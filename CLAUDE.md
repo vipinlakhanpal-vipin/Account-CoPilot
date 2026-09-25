@@ -9,7 +9,7 @@ B2B procurement-intelligence app for a Coupa / SAP Ariba implementation and mana
 - **Local Node is 18.** Run scripts and builds with Node 22 via npx: `npx -y -p node@22 node <script>`, and build with `npx -y -p node@22 node node_modules/next/dist/bin/next build`.
 
 ## Releasing
-Bump `APP_VERSION` in `lib/version.ts` (1.6 → 1.7 …), add a line to `RELEASES`, build, commit, `git tag -a v1.x`, `git push origin main --tags`. The in-app Refresh button shows a red badge when a new version is live. Commits end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
+Bump `APP_VERSION` in `lib/version.ts` (1.9 → 1.10 …), add a line to `RELEASES`, build, commit, `git tag -a v1.x`, `git push origin main --tags`. The in-app Refresh button shows a red badge when a new version is live. Commits end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
 
 ## Data rules (the user insists on these)
 - **Never overwrite reference data.** Rows from the user's workbook (`FINAL-UAE-Target-LIST-V3.1-SEP-2026.xlsx`: Vipin-Profiling, UAE Targets v3, Stakeholders) are kept verbatim. Channel-state values such as CoPilot or Claude-Seamless are theirs.
@@ -59,8 +59,10 @@ The goal is to move accounts out of Likely / Needs check / Unknown by finding of
 - Reference workbook import: `scripts/import_reference_lists.py` → `scripts/seed_reference.mjs`.
 - Known data issue: in the user's Stakeholders sheet, the Company column is shifted by 1–2 rows in patches (rows 17–648). Verification rows marked "Claude — corrected company (sheet row shift)" hold the right company.
 
-## Open items (as of v1.7, 2026-09-25)
+## Open items (as of v1.9, 2026-09-25)
 - **Revenue verification queue:** 145 accounts (see "Current task" above). 2 done so far (Al Batha, Al Ghurair → Likely).
 - **Seamless discovery (not yet imported, awaiting the user's go-ahead):** a free Seamless search for UAE + revenue ≥ $500M + 200+ staff returned 774 companies. Of the first 500, 386 are not in the app (saved in `data/verification/seamless_discovery.json`). Before importing, clean out ministries/government bodies (or tag them separately), single hotels, local branches of foreign groups and duplicates. Import as list "Seamless discovery", status ICP — Likely.
 - **Sources not available:** LinkedIn / Sales Navigator (no login access; public search snippets only), Copilot (no integration; its data arrives only via the user's workbook), ZoomInfo / D&B / Refinitiv (paid, not connected; the user may send exports).
 - **Settings page:** tiers, team invites (temporary password or email invite), Costs & usage guide. Profile menu in the header.
+- **LinkedIn coverage:** 727 of 835 unique contacts have a LinkedIn URL. The user asked to use their LinkedIn login to collect the rest. That was declined (LinkedIn ToS / account risk). Instead, fill the 108 gaps via Seamless `research_contacts` (≈1 credit each; ~50 are "Not publicly identified" placeholders that can't be looked up) or a Sales Navigator export the user makes themselves.
+- **App features as of v1.9:** clickable dashboard tiles (drill-down drawer), contact cards (Stakeholders row or account-brief stakeholder), profile menu, team invites, Costs & usage in Settings, one-row filters.
