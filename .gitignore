@@ -1,0 +1,25 @@
+# dependencies / build
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# secrets
+.env
+.env.*
+!.env.example
+
+# PERSONAL / CONTACT DATA — never commit (repo may be public)
+data/research/
+data/enrichment/
+data/reference/
+data/seed/
+output/
+*.xlsx
+
+# local tooling
+.DS_Store
+__pycache__/
+.claude/launch.json
+.vercel

@@ -1,0 +1,9 @@
+G1|ADNOC Gas; ADNOC Distribution; ADNOC Drilling; ADNOC Logistics & Services; Borouge; Fertiglobe; TAQA (Abu Dhabi National Energy Company); Dana Gas
+G2|Emirates Telecommunications Group (e&); Emirates Integrated Telecommunications (du); Space42; Presight AI; Phoenix Group; Invictus Investment; Ghitha Holding; Al Seer Marine
+G3|International Holding Company (IHC); Alpha Dhabi Holding; Multiply Group; Modon Holding; Pure Health; Burjeel Holdings; Julphar (Gulf Pharmaceutical Industries); Waha Capital
+G4|Emaar Properties; Emaar Development; Aldar Properties; TECOM Group; Dubai Investments; RAK Properties; Deyaar Development; Dubai Residential REIT; ALEC Holdings
+G5|Dubai Electricity and Water Authority (DEWA); Salik Company; Parkin Company; Dubai Taxi Company; Emirates Central Cooling Systems (Empower); National Central Cooling Company (Tabreed); Emsteel (Emirates Steel Arkan); RAK Ceramics; NMDC Group; NMDC Energy
+G6|AD Ports Group; Aramex; Air Arabia; Agility Global; Abu Dhabi Aviation; Orascom Construction; Abu Dhabi National Hotels (ADNH); ADNH Catering
+G7|Lulu Retail Holdings; Spinneys 1961 Holding; Talabat Holding; Americana Restaurants International; Agthia Group; Taaleem Holdings; Union Coop; Al Ansari Financial Services
+G8|First Abu Dhabi Bank (FAB); Emirates NBD; Abu Dhabi Commercial Bank (ADCB); Dubai Islamic Bank; Abu Dhabi Islamic Bank (ADIB); Mashreq
+G9|Commercial Bank of Dubai (CBD); RAKBANK; Sharjah Islamic Bank; Emirates Islamic; National Bank of Fujairah (NBF); Ajman Bank; Abu Dhabi National Insurance Company (ADNIC); Orient Insurance

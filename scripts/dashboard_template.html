@@ -1,0 +1,401 @@
+<meta charset="utf-8">
+<title>Account CoPilot UAE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F2F4F8; --surface:#FFFFFF; --surface-2:#F6F8FB; --sunken:#EDF1F6; --line:#DCE2EB; --line-2:#C9D2DF;
+  --text:#15223A; --muted:#56657E; --faint:#8793A7;
+  --accent:#1F5A96; --accent-hover:#174778; --accent-ink:#FFFFFF; --accent-soft:rgba(31,90,150,.08);
+  --bar:#A9C3DE; --bar-top:#1F5A96;
+  --sig-vs:#0F7A5A; --sig-vs-bg:#E3F3EC; --sig-s:#2C8A68; --sig-s-bg:#EAF5EF;
+  --sig-m:#9A6A12; --sig-m-bg:#FBF1DC; --sig-w:#7A6A4A; --sig-w-bg:#F4EFE6;
+  --sig-n:#6B778A; --sig-n-bg:#EEF1F5; --sig-c:#A8434C; --sig-c-bg:#F8E6E8;
+  --gold:#A8801F;
+  --band:#0B1422; --band-2:#111D30; --band-text:#E6EDF7; --band-muted:#94A6C0; --band-line:#22324B;
+  --shadow:0 1px 2px rgba(20,34,58,.06),0 1px 1px rgba(20,34,58,.04);
+  --display:"Barlow Semi Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"IBM Plex Sans",-apple-system,"Segoe UI",Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  color-scheme:dark;
+  --bg:#0B1320; --surface:#111B2B; --surface-2:#152134; --sunken:#0E1726; --line:#213049; --line-2:#2C3D59;
+  --text:#E6ECF5; --muted:#98A7BE; --faint:#66778F;
+  --accent:#7FB0E0; --accent-hover:#A3C7EA; --accent-ink:#0B1320; --accent-soft:rgba(127,176,224,.10);
+  --bar:#2F4A6C; --bar-top:#7FB0E0;
+  --sig-vs:#6CD1AC; --sig-vs-bg:rgba(47,163,126,.16); --sig-s:#86CDAE; --sig-s-bg:rgba(72,160,122,.12);
+  --sig-m:#E3BD6A; --sig-m-bg:rgba(217,164,65,.14); --sig-w:#C2AE88; --sig-w-bg:rgba(194,174,136,.10);
+  --sig-n:#8594AA; --sig-n-bg:rgba(133,148,170,.10); --sig-c:#EE8E96; --sig-c-bg:rgba(224,108,117,.14);
+  --gold:#D8B45A; --shadow:none;
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0B1320; --surface:#111B2B; --surface-2:#152134; --sunken:#0E1726; --line:#213049; --line-2:#2C3D59;
+  --text:#E6ECF5; --muted:#98A7BE; --faint:#66778F;
+  --accent:#7FB0E0; --accent-hover:#A3C7EA; --accent-ink:#0B1320; --accent-soft:rgba(127,176,224,.10);
+  --bar:#2F4A6C; --bar-top:#7FB0E0;
+  --sig-vs:#6CD1AC; --sig-vs-bg:rgba(47,163,126,.16); --sig-s:#86CDAE; --sig-s-bg:rgba(72,160,122,.12);
+  --sig-m:#E3BD6A; --sig-m-bg:rgba(217,164,65,.14); --sig-w:#C2AE88; --sig-w-bg:rgba(194,174,136,.10);
+  --sig-n:#8594AA; --sig-n-bg:rgba(133,148,170,.10); --sig-c:#EE8E96; --sig-c-bg:rgba(224,108,117,.14);
+  --gold:#D8B45A; --shadow:none;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--text)}
+body{font-family:var(--body);font-size:14px;line-height:1.5;margin:0}
+.wrap{max-width:1400px;margin:0 auto;padding-inline:24px;padding-block:0 56px}
+/* carbon-fibre header band */
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;color:var(--band-text);border-bottom:1px solid var(--band-line);
+  background-color:var(--band);
+  background-image:
+    linear-gradient(135deg, rgba(255,255,255,.035) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.035) 50%, rgba(255,255,255,.035) 75%, transparent 75%),
+    linear-gradient(45deg, rgba(0,0,0,.28) 25%, transparent 25%, transparent 50%, rgba(0,0,0,.28) 50%, rgba(0,0,0,.28) 75%, transparent 75%),
+    linear-gradient(180deg, #13223A 0%, #0B1422 100%);
+  background-size:6px 6px, 6px 6px, 100% 100%}
+.top-inner{max-width:1400px;margin:0 auto;padding:14px 24px 0;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.brand{display:flex;flex-direction:column;margin-right:auto;min-width:0}
+.brand b{font-family:var(--display);font-weight:600;font-size:23px;letter-spacing:.06em;text-transform:uppercase}
+.brand b i{font-style:normal;color:#8DB8E4}
+.brand span{font-size:12px;color:var(--band-muted)}
+.btn{font:500 13px var(--body);border:1px solid var(--line-2);background:var(--surface);color:var(--text);padding:8px 14px;border-radius:6px;cursor:pointer}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn:focus-visible,.tab:focus-visible,tr:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn.primary{background:#E9EFF7;color:#0B1422;border-color:#E9EFF7;font-weight:600}
+.btn.primary:hover{background:#FFFFFF;color:#0B1422}
+.btn.ghost{background:transparent;border-color:rgba(233,239,247,.28);color:var(--band-text)}
+.btn.ghost:hover{border-color:#E9EFF7;color:#FFFFFF}
+.btn[disabled]{opacity:.55;cursor:progress}
+nav.tabs{display:flex;gap:4px;overflow-x:auto;max-width:1400px;margin:10px auto 0;padding:0 24px}
+.tab{font:600 12.5px var(--body);letter-spacing:.04em;color:var(--band-muted);background:transparent;border:0;padding:10px 14px 11px;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent}
+.tab:hover{color:var(--band-text)}
+.tab[aria-selected="true"]{color:#FFFFFF;border-bottom-color:#8DB8E4}
+section.view{padding-top:24px}
+h2{font-family:var(--display);font-weight:600;font-size:17px;letter-spacing:.05em;text-transform:uppercase;margin:0 0 12px;color:var(--text);text-wrap:balance}
+.eyebrow{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 4px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px;box-shadow:var(--shadow)}
+.kpi small{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.kpi b{display:block;font-family:var(--display);font-size:34px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.15;margin-top:4px}
+.kpi.hl b{color:var(--accent)}
+.kpi em{display:block;font-style:normal;font-size:11.5px;color:var(--faint)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px;margin-top:16px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px 18px;min-width:0;box-shadow:var(--shadow)}
+.bars{display:flex;flex-direction:column;gap:8px}
+.bar{display:grid;grid-template-columns:minmax(100px,40%) 1fr 34px;gap:10px;align-items:center;font-size:12.5px}
+.bar .lab{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar .trk{height:8px;background:var(--sunken);border-radius:4px;overflow:hidden}
+.bar .fill{display:block;height:100%;background:var(--bar);border-radius:4px}
+.bar.top .fill{background:var(--bar-top)}
+.bar .n{font-family:var(--mono);font-size:12px;text-align:right;font-variant-numeric:tabular-nums;color:var(--text)}
+.bar.sigbar .fill{background:var(--c)}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;align-items:center}
+.filters select{flex:0 1 auto;max-width:210px}
+.filters input,.filters select{font:13px var(--body);background:var(--surface);color:var(--text);border:1px solid var(--line-2);border-radius:6px;padding:7px 10px;min-width:0}
+.filters input{flex:1 1 240px}
+.filters input:focus,.filters select:focus{outline:2px solid var(--accent-soft);border-color:var(--accent)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--surface);box-shadow:var(--shadow)}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th{position:sticky;top:0;background:var(--surface-2);color:var(--muted);text-align:left;font:600 10.5px var(--body);letter-spacing:.08em;text-transform:uppercase;padding:10px 12px;white-space:nowrap;border-bottom:1px solid var(--line)}
+td{padding:9px 12px;border-top:1px solid var(--line);vertical-align:top}
+tbody tr:first-child td{border-top:0}
+tr.click{cursor:pointer}
+tr.click:hover td{background:var(--accent-soft)}
+td.wrap{min-width:240px;max-width:420px;color:var(--muted)}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+.pill{display:inline-block;font:600 10.5px var(--body);letter-spacing:.05em;padding:2px 9px;border-radius:999px;white-space:nowrap;color:var(--c);background:var(--cb);border:1px solid color-mix(in srgb, var(--c) 28%, transparent)}
+.s-VERY{--c:var(--sig-vs);--cb:var(--sig-vs-bg)}.s-STRONG{--c:var(--sig-s);--cb:var(--sig-s-bg)}
+.s-MODERATE{--c:var(--sig-m);--cb:var(--sig-m-bg)}.s-WEAK{--c:var(--sig-w);--cb:var(--sig-w-bg)}
+.s-NO{--c:var(--sig-n);--cb:var(--sig-n-bg)}.s-CONFLICTING{--c:var(--sig-c);--cb:var(--sig-c-bg)}
+.tag{display:inline-block;font-size:11px;padding:1px 8px;border-radius:4px;background:var(--surface-2);border:1px solid var(--line);color:var(--muted);margin:1px 3px 1px 0}
+.tag.fact{color:var(--sig-vs);background:var(--sig-vs-bg);border-color:transparent}.tag.likely{color:var(--sig-m);background:var(--sig-m-bg);border-color:transparent}.tag.unv{color:var(--faint)}
+.mono{font-family:var(--mono);font-size:12px}
+.muted{color:var(--muted)}
+b{font-weight:600}
+.scrim{position:fixed;inset:0;background:rgba(6,11,20,.55);z-index:40}
+aside.brief{position:fixed;top:0;right:0;bottom:0;width:min(880px,100%);z-index:50;background:var(--bg);border-left:1px solid var(--line-2);overflow-y:auto;padding:0 0 40px;box-shadow:-12px 0 32px rgba(6,11,20,.25)}
+.brief-head{position:sticky;top:0;color:var(--band-text);border-bottom:1px solid var(--band-line);padding:calc(16px + env(safe-area-inset-top,0px)) 24px 16px;display:flex;gap:12px;align-items:flex-start;z-index:2;
+  background-color:var(--band);background-image:linear-gradient(135deg, rgba(255,255,255,.035) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.035) 50%, rgba(255,255,255,.035) 75%, transparent 75%),linear-gradient(180deg,#13223A,#0B1422);background-size:6px 6px,100% 100%}
+.brief-head .muted{color:var(--band-muted)}
+.brief-head h3{font-family:var(--display);font-weight:600;font-size:27px;margin:2px 0 0;letter-spacing:.02em;text-wrap:balance}
+.brief-head .tag{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14);color:var(--band-text)}
+.brief-body{padding:18px 24px;display:flex;flex-direction:column;gap:14px}
+.facts{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.fact{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:9px 12px}
+.fact small{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.fact div{font-weight:500;overflow-wrap:anywhere}
+.block{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px;box-shadow:var(--shadow)}
+.block h4{margin:0 0 10px;font:600 12px var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.block p{margin:0 0 6px;max-width:78ch}
+.sig{border-left:3px solid var(--c,var(--line-2));padding:7px 12px;margin:8px 0;background:var(--surface-2);border-radius:0 6px 6px 0}
+.sig.VERY{--c:var(--sig-vs)}.sig.STRONG{--c:var(--sig-s)}.sig.MODERATE{--c:var(--sig-m)}.sig.WEAK{--c:var(--sig-w)}.sig.CONFLICTING{--c:var(--sig-c)}
+.pitch{border:1px solid color-mix(in srgb, var(--gold) 45%, var(--line));border-radius:8px;padding:14px 16px;background:color-mix(in srgb, var(--gold) 6%, var(--surface))}
+.pitch h4{color:var(--gold)!important}
+.pitch-out{white-space:pre-wrap;margin-top:12px;font-size:13.5px;line-height:1.6}
+.note{font-size:12px;color:var(--muted)}
+.toast{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--band);color:var(--band-text);border:1px solid var(--band-line);padding:10px 16px;border-radius:8px;z-index:60}
+@media (max-width:600px){.wrap,.top-inner,nav.tabs{padding-inline:16px}.kpi b{font-size:28px}.brief-body,.brief-head{padding-inline:16px}}
+@media (prefers-reduced-motion:no-preference){aside.brief{animation:slide .18s ease-out}@keyframes slide{from{transform:translateX(24px)}to{transform:none}}}
+</style>
+
+<header class="top"><div class="top-inner">
+  <div class="brand"><b>Account <i>CoPilot</i></b><span id="subtitle">B2B procurement intelligence · UAE</span></div>
+  <button class="btn primary" id="dl" type="button">Download Master Book (.xlsx)</button>
+</div>
+<nav class="tabs" role="tablist" id="tabs"></nav>
+</header>
+
+<div class="wrap">
+  <section class="view" id="v-dashboard"></section>
+  <section class="view" id="v-accounts" hidden></section>
+  <section class="view" id="v-stakeholders" hidden></section>
+  <section class="view" id="v-signals" hidden></section>
+  <section class="view" id="v-erp" hidden></section>
+  <section class="view" id="v-conflicts" hidden></section>
+  <section class="view" id="v-sources" hidden></section>
+</div>
+<div class="scrim" id="scrim" hidden></div>
+<aside class="brief" id="brief" hidden aria-label="Account brief"></aside>
+<div class="toast" id="toast" hidden></div>
+
+<script id="data" type="application/json">/*__DATA__*/</script>
+<script id="xlsx" type="text/plain">/*__XLSX__*/</script>
+<script>
+const D = JSON.parse(document.getElementById('data').textContent);
+const XLSX_NAME = D.meta.xlsx;
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const SIG = ["VERY STRONG SIGNAL","STRONG SIGNAL","MODERATE SIGNAL","WEAK SIGNAL","NO SIGNAL","CONFLICTING SIGNAL"];
+const sigRank = s => { const i = SIG.indexOf(s); return i < 0 ? 9 : i; };
+const pill = s => s ? `<span class="pill s-${esc(String(s).split(' ')[0])}">${esc(s.replace(' SIGNAL',''))}</span>` : '';
+const link = (u, t) => u && /^https?:/.test(u) ? `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(t || 'link')}</a>` : '';
+const statusTag = s => { const v = String(s||'').toUpperCase(); const c = v.startsWith('FACT') ? 'fact' : v.startsWith('LIKELY') ? 'likely' : 'unv'; return s ? `<span class="tag ${c}">${esc(s)}</span>` : ''; };
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.hidden=false; clearTimeout(toast._t); toast._t=setTimeout(()=>t.hidden=true,3200); }
+
+$('#subtitle').textContent = `B2B procurement intelligence · UAE listed ICP (revenue > USD 250M, 100+ staff) · researched ${D.meta.run_date} · channel: Claude`;
+
+const TABS = [["dashboard","Dashboard"],["accounts","Accounts"],["stakeholders","Stakeholders"],["signals","S2P Signals"],["erp","ERP & Apps"],["conflicts","Conflicts"],["sources","Sources"]];
+const tabs = $('#tabs');
+TABS.forEach(([id,label],i)=>{ const b=document.createElement('button'); b.className='tab'; b.type='button'; b.role='tab'; b.id='t-'+id; b.textContent=label; b.setAttribute('aria-selected', i===0); b.onclick=()=>show(id); tabs.appendChild(b); });
+function show(id){ TABS.forEach(([t])=>{ $('#v-'+t).hidden = t!==id; $('#t-'+t).setAttribute('aria-selected', t===id); }); try{localStorage.setItem('acp-tab',id)}catch(e){} }
+
+function countBy(rows, fn){ const m={}; rows.forEach(r=>{ const k=fn(r)||'Unknown'; m[k]=(m[k]||0)+1; }); return Object.entries(m).sort((a,b)=>b[1]-a[1]); }
+const SIGVAR = {"VERY":"--sig-vs","STRONG":"--sig-s","MODERATE":"--sig-m","WEAK":"--sig-w","NO":"--sig-n","CONFLICTING":"--sig-c"};
+function bars(entries, order, signal){ if(order) entries.sort((a,b)=>order(a[0])-order(b[0])); const max=Math.max(1,...entries.map(e=>e[1]));
+  return `<div class="bars">${entries.map(([k,n])=>{ const sv = signal && SIGVAR[String(k).split(' ')[0]];
+    const cls = sv ? 'bar sigbar' : (n===max ? 'bar top' : 'bar');
+    return `<div class="${cls}" ${sv?`style="--c:var(${sv})"`:''}><span class="lab" title="${esc(k)}">${esc(k)}</span><span class="trk"><span class="fill" style="width:${(n/max*100).toFixed(1)}%"></span></span><span class="n">${n}</span></div>`; }).join('')}</div>`; }
+
+const A = D.accounts, P = D.contacts;
+const famKey = f => { const v = String(f||'OTHER').toUpperCase(); return v.includes('PROCURE')||v.includes('SUPPLY') ? (v.includes('SUPPLY')&&!v.includes('PROCURE')?'SUPPLY CHAIN':'PROCUREMENT') : v.includes('FIN') ? 'FINANCE' : v.includes('TRANSFORM') ? 'TRANSFORMATION' : (v==='IT'||v.includes('TECH')||v.includes('DIGITAL')) ? 'IT' : v; };
+const erpKey = e => { const v = String(e||'Unknown'); if (/unknown|not identified|no evidence/i.test(v)) return 'Unknown'; if (/s\/4/i.test(v)) return 'SAP S/4HANA'; if (/sap/i.test(v)) return 'SAP (ECC / other)'; if (/fusion|oracle cloud/i.test(v)) return 'Oracle Fusion Cloud ERP'; if (/e-business|ebs/i.test(v)) return 'Oracle E-Business Suite'; if (/oracle/i.test(v)) return 'Oracle (other)'; if (/dynamics|microsoft/i.test(v)) return 'Microsoft Dynamics'; return v.split(/[;(,]/)[0].trim(); };
+const byCo = {}; P.forEach(p => (byCo[p.company_id] ||= []).push(p));
+
+// ---------- dashboard ----------
+(function(){
+  const icp = A.filter(a=>a.icp_fit==='Yes').length;
+  const strong = A.filter(a=>sigRank(a.s2p_signal_level)<=1).length;
+  const coupa = A.filter(a=>/coupa/i.test(a.existing_s2p_product||'')).length;
+  const ariba = A.filter(a=>/ariba/i.test(a.existing_s2p_product||'')).length;
+  const emails = P.filter(p=>p.email).length;
+  const verified = P.filter(p=>p.verification_status==='VERIFIED').length;
+  const k = [["Accounts researched",A.length],["ICP fit",icp],["Strong / very strong",strong],["Coupa accounts",coupa],["SAP Ariba accounts",ariba],["Contacts",P.length],["Verified contacts",verified],["Contacts with email",emails],["Signals logged",D.signals.length],["Conflicts retained",D.conflicts.length]];
+  const top = A.filter(a=>sigRank(a.s2p_signal_level)<=1).sort((a,b)=>sigRank(a.s2p_signal_level)-sigRank(b.s2p_signal_level));
+  $('#v-dashboard').innerHTML = `
+    <div class="kpis">${k.map(([l,v])=>`<div class="kpi${/Strong|Ariba|Coupa/.test(l)?' hl':''}"><small>${l}</small><b>${v}</b></div>`).join('')}</div>
+    <div class="grid2">
+      <div class="panel"><h2>Accounts by S2P signal</h2>${bars(countBy(A,a=>a.s2p_signal_level), sigRank, true)}</div>
+      <div class="panel"><h2>Existing S2P platform</h2>${bars(countBy(A,a=>a.existing_s2p_product))}</div>
+      <div class="panel"><h2>ERP landscape</h2>${bars(countBy(A,a=>erpKey(a.erp)).slice(0,10))}</div>
+      <div class="panel"><h2>Contacts by role family</h2>${bars(countBy(P,p=>famKey(p.role_family)))}</div>
+      <div class="panel"><h2>Contacts by tier</h2>${bars(countBy(P,p=>p.contact_tier), k=>parseInt(String(k).replace(/\D/g,''))||9)}</div>
+      <div class="panel"><h2>Accounts by industry</h2>${bars(countBy(A,a=>a.industry).slice(0,12))}</div>
+    </div>
+    <div class="panel" style="margin-top:16px"><h2>Priority accounts</h2>
+      <p class="note">Accounts with strong or very strong S2P signals. Select a row to open the account brief.</p>
+      <div class="tablewrap"><table><thead><tr><th>Company</th><th>Signal</th><th>Existing S2P</th><th>Status</th><th>ERP</th><th>Why</th></tr></thead>
+      <tbody>${top.map(a=>`<tr class="click" tabindex="0" data-co="${a.company_id}"><td><b>${esc(a.company_name)}</b></td><td>${pill(a.s2p_signal_level)}</td><td>${esc(a.existing_s2p_product)}</td><td>${esc(a.s2p_platform_status)}</td><td>${esc(a.erp)}</td><td class="wrap">${esc((a.s2p_strong_signals||'').slice(0,260))}</td></tr>`).join('') || '<tr><td colspan="6" class="muted">No strong signals yet.</td></tr>'}</tbody></table></div>
+    </div>`;
+})();
+
+// ---------- generic filterable table ----------
+function tableView(el, {title, note, rows, cols, filters=[], search, onRow}){
+  const fid = el.id;
+  el.innerHTML = `<h2>${title}</h2>${note?`<p class="note">${note}</p>`:''}
+    <div class="filters"><input id="${fid}-q" type="search" placeholder="Search ${title.toLowerCase()}…" aria-label="Search">
+    ${filters.map((f,i)=>`<select id="${fid}-f${i}" aria-label="${esc(f.label)}"><option value="">${esc(f.label)}: all</option>${[...new Set(rows.map(f.get).filter(Boolean))].sort().map(v=>`<option>${esc(v)}</option>`).join('')}</select>`).join('')}
+    <span class="note" id="${fid}-n" style="align-self:center"></span></div>
+    <div class="tablewrap"><table><thead><tr>${cols.map(c=>`<th>${c[0]}</th>`).join('')}</tr></thead><tbody id="${fid}-b"></tbody></table></div>`;
+  const render = () => {
+    const q = $('#'+fid+'-q').value.toLowerCase();
+    const fv = filters.map((f,i)=>$('#'+fid+'-f'+i).value);
+    const out = rows.filter(r => (!q || search(r).toLowerCase().includes(q)) && filters.every((f,i)=>!fv[i] || f.get(r)===fv[i]));
+    $('#'+fid+'-n').textContent = `${out.length} of ${rows.length}`;
+    $('#'+fid+'-b').innerHTML = out.map((r,i)=>`<tr ${onRow?`class="click" tabindex="0" data-co="${r.company_id}"`:''}>${cols.map(c=>`<td class="${c[2]||''}">${c[1](r)}</td>`).join('')}</tr>`).join('');
+  };
+  el.addEventListener('input', render); render();
+}
+
+tableView($('#v-accounts'), {
+  title:'Accounts', note:'Select any account to open its brief: intel, ERP and apps, S2P evidence, stakeholders and a pitch planner.',
+  rows:[...A].sort((a,b)=>sigRank(a.s2p_signal_level)-sigRank(b.s2p_signal_level)||a.company_name.localeCompare(b.company_name)),
+  search:a=>[a.company_name,a.industry,a.erp,a.existing_s2p_product,a.s2p_strong_signals].join(' '),
+  filters:[{label:'Signal',get:a=>a.s2p_signal_level},{label:'S2P',get:a=>a.existing_s2p_product},{label:'Industry',get:a=>a.industry},{label:'Exchange',get:a=>a.exchange},{label:'ICP fit',get:a=>a.icp_fit}],
+  cols:[["Company",a=>`<b>${esc(a.company_name)}</b><div class="muted mono">${esc(a.exchange||'')} ${esc(a.ticker||'')}</div>`],
+        ["Industry",a=>esc(a.industry)],["Revenue USD m",a=>`<span class="mono">${a.revenue_usd_m?Math.round(Number(a.revenue_usd_m)).toLocaleString():''}</span>`],
+        ["ICP",a=>esc(a.icp_fit)],["Signal",a=>pill(a.s2p_signal_level)],["Existing S2P",a=>esc(a.existing_s2p_product)],
+        ["S2P status",a=>esc(a.s2p_platform_status)],["ERP",a=>esc(a.erp)],["Contacts",a=>`<span class="mono">${(byCo[a.company_id]||[]).length}</span>`]],
+  onRow:true});
+
+tableView($('#v-stakeholders'), {
+  title:'Stakeholders', note:'Company and contact details only. Emails are never pattern-guessed; a blank email means it could not be verified.',
+  rows:[...P].sort((a,b)=>sigRank(a.account_s2p_signal)-sigRank(b.account_s2p_signal)||a.company.localeCompare(b.company)||String(a.contact_tier).localeCompare(String(b.contact_tier))),
+  search:p=>[p.company,p.full_name,p.title_verbatim,p.email,p.notes_contact].join(' '),
+  filters:[{label:'Tier',get:p=>p.contact_tier},{label:'Role family',get:p=>p.role_family},{label:'Signal',get:p=>p.account_s2p_signal},{label:'Email status',get:p=>p.email_status},{label:'Channel',get:p=>p.channel_state}],
+  cols:[["Company",p=>esc(p.company)],["Full name",p=>`<b>${esc(p.full_name)}</b>`],["Title (verbatim)",p=>esc(p.title_verbatim),'wrap'],
+        ["Role family",p=>esc(p.role_family)],["Tier",p=>esc(p.contact_tier)],["Channel",p=>`${esc(p.channel_state)}<div class="muted">${esc(p.channel_source)}</div>`],
+        ["Email",p=>`<span class="mono">${esc(p.email)}</span>`],["Email status",p=>esc(p.email_status)],["Phone",p=>`<span class="mono">${esc(p.phone)}</span> <span class="muted">${esc(p.phone_type)}</span>`],
+        ["LinkedIn",p=>link(p.linkedin_url,'profile')],["S2P signal",p=>pill(p.account_s2p_signal)],["Notes / intel",p=>esc(p.notes_contact),'wrap']],
+  onRow:true});
+
+tableView($('#v-signals'), {
+  title:'S2P signals', note:'Every signal carries its evidence and source.',
+  rows:[...D.signals].sort((a,b)=>sigRank(a.level)-sigRank(b.level)),
+  search:s=>[s.company,s.signal,s.evidence,s.platform].join(' '),
+  filters:[{label:'Level',get:s=>s.level},{label:'Category',get:s=>s.category},{label:'Platform',get:s=>s.platform}],
+  cols:[["Company",s=>`<b>${esc(s.company)}</b>`],["Level",s=>pill(s.level)],["Category",s=>esc(s.category)],["Platform",s=>esc(s.platform)],["Signal",s=>esc(s.signal),'wrap'],["Evidence",s=>esc(s.evidence),'wrap'],["Date",s=>`<span class="mono">${esc(s.date)}</span>`],["Source",s=>link(s.source_url,'source')]],
+  onRow:true});
+
+tableView($('#v-erp'), {
+  title:'ERP & third-party apps', note:'FACT = directly sourced · LIKELY = several indirect signals · UNVERIFIED = one weak source, such as technographics.',
+  rows:D.apps, search:r=>[r.company,r.name,r.category,r.evidence].join(' '),
+  filters:[{label:'Category',get:r=>r.category},{label:'Status',get:r=>r.status}],
+  cols:[["Company",r=>`<b>${esc(r.company)}</b>`],["Application",r=>esc(r.name)],["Category",r=>esc(r.category)],["Status",r=>statusTag(r.status)],["Evidence",r=>esc(r.evidence),'wrap'],["Source",r=>link(r.source_url,'source')]],
+  onRow:true});
+
+tableView($('#v-conflicts'), {
+  title:'Conflicts', note:'Both values are kept. Nothing is overwritten.',
+  rows:D.conflicts, search:c=>[c.company,c.entity,c.field,c.value_a,c.value_b].join(' '),
+  filters:[{label:'Field',get:c=>c.field}],
+  cols:[["Company",c=>esc(c.company)],["Entity",c=>esc(c.entity)],["Field",c=>esc(c.field)],["Value A",c=>esc(c.value_a),'wrap'],["Source A",c=>esc(c.source_a)],["Value B",c=>esc(c.value_b),'wrap'],["Source B",c=>esc(c.source_b)],["Determination",c=>esc(c.determination),'wrap']],
+  onRow:true});
+
+tableView($('#v-sources'), {
+  title:'Source evidence', note:'The audit trail behind every fact.',
+  rows:D.sources, search:s=>[s.company,s.source,s.information_found,s.url].join(' '),
+  filters:[{label:'Tier',get:s=>s.source_tier},{label:'Type',get:s=>s.source_type},{label:'Confidence',get:s=>s.confidence}],
+  cols:[["Company",s=>esc(s.company)],["Source",s=>esc(s.source)],["Type",s=>esc(s.source_type)],["Tier",s=>esc(s.source_tier)],["Information found",s=>esc(s.information_found),'wrap'],["Published",s=>`<span class="mono">${esc(s.date_published)}</span>`],["Confidence",s=>esc(s.confidence)],["URL",s=>link(s.url,'open')]],
+  onRow:true});
+
+// ---------- account brief ----------
+document.addEventListener('click', e => { const tr = e.target.closest('tr[data-co]'); if (tr && !e.target.closest('a')) openBrief(tr.dataset.co); });
+document.addEventListener('keydown', e => { if (e.key==='Enter'){ const tr=e.target.closest?.('tr[data-co]'); if(tr) openBrief(tr.dataset.co);} if (e.key==='Escape') closeBrief(); });
+$('#scrim').onclick = closeBrief;
+function closeBrief(){ $('#brief').hidden = true; $('#scrim').hidden = true; }
+function fact(l,v){ return v ? `<div class="fact"><small>${l}</small><div>${v}</div></div>` : ''; }
+
+function openBrief(cid){
+  const a = A.find(x=>x.company_id===cid); if(!a) return;
+  const cs = (byCo[cid]||[]).sort((x,y)=>String(x.contact_tier).localeCompare(String(y.contact_tier)));
+  const sigs = D.signals.filter(s=>s.company_id===cid).sort((x,y)=>sigRank(x.level)-sigRank(y.level));
+  const apps = D.apps.filter(s=>s.company_id===cid);
+  const srcs = D.sources.filter(s=>s.company_id===cid);
+  const conf = D.conflicts.filter(s=>s.company_id===cid);
+  const b = $('#brief');
+  b.innerHTML = `
+  <div class="brief-head"><div style="flex:1;min-width:0"><div class="muted mono">${esc(a.exchange||'')} ${esc(a.ticker||'')} · ${esc(a.industry||'')}</div><h3>${esc(a.company_name)}</h3><div style="margin-top:6px">${pill(a.s2p_signal_level)} <span class="tag">${esc(a.existing_s2p_product||'Unknown')}</span> <span class="tag">${esc(a.s2p_platform_status||'Unknown')}</span></div></div>
+  <button class="btn ghost" type="button" id="closeBrief">Close</button></div>
+  <div class="brief-body">
+    <div class="facts">
+      ${fact('Website', link(a.company_website, a.domain||a.company_website))}
+      ${fact('Revenue', a.revenue_usd_m ? `USD ${Math.round(Number(a.revenue_usd_m)).toLocaleString()}m <span class="muted">(${esc(a.revenue_local||'')} ${esc(a.revenue_fy||'')})</span>` : '')}
+      ${fact('Employees', esc(a.employee_range))}
+      ${fact('ICP fit', esc(a.icp_fit) + (a.icp_fit_reason?`<div class="note">${esc(a.icp_fit_reason)}</div>`:''))}
+      ${fact('Ownership', esc(a.ownership))}
+      ${fact('Parent', esc(a.parent_company))}
+      ${fact('Board phone', `<span class="mono">${esc(a.board_phone)}</span>`)}
+      ${fact('Confidence', esc(a.research_confidence))}
+    </div>
+    <div class="block"><h4>S2P intelligence</h4><p>${esc(a.s2p_strong_signals||'No S2P evidence found.')}</p>
+      ${a.existing_s2p_detail?`<p class="note">Detail: ${esc(a.existing_s2p_detail)}</p>`:''}
+      <p class="note">Coupa: ${esc(a.coupa_opportunity_type||'No Evidence')} · Ariba: ${esc(a.ariba_opportunity_type||'No Evidence')}</p>
+      ${sigs.map(s=>`<div class="sig ${esc(String(s.level).split(' ')[0])}"><b>${esc(s.signal)}</b> ${pill(s.level)} <span class="tag">${esc(s.category)}</span><div class="note">${esc(s.evidence)} ${s.date?`· ${esc(s.date)}`:''} ${link(s.source_url,'source')}</div></div>`).join('')}
+    </div>
+    <div class="block"><h4>ERP landscape and third-party apps</h4><p><b>ERP:</b> ${esc(a.erp||'Unknown')} ${statusTag(a.erp_status)}</p>${a.erp_evidence?`<p class="note">${esc(a.erp_evidence)}</p>`:''}
+      <div>${apps.map(x=>`<span class="tag" title="${esc(x.evidence)}">${esc(x.name)} · ${esc(x.category)} · ${esc(x.status)}</span>`).join(' ')||'<span class="muted">No third-party apps verified.</span>'}</div></div>
+    <div class="block"><h4>Transformation context</h4>
+      ${a.procurement_model?`<p><b>Procurement model:</b> ${esc(a.procurement_model)}</p>`:''}
+      ${a.procurement_transformation_signals?`<p><b>Procurement transformation:</b> ${esc(a.procurement_transformation_signals)}</p>`:''}
+      ${a.digital_transformation_signals?`<p><b>Digital transformation:</b> ${esc(a.digital_transformation_signals)}</p>`:''}
+      ${a.known_implementation_partner?`<p><b>Implementation partner:</b> ${esc(a.known_implementation_partner)}</p>`:''}
+      ${a.known_consulting_partner?`<p><b>Consulting partner:</b> ${esc(a.known_consulting_partner)}</p>`:''}
+      ${a.subsidiaries?`<p class="note"><b>Subsidiaries:</b> ${esc(a.subsidiaries)}</p>`:''}</div>
+    <div class="block"><h4>Opportunity observations</h4><p>${esc(a.potential_opportunity||'—')}</p>${a.account_notes?`<p class="note">${esc(a.account_notes)}</p>`:''}</div>
+    <div class="block"><h4>Stakeholders (${cs.length})</h4><div class="tablewrap"><table><thead><tr><th>Name</th><th>Title (verbatim)</th><th>Tier</th><th>Email</th><th>Phone</th><th>LinkedIn</th></tr></thead><tbody>
+      ${cs.map(p=>`<tr><td><b>${esc(p.full_name)}</b><div class="muted">${esc(p.role_family)} · ${esc(p.verification_status||'')}</div></td><td>${esc(p.title_verbatim)}</td><td>${esc(p.contact_tier)}</td><td class="mono">${esc(p.email)}<div class="muted">${esc(p.email_status)}</div></td><td class="mono">${esc(p.phone)}</td><td>${link(p.linkedin_url,'profile')}</td></tr>${p.notes_contact?`<tr><td colspan="6" class="note">${esc(p.notes_contact)}</td></tr>`:''}`).join('')}
+    </tbody></table></div></div>
+    <div class="pitch" id="pitchBox"><h4 style="margin:0 0 6px;font:600 13px var(--display);letter-spacing:.1em;text-transform:uppercase;color:var(--input)">Pitch planner</h4>
+      <p class="note">Ask Claude to draft a pitch plan from the evidence on this page: what to lead with, who to approach first, and what to validate on the first call. It uses only the facts above.</p>
+      <button class="btn primary" type="button" id="pitchBtn">Draft pitch plan</button>
+      <div class="pitch-out" id="pitchOut"></div></div>
+    ${conf.length?`<div class="block"><h4>Conflicts retained (${conf.length})</h4>${conf.map(c=>`<p class="note"><b>${esc(c.entity)} · ${esc(c.field)}</b>: "${esc(c.value_a)}" (${esc(c.source_a)}) vs "${esc(c.value_b)}" (${esc(c.source_b)}) — ${esc(c.determination)}</p>`).join('')}</div>`:''}
+    <div class="block"><h4>Evidence (${srcs.length} sources)</h4>${srcs.map(s=>`<p class="note"><span class="tag">${esc(s.source_tier||'')}</span> <b>${esc(s.source)}</b> ${s.date_published?`(${esc(s.date_published)})`:''} — ${esc(s.information_found)} ${link(s.url,'open')}</p>`).join('')}</div>
+  </div>`;
+  b.hidden = false; $('#scrim').hidden = false; b.scrollTop = 0;
+  $('#closeBrief').onclick = closeBrief;
+  $('#pitchBtn').onclick = () => draftPitch(a, cs, sigs, apps);
+}
+
+let sampleP = null;
+async function draftPitch(a, cs, sigs, apps){
+  const out = $('#pitchOut'), btn = $('#pitchBtn');
+  sampleP ||= (window.claude?.use ? window.claude.use('sample') : Promise.resolve(null));
+  const sample = await sampleP;
+  if (!sample){ out.textContent = 'The pitch planner is not available in this view. Open the artifact in Claude to use it.'; return; }
+  btn.disabled = true; out.textContent = 'Drafting…';
+  const facts = {company:a.company_name, industry:a.industry, revenue_usd_m:a.revenue_usd_m, erp:a.erp, erp_status:a.erp_status,
+    existing_s2p:a.existing_s2p_product, s2p_detail:a.existing_s2p_detail, s2p_status:a.s2p_platform_status, signal:a.s2p_signal_level,
+    s2p_signals:a.s2p_strong_signals, procurement_transformation:a.procurement_transformation_signals, digital:a.digital_transformation_signals,
+    procurement_model:a.procurement_model, coupa_opportunity:a.coupa_opportunity_type, ariba_opportunity:a.ariba_opportunity_type,
+    opportunity:a.potential_opportunity, apps:apps.map(x=>`${x.name} (${x.category}, ${x.status})`),
+    signals:sigs.map(s=>`${s.level}: ${s.signal} — ${s.evidence} (${s.date||''})`),
+    contacts:cs.map(p=>`${p.full_name} — ${p.title_verbatim} — ${p.role_family} ${p.contact_tier}`)};
+  const prompt = `You are a pre-sales strategist for a Coupa and SAP Ariba implementation, integration and managed-services partner in the Middle East.
+Using ONLY the facts below (do not invent facts; where something is unknown say it must be validated), write a concise pitch plan with these headings:
+1. Situation (2-3 bullets, cite the evidence)
+2. What to pitch (ranked: e.g. managed services, optimisation, integration, implementation, evaluation support) and why
+3. Who to approach first and the angle for each (use the named contacts)
+4. Discovery questions for the first call (5)
+5. Risks / what to validate
+Keep it under 350 words. Plain text, no markdown tables.
+FACTS: ${JSON.stringify(facts)}`;
+  try {
+    await sample(prompt, { onText: ({text}) => { out.textContent = text; } });
+  } catch (e) {
+    out.textContent = e?.code === 'not_granted' ? 'Pitch planner needs permission to ask Claude. It was not granted in this view.' :
+      e?.code === 'rate_limited' ? 'Too many requests just now. Try again in a minute.' : (e?.text || 'Could not draft the pitch plan. Try again.');
+  } finally { btn.disabled = false; }
+}
+
+// ---------- download ----------
+let dlP = null;
+$('#dl').onclick = async () => {
+  dlP ||= (window.claude?.use ? window.claude.use('downloads') : Promise.resolve(null));
+  const dl = await dlP;
+  if (!dl){ toast('Download is not available in this view.'); return; }
+  try {
+    const b64 = document.getElementById('xlsx').textContent.trim();
+    if (!b64) throw new Error('missing');
+    const bin = atob(b64); const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    const blob = new Blob([bytes]);
+    await dl.save({ filename: XLSX_NAME, data: blob });
+    toast('Master Book saved.');
+  } catch (e) {
+    if (e?.code === 'declined') return;
+    toast(e?.code === 'rate_limited' ? 'A save prompt is already open.' : 'Could not prepare the workbook. Try again.');
+  }
+};
+
+try { const t = localStorage.getItem('acp-tab'); if (t && TABS.some(x=>x[0]===t)) show(t); } catch(e) {}
+</script>
