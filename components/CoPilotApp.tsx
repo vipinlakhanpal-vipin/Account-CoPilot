@@ -27,6 +27,13 @@ const erpKey = (e: unknown) => {
   return v.split(/[;(,]/)[0].trim();
 };
 
+const icpRank = (s?: string) => (s === "Verified ICP" ? 0 : String(s || "").startsWith("Claude") ? 1 : 2);
+function IcpTag({ s }: { s?: string }) {
+  if (!s) return null;
+  const cls = s === "Verified ICP" ? "fact" : s.startsWith("Claude") ? "likely" : "unv";
+  return <span className={`tag ${cls}`}>{s}</span>;
+}
+
 function Pill({ s }: { s?: string }) {
   if (!s) return null;
   return <span className={`pill s-${s.split(" ")[0]}`}>{s.replace(" SIGNAL", "")}</span>;
@@ -128,13 +135,15 @@ export default function CoPilotApp({ data, tab }: { data: AllData; tab: string }
   let view: React.ReactNode = null;
   if (tab === "accounts") {
     view = <FilterTable title="Accounts" note="Select any account to open its brief: intel, ERP and apps, S2P evidence, stakeholders and a pitch planner."
-      rows={[...A].sort((a, b) => sigRank(a.s2p_signal_level) - sigRank(b.s2p_signal_level) || str(a.company_name).localeCompare(b.company_name))}
+      rows={[...A].sort((a, b) => icpRank(a.icp_status) - icpRank(b.icp_status) || sigRank(a.s2p_signal_level) - sigRank(b.s2p_signal_level) || str(a.company_name).localeCompare(b.company_name))}
       search={(a) => [a.company_name, a.industry, a.erp, a.existing_s2p_product, a.s2p_strong_signals].join(" ")}
-      filters={[{ label: "Signal", get: (a) => a.s2p_signal_level }, { label: "S2P", get: (a) => a.existing_s2p_product }, { label: "Industry", get: (a) => a.industry },
-        { label: "Exchange", get: (a) => a.exchange }, { label: "ICP fit", get: (a) => a.icp_fit }, { label: "Country", get: (a) => a.country }]}
+      filters={[{ label: "ICP status", get: (a) => a.icp_status }, { label: "List", get: (a) => (a.lists || []).join(" + ") },
+        { label: "Signal", get: (a) => a.s2p_signal_level }, { label: "S2P", get: (a) => a.existing_s2p_product }, { label: "Industry", get: (a) => a.industry },
+        { label: "Exchange", get: (a) => a.exchange }, { label: "Country", get: (a) => a.country }]}
       cols={[{ h: "Company", cell: (a) => <><b>{a.company_name}</b><div className="muted mono">{a.exchange} {a.ticker}</div></> },
         { h: "Industry", cell: (a) => a.industry }, { h: "Revenue USD m", cell: (a) => <span className="mono">{a.revenue_usd_m ? Math.round(Number(a.revenue_usd_m)).toLocaleString() : ""}</span> },
-        { h: "ICP", cell: (a) => a.icp_fit }, { h: "Signal", cell: (a) => <Pill s={a.s2p_signal_level} /> }, { h: "Existing S2P", cell: (a) => a.existing_s2p_product },
+        { h: "ICP status", cell: (a) => <IcpTag s={a.icp_status} /> }, { h: "Lists", cell: (a) => <span className="muted">{(a.lists || []).join(", ")}</span> },
+        { h: "Signal", cell: (a) => <Pill s={a.s2p_signal_level} /> }, { h: "Existing S2P", cell: (a) => a.existing_s2p_product },
         { h: "S2P status", cell: (a) => a.s2p_platform_status }, { h: "ERP", cell: (a) => a.erp }, { h: "Contacts", cell: (a) => <span className="mono">{(byCo[a.id] || []).length}</span> }]}
       onRow={openRow} />;
   } else if (tab === "stakeholders") {
@@ -185,7 +194,8 @@ export default function CoPilotApp({ data, tab }: { data: AllData; tab: string }
   } else {
     const top = A.filter((a) => sigRank(a.s2p_signal_level) <= 1).sort((a, b) => sigRank(a.s2p_signal_level) - sigRank(b.s2p_signal_level));
     const kpis: [string, number, boolean?][] = [
-      ["Accounts researched", A.length], ["ICP fit", A.filter((a) => a.icp_fit === "Yes").length],
+      ["Accounts (all lists)", A.length], ["Verified ICP", A.filter((a) => a.icp_status === "Verified ICP" || (!a.icp_status && a.icp_fit === "Yes")).length, true],
+      ["Your targets to verify", A.filter((a) => String(a.icp_status || "").startsWith("Your target")).length],
       ["Strong / very strong", top.length, true], ["Coupa accounts", A.filter((a) => /coupa/i.test(str(a.existing_s2p_product))).length, true],
       ["SAP Ariba accounts", A.filter((a) => /ariba/i.test(str(a.existing_s2p_product))).length, true], ["Contacts", P.length],
       ["Verified contacts", P.filter((p) => p.verification_status === "VERIFIED").length], ["Contacts with email", P.filter((p) => p.email).length],
@@ -202,7 +212,7 @@ export default function CoPilotApp({ data, tab }: { data: AllData; tab: string }
           <div className="panel"><h2>ERP landscape</h2><Bars entries={countBy(A, (a) => erpKey(a.erp)).slice(0, 10)} /></div>
           <div className="panel"><h2>Contacts by role family</h2><Bars entries={countBy(P, (p) => famKey(p.role_family))} /></div>
           <div className="panel"><h2>Research channel</h2><Bars entries={countBy(P, (p) => p.research_channel)} /></div>
-          <div className="panel"><h2>Accounts by country</h2><Bars entries={countBy(A, (a) => a.country)} /></div>
+          <div className="panel"><h2>Accounts by ICP status</h2><Bars entries={countBy(A, (a) => a.icp_status || "Unknown")} /></div>
         </div>
         <div className="panel" style={{ marginTop: 16 }}>
           <h2>Priority accounts</h2>
@@ -288,6 +298,8 @@ function Brief({ a, data, people, onClose }: { a: Row; data: AllData; people: Ro
             <Fact l="Parent">{a.parent_company}</Fact>
             <Fact l="Board phone">{a.board_phone && <span className="mono">{a.board_phone}</span>}</Fact>
             <Fact l="Last researched">{str(a.last_researched).slice(0, 10)}</Fact>
+            <Fact l="ICP status"><IcpTag s={a.icp_status} /></Fact>
+            <Fact l="Lists">{(a.lists || []).join(", ")}</Fact>
           </div>
           <div className="block"><h4>S2P intelligence</h4><p>{a.s2p_strong_signals || "No S2P evidence found."}</p>
             {a.existing_s2p_detail && <p className="note">Detail: {a.existing_s2p_detail}</p>}
@@ -307,6 +319,7 @@ function Brief({ a, data, people, onClose }: { a: Row; data: AllData; people: Ro
             {a.known_implementation_partner && <p><b>Implementation partner:</b> {a.known_implementation_partner}</p>}
             {a.subsidiaries && <p className="note"><b>Subsidiaries:</b> {a.subsidiaries}</p>}
           </div>
+          {a.profile && <Profile profile={a.profile} />}
           <div className="block"><h4>Opportunity observations</h4><p>{a.potential_opportunity || "—"}</p>{a.account_notes && <p className="note">{a.account_notes}</p>}</div>
           <div className="block"><h4>Stakeholders ({cs.length})</h4>
             <div className="tablewrap"><table><thead><tr><th className="num">#</th><th>Name</th><th>Title (verbatim)</th><th>Tier</th><th>Channel</th><th>Email</th><th>Phone</th><th>LinkedIn</th></tr></thead>
@@ -328,5 +341,25 @@ function Brief({ a, data, people, onClose }: { a: Row; data: AllData; people: Ro
         </div>
       </aside>
     </>
+  );
+}
+
+function Profile({ profile }: { profile: Record<string, Record<string, unknown>> }) {
+  const sheets = Object.entries(profile).filter(([, v]) => v && Object.keys(v).length);
+  if (!sheets.length) return null;
+  return (
+    <div className="block input-block">
+      <h4>Your profiling (reference workbook, unchanged)</h4>
+      {sheets.map(([sheet, fields]) => (
+        <div key={sheet} style={{ marginBottom: 10 }}>
+          <p className="note"><b>{sheet}</b></p>
+          <div className="facts">
+            {Object.entries(fields).filter(([k]) => k !== "Company" && k !== "Sl#").map(([k, v]) => (
+              <div key={k} className="fact"><small>{k}</small><div>{/^https?:/.test(String(v)) ? <a href={String(v)} target="_blank" rel="noopener noreferrer">{String(v)}</a> : String(v)}</div></div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }

@@ -167,3 +167,5 @@ th.num,td.num{width:1%;text-align:right;color:var(--faint);padding-right:6px}
 .refresh.has-update{border-color:#E5484D;color:#FFFFFF}
 .refresh .badge{position:absolute;top:-9px;right:-12px;background:#E5484D;color:#fff;font:700 10px var(--body);border-radius:999px;padding:1px 6px;box-shadow:0 0 0 2px var(--band)}
 @media (prefers-reduced-motion:no-preference){.refresh.has-update .badge{animation:pulse 1.6s ease-in-out infinite}@keyframes pulse{50%{transform:scale(1.12)}}}
+.input-block{border-color:color-mix(in srgb, var(--gold) 45%, var(--line))}
+.input-block h4{color:var(--gold)}
