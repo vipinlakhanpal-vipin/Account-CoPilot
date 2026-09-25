@@ -58,3 +58,9 @@ The goal is to move accounts out of Likely / Needs check / Unknown by finding of
 - Seamless.ai (Claude connector): contact enrichment and verification (`scripts/build_verification.py` → `scripts/apply_verification.mjs`). The user approved credit use; check `get_credits` before and after.
 - Reference workbook import: `scripts/import_reference_lists.py` → `scripts/seed_reference.mjs`.
 - Known data issue: in the user's Stakeholders sheet, the Company column is shifted by 1–2 rows in patches (rows 17–648). Verification rows marked "Claude — corrected company (sheet row shift)" hold the right company.
+
+## Open items (as of v1.7, 2026-09-25)
+- **Revenue verification queue:** 145 accounts (see "Current task" above). 2 done so far (Al Batha, Al Ghurair → Likely).
+- **Seamless discovery (not yet imported, awaiting the user's go-ahead):** a free Seamless search for UAE + revenue ≥ $500M + 200+ staff returned 774 companies. Of the first 500, 386 are not in the app (saved in `data/verification/seamless_discovery.json`). Before importing, clean out ministries/government bodies (or tag them separately), single hotels, local branches of foreign groups and duplicates. Import as list "Seamless discovery", status ICP — Likely.
+- **Sources not available:** LinkedIn / Sales Navigator (no login access; public search snippets only), Copilot (no integration; its data arrives only via the user's workbook), ZoomInfo / D&B / Refinitiv (paid, not connected; the user may send exports).
+- **Settings page:** tiers, team invites (temporary password or email invite), Costs & usage guide. Profile menu in the header.
