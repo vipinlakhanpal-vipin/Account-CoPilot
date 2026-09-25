@@ -1,3 +1,4 @@
+import { requirePageUser } from "@/lib/auth";
 import Header from "@/components/Header";
 import CoPilotApp from "@/components/CoPilotApp";
 import { supabaseServer } from "@/lib/supabase/server";
@@ -8,6 +9,7 @@ export const dynamic = "force-dynamic";
 const LABELS: Record<string, string> = { accounts: "Accounts", stakeholders: "Stakeholders", signals: "S2P Signals", erp: "ERP & Apps", conflicts: "Conflicts", sources: "Sources" };
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+  await requirePageUser();
   const { tab = "dashboard" } = await searchParams;
   const sb = await supabaseServer();
   const data = await loadAll(sb);

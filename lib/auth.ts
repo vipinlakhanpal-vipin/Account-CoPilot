@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 
 export function emailAllowed(email?: string | null) {
@@ -15,4 +16,13 @@ export async function requireUser() {
   const user = data.user;
   if (!user || !emailAllowed(user.email)) return null;
   return user;
+}
+
+/** For pages: sends visitors who are not signed in (or not on an allowed domain) to the login page. */
+export async function requirePageUser() {
+  const sb = await supabaseServer();
+  const { data } = await sb.auth.getUser();
+  if (!data.user) redirect("/login");
+  if (!emailAllowed(data.user.email)) redirect("/login?denied=1");
+  return data.user;
 }

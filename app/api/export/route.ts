@@ -1,3 +1,4 @@
+import { requireUser } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase/server";
 import { loadAll } from "@/lib/data";
@@ -6,6 +7,7 @@ import { buildWorkbook } from "@/lib/export/workbook";
 export const maxDuration = 60;
 
 export async function GET() {
+  if (!(await requireUser())) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
   const sb = await supabaseServer();
   const data = await loadAll(sb);
   const buf = await buildWorkbook(data);
