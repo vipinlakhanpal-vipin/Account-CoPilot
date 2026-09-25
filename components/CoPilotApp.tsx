@@ -18,6 +18,13 @@ const SIG = ["VERY STRONG SIGNAL", "STRONG SIGNAL", "MODERATE SIGNAL", "WEAK SIG
 const PALETTE = ["#3AA0FF", "#2ECC8F", "#9B6BFF", "#F5A623", "#6C7BFF", "#FF4D6A", "#2EC4A6", "#E052C8", "#5AD1FF", "#B6E36B"];
 const SIGVAR: Record<string, string> = { VERY: "--sig-vs", STRONG: "--sig-s", MODERATE: "--sig-m", WEAK: "--sig-w", NO: "--sig-n", CONFLICTING: "--sig-c" };
 const sigRank = (s?: string) => { const i = SIG.indexOf(s || ""); return i < 0 ? 9 : i; };
+/** Revenue is stored in USD millions: 6040 → "$6.04B", 600 → "$600M". */
+export const usd = (m: unknown) => {
+  const n = Number(m);
+  if (m === null || m === undefined || m === "" || !isFinite(n) || n <= 0) return "";
+  if (n >= 1000) return `$${(n / 1000).toFixed(2).replace(/\.?0+$/, "")}B`;
+  return `$${n >= 100 ? Math.round(n) : n.toFixed(1).replace(/\.0$/, "")}M`;
+};
 const str = (v: unknown) => (v === null || v === undefined ? "" : String(v));
 
 // Role family is a department, never a data source. Unrecognised values fall into OTHER.
@@ -160,7 +167,7 @@ export default function CoPilotApp({ data }: { data: AllData }) {
         { label: "Signal", get: (a) => a.s2p_signal_level }, { label: "S2P", get: (a) => a.existing_s2p_product }, { label: "Industry", get: (a) => a.industry },
         { label: "Exchange", get: (a) => a.exchange }, { label: "Country", get: (a) => a.country }]}
       cols={[{ h: "Company", cell: (a) => <><b>{a.company_name}</b><div className="muted mono">{a.exchange} {a.ticker}</div></> },
-        { h: "Industry", cell: (a) => a.industry }, { h: "Revenue USD m", cell: (a) => <span className="mono">{a.revenue_usd_m ? Math.round(Number(a.revenue_usd_m)).toLocaleString() : ""}</span> },
+        { h: "Industry", cell: (a) => a.industry }, { h: "Revenue", cell: (a) => <span className="mono">{usd(a.revenue_usd_m)}</span> },
         { h: "ICP status", cell: (a) => <IcpTag s={a.icp_status} /> }, { h: "Lists", cell: (a) => <span className="muted">{(a.lists || []).join(", ")}</span> },
         { h: "Signal", cell: (a) => <Pill s={a.s2p_signal_level} /> }, { h: "Existing S2P", cell: (a) => a.existing_s2p_product },
         { h: "S2P status", cell: (a) => a.s2p_platform_status }, { h: "ERP", cell: (a) => a.erp }, { h: "Contacts", cell: (a) => <span className="mono">{(byCo[a.id] || []).length}</span> }]}
@@ -311,7 +318,7 @@ function Brief({ a, data, people, onClose }: { a: Row; data: AllData; people: Ro
           {refresh && <p className="note">{refresh}</p>}
           <div className="facts">
             <Fact l="Website"><Ext href={a.company_website}>{a.domain || a.company_website}</Ext></Fact>
-            <Fact l="Revenue">{a.revenue_usd_m ? <>USD {Math.round(Number(a.revenue_usd_m)).toLocaleString()}m <span className="muted">({a.revenue_local} {a.revenue_fy})</span></> : ""}</Fact>
+            <Fact l="Revenue">{a.revenue_usd_m ? <>{usd(a.revenue_usd_m)} <span className="muted">{[a.revenue_local, a.revenue_fy].filter(Boolean).join(" · ")}</span></> : ""}</Fact>
             <Fact l="Employees">{a.employee_range}</Fact>
             <Fact l="ICP fit">{a.icp_fit}{a.icp_fit_reason && <div className="note">{a.icp_fit_reason}</div>}</Fact>
             <Fact l="Ownership">{a.ownership}</Fact>

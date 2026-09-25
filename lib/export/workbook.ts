@@ -17,7 +17,9 @@ const TABS = ["FF0B1320", "FF0F1D33", "FF14284A", "FF15325A", "FF1A3D6B", "FF1F4
 const SIG_ORDER = Object.keys(SIGNALS);
 const rank = (s: string) => { const i = SIG_ORDER.indexOf(s); return i < 0 ? 9 : i; };
 
-type Col = [header: string, key: string, width: number, kind?: "url" | "wrap" | "num"];
+type Col = [header: string, key: string, width: number, kind?: "url" | "wrap" | "num" | "usd"];
+// Values are USD millions; displays $6.04B / $600M while staying numeric for sorting.
+const USD_FMT = '[>=1000]"$"#,##0.00,"B";"$"#,##0"M"';
 const FIRST = 4, MAX = 3000;
 
 function banner(ws: ExcelJS.Worksheet, title: string, subtitle: string, n: number) {
@@ -59,10 +61,11 @@ function table(wb: ExcelJS.Workbook, name: string, title: string, subtitle: stri
         cell.value = { text: v, hyperlink: v };
         cell.font = { name: FONT, size: 9, color: { argb: "FF1F5FBF" }, underline: true };
       } else {
-        cell.value = kind === "num" && v !== "" ? Number(v) : String(v);
+        cell.value = (kind === "num" || kind === "usd") && v !== "" && isFinite(Number(v)) ? Number(v) : String(v);
         cell.font = { name: FONT, size: 9 };
       }
       if (kind === "num") cell.numFmt = "#,##0";
+      if (kind === "usd") cell.numFmt = USD_FMT;
       cell.alignment = { vertical: "top", wrapText: kind === "wrap" };
       cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: isInput ? INPUT_FILL : ri % 2 ? BAND : "FFFFFFFF" } };
       const side = isInput ? { style: "medium" as const, color: { argb: INPUT_BORDER } } : { style: "thin" as const, color: { argb: "FFC9D3E0" } };
@@ -87,7 +90,7 @@ export async function buildWorkbook(d: AllData): Promise<Buffer> {
 
   const accCols: Col[] = [
     ["Company", "company_name", 30], ["Website", "company_website", 24, "url"], ["Country", "country", 9], ["Exchange", "exchange", 10], ["Ticker", "ticker", 10],
-    ["Industry", "industry", 20], ["ICP Status", "icp_status", 22], ["Lists", "lists_text", 26], ["ICP Fit", "icp_fit", 10], ["ICP Fit Reason", "icp_fit_reason", 34, "wrap"], ["Revenue (USD m)", "revenue_usd_m", 13, "num"],
+    ["Industry", "industry", 20], ["ICP Status", "icp_status", 22], ["Lists", "lists_text", 26], ["ICP Fit", "icp_fit", 10], ["ICP Fit Reason", "icp_fit_reason", 34, "wrap"], ["Revenue (USD)", "revenue_usd_m", 13, "usd"],
     ["Revenue (Local)", "revenue_local", 16], ["Revenue FY", "revenue_fy", 10], ["Revenue Source", "revenue_source_url", 24, "url"], ["Employee Range", "employee_range", 14],
     ["Ownership", "ownership", 30, "wrap"], ["Parent Company", "parent_company", 22], ["Subsidiaries", "subsidiaries", 34, "wrap"], ["Board Phone", "board_phone", 16],
     ["Procurement Model", "procurement_model", 30, "wrap"], ["ERP", "erp", 22], ["ERP Status", "erp_status", 11], ["ERP Evidence", "erp_evidence", 40, "wrap"],
