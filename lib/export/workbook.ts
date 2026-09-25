@@ -33,8 +33,10 @@ function banner(ws: ExcelJS.Worksheet, title: string, subtitle: string, n: numbe
   ws.getRow(1).height = 30; ws.getRow(2).height = 18;
 }
 
-function table(wb: ExcelJS.Workbook, name: string, title: string, subtitle: string, cols: Col[], rows: Row[], tab: number, inputs: string[] = []) {
-  const ws = wb.addWorksheet(name, { properties: { tabColor: { argb: TABS[tab % TABS.length] } }, views: [{ state: "frozen", xSplit: 2, ySplit: 3, zoomScale: 90 }] });
+function table(wb: ExcelJS.Workbook, name: string, title: string, subtitle: string, colsIn: Col[], rowsIn: Row[], tab: number, inputs: string[] = []) {
+  const cols: Col[] = [["#", "__n", 6, "num"], ...colsIn];
+  const rows = rowsIn.map((r, i) => ({ ...r, __n: i + 1 }));
+  const ws = wb.addWorksheet(name, { properties: { tabColor: { argb: TABS[tab % TABS.length] } }, views: [{ state: "frozen", xSplit: 3, ySplit: 3, zoomScale: 90 }] });
   banner(ws, title, subtitle, cols.length);
   cols.forEach(([h, key, w], i) => {
     const cell = ws.getCell(3, i + 1);
@@ -156,7 +158,7 @@ export async function buildWorkbook(d: AllData): Promise<Buffer> {
   const pv = wb.addWorksheet("Pivot Analysis", { properties: { tabColor: { argb: TABS[10] } } });
   banner(pv, "PIVOT ANALYSIS — Live summary tables", "Counts are formulas over the Accounts / Contacts tabs", 10);
   const letter = (n: number) => { let s = ""; for (n += 1; n > 0; n = Math.floor((n - 1) / 26)) s = String.fromCharCode(65 + ((n - 1) % 26)) + s; return s; };
-  const colOf = (cols: Col[], key: string) => letter(cols.findIndex((c) => c[1] === key));
+  const colOf = (cols: Col[], key: string) => letter(cols.findIndex((c) => c[1] === key) + 1); // +1 for the leading # column
   const rng = (sheet: string, cols: Col[], key: string) => `'${sheet}'!$${colOf(cols, key)}$${FIRST}:$${colOf(cols, key)}$${MAX}`;
   const uniq = (rows: Row[], key: string) => [...new Set(rows.map((r) => r[key] || "Unknown"))].sort();
   let r0 = 4;
@@ -186,7 +188,7 @@ export async function buildWorkbook(d: AllData): Promise<Buffer> {
     ["Strong / very strong", `COUNTIF(${A("s2p_signal_level")},"STRONG SIGNAL")+COUNTIF(${A("s2p_signal_level")},"VERY STRONG SIGNAL")`],
     ["Coupa accounts", `COUNTIF(${A("existing_s2p_product")},"*Coupa*")`], ["SAP Ariba accounts", `COUNTIF(${A("existing_s2p_product")},"*Ariba*")`],
     ["Contacts", `COUNTA(${C("full_name")})`], ["Verified contacts", `COUNTIF(${C("verification_status")},"VERIFIED")`],
-    ["Emails verified active", `COUNTIF(${C("email_status")},"Verified Active")`], ["Conflicts retained", `COUNTA('Conflicts'!$C$${FIRST}:$C$${MAX})`],
+    ["Emails verified active", `COUNTIF(${C("email_status")},"Verified Active")`], ["Conflicts retained", `COUNTA('Conflicts'!$D$${FIRST}:$D$${MAX})`],
   ];
   kpis.forEach(([label, f], i) => {
     const row = 4 + Math.floor(i / 3) * 4, col = 1 + (i % 3) * 4;

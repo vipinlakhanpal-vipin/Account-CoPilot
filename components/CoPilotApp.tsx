@@ -86,16 +86,20 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow }: {
             {options[i].map((o) => <option key={o}>{o}</option>)}
           </select>
         ))}
-        <span className="note">{out.length} of {rows.length}</span>
+        <span className="note">
+          {out.length} of {rows.length} rows
+          {rows.some((r) => r.company_id) && <> · {new Set(out.map((r) => r.company_id)).size} {new Set(out.map((r) => r.company_id)).size === 1 ? "company" : "companies"}</>}
+        </span>
       </div>
       <div className="tablewrap">
         <table>
-          <thead><tr>{cols.map((c) => <th key={c.h}>{c.h}</th>)}</tr></thead>
+          <thead><tr><th className="num">#</th>{cols.map((c) => <th key={c.h}>{c.h}</th>)}</tr></thead>
           <tbody>
             {out.slice(0, 800).map((r, i) => (
               <tr key={r.id || i} className={onRow ? "click" : undefined} tabIndex={onRow ? 0 : undefined}
                 onClick={(e) => { if (onRow && !(e.target as HTMLElement).closest("a")) onRow(r); }}
                 onKeyDown={(e) => { if (onRow && e.key === "Enter") onRow(r); }}>
+                <td className="num mono">{i + 1}</td>
                 {cols.map((c) => <td key={c.h} className={c.wrap ? "wrap" : undefined}>{c.cell(r)}</td>)}
               </tr>
             ))}
@@ -204,10 +208,10 @@ export default function CoPilotApp({ data, tab }: { data: AllData; tab: string }
           <h2>Priority accounts</h2>
           <p className="note">Accounts with strong or very strong S2P signals. Select a row to open the account brief.</p>
           <div className="tablewrap"><table>
-            <thead><tr><th>Company</th><th>Signal</th><th>Existing S2P</th><th>Status</th><th>ERP</th><th>Why</th></tr></thead>
-            <tbody>{top.map((a) => (
+            <thead><tr><th className="num">#</th><th>Company</th><th>Signal</th><th>Existing S2P</th><th>Status</th><th>ERP</th><th>Why</th></tr></thead>
+            <tbody>{top.map((a, i) => (
               <tr key={a.id} className="click" tabIndex={0} onClick={() => setOpen(a.id)} onKeyDown={(e) => e.key === "Enter" && setOpen(a.id)}>
-                <td><b>{a.company_name}</b></td><td><Pill s={a.s2p_signal_level} /></td><td>{a.existing_s2p_product}</td><td>{a.s2p_platform_status}</td>
+                <td className="num mono">{i + 1}</td><td><b>{a.company_name}</b></td><td><Pill s={a.s2p_signal_level} /></td><td>{a.existing_s2p_product}</td><td>{a.s2p_platform_status}</td>
                 <td>{a.erp}</td><td className="wrap">{str(a.s2p_strong_signals).slice(0, 260)}</td>
               </tr>))}
             </tbody></table></div>
@@ -305,9 +309,9 @@ function Brief({ a, data, people, onClose }: { a: Row; data: AllData; people: Ro
           </div>
           <div className="block"><h4>Opportunity observations</h4><p>{a.potential_opportunity || "—"}</p>{a.account_notes && <p className="note">{a.account_notes}</p>}</div>
           <div className="block"><h4>Stakeholders ({cs.length})</h4>
-            <div className="tablewrap"><table><thead><tr><th>Name</th><th>Title (verbatim)</th><th>Tier</th><th>Channel</th><th>Email</th><th>Phone</th><th>LinkedIn</th></tr></thead>
-              <tbody>{cs.map((p) => (
-                <tr key={p.id}><td><b>{p.full_name}</b><div className="muted">{p.role_family} · {p.verification_status}</div></td><td>{p.title_verbatim}</td>
+            <div className="tablewrap"><table><thead><tr><th className="num">#</th><th>Name</th><th>Title (verbatim)</th><th>Tier</th><th>Channel</th><th>Email</th><th>Phone</th><th>LinkedIn</th></tr></thead>
+              <tbody>{cs.map((p, i) => (
+                <tr key={p.id}><td className="num mono">{i + 1}</td><td><b>{p.full_name}</b><div className="muted">{p.role_family} · {p.verification_status}</div></td><td>{p.title_verbatim}</td>
                   <td>{p.contact_tier}</td><td>{p.channel_state}</td><td className="mono">{p.email}<div className="muted">{p.email_status}</div></td>
                   <td className="mono">{p.phone}</td><td><Ext href={p.linkedin_url}>profile</Ext></td></tr>))}
               </tbody></table></div>

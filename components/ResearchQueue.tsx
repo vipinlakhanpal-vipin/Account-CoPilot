@@ -67,15 +67,16 @@ export default function ResearchQueue() {
       <div className="panel" style={{ marginTop: 16 }}>
         <h2>Research runs</h2>
         <div className="tablewrap"><table>
-          <thead><tr><th>Started</th><th>Company</th><th>Depth</th><th>Status</th><th>Result</th><th>By</th></tr></thead>
-          <tbody>{runs.map((r) => (
+          <thead><tr><th className="num">#</th><th>Started</th><th>Company</th><th>Depth</th><th>Status</th><th>Result</th><th>By</th></tr></thead>
+          <tbody>{runs.map((r, i) => (
             <tr key={r.id}>
+              <td className="num mono">{i + 1}</td>
               <td className="mono">{new Date(r.started_at).toLocaleString()}</td><td><b>{r.query}</b></td><td>{r.depth}</td>
               <td><span className={`status ${r.status}`}>{r.status}</span></td>
               <td className="wrap">{r.status === "error" ? r.error : r.stats ? `${r.stats.company} · ${r.stats.newContacts} new contacts · ${r.stats.updatedContacts} updated · ${r.stats.signals} signals · ${r.stats.conflicts} conflicts` : ""}</td>
               <td className="muted">{r.requested_by}</td>
             </tr>))}
-            {!runs.length && <tr><td colSpan={6} className="muted">No research runs yet.</td></tr>}
+            {!runs.length && <tr><td colSpan={7} className="muted">No research runs yet.</td></tr>}
           </tbody></table></div>
       </div>
     </section>

@@ -154,3 +154,5 @@ textarea{min-height:64px;resize:vertical}
 .status.done{background:var(--sig-vs-bg);color:var(--sig-vs)} .status.error{background:var(--sig-c-bg);color:var(--sig-c)}
 .status.researching,.status.extracting,.status.reconciling{background:var(--sig-m-bg);color:var(--sig-m)}
 .row-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+
+th.num,td.num{width:1%;text-align:right;color:var(--faint);padding-right:6px}
