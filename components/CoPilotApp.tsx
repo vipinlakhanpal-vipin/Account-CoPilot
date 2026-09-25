@@ -1,8 +1,10 @@
 "use client";
+import CostNote from "@/components/CostNote";
 import { useMemo, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Hero from "@/components/Hero";
 import type { AllData, Row } from "@/lib/data";
+import { ALL, COUNTRIES, DEFAULT_COUNTRY, countryCode } from "@/lib/countries";
 
 const HERO: Record<string, [string, string]> = {
   dashboard: ["Dashboard", "A live snapshot of UAE target accounts, S2P signals, ERP landscape and decision makers."],
@@ -26,6 +28,12 @@ export const usd = (m: unknown) => {
   return `$${n >= 100 ? Math.round(n) : n.toFixed(1).replace(/\.0$/, "")}M`;
 };
 const str = (v: unknown) => (v === null || v === undefined ? "" : String(v));
+// Record dates: when the account was added, last updated, and when its ICP status last changed.
+const day = (v: unknown) => str(v).slice(0, 10);
+const statusSince = (a: Row) => day(a.profile?.["Status changed"]?.at || a.last_verified || a.created_at);
+const Dates = ({ a }: { a: Row }) => (
+  <span className="mono rec-dates" title={`Added ${day(a.created_at) || "—"} · Updated ${day(a.updated_at) || "—"} · Status since ${statusSince(a) || "—"}`}>
+    {day(a.updated_at) || "—"}<div className="muted">added {day(a.created_at) || "—"}</div></span>);
 
 // Role family is a department, never a data source. Unrecognised values fall into OTHER.
 const famKey = (f: unknown) => {
@@ -151,8 +159,19 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "
   );
 }
 
-export default function CoPilotApp({ data }: { data: AllData }) {
-  const tab = useSearchParams().get("tab") || "dashboard";
+export default function CoPilotApp({ data: all }: { data: AllData }) {
+  const params = useSearchParams();
+  const tab = params.get("tab") || "dashboard";
+  const country = params.get("country") || DEFAULT_COUNTRY;
+  // Everything below (dashboard, tabs, drill-downs) sees only the selected country's accounts and their linked rows.
+  const data = useMemo<AllData>(() => {
+    if (country === ALL) return all;
+    const accounts = all.accounts.filter((a) => countryCode(a.country) === country);
+    const ids = new Set(accounts.map((a) => a.id));
+    const mine = (r: Row) => ids.has(r.company_id);
+    return { ...all, accounts, contacts: all.contacts.filter(mine), signals: all.signals.filter(mine), sources: all.sources.filter(mine),
+      conflicts: all.conflicts.filter(mine), apps: all.apps.filter(mine), history: all.history.filter(mine) };
+  }, [all, country]);
   const { accounts: A, contacts: P } = data;
   const [open, setOpen] = useState<string | null>(null);
   const [contact, setContact] = useState<string | null>(null);
@@ -183,7 +202,8 @@ export default function CoPilotApp({ data }: { data: AllData }) {
         { label: "Exchange", get: (a) => a.exchange }, { label: "Country", get: (a) => a.country }]}
       cols={[{ h: "Company", cell: (a) => <><b>{a.company_name}</b><div className="muted mono">{a.exchange} {a.ticker}</div></> },
         { h: "Industry", cell: (a) => a.industry }, { h: "Revenue", cell: (a) => { const r = bestRevenue(a); return r.v ? <><span className="mono">{usd(r.v)}</span>{r.src && <div className="rev-src">{r.src}</div>}</> : <span className="muted">—</span>; } },
-        { h: "ICP status", cell: (a) => <IcpTag s={a.icp_status} why={a.icp_fit_reason} /> }, { h: "Lists", cell: (a) => <span className="muted">{(a.lists || []).join(", ")}</span> },
+        { h: "ICP status", cell: (a) => <><IcpTag s={a.icp_status} why={a.icp_fit_reason} /><div className="muted mono rec-since">since {statusSince(a) || "—"}</div></> },
+        { h: "Updated", cell: (a) => <Dates a={a} /> }, { h: "Lists", cell: (a) => <span className="muted">{(a.lists || []).join(", ")}</span> },
         { h: "Signal", cell: (a) => <Pill s={a.s2p_signal_level} /> }, { h: "Existing S2P", cell: (a) => a.existing_s2p_product },
         { h: "S2P status", cell: (a) => a.s2p_platform_status }, { h: "ERP", cell: (a) => a.erp }, { h: "Contacts", cell: (a) => <span className="mono">{(byCo[a.id] || []).length}</span> }]}
       onRow={openRow} />;
@@ -280,7 +300,10 @@ export default function CoPilotApp({ data }: { data: AllData }) {
   return (
     <>
       <Hero title={(HERO[tab] || HERO.dashboard)[0]} text={(HERO[tab] || HERO.dashboard)[1]} />
-      <section className="view">{view}</section>
+      <section className="view">{A.length === 0
+        ? <div className="panel"><h2>No {COUNTRIES.find((c) => c.code === country)?.name || country} accounts yet</h2>
+            <p>This market is next on the roadmap. Add companies from the Research Queue (choose the country there), or pick another country above.</p></div>
+        : view}</section>
       {drill && <DrillDown d={drill} byCo={byCo} onClose={() => setDrill(null)} onAccount={setOpen} onContact={setContact} />}
       {open && <Brief a={A.find((x) => x.id === open)!} data={data} people={byCo[open] || []} onClose={() => setOpen(null)} onContact={setContact} />}
       {contact && (() => { const p = P.find((x) => x.id === contact); return p ? <ContactCard p={p} data={data} onClose={() => setContact(null)} onAccount={(id) => { setContact(null); setOpen(id); }} /> : null; })()}
@@ -334,7 +357,7 @@ function Brief({ a, data, people, onClose, onContact }: { a: Row; data: AllData;
             <h3>{a.company_name}</h3>
             <div style={{ marginTop: 6 }}><Pill s={a.s2p_signal_level} /> <span className="tag">{a.existing_s2p_product || "Unknown"}</span> <span className="tag">{a.s2p_platform_status || "Unknown"}</span></div>
           </div>
-          <button className="btn ghost" type="button" onClick={refreshResearch}>Refresh research</button>
+          <span className="cost-wrap"><button className="btn ghost" type="button" onClick={refreshResearch}>Refresh research</button><CostNote cost="≈ $1.20–1.50" /></span>
           <button className="btn ghost" type="button" onClick={onClose}>Close</button>
         </div>
         <div className="brief-body">
@@ -349,6 +372,7 @@ function Brief({ a, data, people, onClose, onContact }: { a: Row; data: AllData;
             <Fact l="Parent">{a.parent_company}</Fact>
             <Fact l="Board phone">{a.board_phone && <span className="mono">{a.board_phone}</span>}</Fact>
             <Fact l="Last researched">{str(a.last_researched).slice(0, 10)}</Fact>
+            <Fact l="Record dates"><span className="mono">Added {day(a.created_at) || "—"} · Updated {day(a.updated_at) || "—"} · Status since {statusSince(a) || "—"}</span></Fact>
             <Fact l="ICP status"><IcpTag s={a.icp_status} why={a.icp_fit_reason} />{a.icp_fit_reason && <div className="note">{a.icp_fit_reason}</div>}</Fact>
             <Fact l="Lists">{(a.lists || []).join(", ")}</Fact>
           </div>
@@ -382,7 +406,7 @@ function Brief({ a, data, people, onClose, onContact }: { a: Row; data: AllData;
           </div>
           <div className="pitch"><h4 style={{ margin: "0 0 6px", font: "600 12px var(--body)", letterSpacing: ".1em", textTransform: "uppercase" }}>Pitch planner</h4>
             <p className="note">Claude drafts a pitch plan from the evidence on this page: what to lead with, who to approach first, and what to validate on the first call.</p>
-            <button className="btn primary" type="button" disabled={busy} onClick={draftPitch}>{busy ? "Drafting…" : "Draft pitch plan"}</button>
+            <button className="btn primary" type="button" disabled={busy} onClick={draftPitch}>{busy ? "Drafting…" : "Draft pitch plan"}</button> <CostNote cost="≈ $0.05–0.10" />
             {pitch && <div className="pitch-out">{pitch}</div>}
           </div>
           {conf.length > 0 && <div className="block"><h4>Conflicts retained ({conf.length})</h4>
@@ -425,7 +449,7 @@ function DrillDown({ d, byCo, onClose, onAccount, onContact }: { d: { title: str
       search={(a) => [a.company_name, a.industry, a.erp, a.existing_s2p_product].join(" ")}
       filters={[{ label: "ICP status", get: (a) => a.icp_status }, { label: "Signal", get: (a) => a.s2p_signal_level }, { label: "Industry", get: (a) => a.industry }]}
       cols={[{ h: "Company", cell: (a) => <b>{a.company_name}</b> }, { h: "Revenue", cell: (a) => <span className="mono">{usd(bestRevenue(a).v)}</span> },
-        { h: "ICP status", cell: (a) => <IcpTag s={a.icp_status} why={a.icp_fit_reason} /> }, { h: "Signal", cell: (a) => <Pill s={a.s2p_signal_level} /> },
+        { h: "ICP status", cell: (a) => <IcpTag s={a.icp_status} why={a.icp_fit_reason} /> }, { h: "Updated", cell: (a) => <Dates a={a} /> }, { h: "Signal", cell: (a) => <Pill s={a.s2p_signal_level} /> },
         { h: "S2P", cell: (a) => a.existing_s2p_product }, { h: "ERP", cell: (a) => a.erp }, { h: "Contacts", cell: (a) => <span className="mono">{(byCo[a.id] || []).length}</span> }]}
       onRow={(a) => onAccount(a.id)} />;
   } else if (d.kind === "contacts") {

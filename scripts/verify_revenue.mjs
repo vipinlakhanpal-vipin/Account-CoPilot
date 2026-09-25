@@ -103,12 +103,15 @@ if (!APPLY) {
     const r = JSON.parse(fs.readFileSync(file, "utf8"));
     const status = r.icp_verdict === "Verified ICP" ? "ICP — Verified" : r.icp_verdict === "Likely ICP" ? "ICP — Likely"
       : r.icp_verdict === "Below $250M" ? "Not ICP" : c.icp_status;
+    const now = new Date().toISOString();
+    const profile = { ...(c.profile || {}), "Revenue check": { at: r.checked_at, verdict: r.icp_verdict, status: r.revenue_status, reasoning: r.reasoning },
+      ...(status !== c.icp_status ? { "Status changed": { at: now, from: c.icp_status || null, to: status } } : {}) };
     const { error: e } = await db.from("companies").update({
       icp_status: status, listing_status: r.listing_status, exchange: r.exchange || null, ticker: r.ticker || null,
       verified_revenue_usd_m: r.net_revenue_usd_m, verified_revenue_fy: r.fiscal_year || null, verified_revenue_type: r.revenue_type,
       verified_revenue_source: r.source_name || null, verified_revenue_url: r.source_url || null, verified_revenue_status: r.revenue_status,
       icp_fit: r.icp_verdict === "Verified ICP" ? "Yes" : r.icp_verdict === "Below $250M" ? "No" : "Borderline",
-      icp_fit_reason: r.reasoning, last_verified: r.checked_at,
+      icp_fit_reason: r.reasoning, last_verified: r.checked_at, updated_at: now, profile,
     }).eq("id", c.id);
     if (e) throw e;
     if (r.source_url) await db.from("sources").insert({ company_id: c.id, source: r.source_name, source_type: r.source_kind, url: r.source_url,

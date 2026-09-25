@@ -19,7 +19,7 @@ let updated = 0, created = 0;
 for (const c of ref.companies) {
   const { matched_claude, ...rec } = c;
   if (matched_claude) {
-    const { error } = await db.from("companies").update({ lists: rec.lists, icp_status: rec.icp_status, profile: rec.profile, ref_sl_no: rec.ref_sl_no ?? null }).eq("slug", rec.slug);
+    const { error } = await db.from("companies").update({ lists: rec.lists, icp_status: rec.icp_status, profile: rec.profile, ref_sl_no: rec.ref_sl_no ?? null, updated_at: new Date().toISOString() }).eq("slug", rec.slug);
     if (error) throw error; updated++;
   } else {
     const { error } = await db.from("companies").upsert({ ...rec, research_channel: "Reference", existing_s2p_product: "Unknown",

@@ -44,7 +44,7 @@ for (const c of cos) {
     status = v >= 250 ? "ICP — Verified" : "Not ICP";
     reason = `Revenue check: ${fmt(v)} (${c.verified_revenue_fy || "latest"}, ${c.verified_revenue_type || "revenue"}) — ${c.verified_revenue_source || "source"}.`;
     display = v; displaySrc = "Verified";
-  } else if (c.verified_revenue_status === "LIKELY" && c.verified_revenue_usd_m) {
+  } else if (["LIKELY", "UNVERIFIED"].includes(c.verified_revenue_status) && c.verified_revenue_usd_m) {
     const v = Number(c.verified_revenue_usd_m);
     status = v >= 250 ? "ICP — Likely" : "ICP — Needs check";
     reason = `Revenue check (estimate): ${fmt(v)} (${c.verified_revenue_fy || "latest"}) — ${c.verified_revenue_source || "estimate"}. No official figure published.`;
@@ -70,9 +70,18 @@ for (const c of cos) {
   } else {
     status = "Unknown"; reason = "No revenue figure in your data, Seamless or research yet.";
   }
+  // Keep the revenue-check explanation (written by verify_revenue.mjs --apply) so findings are not lost on recompute.
+  const check = c.profile?.["Revenue check"]?.reasoning;
+  if (check && !reason.includes(check)) reason += ` Revenue check notes: ${check}`;
   tally[status] = (tally[status] || 0) + 1;
   const patch = { icp_status: status, icp_fit: status === "ICP — Verified" ? "Yes" : status === "Not ICP" ? "No" : "Borderline", icp_fit_reason: reason,
     profile: { ...(c.profile || {}), "Display revenue": display ? { value_usd_m: display, source: displaySrc } : null } };
+  // Record dates: stamp updated_at and "Status changed" only when the ICP status actually changes.
+  if (status !== c.icp_status) {
+    const now = new Date().toISOString();
+    patch.updated_at = now;
+    patch.profile["Status changed"] = { at: now, from: c.icp_status || null, to: status };
+  }
   const { error: e } = await db.from("companies").update(patch).eq("id", c.id);
   if (e) throw e;
   changed++;

@@ -1,7 +1,8 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.9";
+export const APP_VERSION = "1.10";
 
 export const RELEASES: { version: string; date: string; notes: string }[] = [
+  { version: "1.10", date: "2026-09-25", notes: "Country tiles under the nav filter the dashboard and every tab; record dates (added, updated, status since) in Accounts, briefs and Excel; cost-impact notes on actions that use the Anthropic API; all nav tabs fit on screen; revenue checks keep their notes on recompute." },
   { version: "1.9", date: "2026-09-25", notes: "Filters stay on one row; row count moved below the filters." },
   { version: "1.8", date: "2026-09-25", notes: "Clickable dashboard tiles open a drill-down of the records behind each number; contact cards from Stakeholders and account briefs." },
   { version: "1.7", date: "2026-09-25", notes: "Profile menu (name, email, joined from, log out), invite colleagues, Costs & usage guide in Settings, header keeps Download on the first row." },

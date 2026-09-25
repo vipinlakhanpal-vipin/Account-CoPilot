@@ -1,4 +1,5 @@
 "use client";
+import CostNote from "@/components/CostNote";
 import { useEffect, useState } from "react";
 
 type Run = { id: string; query: string; depth: string; status: string; error?: string; stats?: Record<string, unknown>; started_at: string; finished_at?: string; requested_by?: string };
@@ -60,7 +61,7 @@ export default function ResearchQueue() {
               <label key={r}><input type="checkbox" checked={roles.includes(r)} onChange={(e) => setRoles(e.target.checked ? [...roles, r] : roles.filter((x) => x !== r))} /> {r}</label>))}
             </div>
           </div>
-          <div><button className="btn primary">Start research</button></div>
+          <div className="cost-wrap"><button className="btn primary">Start research</button><CostNote cost="Quick ≈ $0.55 · Standard ≈ $1.20–1.50 · Deep ≈ $2.50–3.50" /></div>
           {msg && <p className="note">{msg}</p>}
         </form>
       </div>

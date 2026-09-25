@@ -16,7 +16,7 @@ const bySlug = Object.fromEntries(cos.map((c) => [c.slug, c]));
 await pool(u.companies, 15, async (c) => {
   const row = bySlug[c.slug]; if (!row) return;
   const profile = { ...(row.profile || {}), "Claude verification (Seamless, 2026-09-25)": c.claude_verification };
-  const { error } = await db.from("companies").update({ icp_status: c.icp_status, icp_fit_reason: c.icp_fit_reason, profile, last_verified: new Date().toISOString() }).eq("id", row.id);
+  const { error } = await db.from("companies").update({ icp_status: c.icp_status, icp_fit_reason: c.icp_fit_reason, profile, last_verified: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", row.id);
   if (error) throw error;
   if (c.technologies?.length) {
     const { count } = await db.from("technology_evidence").select("*", { count: "exact", head: true }).eq("company_id", row.id);

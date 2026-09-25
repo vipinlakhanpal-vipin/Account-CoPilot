@@ -25,7 +25,10 @@ export default function Header({ active, subtitle }: { active: string; subtitle:
   const go = (e: React.MouseEvent, href: string) => {
     if (path === "/" && href.startsWith("/?") || (path === "/" && href === "/")) {
       e.preventDefault();
-      window.history.pushState(null, "", href);
+      // Keep the selected country when switching tabs.
+      const country = params.get("country");
+      const url = country ? `${href}${href.includes("?") ? "&" : "?"}country=${encodeURIComponent(country)}` : href;
+      window.history.pushState(null, "", url);
       window.scrollTo({ top: 0 });
     }
   };
@@ -49,7 +52,6 @@ export default function Header({ active, subtitle }: { active: string; subtitle:
                     title={latest ? `Version v${latest} is available. Click to load it.` : "Reload the latest data"}>
                     <Spin />v{APP_VERSION}{latest && <span className="dot" aria-label={`New version v${latest} available`} />}
                   </button>
-                  <span className="chip">UAE</span>
                 </span>
               </div>
               <span className="brand-sub">{subtitle}</span>
