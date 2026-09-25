@@ -3,7 +3,7 @@ import { supabaseServer } from "@/lib/supabase/server";
 export function emailAllowed(email?: string | null) {
   if (!email) return false;
   const allowed = (process.env.ALLOWED_EMAIL_DOMAINS || "")
-    .split(/[,;\s]+/).map((d) => d.trim().toLowerCase().replace(/^["'@]+|["']+$/g, "").replace(/^.*@/, "")).filter(Boolean);
+    .split(/[,;\s]+/).map((d) => d.trim().toLowerCase().replace(/^["'@]+|["']+$/g, "").replace(/^.*@/, "").replace(/^(https?:\/\/)?(www\.)?/, "").replace(/\/.*$/, "")).filter(Boolean);
   if (!allowed.length) return true;
   return allowed.includes(email.split("@")[1]?.trim().toLowerCase() ?? "");
 }
