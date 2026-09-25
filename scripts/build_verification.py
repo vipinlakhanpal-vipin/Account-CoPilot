@@ -48,28 +48,40 @@ def sim(a, b):
 
 
 def company_verdict(s, ref):
-    """Seamless is used for revenue/headcount bands only. Its Public/Private flag is unreliable for UAE
-    (it lists ADNOC, Nakheel etc. as Private), so listing status is always left 'to confirm'."""
+    """ICP status for a company from your list, combining YOUR size figure with Seamless's revenue band.
+    Seamless's public/private flag is unreliable for UAE companies, so listing stays 'to confirm'."""
+    yours = ref.get("revenue_usd_m")
+    yours = float(yours) if isinstance(yours, (int, float)) else None
+    fmt = lambda m: (f"${m / 1000:.2f}B" if m >= 1000 else f"${m:,.0f}M")  # noqa: E731
     if not s or not s.get("seamless_found"):
+        if yours is not None and yours >= 250:
+            return "Your target — revenue ≥ $250M (your data), listing to confirm", f"Your size {fmt(yours)}; not found in Seamless. Listing not confirmed."
         return "Your target — not found in Seamless", "Not found in Seamless by domain or name; needs web verification."
-    rev_txt = s.get("revenue_range") or ""
+    band = s.get("revenue_range") or ""
     try:
-        rev = float(s.get("annual_revenue") or 0) / 1e6
+        exact = float(s.get("annual_revenue") or 0) / 1e6
     except (TypeError, ValueError):
-        rev = 0
-    emp = s.get("employee_count") or 0
-    reason = (f"Seamless: {s.get('seamless_name')} ({s.get('seamless_domain')}); revenue band {rev_txt or 'unknown'}"
-              + (f", ~USD {rev:,.0f}m" if rev else "") + f"; employees {emp or s.get('employee_range') or 'unknown'}"
-              + (f"; your size USD {ref['revenue_usd_m']}m" if ref.get("revenue_usd_m") else "")
-              + (f"; match note: {s['match_note']}" if s.get("match_note") else "")
-              + ". Listing status not confirmed — Seamless's public/private flag is unreliable for UAE companies.")
-    if rev_txt in ("$1B+", "$500M - $1B") or rev >= 250:
-        return "Your target — revenue ≥ USD 250M (Seamless), listing to confirm", reason
-    if rev_txt == "$100M - $500M":
-        return "Your target — revenue USD 100–500M band, confirm", reason
-    if rev_txt:
-        return "Your target — revenue below USD 250M (Seamless)", reason
-    return "Your target — revenue unknown", reason
+        exact = 0
+    s_high = band in ("$1B+", "$500M - $1B") or exact >= 250
+    s_low = bool(band) and not s_high and band != "$100M - $500M"
+    emp = s.get("employee_count") or s.get("employee_range") or "unknown"
+    reason = (f"Your size: {fmt(yours) if yours else 'not given'} · Seamless: {band or 'no revenue band'}" + (f" (~{fmt(exact)})" if exact else "")
+              + f", employees {emp} · matched '{s.get('seamless_name')}' ({s.get('seamless_domain')})"
+              + ". Listing not confirmed — Seamless's public/private flag is unreliable for UAE companies.")
+    you_high = yours is not None and yours >= 250
+    if you_high and s_high:
+        return "Your target — revenue ≥ $250M, listing to confirm", reason
+    if you_high and s_low:
+        return "Your target — revenue conflict (your data vs Seamless)", reason
+    if you_high:  # Seamless band ambiguous ($100–500M) or missing
+        return "Your target — revenue ≥ $250M (your data), listing to confirm", reason
+    if yours is not None and yours < 250 and s_high:
+        return "Your target — revenue conflict (your data vs Seamless)", reason
+    if s_high:
+        return "Your target — revenue ≥ $250M (Seamless), listing to confirm", reason
+    if (yours is not None and yours < 250) or s_low:
+        return "Your target — below $250M", reason
+    return "Your target — revenue to confirm", reason
 
 
 def main():

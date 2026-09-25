@@ -52,10 +52,10 @@ const erpKey = (e: unknown) => {
 };
 
 const icpRank = (s?: string) => (s === "Verified ICP" ? 0 : String(s || "").startsWith("Claude") ? 1 : 2);
-function IcpTag({ s }: { s?: string }) {
+function IcpTag({ s, why }: { s?: string; why?: string }) {
   if (!s) return null;
-  const cls = s === "Verified ICP" ? "fact" : s.startsWith("Claude") ? "likely" : "unv";
-  return <span className={`tag ${cls}`}>{s}</span>;
+  const cls = s === "Verified ICP" ? "fact" : /conflict/i.test(s) ? "conflict" : /≥ \$250M/.test(s) ? "likely" : "unv";
+  return <span className={`tag ${cls}`} title={why || s}>{s}</span>;
 }
 
 function Pill({ s }: { s?: string }) {
@@ -160,7 +160,7 @@ export default function CoPilotApp({ data }: { data: AllData }) {
 
   let view: React.ReactNode = null;
   if (tab === "accounts") {
-    view = <FilterTable unit="companies" title="Accounts" note="Select any account to open its brief: intel, ERP and apps, S2P evidence, stakeholders and a pitch planner."
+    view = <FilterTable unit="companies" title="Accounts" note="ICP = stock-listed, revenue ≥ $250M, 100+ employees. Verified ICP: confirmed by Claude research. Your target: from your workbook, not yet fully verified; a revenue conflict means your figure and Seamless disagree. Hover a status for the reason; select a row to open the account brief."
       rows={[...A].sort((a, b) => icpRank(a.icp_status) - icpRank(b.icp_status) || sigRank(a.s2p_signal_level) - sigRank(b.s2p_signal_level) || str(a.company_name).localeCompare(b.company_name))}
       search={(a) => [a.company_name, a.industry, a.erp, a.existing_s2p_product, a.s2p_strong_signals].join(" ")}
       filters={[{ label: "ICP status", get: (a) => a.icp_status }, { label: "List", get: (a) => (a.lists || []).join(" + ") },
@@ -168,7 +168,7 @@ export default function CoPilotApp({ data }: { data: AllData }) {
         { label: "Exchange", get: (a) => a.exchange }, { label: "Country", get: (a) => a.country }]}
       cols={[{ h: "Company", cell: (a) => <><b>{a.company_name}</b><div className="muted mono">{a.exchange} {a.ticker}</div></> },
         { h: "Industry", cell: (a) => a.industry }, { h: "Revenue", cell: (a) => <span className="mono">{usd(a.revenue_usd_m)}</span> },
-        { h: "ICP status", cell: (a) => <IcpTag s={a.icp_status} /> }, { h: "Lists", cell: (a) => <span className="muted">{(a.lists || []).join(", ")}</span> },
+        { h: "ICP status", cell: (a) => <IcpTag s={a.icp_status} why={a.icp_fit_reason} /> }, { h: "Lists", cell: (a) => <span className="muted">{(a.lists || []).join(", ")}</span> },
         { h: "Signal", cell: (a) => <Pill s={a.s2p_signal_level} /> }, { h: "Existing S2P", cell: (a) => a.existing_s2p_product },
         { h: "S2P status", cell: (a) => a.s2p_platform_status }, { h: "ERP", cell: (a) => a.erp }, { h: "Contacts", cell: (a) => <span className="mono">{(byCo[a.id] || []).length}</span> }]}
       onRow={openRow} />;
@@ -325,7 +325,7 @@ function Brief({ a, data, people, onClose }: { a: Row; data: AllData; people: Ro
             <Fact l="Parent">{a.parent_company}</Fact>
             <Fact l="Board phone">{a.board_phone && <span className="mono">{a.board_phone}</span>}</Fact>
             <Fact l="Last researched">{str(a.last_researched).slice(0, 10)}</Fact>
-            <Fact l="ICP status"><IcpTag s={a.icp_status} /></Fact>
+            <Fact l="ICP status"><IcpTag s={a.icp_status} why={a.icp_fit_reason} />{a.icp_fit_reason && <div className="note">{a.icp_fit_reason}</div>}</Fact>
             <Fact l="Lists">{(a.lists || []).join(", ")}</Fact>
           </div>
           <div className="block"><h4>S2P intelligence</h4><p>{a.s2p_strong_signals || "No S2P evidence found."}</p>
