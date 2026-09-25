@@ -18,6 +18,7 @@ for (const line of fs.readFileSync(".env.local", "utf8").split("\n")) {
 const args = process.argv.slice(2);
 const LIMIT = args.includes("--limit") ? Number(args[args.indexOf("--limit") + 1]) : Infinity;
 const APPLY = args.includes("--apply");
+const ONLY = args.includes("--only") ? args[args.indexOf("--only") + 1].split(",").map((x) => x.toLowerCase()) : null;
 const CONCURRENCY = 3;
 const OUT = "data/verification/revenue";
 fs.mkdirSync(OUT, { recursive: true });
@@ -56,6 +57,9 @@ async function check(c) {
   const yours = c.profile?.["Vipin-Profiling"]?.["Size (USD m)"] ?? c.revenue_usd_m;
   const messages = [{ role: "user", content: `Company: ${c.company_name}\nWebsite: ${c.company_website || c.domain || "unknown"}\nThe user's own size estimate: ${yours ?? "none"} USD m (verify independently; do not copy it).` }];
   let notes = "";
+  const usage = { input: 0, output: 0, searches: 0 };
+  const add = (u) => { if (!u) return; usage.input += (u.input_tokens || 0) + (u.cache_read_input_tokens || 0) + (u.cache_creation_input_tokens || 0);
+    usage.output += u.output_tokens || 0; usage.searches += u.server_tool_use?.web_search_requests || 0; };
   for (let turn = 0; turn < 4; turn++) {
     const msg = await client.beta.messages.stream({
       model: "claude-opus-5", max_tokens: 16000, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default",
@@ -63,6 +67,7 @@ async function check(c) {
       tools: [{ type: "web_search_20260209", name: "web_search", max_uses: 6 }, { type: "web_fetch_20260209", name: "web_fetch", max_uses: 4 }],
       messages,
     }).finalMessage();
+    add(msg.usage);
     for (const b of msg.content) if (b.type === "text") notes += b.text;
     if (msg.stop_reason === "pause_turn") { messages.push({ role: "assistant", content: msg.content }); continue; }
     break;
@@ -72,18 +77,21 @@ async function check(c) {
     system: "Convert the research notes into the JSON fields. Use only what the notes support; unknown → empty string, null or the 'not found' option.",
     messages: [{ role: "user", content: `Company: ${c.company_name}\nNOTES:\n${notes}` }],
   });
-  const out = { slug: c.slug, company_name: c.company_name, checked_at: new Date().toISOString(), ...(parsed.parsed_output || { icp_verdict: "Revenue not found", reasoning: "Extraction failed" }) };
+  add(parsed.usage);
+  usage.cost_usd = +(usage.input * 5e-6 + usage.output * 25e-6 + usage.searches * 0.01).toFixed(3);
+  const out = { _usage: usage, slug: c.slug, company_name: c.company_name, checked_at: new Date().toISOString(), ...(parsed.parsed_output || { icp_verdict: "Revenue not found", reasoning: "Extraction failed" }) };
   fs.writeFileSync(file, JSON.stringify(out, null, 1));
   return out;
 }
 
 if (!APPLY) {
-  const todo = companies.filter((c) => !fs.existsSync(path.join(OUT, `${c.slug}.json`))).slice(0, LIMIT);
+  const todo = companies.filter((c) => !fs.existsSync(path.join(OUT, `${c.slug}.json`)))
+    .filter((c) => !ONLY || ONLY.some((o) => c.company_name.toLowerCase().includes(o))).slice(0, LIMIT);
   console.log(`${companies.length} target companies · ${todo.length} to check now`);
   let done = 0;
   for (let i = 0; i < todo.length; i += CONCURRENCY) {
     await Promise.all(todo.slice(i, i + CONCURRENCY).map(async (c) => {
-      try { const r = await check(c); done++; console.log(`[${done}/${todo.length}] ${c.company_name}: ${r.icp_verdict} ${r.net_revenue_usd_m ?? ""} (${r.fiscal_year || ""})`); }
+      try { const r = await check(c); done++; console.log(`[${done}/${todo.length}] ${c.company_name}: ${r.icp_verdict} ${r.net_revenue_usd_m ?? ""} (${r.fiscal_year || ""}) · ~$${r._usage?.cost_usd ?? "?"}`); }
       catch (e) { console.log(`[error] ${c.company_name}: ${e.message}`); }
     }));
   }

@@ -187,3 +187,17 @@ h2 .count{font:600 12px var(--body);letter-spacing:.02em;text-transform:none;col
 .icp-u{color:#C9B8FF;background:rgba(155,107,255,.14);border-color:rgba(155,107,255,.4)} .icp-u i{background:#9B6BFF;color:#170B33}
 .icp-n{color:#FF9AA8;background:rgba(255,77,106,.12);border-color:rgba(255,77,106,.4)} .icp-n i{background:#FF4D6A;color:#2E0710}
 .rev-src{font-size:10.5px;color:var(--faint)}
+
+/* coloured filters */
+.filters .flt,.filters .flt-search{--k:#2EC4A6;color:color-mix(in srgb, var(--k) 55%, #FFFFFF);font-weight:500;
+  background:linear-gradient(180deg,color-mix(in srgb, var(--k) 20%, #0F1C35),color-mix(in srgb, var(--k) 10%, #0F1C35));
+  border:1px solid color-mix(in srgb, var(--k) 45%, transparent);border-radius:9px}
+.filters .flt:hover,.filters .flt-search:hover{border-color:var(--k)}
+.filters .flt:focus,.filters .flt-search:focus{outline:2px solid color-mix(in srgb, var(--k) 40%, transparent);border-color:var(--k)}
+.filters .flt.on,.filters .flt-search.on{color:#FFFFFF;border-color:var(--k);
+  background:linear-gradient(180deg,color-mix(in srgb, var(--k) 45%, #0F1C35),color-mix(in srgb, var(--k) 28%, #0F1C35));box-shadow:0 0 14px color-mix(in srgb, var(--k) 35%, transparent)}
+.filters .flt option{background:#14233F;color:#E8EEF8}
+.filters .flt-search::placeholder{color:color-mix(in srgb, var(--k) 45%, #9DB0CC)}
+.filters .f1{--k:#3AA0FF} .filters .f2{--k:#2ECC8F} .filters .f3{--k:#9B6BFF} .filters .f4{--k:#F5A623}
+.filters .f5{--k:#6C7BFF} .filters .f6{--k:#FF4D6A} .filters .f7{--k:#2EC4A6} .filters .f8{--k:#E052C8}
+.filters .btn.clear{padding:6px 12px;font-size:12px;border-radius:9px;background:transparent;border-color:rgba(255,255,255,.2)}

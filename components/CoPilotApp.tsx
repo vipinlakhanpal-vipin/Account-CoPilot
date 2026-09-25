@@ -120,9 +120,10 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "
       <h2 className="with-count">{title} <span className="count">{out.length.toLocaleString()} {unit}{out.length !== rows.length ? ` of ${rows.length.toLocaleString()}` : ""}</span></h2>
       {note && <p className="note">{note}</p>}
       <div className="filters">
-        <input type="search" placeholder={`Search ${title.toLowerCase()}…`} aria-label="Search" value={q} onChange={(e) => setQ(e.target.value)} />
+        <input type="search" className={`flt-search${q ? " on" : ""}`} placeholder={`Search ${title.toLowerCase()}…`} aria-label="Search" value={q} onChange={(e) => setQ(e.target.value)} />
+        {(q || fv.some(Boolean)) && <button type="button" className="btn clear" onClick={() => { setQ(""); setFv(filters.map(() => "")); }}>Clear filters</button>}
         {filters.map((f, i) => (
-          <select key={f.label} aria-label={f.label} value={fv[i]} onChange={(e) => setFv(fv.map((x, j) => (j === i ? e.target.value : x)))}>
+          <select key={f.label} aria-label={f.label} value={fv[i]} className={`flt f${(i % 8) + 1}${fv[i] ? " on" : ""}`} onChange={(e) => setFv(fv.map((x, j) => (j === i ? e.target.value : x)))}>
             <option value="">{f.label}: all</option>
             {options[i].map((o) => <option key={o}>{o}</option>)}
           </select>
