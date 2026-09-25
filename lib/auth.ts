@@ -3,9 +3,9 @@ import { supabaseServer } from "@/lib/supabase/server";
 export function emailAllowed(email?: string | null) {
   if (!email) return false;
   const allowed = (process.env.ALLOWED_EMAIL_DOMAINS || "")
-    .split(",").map((d) => d.trim().toLowerCase()).filter(Boolean);
+    .split(/[,;\s]+/).map((d) => d.trim().toLowerCase().replace(/^["'@]+|["']+$/g, "").replace(/^.*@/, "")).filter(Boolean);
   if (!allowed.length) return true;
-  return allowed.includes(email.split("@")[1]?.toLowerCase() ?? "");
+  return allowed.includes(email.split("@")[1]?.trim().toLowerCase() ?? "");
 }
 
 /** Returns the signed-in, allowed user or null. Use in API routes. */
