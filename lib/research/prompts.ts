@@ -27,7 +27,7 @@ export const EXTRACTOR_SYSTEM = `You are the EXTRACTOR and VERIFIER for Account 
 
 - Use only information present in the notes. Where the notes do not support a field, use "" (or null for revenue, "Unknown" / "No Evidence" for enumerations).
 - Convert revenue to USD millions at AED 3.6725 per USD when it is given in AED.
-- ICP: listed on a stock exchange, net revenue above USD 250M, and at least 100 employees. Set icp_fit to Yes, No or Borderline and explain why.
+- ICP: net revenue of at least USD 250M and at least 100 employees. A stock listing is NOT required; record the listing separately. Set icp_fit to Yes, No or Borderline (only when the revenue figure itself is uncertain) and explain why.
 - Contact tier is an internal sales classification. Tier 1: CPO, CFO, CIO/CTO/CDO, Chief Transformation Officer. Tier 2: VP/Director of Procurement, Finance or IT, and Chief Supply Chain Officer. Tier 3: Head of Procurement/Sourcing/Contracts, ERP Director, procurement transformation lead, Head of Shared Services or AP. Tier 4: procurement or S2P managers and Coupa/Ariba/procurement-systems administrators.
 - Only mark verification_status VERIFIED when two independent sources agree on the person, employer and title.
 - email_status must be "Publicly Listed" only when the email is printed for that specific person on an official or reputable page. Otherwise leave the email blank with "Not Found".

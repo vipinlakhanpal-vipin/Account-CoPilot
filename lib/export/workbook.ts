@@ -90,7 +90,7 @@ export async function buildWorkbook(d: AllData): Promise<Buffer> {
 
   const accCols: Col[] = [
     ["Company", "company_name", 30], ["Website", "company_website", 24, "url"], ["Country", "country", 9], ["Exchange", "exchange", 10], ["Ticker", "ticker", 10],
-    ["Industry", "industry", 20], ["ICP Status", "icp_status", 22], ["Lists", "lists_text", 26], ["ICP Fit", "icp_fit", 10], ["ICP Fit Reason", "icp_fit_reason", 34, "wrap"], ["Revenue (USD)", "revenue_usd_m", 13, "usd"],
+    ["Industry", "industry", 20], ["ICP Status", "icp_status", 18], ["ICP Reason", "icp_fit_reason", 44, "wrap"], ["Listing", "listing_status", 14], ["Lists", "lists_text", 26], ["ICP Fit", "icp_fit", 10], ["ICP Fit Reason", "icp_fit_reason", 34, "wrap"], ["Revenue (USD)", "revenue_usd_m", 13, "usd"],
     ["Revenue (Local)", "revenue_local", 16], ["Revenue FY", "revenue_fy", 10], ["Revenue Source", "revenue_source_url", 24, "url"], ["Employee Range", "employee_range", 14],
     ["Ownership", "ownership", 30, "wrap"], ["Parent Company", "parent_company", 22], ["Subsidiaries", "subsidiaries", 34, "wrap"], ["Board Phone", "board_phone", 16],
     ["Procurement Model", "procurement_model", 30, "wrap"], ["ERP", "erp", 22], ["ERP Status", "erp_status", 11], ["ERP Evidence", "erp_evidence", 40, "wrap"],
@@ -103,7 +103,8 @@ export async function buildWorkbook(d: AllData): Promise<Buffer> {
     ["First Found", "first_found", 11], ["Last Researched", "last_researched", 20], ["Confidence", "research_confidence", 11],
     ["Account Owner", "account_owner", 16], ["Account Priority", "account_priority", 12], ["Pitch Angle / Next Step", "pitch_next_step", 36, "wrap"],
   ];
-  const icpRank = (x: string) => (x === "Verified ICP" ? 0 : String(x || "").startsWith("Claude") ? 1 : 2);
+  const ICP_ORDER = ["ICP — Verified", "ICP — Likely", "ICP — Needs check", "Unknown", "Not ICP"];
+  const icpRank = (x: string) => { const i = ICP_ORDER.indexOf(String(x)); return i < 0 ? 9 : i; };
   const accounts: Row[] = d.accounts.map((a): Row => ({ ...a, lists_text: (a.lists || []).join(", ") }))
     .sort((a, b) => icpRank(a.icp_status) - icpRank(b.icp_status) || rank(a.s2p_signal_level) - rank(b.s2p_signal_level) || String(a.company_name).localeCompare(b.company_name));
   table(wb, "Accounts", "ACCOUNTS — UAE ICP & Target Lists", `Exported ${today} · gold columns are for your input`, accCols, accounts, 1, ["account_owner", "account_priority", "pitch_next_step"]);

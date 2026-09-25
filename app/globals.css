@@ -178,3 +178,12 @@ textarea{min-height:64px;resize:vertical}
 h2.with-count{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 h2 .count{font:600 12px var(--body);letter-spacing:.02em;text-transform:none;color:#06231D;background:var(--teal);border-radius:999px;padding:2px 10px}
 .tag.conflict{color:var(--sig-c);background:var(--sig-c-bg);border-color:transparent}
+
+.icp{display:inline-flex;align-items:center;gap:6px;font:600 11.5px var(--body);padding:3px 10px 3px 4px;border-radius:999px;white-space:nowrap;border:1px solid transparent}
+.icp i{font-style:normal;display:inline-grid;place-items:center;width:17px;height:17px;border-radius:50%;font-size:10px;font-weight:700}
+.icp-v{color:#6BF0C6;background:rgba(46,204,143,.14);border-color:rgba(46,204,143,.4)} .icp-v i{background:#2ECC8F;color:#062418}
+.icp-l{color:#8FD0FF;background:rgba(58,160,255,.14);border-color:rgba(58,160,255,.4)} .icp-l i{background:#3AA0FF;color:#06182E}
+.icp-c{color:#FFC860;background:rgba(245,166,35,.14);border-color:rgba(245,166,35,.45)} .icp-c i{background:#F5A623;color:#2A1A02}
+.icp-u{color:#C9B8FF;background:rgba(155,107,255,.14);border-color:rgba(155,107,255,.4)} .icp-u i{background:#9B6BFF;color:#170B33}
+.icp-n{color:#FF9AA8;background:rgba(255,77,106,.12);border-color:rgba(255,77,106,.4)} .icp-n i{background:#FF4D6A;color:#2E0710}
+.rev-src{font-size:10.5px;color:var(--faint)}

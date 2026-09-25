@@ -51,12 +51,21 @@ const erpKey = (e: unknown) => {
   return v.split(/[;(,]/)[0].trim();
 };
 
-const icpRank = (s?: string) => (s === "Verified ICP" ? 0 : String(s || "").startsWith("Claude") ? 1 : 2);
+const ICP_ORDER = ["ICP — Verified", "ICP — Likely", "ICP — Needs check", "Unknown", "Not ICP"];
+const icpRank = (s?: string) => { const i = ICP_ORDER.indexOf(String(s)); return i < 0 ? 9 : i; };
+const ICP_CLS: Record<string, string> = { "ICP — Verified": "icp-v", "ICP — Likely": "icp-l", "ICP — Needs check": "icp-c", "Not ICP": "icp-n", Unknown: "icp-u" };
+const ICP_ICON: Record<string, string> = { "ICP — Verified": "✓", "ICP — Likely": "●", "ICP — Needs check": "!", "Not ICP": "✕", Unknown: "?" };
 function IcpTag({ s, why }: { s?: string; why?: string }) {
   if (!s) return null;
-  const cls = s === "Verified ICP" ? "fact" : /conflict/i.test(s) ? "conflict" : /≥ \$250M/.test(s) ? "likely" : "unv";
-  return <span className={`tag ${cls}`} title={why || s}>{s}</span>;
+  return <span className={`icp ${ICP_CLS[s] || "icp-u"}`} title={why || s}><i aria-hidden="true">{ICP_ICON[s] || "?"}</i>{s}</span>;
 }
+/** Best available revenue: verified > Claude research > your data > Seamless estimate. */
+const bestRevenue = (a: Row): { v: number | null; src: string } => {
+  const d = a.profile?.["Display revenue"];
+  if (d?.value_usd_m) return { v: Number(d.value_usd_m), src: d.source };
+  if (a.revenue_usd_m) return { v: Number(a.revenue_usd_m), src: "" };
+  return { v: null, src: "" };
+};
 
 function Pill({ s }: { s?: string }) {
   if (!s) return null;
@@ -160,14 +169,14 @@ export default function CoPilotApp({ data }: { data: AllData }) {
 
   let view: React.ReactNode = null;
   if (tab === "accounts") {
-    view = <FilterTable unit="companies" title="Accounts" note="ICP = stock-listed, revenue ≥ $250M, 100+ employees. Verified ICP: confirmed by Claude research. Your target: from your workbook, not yet fully verified; a revenue conflict means your figure and Seamless disagree. Hover a status for the reason; select a row to open the account brief."
-      rows={[...A].sort((a, b) => icpRank(a.icp_status) - icpRank(b.icp_status) || sigRank(a.s2p_signal_level) - sigRank(b.s2p_signal_level) || str(a.company_name).localeCompare(b.company_name))}
+    view = <FilterTable unit="companies" title="Accounts" note="ICP = net revenue ≥ $250M and 100+ employees (stock listing not required). ✓ Verified: confirmed from an official source · ● Likely: your data / Seamless say ≥ $250M, not yet confirmed · ! Needs check: sources disagree about $250M · ? Unknown: no revenue figure yet · ✕ Not ICP: below $250M. Hover a status for the reason; select a row to open the account brief."
+      rows={[...A].sort((a, b) => icpRank(a.icp_status) - icpRank(b.icp_status) || sigRank(a.s2p_signal_level) - sigRank(b.s2p_signal_level) || (bestRevenue(b).v || 0) - (bestRevenue(a).v || 0))}
       search={(a) => [a.company_name, a.industry, a.erp, a.existing_s2p_product, a.s2p_strong_signals].join(" ")}
       filters={[{ label: "ICP status", get: (a) => a.icp_status }, { label: "List", get: (a) => (a.lists || []).join(" + ") },
         { label: "Signal", get: (a) => a.s2p_signal_level }, { label: "S2P", get: (a) => a.existing_s2p_product }, { label: "Industry", get: (a) => a.industry },
         { label: "Exchange", get: (a) => a.exchange }, { label: "Country", get: (a) => a.country }]}
       cols={[{ h: "Company", cell: (a) => <><b>{a.company_name}</b><div className="muted mono">{a.exchange} {a.ticker}</div></> },
-        { h: "Industry", cell: (a) => a.industry }, { h: "Revenue", cell: (a) => <span className="mono">{usd(a.revenue_usd_m)}</span> },
+        { h: "Industry", cell: (a) => a.industry }, { h: "Revenue", cell: (a) => { const r = bestRevenue(a); return r.v ? <><span className="mono">{usd(r.v)}</span>{r.src && <div className="rev-src">{r.src}</div>}</> : <span className="muted">—</span>; } },
         { h: "ICP status", cell: (a) => <IcpTag s={a.icp_status} why={a.icp_fit_reason} /> }, { h: "Lists", cell: (a) => <span className="muted">{(a.lists || []).join(", ")}</span> },
         { h: "Signal", cell: (a) => <Pill s={a.s2p_signal_level} /> }, { h: "Existing S2P", cell: (a) => a.existing_s2p_product },
         { h: "S2P status", cell: (a) => a.s2p_platform_status }, { h: "ERP", cell: (a) => a.erp }, { h: "Contacts", cell: (a) => <span className="mono">{(byCo[a.id] || []).length}</span> }]}
@@ -220,8 +229,9 @@ export default function CoPilotApp({ data }: { data: AllData }) {
   } else {
     const top = A.filter((a) => sigRank(a.s2p_signal_level) <= 1).sort((a, b) => sigRank(a.s2p_signal_level) - sigRank(b.s2p_signal_level));
     const kpis: [string, number, boolean?][] = [
-      ["Accounts (all lists)", A.length], ["Verified ICP", A.filter((a) => a.icp_status === "Verified ICP" || (!a.icp_status && a.icp_fit === "Yes")).length, true],
-      ["Your targets to verify", A.filter((a) => String(a.icp_status || "").startsWith("Your target")).length],
+      ["Accounts (all lists)", A.length], ["ICP — Verified", A.filter((a) => a.icp_status === "ICP — Verified").length, true],
+      ["ICP — Likely", A.filter((a) => a.icp_status === "ICP — Likely").length],
+      ["ICP — Needs check", A.filter((a) => a.icp_status === "ICP — Needs check" || a.icp_status === "Unknown").length],
       ["Strong / very strong", top.length, true], ["Coupa accounts", A.filter((a) => /coupa/i.test(str(a.existing_s2p_product))).length, true],
       ["SAP Ariba accounts", A.filter((a) => /ariba/i.test(str(a.existing_s2p_product))).length, true], ["Contacts", P.length],
       ["Verified contacts", P.filter((p) => p.verification_status === "VERIFIED").length], ["Contacts with email", P.filter((p) => p.email).length],
@@ -238,7 +248,7 @@ export default function CoPilotApp({ data }: { data: AllData }) {
           <div className="panel"><h2>ERP landscape</h2><Bars entries={countBy(A, (a) => erpKey(a.erp)).slice(0, 10)} /></div>
           <div className="panel"><h2>Contacts by role family</h2><Bars entries={countBy(P, (p) => famKey(p.role_family))} /></div>
           <div className="panel"><h2>Research channel</h2><Bars entries={countBy(P, (p) => p.research_channel)} /></div>
-          <div className="panel"><h2>Accounts by ICP status</h2><Bars entries={countBy(A, (a) => a.icp_status || "Unknown")} /></div>
+          <div className="panel"><h2>Accounts by ICP status</h2><Bars entries={countBy(A, (a) => a.icp_status || "Unknown")} order={(k) => icpRank(k)} /></div>
         </div>
         <div className="panel" style={{ marginTop: 16 }}>
           <h2>Priority accounts</h2>
@@ -318,7 +328,8 @@ function Brief({ a, data, people, onClose }: { a: Row; data: AllData; people: Ro
           {refresh && <p className="note">{refresh}</p>}
           <div className="facts">
             <Fact l="Website"><Ext href={a.company_website}>{a.domain || a.company_website}</Ext></Fact>
-            <Fact l="Revenue">{a.revenue_usd_m ? <>{usd(a.revenue_usd_m)} <span className="muted">{[a.revenue_local, a.revenue_fy].filter(Boolean).join(" · ")}</span></> : ""}</Fact>
+            <Fact l="Revenue">{bestRevenue(a).v ? <>{usd(bestRevenue(a).v)} <span className="muted">{[bestRevenue(a).src, a.revenue_local, a.revenue_fy].filter(Boolean).join(" · ")}</span></> : ""}</Fact>
+            <Fact l="Listing">{a.listing_status || (a.exchange ? `Listed (${a.exchange})` : "")}</Fact>
             <Fact l="Employees">{a.employee_range}</Fact>
             <Fact l="ICP fit">{a.icp_fit}{a.icp_fit_reason && <div className="note">{a.icp_fit_reason}</div>}</Fact>
             <Fact l="Ownership">{a.ownership}</Fact>
