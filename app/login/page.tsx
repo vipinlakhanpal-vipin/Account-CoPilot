@@ -25,7 +25,13 @@ export default function Login() {
     if (mode === "password") {
       const { error } = await sb.auth.signInWithPassword({ email, password });
       if (error) { setState("error"); setMsg(error.message === "Invalid login credentials" ? "Email or password is incorrect." : error.message); return; }
-      window.location.href = "/";
+      const who = await fetch("/api/whoami", { cache: "no-store" }).then((r) => r.json()).catch(() => null);
+      if (who?.signedIn && who?.domainAllowed) { window.location.href = "/"; return; }
+      setState("error");
+      if (!who) setMsg("Signed in, but the app server could not be reached. Refresh and try again.");
+      else if (!who.signedIn) setMsg(`Password accepted, but the app server did not receive your session (${who.authCookieSeen ? "cookie present; " + (who.authError || "session rejected") : "no session cookie"}). Check that NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY in Vercel match this Supabase project.`);
+      else setMsg(`Signed in as ${who.email}, but the app only allows: ${who.allowedDomains.join(", ") || "(none set)"}. Update ALLOWED_EMAIL_DOMAINS in Vercel and redeploy.`);
+      await sb.auth.signOut();
       return;
     }
     const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: `${window.location.origin}/auth/callback`, shouldCreateUser: false } });

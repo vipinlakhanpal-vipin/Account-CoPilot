@@ -4,7 +4,7 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 type CookieList = { name: string; value: string; options?: CookieOptions }[];
 import { emailAllowed } from "@/lib/auth";
 
-const PUBLIC = ["/login", "/auth/callback"];
+const PUBLIC = ["/login", "/auth/callback", "/api/whoami"];
 
 export async function middleware(req: NextRequest) {
   let res = NextResponse.next({ request: req });
