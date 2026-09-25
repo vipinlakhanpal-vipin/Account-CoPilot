@@ -63,6 +63,8 @@ def main(path):
         rec = dict(zip(header, row))
         if not rec.get("Full name") or not rec.get("Company") or str(rec.get("Company")).startswith("Company ("):
             continue
+        if isinstance(rec["Full name"], (int, float)) or str(rec["Full name"]).strip().isdigit():
+            continue  # annotation row, not a contact
         co = str(rec["Company"]).strip()
         lc = co.lower()
         slug = None

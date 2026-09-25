@@ -107,7 +107,7 @@ def main(path):
     hdr_i = next(i for i, r in enumerate(st_rows) if r and "Full name" in [str(x) for x in r])
     hdr = [str(x or "").strip() for x in st_rows[hdr_i]]
     by_key = {key(c["company_name"]): s for s, c in companies.items()}
-    contacts = []
+    contacts, notes = [], []
     for i, r in enumerate(st_rows[hdr_i + 1:], hdr_i + 2):
         rec = dict(zip(hdr, r))
         if not rec.get("Full name") or not rec.get("Company") or str(rec["Company"]).startswith("Company ("):
@@ -137,6 +137,12 @@ def main(path):
                 by_key[key(co)] = slug
         elif slug in companies and "Stakeholders" not in companies[slug]["lists"]:
             companies[slug]["lists"].append("Stakeholders")
+        fn = rec.get("Full name")
+        if isinstance(fn, (int, float)) or str(fn).strip().isdigit():
+            # Annotation row (name column holds a row number; the note sits in Role family) — keep as a note, not a contact
+            notes.append({"row": i, "about_row": int(float(fn)), "company_slug": slug, "company_ref_name": co,
+                          "person": clean(rec.get("Title (verbatim)")), "note": clean(rec.get("Role family"))})
+            continue
         tier = rec.get("Contact tier")
         state = clean(rec.get("Channel-state")) or ""
         contacts.append({
@@ -164,11 +170,12 @@ def main(path):
     cid = {os.path.basename(f)[:-5]: f"C{i:03d}" for i, f in enumerate(files, 1)}
     for c in contacts:
         c["external_id"] = f"{cid[c['company_slug']]}-R{c['row']}" if c["company_slug"] in cid else f"REF-R{c['row']}"
-    out = {"companies": list(companies.values()), "contacts": contacts}
+    out = {"companies": list(companies.values()), "contacts": contacts, "notes": notes}
     os.makedirs(os.path.join(ROOT, "data", "seed"), exist_ok=True)
     json.dump(out, open(os.path.join(ROOT, "data", "seed", "reference.json"), "w"), ensure_ascii=False, default=str)
     new = [c for c in companies.values() if not c["matched_claude"]]
     print(f"companies total: {len(companies)} · matched to Claude research: {len(companies) - len(new)} · new from your lists: {len(new)}")
+    print(f"reference notes (annotation rows): {len(notes)}")
     print(f"stakeholder contacts: {len(contacts)} · on Claude accounts: {sum(1 for c in contacts if not c['company_slug'].startswith('ref-'))}")
 
 

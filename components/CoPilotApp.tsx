@@ -1,19 +1,36 @@
 "use client";
 import { useMemo, useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import Hero from "@/components/Hero";
 import type { AllData, Row } from "@/lib/data";
 
+const HERO: Record<string, [string, string]> = {
+  dashboard: ["Dashboard", "A live snapshot of UAE target accounts, S2P signals, ERP landscape and decision makers."],
+  accounts: ["Accounts", "Every account with ICP status, S2P platform and signal strength. Select one to open its brief."],
+  stakeholders: ["Stakeholders", "Company and contact details for campaign planning. Emails are never pattern-guessed."],
+  signals: ["S2P Signals", "Evidence-based Source-to-Pay, Coupa and SAP Ariba signals, strongest first."],
+  erp: ["ERP & Apps", "ERP landscape and third-party applications, with how each was verified."],
+  conflicts: ["Conflicts", "Where sources disagree. Both values are kept for you to resolve."],
+  sources: ["Sources", "The audit trail behind every fact: source, type, date and confidence."],
+};
+
 const SIG = ["VERY STRONG SIGNAL", "STRONG SIGNAL", "MODERATE SIGNAL", "WEAK SIGNAL", "NO SIGNAL", "CONFLICTING SIGNAL"];
+const PALETTE = ["#3AA0FF", "#2ECC8F", "#9B6BFF", "#F5A623", "#6C7BFF", "#FF4D6A", "#2EC4A6", "#E052C8", "#5AD1FF", "#B6E36B"];
 const SIGVAR: Record<string, string> = { VERY: "--sig-vs", STRONG: "--sig-s", MODERATE: "--sig-m", WEAK: "--sig-w", NO: "--sig-n", CONFLICTING: "--sig-c" };
 const sigRank = (s?: string) => { const i = SIG.indexOf(s || ""); return i < 0 ? 9 : i; };
 const str = (v: unknown) => (v === null || v === undefined ? "" : String(v));
 
+// Role family is a department, never a data source. Unrecognised values fall into OTHER.
 const famKey = (f: unknown) => {
-  const v = str(f || "OTHER").toUpperCase();
-  if (v.includes("PROCURE") || v.includes("SUPPLY")) return v.includes("SUPPLY") && !v.includes("PROCURE") ? "SUPPLY CHAIN" : "PROCUREMENT";
-  if (v.includes("FIN")) return "FINANCE";
-  if (v.includes("TRANSFORM")) return "TRANSFORMATION";
-  if (v === "IT" || v.includes("TECH") || v.includes("DIGITAL")) return "IT";
-  return v;
+  const v = str(f).toUpperCase();
+  if (!v || v.length > 40) return "OTHER";
+  if (/PROCURE|SOURCING|PURCHAS|CONTRACT/.test(v)) return "PROCUREMENT";
+  if (/SUPPLY|LOGISTIC/.test(v)) return "SUPPLY CHAIN";
+  if (/FINANC|CFO|ACCOUNT|TREASUR/.test(v)) return "FINANCE";
+  if (/TRANSFORM/.test(v)) return "TRANSFORMATION";
+  if (/^IT\b|IT\/|ERP|TECH|DIGITAL|DATA|INFORMATION/.test(v)) return "IT";
+  if (/EXEC|CEO|CHAIR|BOARD|MANAGING DIRECTOR/.test(v)) return "EXECUTIVE";
+  return "OTHER";
 };
 const erpKey = (e: unknown) => {
   const v = str(e || "Unknown");
@@ -57,10 +74,11 @@ function Bars({ entries, order, signal }: { entries: [string, number][]; order?:
   const max = Math.max(1, ...list.map((e) => e[1]));
   return (
     <div className="bars">
-      {list.map(([k, n]) => {
+      {list.map(([k, n], idx) => {
         const sv = signal ? SIGVAR[k.split(" ")[0]] : undefined;
+        const colour = sv ? `var(${sv})` : PALETTE[idx % PALETTE.length];
         return (
-          <div key={k} className={sv ? "bar sigbar" : n === max ? "bar top" : "bar"} style={sv ? ({ "--c": `var(${sv})` } as React.CSSProperties) : undefined}>
+          <div key={k} className="bar sigbar" style={{ "--c": colour } as React.CSSProperties}>
             <span className="lab" title={k}>{k}</span>
             <span className="trk"><span className="fill" style={{ width: `${((n / max) * 100).toFixed(1)}%` }} /></span>
             <span className="n">{n}</span>
@@ -74,8 +92,8 @@ function Bars({ entries, order, signal }: { entries: [string, number][]; order?:
 type ColDef = { h: string; cell: (r: Row) => React.ReactNode; wrap?: boolean };
 type FilterDef = { label: string; get: (r: Row) => string };
 
-function FilterTable({ title, note, rows, cols, filters, search, onRow }: {
-  title: string; note?: string; rows: Row[]; cols: ColDef[]; filters: FilterDef[]; search: (r: Row) => string; onRow?: (r: Row) => void;
+function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "rows" }: {
+  title: string; note?: string; rows: Row[]; cols: ColDef[]; filters: FilterDef[]; search: (r: Row) => string; onRow?: (r: Row) => void; unit?: string;
 }) {
   const [q, setQ] = useState("");
   const [fv, setFv] = useState<string[]>(filters.map(() => ""));
@@ -83,7 +101,7 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow }: {
   const out = rows.filter((r) => (!q || search(r).toLowerCase().includes(q.toLowerCase())) && filters.every((f, i) => !fv[i] || f.get(r) === fv[i]));
   return (
     <>
-      <h2>{title}</h2>
+      <h2 className="with-count">{title} <span className="count">{out.length.toLocaleString()} {unit}{out.length !== rows.length ? ` of ${rows.length.toLocaleString()}` : ""}</span></h2>
       {note && <p className="note">{note}</p>}
       <div className="filters">
         <input type="search" placeholder={`Search ${title.toLowerCase()}…`} aria-label="Search" value={q} onChange={(e) => setQ(e.target.value)} />
@@ -117,7 +135,8 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow }: {
   );
 }
 
-export default function CoPilotApp({ data, tab }: { data: AllData; tab: string }) {
+export default function CoPilotApp({ data }: { data: AllData }) {
+  const tab = useSearchParams().get("tab") || "dashboard";
   const { accounts: A, contacts: P } = data;
   const [open, setOpen] = useState<string | null>(null);
   const byCo = useMemo(() => {
@@ -134,7 +153,7 @@ export default function CoPilotApp({ data, tab }: { data: AllData; tab: string }
 
   let view: React.ReactNode = null;
   if (tab === "accounts") {
-    view = <FilterTable title="Accounts" note="Select any account to open its brief: intel, ERP and apps, S2P evidence, stakeholders and a pitch planner."
+    view = <FilterTable unit="companies" title="Accounts" note="Select any account to open its brief: intel, ERP and apps, S2P evidence, stakeholders and a pitch planner."
       rows={[...A].sort((a, b) => icpRank(a.icp_status) - icpRank(b.icp_status) || sigRank(a.s2p_signal_level) - sigRank(b.s2p_signal_level) || str(a.company_name).localeCompare(b.company_name))}
       search={(a) => [a.company_name, a.industry, a.erp, a.existing_s2p_product, a.s2p_strong_signals].join(" ")}
       filters={[{ label: "ICP status", get: (a) => a.icp_status }, { label: "List", get: (a) => (a.lists || []).join(" + ") },
@@ -147,7 +166,7 @@ export default function CoPilotApp({ data, tab }: { data: AllData; tab: string }
         { h: "S2P status", cell: (a) => a.s2p_platform_status }, { h: "ERP", cell: (a) => a.erp }, { h: "Contacts", cell: (a) => <span className="mono">{(byCo[a.id] || []).length}</span> }]}
       onRow={openRow} />;
   } else if (tab === "stakeholders") {
-    view = <FilterTable title="Stakeholders" note="Company and contact details only. Emails are never pattern-guessed; a blank email means it could not be verified."
+    view = <FilterTable unit="contacts" title="Stakeholders" note="Company and contact details only. Emails are never pattern-guessed; a blank email means it could not be verified."
       rows={[...P].sort((a, b) => sigRank(a.account_s2p_signal) - sigRank(b.account_s2p_signal) || str(a.company).localeCompare(b.company) || str(a.contact_tier).localeCompare(str(b.contact_tier)))}
       search={(p) => [p.company, p.full_name, p.title_verbatim, p.email, p.notes_contact].join(" ")}
       filters={[{ label: "Tier", get: (p) => p.contact_tier }, { label: "Role family", get: (p) => famKey(p.role_family) }, { label: "Signal", get: (p) => p.account_s2p_signal },
@@ -161,7 +180,7 @@ export default function CoPilotApp({ data, tab }: { data: AllData; tab: string }
         { h: "Notes / intel", cell: (p) => p.notes_contact, wrap: true }]}
       onRow={openRow} />;
   } else if (tab === "signals") {
-    view = <FilterTable title="S2P signals" note="Every signal carries its evidence and source."
+    view = <FilterTable unit="signals" title="S2P signals" note="Every signal carries its evidence and source."
       rows={[...data.signals].sort((a, b) => sigRank(a.level) - sigRank(b.level))}
       search={(s) => [s.company, s.signal, s.evidence, s.platform].join(" ")}
       filters={[{ label: "Level", get: (s) => s.level }, { label: "Category", get: (s) => s.category }, { label: "Platform", get: (s) => s.platform }]}
@@ -177,14 +196,14 @@ export default function CoPilotApp({ data, tab }: { data: AllData; tab: string }
         { h: "Status", cell: (r) => <StatusTag s={r.status} /> }, { h: "Evidence", cell: (r) => r.evidence, wrap: true }, { h: "Source", cell: (r) => <Ext href={r.source_url}>source</Ext> }]}
       onRow={openRow} />;
   } else if (tab === "conflicts") {
-    view = <FilterTable title="Conflicts" note="Both values are kept. Nothing is overwritten." rows={data.conflicts}
+    view = <FilterTable unit="conflicts" title="Conflicts" note="Both values are kept. Nothing is overwritten." rows={data.conflicts}
       search={(c) => [c.company, c.entity, c.field, c.value_a, c.value_b].join(" ")} filters={[{ label: "Field", get: (c) => c.field }]}
       cols={[{ h: "Company", cell: (c) => c.company }, { h: "Entity", cell: (c) => c.entity }, { h: "Field", cell: (c) => c.field },
         { h: "Value A", cell: (c) => c.value_a, wrap: true }, { h: "Source A", cell: (c) => c.source_a }, { h: "Value B", cell: (c) => c.value_b, wrap: true },
         { h: "Source B", cell: (c) => c.source_b }, { h: "Determination", cell: (c) => c.determination, wrap: true }]}
       onRow={openRow} />;
   } else if (tab === "sources") {
-    view = <FilterTable title="Source evidence" note="The audit trail behind every fact." rows={data.sources}
+    view = <FilterTable unit="sources" title="Source evidence" note="The audit trail behind every fact." rows={data.sources}
       search={(s) => [s.company, s.source, s.information_found, s.url].join(" ")}
       filters={[{ label: "Tier", get: (s) => s.source_tier }, { label: "Type", get: (s) => s.source_type }, { label: "Confidence", get: (s) => s.confidence }]}
       cols={[{ h: "Company", cell: (s) => s.company }, { h: "Source", cell: (s) => s.source }, { h: "Type", cell: (s) => s.source_type }, { h: "Tier", cell: (s) => s.source_tier },
@@ -205,7 +224,7 @@ export default function CoPilotApp({ data, tab }: { data: AllData; tab: string }
     ];
     view = (
       <>
-        <div className="kpis">{kpis.map(([l, v, hl]) => <div key={l} className={`kpi${hl ? " hl" : ""}`}><small>{l}</small><b>{v}</b></div>)}</div>
+        <div className="kpis">{kpis.map(([l, v], i) => <div key={l} className={`kpi c${(i % 8) + 1}`}><small>{l}</small><b>{v.toLocaleString()}</b></div>)}</div>
         <div className="grid2">
           <div className="panel"><h2>Accounts by S2P signal</h2><Bars entries={countBy(A, (a) => a.s2p_signal_level)} order={sigRank} signal /></div>
           <div className="panel"><h2>Existing S2P platform</h2><Bars entries={countBy(A, (a) => a.existing_s2p_product)} /></div>
@@ -232,6 +251,7 @@ export default function CoPilotApp({ data, tab }: { data: AllData; tab: string }
 
   return (
     <>
+      <Hero title={(HERO[tab] || HERO.dashboard)[0]} text={(HERO[tab] || HERO.dashboard)[1]} />
       <section className="view">{view}</section>
       {open && <Brief a={A.find((x) => x.id === open)!} data={data} people={byCo[open] || []} onClose={() => setOpen(null)} />}
     </>

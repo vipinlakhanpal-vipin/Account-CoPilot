@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { APP_VERSION } from "@/lib/version";
+import Logo from "@/components/Logo";
 
 export default function Login() {
   const [mode, setMode] = useState<"password" | "link">("password");
@@ -42,7 +43,7 @@ export default function Login() {
   return (
     <main className="login">
       <div className="login-card">
-        <div className="brand"><b>Account <i>CoPilot</i> <span className="note">v{APP_VERSION}</span></b><span>B2B procurement intelligence</span></div>
+        <div className="brand"><Logo /><div className="brand-text"><span className="appname">Account CoPilot</span><span className="brand-sub">B2B procurement intelligence · v{APP_VERSION}</span></div></div>
         {state === "sent" ? (
           <p>If <b>{email}</b> has an account, a sign-in link is on its way. You can close this tab.</p>
         ) : (
@@ -54,7 +55,7 @@ export default function Login() {
               <input id="password" type="password" required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)}
                 style={{ font: "14px var(--body)", background: "var(--surface)", color: "var(--text)", border: "1px solid var(--line-2)", borderRadius: 6, padding: "9px 11px" }} />
             </>)}
-            <button className="btn primary" style={{ background: "var(--accent)", color: "var(--accent-ink)", borderColor: "var(--accent)" }} disabled={state === "busy"}>
+            <button className="btn primary" disabled={state === "busy"}>
               {state === "busy" ? "Signing in…" : mode === "password" ? "Sign in" : "Email me a sign-in link"}
             </button>
             {state === "error" && <p className="error">{msg}</p>}

@@ -34,3 +34,17 @@ const id = Object.fromEntries(cos.map((c) => [c.slug, c.id]));
 const rows = ref.contacts.map(({ row, company_slug, ...c }) => ({ ...c, company_id: id[company_slug] })).filter((c) => c.company_id);
 for (const part of chunks(rows)) { const { error } = await db.from("contacts").upsert(part, { onConflict: "external_id" }); if (error) throw error; }
 console.log(`contacts: ${rows.length} upserted (existing reference rows keep the same id)`);
+
+// Annotation rows from the Stakeholders sheet: not contacts. Remove any earlier import of them; log them as reference notes.
+const noteRows = new Set((ref.notes || []).map((n) => n.row));
+const { data: stale } = await db.from("contacts").select("id,external_id").or("external_id.like.REF-R%,external_id.like.C%-R%");
+const drop = (stale || []).filter((c) => noteRows.has(Number(String(c.external_id).split("-R").pop()))).map((c) => c.id);
+if (drop.length) { const { error } = await db.from("contacts").delete().in("id", drop); if (error) throw error; }
+const { data: existingNotes } = await db.from("conflicts").select("id").eq("source_a", "Reference workbook note");
+if (!existingNotes?.length && ref.notes?.length) {
+  const rowsN = ref.notes.map((n) => ({ company_id: id[n.company_slug], entity: n.person, field: "Reference note: company mismatch",
+    value_a: n.note, source_a: "Reference workbook note", value_b: `Stakeholders row ${n.about_row}`, source_b: `FINAL-UAE-Target-LIST-V3.1 · Stakeholders row ${n.row}`,
+    determination: "Carried from your workbook for review", evidence: "" })).filter((r) => r.company_id);
+  const { error } = await db.from("conflicts").insert(rowsN); if (error) throw error;
+}
+console.log(`annotation rows: ${drop.length} removed from contacts, ${ref.notes?.length || 0} logged as reference notes`);

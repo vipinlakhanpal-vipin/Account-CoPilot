@@ -60,7 +60,7 @@ export default function ResearchQueue() {
               <label key={r}><input type="checkbox" checked={roles.includes(r)} onChange={(e) => setRoles(e.target.checked ? [...roles, r] : roles.filter((x) => x !== r))} /> {r}</label>))}
             </div>
           </div>
-          <div><button className="btn primary" style={{ background: "var(--accent)", color: "var(--accent-ink)", borderColor: "var(--accent)" }}>Start research</button></div>
+          <div><button className="btn primary">Start research</button></div>
           {msg && <p className="note">{msg}</p>}
         </form>
       </div>
