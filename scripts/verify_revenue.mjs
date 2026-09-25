@@ -116,5 +116,5 @@ if (!APPLY) {
       confidence: r.revenue_status === "FACT" ? "HIGH" : r.revenue_status === "LIKELY" ? "MEDIUM" : "LOW", supports_s2p_status: "N/A" });
     n++;
   }
-  console.log(`applied ${n} revenue checks`);
+  console.log(`applied ${n} revenue checks — now run: node scripts/recompute_icp.mjs`);
 }

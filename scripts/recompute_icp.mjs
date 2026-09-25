@@ -44,6 +44,11 @@ for (const c of cos) {
     status = v >= 250 ? "ICP — Verified" : "Not ICP";
     reason = `Revenue check: ${fmt(v)} (${c.verified_revenue_fy || "latest"}, ${c.verified_revenue_type || "revenue"}) — ${c.verified_revenue_source || "source"}.`;
     display = v; displaySrc = "Verified";
+  } else if (c.verified_revenue_status === "LIKELY" && c.verified_revenue_usd_m) {
+    const v = Number(c.verified_revenue_usd_m);
+    status = v >= 250 ? "ICP — Likely" : "ICP — Needs check";
+    reason = `Revenue check (estimate): ${fmt(v)} (${c.verified_revenue_fy || "latest"}) — ${c.verified_revenue_source || "estimate"}. No official figure published.`;
+    display = v; displaySrc = "Estimate";
   } else if (claude && c.revenue_usd_m) {
     const v = Number(c.revenue_usd_m);
     status = v >= 250 ? "ICP — Verified" : "Not ICP";
