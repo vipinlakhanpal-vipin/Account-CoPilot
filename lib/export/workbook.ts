@@ -35,7 +35,7 @@ function banner(ws: ExcelJS.Worksheet, title: string, subtitle: string, n: numbe
 
 function table(wb: ExcelJS.Workbook, name: string, title: string, subtitle: string, colsIn: Col[], rowsIn: Row[], tab: number, inputs: string[] = []) {
   const cols: Col[] = [["#", "__n", 6, "num"], ...colsIn];
-  const rows = rowsIn.map((r, i) => ({ ...r, __n: i + 1 }));
+  const rows: Row[] = rowsIn.map((r, i) => ({ ...r, __n: i + 1 }));
   const ws = wb.addWorksheet(name, { properties: { tabColor: { argb: TABS[tab % TABS.length] } }, views: [{ state: "frozen", xSplit: 3, ySplit: 3, zoomScale: 90 }] });
   banner(ws, title, subtitle, cols.length);
   cols.forEach(([h, key, w], i) => {
