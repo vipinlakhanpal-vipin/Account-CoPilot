@@ -156,6 +156,8 @@ export default function CoPilotApp({ data }: { data: AllData }) {
   const tab = useSearchParams().get("tab") || "dashboard";
   const { accounts: A, contacts: P } = data;
   const [open, setOpen] = useState<string | null>(null);
+  const [contact, setContact] = useState<string | null>(null);
+  const [drill, setDrill] = useState<{ title: string; kind: Kind; rows: Row[] } | null>(null);
   const byCo = useMemo(() => {
     const m: Record<string, Row[]> = {};
     P.forEach((p) => { (m[p.company_id] ||= []).push(p); });
@@ -163,7 +165,11 @@ export default function CoPilotApp({ data }: { data: AllData }) {
   }, [P]);
   const openRow = (r: Row) => setOpen(r.company_id);
   useEffect(() => {
-    const k = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(null); };
+    // Escape closes the top-most panel first: contact card, then account brief, then drill-down
+    const k = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setContact((c) => { if (c) return null; setOpen((o) => { if (o) return null; setDrill(null); return o; }); return c; });
+    };
     window.addEventListener("keydown", k);
     return () => window.removeEventListener("keydown", k);
   }, []);
@@ -183,7 +189,7 @@ export default function CoPilotApp({ data }: { data: AllData }) {
         { h: "S2P status", cell: (a) => a.s2p_platform_status }, { h: "ERP", cell: (a) => a.erp }, { h: "Contacts", cell: (a) => <span className="mono">{(byCo[a.id] || []).length}</span> }]}
       onRow={openRow} />;
   } else if (tab === "stakeholders") {
-    view = <FilterTable unit="contacts" title="Stakeholders" note="Company and contact details only. Emails are never pattern-guessed; a blank email means it could not be verified."
+    view = <FilterTable unit="contacts" title="Stakeholders" note="Company and contact details only. Emails are never pattern-guessed; a blank email means it could not be verified. Select a contact to open their contact card."
       rows={[...P].sort((a, b) => sigRank(a.account_s2p_signal) - sigRank(b.account_s2p_signal) || str(a.company).localeCompare(b.company) || str(a.contact_tier).localeCompare(str(b.contact_tier)))}
       search={(p) => [p.company, p.full_name, p.title_verbatim, p.email, p.notes_contact].join(" ")}
       filters={[{ label: "Tier", get: (p) => p.contact_tier }, { label: "Role family", get: (p) => famKey(p.role_family) }, { label: "Signal", get: (p) => p.account_s2p_signal },
@@ -195,7 +201,7 @@ export default function CoPilotApp({ data }: { data: AllData }) {
         { h: "Phone", cell: (p) => <><span className="mono">{p.phone}</span> <span className="muted">{p.phone_type}</span></> },
         { h: "LinkedIn", cell: (p) => <Ext href={p.linkedin_url}>profile</Ext> }, { h: "S2P signal", cell: (p) => <Pill s={p.account_s2p_signal} /> },
         { h: "Notes / intel", cell: (p) => p.notes_contact, wrap: true }]}
-      onRow={openRow} />;
+      onRow={(p) => setContact(p.id)} />;
   } else if (tab === "signals") {
     view = <FilterTable unit="signals" title="S2P signals" note="Every signal carries its evidence and source."
       rows={[...data.signals].sort((a, b) => sigRank(a.level) - sigRank(b.level))}
@@ -229,20 +235,25 @@ export default function CoPilotApp({ data }: { data: AllData }) {
       onRow={openRow} />;
   } else {
     const top = A.filter((a) => sigRank(a.s2p_signal_level) <= 1).sort((a, b) => sigRank(a.s2p_signal_level) - sigRank(b.s2p_signal_level));
-    const kpis: [string, number, boolean?][] = [
-      ["Accounts (all lists)", A.length], ["ICP — Verified", A.filter((a) => a.icp_status === "ICP — Verified").length, true],
-      ["ICP — Likely", A.filter((a) => a.icp_status === "ICP — Likely").length],
-      ["ICP — Needs check", A.filter((a) => a.icp_status === "ICP — Needs check" || a.icp_status === "Unknown").length],
-      ["Strong / very strong", top.length, true], ["Coupa accounts", A.filter((a) => /coupa/i.test(str(a.existing_s2p_product))).length, true],
-      ["SAP Ariba accounts", A.filter((a) => /ariba/i.test(str(a.existing_s2p_product))).length, true], ["Contacts", P.length],
-      ["Verified contacts", P.filter((p) => p.verification_status === "VERIFIED").length], ["Contacts with email", P.filter((p) => p.email).length],
-      ["Signals logged", data.signals.length], ["Conflicts retained", data.conflicts.length],
-      ["Employment changes", data.history.filter((h) => /change/i.test(str(h.determination))).length],
-      ["Possible new S2P projects", A.filter((a) => ["Evaluation", "RFP / Tender", "Currently Implementing", "Replacement / Transformation"].includes(a.s2p_platform_status)).length],
+    const ACT = ["Evaluation", "RFP / Tender", "Currently Implementing", "Replacement / Transformation"];
+    const kpis: [string, Row[], Kind][] = [
+      ["Accounts (all lists)", A, "accounts"], ["ICP — Verified", A.filter((a) => a.icp_status === "ICP — Verified"), "accounts"],
+      ["ICP — Likely", A.filter((a) => a.icp_status === "ICP — Likely"), "accounts"],
+      ["ICP — Needs check", A.filter((a) => a.icp_status === "ICP — Needs check" || a.icp_status === "Unknown"), "accounts"],
+      ["Strong / very strong", top, "accounts"], ["Coupa accounts", A.filter((a) => /coupa/i.test(str(a.existing_s2p_product))), "accounts"],
+      ["SAP Ariba accounts", A.filter((a) => /ariba/i.test(str(a.existing_s2p_product))), "accounts"], ["Contacts", P, "contacts"],
+      ["Verified contacts", P.filter((p) => p.verification_status === "VERIFIED"), "contacts"], ["Contacts with email", P.filter((p) => p.email), "contacts"],
+      ["Signals logged", data.signals, "signals"], ["Conflicts retained", data.conflicts, "conflicts"],
+      ["Employment changes", data.history.filter((h) => /change/i.test(str(h.determination))), "history"],
+      ["Possible new S2P projects", A.filter((a) => ACT.includes(a.s2p_platform_status)), "accounts"],
     ];
+
     view = (
       <>
-        <div className="kpis">{kpis.map(([l, v], i) => <div key={l} className={`kpi c${(i % 8) + 1}`}><small>{l}</small><b>{v.toLocaleString()}</b></div>)}</div>
+        <div className="kpis">{kpis.map(([l, rows, kind], i) => (
+          <button type="button" key={l} className={`kpi c${(i % 8) + 1}`} onClick={() => setDrill({ title: l, kind, rows })} title={`Show the ${rows.length.toLocaleString()} records`}>
+            <small>{l}</small><b>{rows.length.toLocaleString()}</b><span className="kpi-go" aria-hidden="true">View →</span>
+          </button>))}</div>
         <div className="grid2">
           <div className="panel"><h2>Accounts by S2P signal</h2><Bars entries={countBy(A, (a) => a.s2p_signal_level)} order={sigRank} signal /></div>
           <div className="panel"><h2>Existing S2P platform</h2><Bars entries={countBy(A, (a) => a.existing_s2p_product)} /></div>
@@ -271,7 +282,9 @@ export default function CoPilotApp({ data }: { data: AllData }) {
     <>
       <Hero title={(HERO[tab] || HERO.dashboard)[0]} text={(HERO[tab] || HERO.dashboard)[1]} />
       <section className="view">{view}</section>
-      {open && <Brief a={A.find((x) => x.id === open)!} data={data} people={byCo[open] || []} onClose={() => setOpen(null)} />}
+      {drill && <DrillDown d={drill} byCo={byCo} onClose={() => setDrill(null)} onAccount={setOpen} onContact={setContact} />}
+      {open && <Brief a={A.find((x) => x.id === open)!} data={data} people={byCo[open] || []} onClose={() => setOpen(null)} onContact={setContact} />}
+      {contact && (() => { const p = P.find((x) => x.id === contact); return p ? <ContactCard p={p} data={data} onClose={() => setContact(null)} onAccount={(id) => { setContact(null); setOpen(id); }} /> : null; })()}
     </>
   );
 }
@@ -281,7 +294,7 @@ function Fact({ l, children }: { l: string; children: React.ReactNode }) {
   return <div className="fact"><small>{l}</small><div>{children}</div></div>;
 }
 
-function Brief({ a, data, people, onClose }: { a: Row; data: AllData; people: Row[]; onClose: () => void }) {
+function Brief({ a, data, people, onClose, onContact }: { a: Row; data: AllData; people: Row[]; onClose: () => void; onContact: (id: string) => void }) {
   const cs = [...people].sort((x, y) => str(x.contact_tier).localeCompare(str(y.contact_tier)));
   const sigs = data.signals.filter((s) => s.company_id === a.id).sort((x, y) => sigRank(x.level) - sigRank(y.level));
   const apps = data.apps.filter((s) => s.company_id === a.id && s.category !== "ERP (core)");
@@ -360,10 +373,10 @@ function Brief({ a, data, people, onClose }: { a: Row; data: AllData; people: Ro
           </div>
           {a.profile && <Profile profile={a.profile} />}
           <div className="block"><h4>Opportunity observations</h4><p>{a.potential_opportunity || "—"}</p>{a.account_notes && <p className="note">{a.account_notes}</p>}</div>
-          <div className="block"><h4>Stakeholders ({cs.length})</h4>
+          <div className="block"><h4>Stakeholders ({cs.length}) · select a person for their contact card</h4>
             <div className="tablewrap"><table><thead><tr><th className="num">#</th><th>Name</th><th>Title (verbatim)</th><th>Tier</th><th>Channel</th><th>Email</th><th>Phone</th><th>LinkedIn</th></tr></thead>
               <tbody>{cs.map((p, i) => (
-                <tr key={p.id}><td className="num mono">{i + 1}</td><td><b>{p.full_name}</b><div className="muted">{p.role_family} · {p.verification_status}</div></td><td>{p.title_verbatim}</td>
+                <tr key={p.id} className="click" tabIndex={0} onClick={(e) => { if (!(e.target as HTMLElement).closest("a")) onContact(p.id); }} onKeyDown={(e) => e.key === "Enter" && onContact(p.id)}><td className="num mono">{i + 1}</td><td><b>{p.full_name}</b><div className="muted">{p.role_family} · {p.verification_status}</div></td><td>{p.title_verbatim}</td>
                   <td>{p.contact_tier}</td><td>{p.channel_state}</td><td className="mono">{p.email}<div className="muted">{p.email_status}</div></td>
                   <td className="mono">{p.phone}</td><td><Ext href={p.linkedin_url}>profile</Ext></td></tr>))}
               </tbody></table></div>
@@ -400,5 +413,102 @@ function Profile({ profile }: { profile: Record<string, Record<string, unknown>>
         </div>
       ))}
     </div>
+  );
+}
+
+type Kind = "accounts" | "contacts" | "signals" | "conflicts" | "history";
+
+function DrillDown({ d, byCo, onClose, onAccount, onContact }: { d: { title: string; kind: Kind; rows: Row[] }; byCo: Record<string, Row[]>;
+  onClose: () => void; onAccount: (id: string) => void; onContact: (id: string) => void }) {
+  let table: React.ReactNode;
+  if (d.kind === "accounts") {
+    table = <FilterTable unit="companies" title={d.title} rows={[...d.rows].sort((a, b) => icpRank(a.icp_status) - icpRank(b.icp_status) || (bestRevenue(b).v || 0) - (bestRevenue(a).v || 0))}
+      search={(a) => [a.company_name, a.industry, a.erp, a.existing_s2p_product].join(" ")}
+      filters={[{ label: "ICP status", get: (a) => a.icp_status }, { label: "Signal", get: (a) => a.s2p_signal_level }, { label: "Industry", get: (a) => a.industry }]}
+      cols={[{ h: "Company", cell: (a) => <b>{a.company_name}</b> }, { h: "Revenue", cell: (a) => <span className="mono">{usd(bestRevenue(a).v)}</span> },
+        { h: "ICP status", cell: (a) => <IcpTag s={a.icp_status} why={a.icp_fit_reason} /> }, { h: "Signal", cell: (a) => <Pill s={a.s2p_signal_level} /> },
+        { h: "S2P", cell: (a) => a.existing_s2p_product }, { h: "ERP", cell: (a) => a.erp }, { h: "Contacts", cell: (a) => <span className="mono">{(byCo[a.id] || []).length}</span> }]}
+      onRow={(a) => onAccount(a.id)} />;
+  } else if (d.kind === "contacts") {
+    table = <FilterTable unit="contacts" title={d.title} rows={d.rows} search={(p) => [p.company, p.full_name, p.title_verbatim, p.email].join(" ")}
+      filters={[{ label: "Tier", get: (p) => p.contact_tier }, { label: "Role family", get: (p) => famKey(p.role_family) }, { label: "Channel", get: (p) => p.channel_state }]}
+      cols={[{ h: "Name", cell: (p) => <b>{p.full_name}</b> }, { h: "Company", cell: (p) => p.company }, { h: "Title", cell: (p) => p.title_verbatim, wrap: true },
+        { h: "Email", cell: (p) => <span className="mono">{p.email}</span> }, { h: "Channel", cell: (p) => p.channel_state }]}
+      onRow={(p) => onContact(p.id)} />;
+  } else if (d.kind === "signals") {
+    table = <FilterTable unit="signals" title={d.title} rows={[...d.rows].sort((a, b) => sigRank(a.level) - sigRank(b.level))} search={(s) => [s.company, s.signal, s.evidence].join(" ")}
+      filters={[{ label: "Level", get: (s) => s.level }, { label: "Platform", get: (s) => s.platform }]}
+      cols={[{ h: "Company", cell: (s) => <b>{s.company}</b> }, { h: "Level", cell: (s) => <Pill s={s.level} /> }, { h: "Signal", cell: (s) => s.signal, wrap: true }, { h: "Date", cell: (s) => s.date }]}
+      onRow={(s) => onAccount(s.company_id)} />;
+  } else if (d.kind === "conflicts") {
+    table = <FilterTable unit="conflicts" title={d.title} rows={d.rows} search={(c) => [c.company, c.entity, c.field, c.value_a, c.value_b].join(" ")}
+      filters={[{ label: "Field", get: (c) => c.field }]}
+      cols={[{ h: "Company", cell: (c) => c.company }, { h: "Entity", cell: (c) => c.entity }, { h: "Field", cell: (c) => c.field },
+        { h: "Value A", cell: (c) => c.value_a, wrap: true }, { h: "Value B", cell: (c) => c.value_b, wrap: true }]}
+      onRow={(c) => onAccount(c.company_id)} />;
+  } else {
+    table = <FilterTable unit="records" title={d.title} rows={d.rows} search={(h) => [h.full_name, h.company, h.title].join(" ")} filters={[]}
+      cols={[{ h: "Person", cell: (h) => <b>{h.full_name}</b> }, { h: "Now at", cell: (h) => h.company }, { h: "Title", cell: (h) => h.title, wrap: true },
+        { h: "Determination", cell: (h) => h.determination }, { h: "Source", cell: (h) => h.source }]}
+      onRow={(h) => h.company_id && onAccount(h.company_id)} />;
+  }
+  return (
+    <>
+      <div className="scrim" onClick={onClose} />
+      <aside className="brief drill" aria-label={d.title}>
+        <div className="brief-head"><div style={{ flex: 1 }}><div className="muted">Dashboard drill-down</div><h3>{d.title}</h3></div>
+          <button className="btn ghost" type="button" onClick={onClose}>Close</button></div>
+        <div className="brief-body">{table}</div>
+      </aside>
+    </>
+  );
+}
+
+function ContactCard({ p, data, onClose, onAccount }: { p: Row; data: AllData; onClose: () => void; onAccount: (id: string) => void }) {
+  const nk = (n: unknown) => str(n).toLowerCase().replace(/^(dr|eng|mr|ms|mrs|h\.?e)\.?\s+/, "").replace(/[^a-z]/g, "");
+  const others = data.contacts.filter((x) => x.id !== p.id && nk(x.full_name) === nk(p.full_name) && (x.company_id === p.company_id || x.company_ref_name === p.company_ref_name));
+  const hist = data.history.filter((h) => nk(h.full_name) === nk(p.full_name) && h.company_id === p.company_id);
+  const copy = async (t: string) => { try { await navigator.clipboard.writeText(t); } catch { /* ignore */ } };
+  return (
+    <>
+      <div className="scrim top" onClick={onClose} />
+      <aside className="brief contact" aria-label={`Contact card: ${p.full_name}`}>
+        <div className="brief-head">
+          <div className="avatar lg" aria-hidden="true">{str(p.full_name).split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase()}</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="muted">{p.role_family} · {p.contact_tier} · {p.channel_state}</div>
+            <h3>{p.full_name}</h3>
+            <div className="note">{p.title_verbatim}</div>
+          </div>
+          <button className="btn ghost" type="button" onClick={() => onAccount(p.company_id)}>Company brief</button>
+          <button className="btn ghost" type="button" onClick={onClose}>Close</button>
+        </div>
+        <div className="brief-body">
+          <div className="facts">
+            <Fact l="Company">{p.company}{p.company_ref_name && p.company_ref_name !== p.company ? <div className="note">As in your sheet: {p.company_ref_name}</div> : null}</Fact>
+            <Fact l="Email">{p.email ? <><span className="mono">{p.email}</span> <button type="button" className="btn tiny" onClick={() => copy(p.email)}>Copy</button><div className="note">{p.email_status}{p.email_confidence ? ` · ${p.email_confidence}` : ""}</div></> : ""}</Fact>
+            <Fact l="Unverified email candidate">{p.email_candidate}</Fact>
+            <Fact l="Phone">{p.phone ? <><span className="mono">{p.phone}</span> <button type="button" className="btn tiny" onClick={() => copy(p.phone)}>Copy</button><div className="note">{p.phone_type}</div></> : ""}</Fact>
+            <Fact l="LinkedIn"><Ext href={p.linkedin_url}>{str(p.linkedin_url).replace(/^https?:\/\/(www\.)?/, "")}</Ext></Fact>
+            <Fact l="Location">{p.location}</Fact>
+            <Fact l="Nationality">{p.nationality}</Fact>
+            <Fact l="Verification">{p.verification_status}</Fact>
+            <Fact l="Employment">{p.employment_status}</Fact>
+            <Fact l="Record">{p.record_status}</Fact>
+            <Fact l="Source">{p.source_url ? <Ext href={p.source_url}>{p.source_type || "source"}</Ext> : p.source}</Fact>
+            <Fact l="Account signal"><Pill s={p.account_s2p_signal} /></Fact>
+          </div>
+          {p.claude_check && <div className="block"><h4>Claude check</h4><p>{p.claude_check}</p></div>}
+          {p.notes_contact && <div className="block"><h4>Notes / intel</h4><p style={{ whiteSpace: "pre-wrap" }}>{p.notes_contact}</p></div>}
+          {p.s2p_contact_signal && <div className="block"><h4>S2P relevance</h4><p>{p.s2p_contact_signal}</p></div>}
+          {others.length > 0 && <div className="block"><h4>Other records for this person ({others.length})</h4>
+            <div className="tablewrap"><table><thead><tr><th>Channel</th><th>Title</th><th>Email</th><th>Phone</th><th>Record</th></tr></thead>
+              <tbody>{others.map((o) => <tr key={o.id}><td>{o.channel_state}</td><td>{o.title_verbatim}</td><td className="mono">{o.email}<div className="muted">{o.email_status}</div></td>
+                <td className="mono">{o.phone}</td><td className="muted">{o.record_status}</td></tr>)}</tbody></table></div></div>}
+          {hist.length > 0 && <div className="block"><h4>Employment history ({hist.length})</h4>
+            {hist.slice(0, 12).map((h) => <p key={h.id} className="note"><b>{h.title}</b> · {h.company} <span className="muted">— {h.determination}{h.evidence ? ` (${h.evidence})` : ""}</span></p>)}</div>}
+        </div>
+      </aside>
+    </>
   );
 }

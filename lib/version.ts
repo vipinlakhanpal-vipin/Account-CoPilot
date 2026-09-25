@@ -1,7 +1,8 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.7";
+export const APP_VERSION = "1.8";
 
 export const RELEASES: { version: string; date: string; notes: string }[] = [
+  { version: "1.8", date: "2026-09-25", notes: "Clickable dashboard tiles open a drill-down of the records behind each number; contact cards from Stakeholders and account briefs." },
   { version: "1.7", date: "2026-09-25", notes: "Profile menu (name, email, joined from, log out), invite colleagues, Costs & usage guide in Settings, header keeps Download on the first row." },
   { version: "1.6", date: "2026-09-25", notes: "Colour-filled filters that light up when active; Clear filters button." },
   { version: "1.5", date: "2026-09-25", notes: "One ICP scale (revenue ≥ $250M, 100+ staff; listing not required): Verified, Likely, Needs check, Unknown, Not ICP. Best-available revenue with its source." },

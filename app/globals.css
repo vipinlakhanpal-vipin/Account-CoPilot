@@ -222,3 +222,14 @@ h4.sub{margin:16px 0 6px;font:600 12px var(--body);letter-spacing:.1em;text-tran
 ul.plain{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;max-width:90ch}
 .temp-pass{background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.45);border-radius:8px;padding:10px 12px}
 .temp-pass code{font:600 14px var(--mono);color:#FFC860}
+
+button.kpi{font:inherit;text-align:left;cursor:pointer;position:relative;transition:transform .12s ease, box-shadow .12s ease}
+button.kpi:hover{transform:translateY(-2px);box-shadow:0 10px 24px color-mix(in srgb, var(--k) 25%, transparent)}
+button.kpi:focus-visible{outline:2px solid var(--k);outline-offset:2px}
+.kpi-go{position:absolute;right:12px;bottom:10px;font-size:11px;font-weight:600;color:color-mix(in srgb, var(--k) 55%, #E8EEF8);opacity:0;transition:opacity .12s}
+button.kpi:hover .kpi-go,button.kpi:focus-visible .kpi-go{opacity:1}
+aside.brief.drill{width:min(1100px,100%)}
+aside.brief.contact{width:min(760px,100%);z-index:70}
+.scrim.top{z-index:65}
+.btn.tiny{padding:1px 7px;font-size:11px;border-radius:5px;margin-left:4px}
+.brief-head .avatar.lg{flex:none}
