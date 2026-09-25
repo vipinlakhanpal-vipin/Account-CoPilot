@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabaseBrowser } from "@/lib/supabase/browser";
+import { APP_VERSION } from "@/lib/version";
 
 export default function Login() {
   const [mode, setMode] = useState<"password" | "link">("password");
@@ -41,7 +42,7 @@ export default function Login() {
   return (
     <main className="login">
       <div className="login-card">
-        <div className="brand"><b>Account <i>CoPilot</i></b><span>B2B procurement intelligence</span></div>
+        <div className="brand"><b>Account <i>CoPilot</i> <span className="note">v{APP_VERSION}</span></b><span>B2B procurement intelligence</span></div>
         {state === "sent" ? (
           <p>If <b>{email}</b> has an account, a sign-in link is on its way. You can close this tab.</p>
         ) : (

@@ -156,3 +156,14 @@ textarea{min-height:64px;resize:vertical}
 .row-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
 
 th.num,td.num{width:1%;text-align:right;color:var(--faint);padding-right:6px}
+
+/* brand name keeps its casing: Account CoPilot */
+.brand b{text-transform:none;letter-spacing:.02em}
+.brand-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.version{display:inline-flex;align-items:center;gap:8px}
+.vtag{font:600 11px var(--mono);color:#BFD6EE;background:rgba(141,184,228,.14);border:1px solid rgba(141,184,228,.35);border-radius:4px;padding:1px 7px}
+.refresh{position:relative;font:600 11.5px var(--body);color:var(--band-text);background:transparent;border:1px solid rgba(233,239,247,.28);border-radius:5px;padding:3px 10px;cursor:pointer}
+.refresh:hover{border-color:#E9EFF7}
+.refresh.has-update{border-color:#E5484D;color:#FFFFFF}
+.refresh .badge{position:absolute;top:-9px;right:-12px;background:#E5484D;color:#fff;font:700 10px var(--body);border-radius:999px;padding:1px 6px;box-shadow:0 0 0 2px var(--band)}
+@media (prefers-reduced-motion:no-preference){.refresh.has-update .badge{animation:pulse 1.6s ease-in-out infinite}@keyframes pulse{50%{transform:scale(1.12)}}}
