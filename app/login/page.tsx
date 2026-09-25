@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 
 export default function Login() {
@@ -8,6 +8,15 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [state, setState] = useState<"idle" | "busy" | "sent" | "error">("idle");
   const [msg, setMsg] = useState("");
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("denied")) {
+      supabaseBrowser().auth.getUser().then(({ data }) => {
+        setState("error");
+        setMsg(`Signed in as ${data.user?.email ?? "this account"}, but that email domain is not on the app's allowed list (ALLOWED_EMAIL_DOMAINS in Vercel).`);
+        supabaseBrowser().auth.signOut();
+      });
+    }
+  }, []);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();

@@ -25,6 +25,7 @@ export async function middleware(req: NextRequest) {
     if (path.startsWith("/api/")) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
     const url = req.nextUrl.clone();
     url.pathname = "/login";
+    url.search = data.user ? "?denied=1" : "";
     return NextResponse.redirect(url);
   }
   return res;
