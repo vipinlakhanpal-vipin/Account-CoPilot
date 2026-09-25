@@ -128,11 +128,10 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "
             {options[i].map((o) => <option key={o}>{o}</option>)}
           </select>
         ))}
-        <span className="note">
-          {out.length} of {rows.length} rows
-          {rows.some((r) => r.company_id) && <> · {new Set(out.map((r) => r.company_id)).size} {new Set(out.map((r) => r.company_id)).size === 1 ? "company" : "companies"}</>}
-        </span>
+
       </div>
+      <p className="filter-count">{out.length} of {rows.length} rows
+          {rows.some((r) => r.company_id) && <> · {new Set(out.map((r) => r.company_id)).size} {new Set(out.map((r) => r.company_id)).size === 1 ? "company" : "companies"}</>}</p>
       <div className="tablewrap">
         <table>
           <thead><tr><th className="num">#</th>{cols.map((c) => <th key={c.h}>{c.h}</th>)}</tr></thead>
