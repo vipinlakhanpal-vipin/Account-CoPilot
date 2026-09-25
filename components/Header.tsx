@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import Logo from "@/components/Logo";
+import ProfileMenu from "@/components/ProfileMenu";
 import { useNewVersion } from "@/components/useVersion";
 import { APP_VERSION } from "@/lib/version";
 
@@ -59,7 +60,12 @@ export default function Header({ active, subtitle }: { active: string; subtitle:
               <Link key={href} href={href} prefetch className="tab" aria-selected={current === label} onClick={(e) => go(e, href)}>{label}</Link>
             ))}
           </nav>
-          <a className="btn primary" href="/api/export">Download Master Book</a>
+          <div className="nav-actions">
+            <a className="btn primary dl" href="/api/export" title="Download Master Book (.xlsx)">
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m0 0-3-3m3 3 3-3M3 13h10" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              <span>Master Book</span></a>
+            <ProfileMenu />
+          </div>
         </div>
       </header>
     </>

@@ -36,10 +36,10 @@ b{font-weight:600}
 
 /* floating header */
 header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;padding:12px 16px 0}
-.navbar{max-width:1400px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+.navbar{max-width:1400px;margin:0 auto;display:flex;align-items:center;gap:12px;flex-wrap:nowrap;
   background:linear-gradient(180deg,rgba(28,45,78,.92),rgba(20,35,63,.92));backdrop-filter:blur(10px);
   border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:10px 14px;box-shadow:0 10px 30px rgba(3,8,20,.35)}
-.brand{display:flex;align-items:center;gap:10px;margin-right:auto;min-width:0}
+.brand{display:flex;align-items:center;gap:10px;flex:none;min-width:0}
 .brand .logo{flex:none;width:34px;height:34px}
 .brand-text{display:flex;flex-direction:column;min-width:0}
 .brand-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -53,7 +53,7 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;padding:1
 .refresh svg{width:13px;height:13px}
 .refresh .dot{position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:var(--red);box-shadow:0 0 0 2px #14233F}
 .chip{font:600 10.5px var(--body);letter-spacing:.03em;color:#06231D;background:#BFF3E6;border-radius:999px;padding:2px 9px}
-nav.tabs{display:flex;gap:4px;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}
+nav.tabs{display:flex;gap:2px;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;flex:1 1 auto;min-width:0;justify-content:flex-end}
 nav.tabs::-webkit-scrollbar{display:none}
 .tab{display:inline-flex;align-items:center;gap:6px;font:500 13px var(--body);color:var(--muted);text-decoration:none;white-space:nowrap;
   padding:7px 12px;border-radius:999px;border:1px solid transparent}
@@ -201,3 +201,24 @@ h2 .count{font:600 12px var(--body);letter-spacing:.02em;text-transform:none;col
 .filters .f1{--k:#3AA0FF} .filters .f2{--k:#2ECC8F} .filters .f3{--k:#9B6BFF} .filters .f4{--k:#F5A623}
 .filters .f5{--k:#6C7BFF} .filters .f6{--k:#FF4D6A} .filters .f7{--k:#2EC4A6} .filters .f8{--k:#E052C8}
 .filters .btn.clear{padding:6px 12px;font-size:12px;border-radius:9px;background:transparent;border-color:rgba(255,255,255,.2)}
+
+.nav-actions{display:flex;align-items:center;gap:8px;flex:none}
+.btn.dl{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;white-space:nowrap}
+.btn.dl svg{width:14px;height:14px}
+@media (max-width:1100px){.navbar{flex-wrap:wrap}nav.tabs{order:3;flex-basis:100%;justify-content:flex-start}.nav-actions{margin-left:auto}}
+.profile{position:relative}
+.avatar{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:50%;font:700 12.5px var(--body);color:#06231D;
+  background:linear-gradient(135deg,#BFF3E6,#7CC4FF);border:2px solid rgba(255,255,255,.25);cursor:pointer}
+.avatar.lg{width:42px;height:42px;font-size:14px;cursor:default}
+.profile-menu{position:absolute;right:0;top:44px;width:300px;z-index:30;background:linear-gradient(180deg,#1A2D50,#14233F);border:1px solid var(--line-2);
+  border-radius:12px;padding:14px;box-shadow:0 18px 40px rgba(3,8,20,.5);display:flex;flex-direction:column;gap:8px}
+.pm-head{display:flex;gap:10px;align-items:center;margin-bottom:4px}
+.pm-row{display:flex;gap:6px}.pm-row input{flex:1;min-width:0}
+.pm-facts{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;margin:4px 0;font-size:12.5px}
+.pm-facts dt{color:var(--muted)}.pm-facts dd{margin:0;overflow-wrap:anywhere}
+.btn.logout{border-color:rgba(255,77,106,.5);color:#FF9AA8}.btn.logout:hover{background:rgba(255,77,106,.12);color:#fff}
+.formula{background:var(--sunken);border:1px solid var(--line-2);border-left:3px solid var(--teal);border-radius:8px;padding:12px 14px;margin:10px 0;font-size:14px}
+h4.sub{margin:16px 0 6px;font:600 12px var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--teal)}
+ul.plain{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;max-width:90ch}
+.temp-pass{background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.45);border-radius:8px;padding:10px 12px}
+.temp-pass code{font:600 14px var(--mono);color:#FFC860}
