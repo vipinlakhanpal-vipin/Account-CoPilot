@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { createHash, randomBytes } from "node:crypto";
 
 // Engine control (Settings → Discovery & refresh engine).
 //  • queue   — a no-API-cost job for the scheduled Claude sessions (verify / discover N companies in a region).
@@ -26,6 +27,7 @@ const setSetting = (db: ReturnType<typeof supabaseAdmin>, key: string, value: un
 async function summary(db: ReturnType<typeof supabaseAdmin>) {
   const [jobs, refresh, balance] = await Promise.all([getSetting<{ jobs: Job[] }>(db, "engine_jobs", { jobs: [] }),
     getSetting<{ batches: Batch[] }>(db, "engine_refresh", { batches: [] }), getSetting<{ amount?: number; as_of?: string; by?: string }>(db, "engine_balance", {})]);
+  const tk = await getSetting<{ hash?: string; created_at?: string; by?: string; hint?: string; revoked_at?: string }>(db, "engine_token", {});
   const { data: runs } = await db.from("research_runs").select("started_at,stats,status,company_name").order("started_at", { ascending: false }).limit(1000);
   const cost = (r: { stats?: { cost_usd?: number } | null }) => Number(r.stats?.cost_usd) || 0;
   const month = new Date().toISOString().slice(0, 7);
@@ -35,7 +37,7 @@ async function summary(db: ReturnType<typeof supabaseAdmin>) {
     return { ...b, spent: +rs.reduce((t, r) => t + cost(r), 0).toFixed(2), runs: rs.length, running: rs.filter((r) => r.status !== "done" && r.status !== "error").length }; });
   const carry = Math.max(0, +batches.reduce((t, b) => t + b.budget - b.spent, 0).toFixed(2));
   const spentSinceBalance = balance.as_of ? (runs || []).filter((r) => String(r.started_at) >= String(balance.as_of)).reduce((t, r) => t + cost(r), 0) : 0;
-  return { jobs: jobs.jobs, batches, carry, spentAll: +spentAll.toFixed(2), spentMonth: +spentMonth.toFixed(2), balance,
+  return { token_info: tk.hash ? { created_at: tk.created_at, by: tk.by, hint: tk.hint } : null, jobs: jobs.jobs, batches, carry, spentAll: +spentAll.toFixed(2), spentMonth: +spentMonth.toFixed(2), balance,
     balanceLeft: balance.amount !== undefined ? +(balance.amount - spentSinceBalance).toFixed(2) : null, est: EST };
 }
 
@@ -52,6 +54,7 @@ const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("refresh"), region: z.string().min(2).max(40), update_count: z.number().int().min(0).max(50), new_count: z.number().int().min(0).max(10), budget: z.number().min(0).max(500) }),
   z.object({ action: z.literal("balance"), amount: z.number().min(0).max(100000) }),
   z.object({ action: z.literal("cancel"), id: z.string() }),
+  z.object({ action: z.literal("token"), op: z.enum(["generate", "revoke"]) }),
 ]);
 
 export async function POST(req: Request) {
@@ -61,6 +64,13 @@ export async function POST(req: Request) {
   if (!parsed.success) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   const b = parsed.data, db = supabaseAdmin(), now = new Date().toISOString(), id = crypto.randomUUID().slice(0, 8);
 
+  if (b.action === "token") {
+    // Engine token for scheduled sessions: shown once, only its SHA-256 hash is stored. Generating a new one revokes the old.
+    if (b.op === "revoke") { await setSetting(db, "engine_token", { revoked_at: now, by: user.email }); return NextResponse.json({ ...(await summary(db)), token: null }); }
+    const token = randomBytes(32).toString("hex");
+    await setSetting(db, "engine_token", { hash: createHash("sha256").update(token).digest("hex"), created_at: now, by: user.email, hint: token.slice(-4) });
+    return NextResponse.json({ ...(await summary(db)), token });
+  }
   if (b.action === "queue" || b.action === "cancel") {
     const st = await getSetting<{ jobs: Job[] }>(db, "engine_jobs", { jobs: [] });
     if (b.action === "queue") st.jobs.unshift({ id, region: b.region, count: b.count, mode: b.mode, requested_by: user.email || "", requested_at: now, status: "queued" });

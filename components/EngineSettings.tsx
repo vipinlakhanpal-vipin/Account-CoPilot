@@ -5,7 +5,7 @@ import { COUNTRIES } from "@/lib/countries";
 
 type Job = { id: string; region: string; count: number | "max"; mode: string; requested_by: string; requested_at: string; status: string; done_at?: string; result?: string };
 type Batch = { id: string; region: string; budget: number; available: number; planned_update: number; planned_new: number; spent: number; runs: number; running: number; at: string; requested_by: string; companies: string[] };
-type Summary = { jobs: Job[]; batches: Batch[]; carry: number; spentAll: number; spentMonth: number; balance: { amount?: number; as_of?: string; by?: string };
+type Summary = { token_info: { created_at?: string; by?: string; hint?: string } | null; token?: string | null; jobs: Job[]; batches: Batch[]; carry: number; spentAll: number; spentMonth: number; balance: { amount?: number; as_of?: string; by?: string };
   balanceLeft: number | null; est: { update: number; discovery: number; profile: number }; log?: { at: string; summary: string; verified: number; new_companies: string[] }[] };
 
 const MODE: Record<string, string> = { verify: "Verify existing companies", discover: "Find new companies", both: "Verify existing + find new" };
@@ -18,12 +18,13 @@ export default function EngineSettings() {
   const [q, setQ] = useState({ region: "UAE", count: "50", mode: "verify" });
   const [r, setR] = useState({ region: "UAE", update: 10, fresh: 5, budget: 20 });
   const [bal, setBal] = useState("");
+  const [newToken, setNewToken] = useState("");
   const load = () => fetch("/api/engine").then((x) => (x.ok ? x.json() : null)).then((j) => j && setS(j)).catch(() => {});
   useEffect(() => { load(); const t = setInterval(load, 30000); return () => clearInterval(t); }, []);
   const post = async (body: unknown, ok: string) => {
     const res = await fetch("/api/engine", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     const j = await res.json().catch(() => ({}));
-    if (res.ok) { setS(j); setMsg(ok); } else setMsg(j.error || "Something went wrong.");
+    if (res.ok) { setS(j); setMsg(ok); if (j.token !== undefined) setNewToken(j.token || ""); } else setMsg(j.error || "Something went wrong.");
   };
 
   const avail = s ? +(r.budget + s.carry).toFixed(2) : r.budget;
@@ -58,6 +59,18 @@ export default function EngineSettings() {
           <div className="tablewrap"><table><thead><tr><th>When</th><th>Summary</th><th>Verified</th><th>New companies</th></tr></thead>
             <tbody>{s.log.slice(0, 10).map((e) => <tr key={e.at}><td className="muted">{new Date(e.at).toLocaleString()}</td><td className="wrap">{e.summary}</td><td>{e.verified}</td>
               <td className="wrap">{e.new_companies.join(", ") || "—"}</td></tr>)}</tbody></table></div></div>}
+
+        <div className="eng-card">
+          <div className="eng-head"><h3>Scheduled session access</h3><span className={`tag ${s?.token_info ? "fact" : "unv"}`}>{s?.token_info ? `Active · ends …${s.token_info.hint}` : "Not set up"}</span></div>
+          <p className="note">The daily 6am Claude session talks to the app with a limited engine token: it can read the job queue and the verification queue, submit revenue results, add discovered companies and post notifications — it cannot read contacts or delete anything. Put it in the cloud environment's variables as <code>ENGINE_TOKEN</code> (with <code>APP_URL=https://account-copilot.vercel.app</code>). It's shown only once; generating a new one revokes the old.</p>
+          <div className="eng-form">
+            <button type="button" className="btn" onClick={() => { if (!s?.token_info || window.confirm("Generate a new engine token? The current one stops working immediately.")) post({ action: "token", op: "generate" }, "New engine token generated — copy it now."); }}>{s?.token_info ? "Regenerate token" : "Generate token"}</button>
+            {s?.token_info && <button type="button" className="btn ghost" onClick={() => { if (window.confirm("Revoke the engine token? Scheduled sessions will stop until a new one is set.")) post({ action: "token", op: "revoke" }, "Engine token revoked."); }}>Revoke</button>}
+          </div>
+          {newToken && <div className="eng-token"><b>Copy these two lines into the cloud environment's Environment variables (shown once):</b>
+            <pre>{`APP_URL=https://account-copilot.vercel.app\nENGINE_TOKEN=${newToken}`}</pre>
+            <button type="button" className="btn tiny" onClick={() => navigator.clipboard?.writeText(`APP_URL=https://account-copilot.vercel.app\nENGINE_TOKEN=${newToken}`)}>Copy</button></div>}
+        </div>
 
         <div className="eng-card paid">
           <div className="eng-head"><h3>2 · Refresh — uses the Anthropic API</h3><CostNote cost="you set the budget below" /></div>
