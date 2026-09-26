@@ -6,7 +6,8 @@ import Hero from "@/components/Hero";
 import type { AllData, Row } from "@/lib/data";
 import { ALL, COUNTRIES, DEFAULT_COUNTRY, countryCode } from "@/lib/countries";
 import DiscoveryPanel from "@/components/DiscoveryPanel";
-import { SOURCES, indexSources, evidenceGroup } from "@/lib/sources";
+import { SOURCES, indexSources, evidenceGroup, originName } from "@/lib/sources";
+import { buildPeople, contributorOf, TRUST_ORDER, type Person, type Trust } from "@/lib/people";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { withDefaults, icpMatch, opportunity, coupaFit, companyPasses, contactMatches, estimateSpend, whySelected, recommendedActions,
   type Criteria, type Score } from "@/lib/icp";
@@ -22,6 +23,8 @@ const HERO: Record<string, [string, string]> = {
   pipeline: ["Pipeline", "Accounts ranked by ICP Match, Opportunity and Coupa Fit against your discovery criteria. Select one for why it was selected and what to do next."],
 };
 type Scores = { m: Score; o: Score; f: ReturnType<typeof coupaFit>; rank: number };
+const TRUST_CLS: Record<string, string> = { "Confirmed by 2+ sources": "t-ok", "Single source": "t-one", Conflicting: "t-bad" };
+const TrustTag = ({ t, why }: { t?: string; why?: string }) => t ? <span className={`trust ${TRUST_CLS[t] || ""}`} title={why}>{t}</span> : null;
 const ScoreChip = ({ s, label }: { s: Score; label: string }) => (
   <span className={`score ${s.total >= 70 ? "hi" : s.total >= 45 ? "mid" : "lo"}`} title={`${label} ${s.total}/100\n` + s.parts.map((p) => `${p.label}: ${p.score}/${p.max} — ${p.why}`).join("\n")}>{s.total}</span>);
 
@@ -182,18 +185,21 @@ export default function CoPilotApp({ data: all }: { data: AllData }) {
       conflicts: all.conflicts.filter(mine), apps: all.apps.filter(mine), history: all.history.filter(mine) };
   }, [all, country]);
   const [criteria, setCriteria] = useState<Criteria>(withDefaults());
-  const [saved, setSaved] = useState("");
+  const [savedMeta, setSavedMeta] = useState<{ by?: string; at?: string } | null>(null);
   const [collapsed, setCollapsed] = useState(false);
   useEffect(() => {
     try { setCollapsed(localStorage.getItem("dp-collapsed") === "1"); } catch {}
     supabaseBrowser().from("settings").select("value").eq("key", "icp_criteria").maybeSingle()
-      .then(({ data: row }) => { if (row?.value) setCriteria(withDefaults(row.value as Criteria)); });
+      .then(({ data: row }) => { if (row?.value) { setCriteria(withDefaults(row.value as Criteria)); setSavedMeta((row.value as { _meta?: { by?: string; at?: string } })._meta || null); } });
   }, []);
   const toggle = () => setCollapsed((c) => { try { localStorage.setItem("dp-collapsed", c ? "0" : "1"); } catch {} return !c; });
-  async function saveCriteria() {
-    const { error } = await supabaseBrowser().from("settings").upsert({ key: "icp_criteria", value: criteria, updated_at: new Date().toISOString() });
-    setSaved(error ? `Could not save: ${error.message}` : "Saved for the team.");
-    setTimeout(() => setSaved(""), 4000);
+  async function saveCriteria(c: Criteria) {
+    const sb = supabaseBrowser(), at = new Date().toISOString();
+    const { data: u } = await sb.auth.getUser();
+    const by = (u.user?.user_metadata?.name as string) || u.user?.email || "";
+    const { error } = await sb.from("settings").upsert({ key: "icp_criteria", value: { ...c, _meta: { by, at } }, updated_at: at });
+    if (!error) setSavedMeta({ by, at });
+    return error ? { ok: false, error: error.message } : { ok: true, by, at };
   }
   const [researchMsg, setResearchMsg] = useState("");
   async function researchMore(limit: number, profile: boolean) {
@@ -213,6 +219,8 @@ export default function CoPilotApp({ data: all }: { data: AllData }) {
   const A = useMemo(() => data.accounts.filter((a) => companyPasses(a, criteria)), [data.accounts, criteria]);
   const P = useMemo(() => { const ids = new Set(A.map((a) => a.id));
     return data.contacts.filter((p) => ids.has(p.company_id) && (!contactSet || contactMatches(p, criteria, data.history, famKey))); }, [data, A, criteria, contactSet]);
+  const people = useMemo(() => buildPeople(P), [P]);
+  const [perPerson, setPerPerson] = useState(true);
   const scores = useMemo(() => {
     const hires: Record<string, number> = {};
     data.history.forEach((h) => { if (/change|promot|join|hire/i.test(str(h.determination))) hires[h.company_id] = (hires[h.company_id] || 0) + 1; });
@@ -270,19 +278,27 @@ export default function CoPilotApp({ data: all }: { data: AllData }) {
         { h: "Contacts", cell: (a) => <span className="mono">{(byCo[a.id] || []).length}</span> }]}
       onRow={openRow} />;
   } else if (tab === "stakeholders") {
-    view = <FilterTable unit="contacts" title="Stakeholders" note="Company and contact details only. Emails are never pattern-guessed; a blank email means it could not be verified. Select a contact to open their contact card."
-      rows={[...P].sort((a, b) => sigRank(a.account_s2p_signal) - sigRank(b.account_s2p_signal) || str(a.company).localeCompare(b.company) || str(a.contact_tier).localeCompare(str(b.contact_tier)))}
+    const rows: Row[] = perPerson ? people : P;
+    view = <>
+      <div className="seg-toggle" role="group" aria-label="Stakeholder view">
+        <button type="button" aria-pressed={perPerson} onClick={() => setPerPerson(true)}>One row per person ({people.length})</button>
+        <button type="button" aria-pressed={!perPerson} onClick={() => setPerPerson(false)}>All source rows ({P.length})</button>
+      </div>
+      <FilterTable unit={perPerson ? "people" : "rows"} title="Stakeholders" note={perPerson
+        ? "One row per person, merged from every source (your sheet's CoPilot, Claude in Copilot and Claude-Seamless rows, plus Claude checks). Trust shows how many independent sources agree; select a person to see what each source says. Emails are never guessed."
+        : "Every source row as imported or added by a Claude check. Nothing is deleted when rows are merged into one person."}
+      rows={[...rows].sort((a, b) => TRUST_ORDER.indexOf(a.trust) - TRUST_ORDER.indexOf(b.trust) || sigRank(a.account_s2p_signal) - sigRank(b.account_s2p_signal) || str(a.company).localeCompare(b.company))}
       search={(p) => [p.company, p.full_name, p.title_verbatim, p.email, p.notes_contact].join(" ")}
-      filters={[{ label: "Tier", get: (p) => p.contact_tier }, { label: "Role family", get: (p) => famKey(p.role_family) }, { label: "Signal", get: (p) => p.account_s2p_signal },
-        { label: "Email status", get: (p) => p.email_status }, { label: "Channel", get: (p) => p.channel_state }]}
+      filters={[...(perPerson ? [{ label: "Trust", get: (p: Row) => p.trust }, { label: "Sources", get: (p: Row) => (p.sources || []).join(" + ") }] : [{ label: "Source", get: (p: Row) => contributorOf(p) }]),
+        { label: "Tier", get: (p) => p.contact_tier }, { label: "Role family", get: (p) => famKey(p.role_family) }, { label: "Email status", get: (p) => p.email_status }]}
       cols={[{ h: "Company", cell: (p) => p.company }, { h: "Full name", cell: (p) => <b>{p.full_name}</b> }, { h: "Title (verbatim)", cell: (p) => p.title_verbatim, wrap: true },
+        ...(perPerson ? [{ h: "Trust", cell: (p: Row) => <><TrustTag t={p.trust} why={p.trust_reason} /><div className="muted">{(p.sources || []).join(" + ")}</div></> }]
+          : [{ h: "Source", cell: (p: Row) => <>{contributorOf(p)}<div className="muted">{p.record_status}</div></> }]),
         { h: "Role family", cell: (p) => p.role_family }, { h: "Tier", cell: (p) => p.contact_tier },
-        { h: "Channel", cell: (p) => <>{p.channel_state}<div className="muted">{p.channel_source !== p.channel_state ? p.channel_source : ""}</div></> },
         { h: "Email", cell: (p) => <span className="mono">{p.email}</span> }, { h: "Email status", cell: (p) => p.email_status },
         { h: "Phone", cell: (p) => <><span className="mono">{p.phone}</span> <span className="muted">{p.phone_type}</span></> },
-        { h: "LinkedIn", cell: (p) => <Ext href={p.linkedin_url}>profile</Ext> }, { h: "S2P signal", cell: (p) => <Pill s={p.account_s2p_signal} /> },
-        { h: "Notes / intel", cell: (p) => p.notes_contact, wrap: true }]}
-      onRow={(p) => setContact(p.id)} />;
+        { h: "LinkedIn", cell: (p) => <Ext href={p.linkedin_url}>profile</Ext> }, { h: "S2P signal", cell: (p) => <Pill s={p.account_s2p_signal} /> }]}
+      onRow={(p) => setContact(p.best_id || p.id)} /></>;
   } else if (tab === "signals") {
     view = <FilterTable unit="signals" title="S2P signals" note="Every signal carries its evidence and source."
       rows={[...data.signals].sort((a, b) => sigRank(a.level) - sigRank(b.level))}
@@ -309,33 +325,47 @@ export default function CoPilotApp({ data: all }: { data: AllData }) {
   } else if (tab === "sources") {
     const region = country === ALL ? "All regions" : country;
     const idx = indexSources(A, data.sources.filter((s) => A.some((a) => a.id === s.company_id)), data.contacts);
-    const tiles = (group: "channel" | "evidence") => (
-      <div className="kpis src-tiles">{SOURCES.filter((d) => d.group === group).map((d) => {
-        const rows = idx[d.key] || [];
-        const byC = country === ALL ? countBy(rows, (a) => countryCode(a.country)).map(([k, n]) => `${k} ${n}`).join(" · ") : "";
-        return (
-          <button type="button" key={d.key} className={`kpi src-tile${rows.length ? "" : " empty"}`} style={{ "--k": d.color } as React.CSSProperties}
-            onClick={() => rows.length && setDrill({ title: `${d.name} | ${region}`, kind: "accounts", rows })} title={`${d.what}\nProvides: ${d.provides}`}>
-            <small>{d.name} <span className="src-region">| {region}</span></small><b>{rows.length.toLocaleString()}</b>
-            <em>companies profiled{byC && ` · ${byC}`}</em><span className="kpi-go" aria-hidden="true">View →</span>
-          </button>);
-      })}</div>);
-    const catalogue = (group: "channel" | "evidence") => (
-      <details className="src-cat"><summary>What each source is, what it provides and how far to trust it</summary>
+    const perCountry = (rows: Row[]) => country === ALL ? countBy(rows, (a) => countryCode(a.country)).map(([k, n]) => `${k} ${n}`).join(" · ") : "";
+    const tile = (key: string, name: string, color: string, rows: Row[], kind: Kind, sub: React.ReactNode, tip = "") => (
+      <button type="button" key={key} className={`kpi src-tile${rows.length ? "" : " empty"}`} style={{ "--k": color } as React.CSSProperties} title={tip}
+        onClick={() => rows.length && setDrill({ title: `${name} | ${region}`, kind, rows })}>
+        <small>{name} <span className="src-region">| {region}</span></small><b>{rows.length.toLocaleString()}</b><em>{sub}</em><span className="kpi-go" aria-hidden="true">View →</span>
+      </button>);
+    const origins = SOURCES.filter((d) => d.group === "origin");
+    const wbIds = new Set((idx.workbook || []).map((a) => a.id));
+    const wbRows = data.contacts.filter((p) => p.is_reference && wbIds.has(p.company_id));
+    const contrib = countBy(wbRows, contributorOf);
+    const catalogue = (group: "origin" | "contributor" | "evidence", label: string) => (
+      <details className="src-cat"><summary>{label}</summary>
         <div className="tablewrap"><table><thead><tr><th>Source</th><th>What it is</th><th>Provides</th><th>How it's collected</th><th>Reliability</th><th>Cost</th></tr></thead>
           <tbody>{SOURCES.filter((d) => d.group === group).map((d) => (
             <tr key={d.key}><td><span className="src-dot" style={{ background: d.color }} /> <b>{d.name}</b></td><td className="wrap">{d.what}</td><td className="wrap">{d.provides}</td>
               <td className="wrap">{d.how}</td><td className="wrap">{d.reliability}</td><td>{d.cost}</td></tr>))}</tbody></table></div></details>);
+    const icpBuckets: [string, string, string[]][] = [["Verified", "#2ECC8F", ["ICP — Verified"]], ["Likely", "#3AA0FF", ["ICP — Likely"]], ["Needs check / Unknown", "#F5A623", ["ICP — Needs check", "Unknown"]], ["Not ICP", "#FF4D6A", ["Not ICP"]]];
+    const trustColor: Record<Trust, string> = { "Confirmed by 2+ sources": "#2ECC8F", "Single source": "#3AA0FF", Conflicting: "#FF4D6A" };
     view = <>
       <div className="panel src-panel">
-        <h2>Channels — how companies were found and profiled</h2>
-        <p className="note">A company can appear under several channels (for example your workbook, then Claude research, then a revenue check). Select a tile to see its companies.</p>
-        {tiles("channel")}{catalogue("channel")}
+        <h2>1 · Origin — where each company came from</h2>
+        <p className="note">Every company has exactly one origin, so these tiles add up to the total: {origins.map((d) => (idx[d.key] || []).length).join(" + ")} = {A.length} companies. Select a tile to see them.</p>
+        <div className="kpis src-tiles">{origins.map((d) => tile(d.key, d.name, d.color, idx[d.key] || [], "accounts",
+          d.key === "workbook" && wbRows.length ? <>Contributors: {contrib.map(([k, n]) => `${k} ${n}`).join(" · ")} contact rows</> : <>companies{perCountry(idx[d.key] || []) && ` · ${perCountry(idx[d.key] || [])}`}</>, d.what))}</div>
+        {catalogue("origin", "What each origin is")}{catalogue("contributor", "Contributors — who added or checked data inside an origin")}
       </div>
       <div className="panel src-panel">
-        <h2>Evidence types — the documents behind the facts</h2>
-        <p className="note">Counts are companies with at least one fact from that type of source. Tier 1 = official (annual reports, filings, company websites); Tier 3–4 = databases and estimates.</p>
-        {tiles("evidence")}{catalogue("evidence")}
+        <h2>2 · Trust — how many independent sources agree</h2>
+        <p className="note">Companies: revenue confirmed from an official source (Verified) or only estimated. Contacts: one record per person; Confirmed = two or more contributors agree (or Claude verified from an official source), Conflicting = sources disagree or the person may have moved.</p>
+        <h3 className="src-h3">Companies</h3>
+        <div className="kpis src-tiles">{icpBuckets.map(([n, c, st]) => { const rows = A.filter((a) => st.includes(a.icp_status || "Unknown"));
+          return tile(n, n, c, rows, "accounts", "companies"); })}</div>
+        <h3 className="src-h3">Contacts ({people.length} people)</h3>
+        <div className="kpis src-tiles">{TRUST_ORDER.map((t) => { const rows = people.filter((p) => p.trust === t);
+          return tile(t, t, trustColor[t], rows, "contacts", "people"); })}</div>
+      </div>
+      <div className="panel src-panel">
+        <h2>3 · Evidence — the documents behind the facts</h2>
+        <p className="note">Companies with at least one fact from that type of document. Tier 1 = official (filings, company websites); Tier 3–4 = databases and estimates.</p>
+        <div className="kpis src-tiles">{SOURCES.filter((d) => d.group === "evidence").map((d) => tile(d.key, d.name, d.color, idx[d.key] || [], "accounts", "companies", d.what))}</div>
+        {catalogue("evidence", "What each evidence type is")}
       </div>
       <FilterTable unit="sources" title="Source evidence" note="The audit trail behind every fact: one row per source used, with what was found and how confident we are." rows={data.sources}
       search={(s) => [s.company, s.source, s.information_found, s.url].join(" ")}
@@ -352,8 +382,8 @@ export default function CoPilotApp({ data: all }: { data: AllData }) {
       ["ICP — Likely", A.filter((a) => a.icp_status === "ICP — Likely"), "accounts"],
       ["ICP — Needs check", A.filter((a) => a.icp_status === "ICP — Needs check" || a.icp_status === "Unknown"), "accounts"],
       ["Strong / very strong", top, "accounts"], ["Coupa accounts", A.filter((a) => /coupa/i.test(str(a.existing_s2p_product))), "accounts"],
-      ["SAP Ariba accounts", A.filter((a) => /ariba/i.test(str(a.existing_s2p_product))), "accounts"], ["Contacts", P, "contacts"],
-      ["Verified contacts", P.filter((p) => p.verification_status === "VERIFIED"), "contacts"], ["Contacts with email", P.filter((p) => p.email), "contacts"],
+      ["SAP Ariba accounts", A.filter((a) => /ariba/i.test(str(a.existing_s2p_product))), "accounts"], ["Contacts (people)", people, "contacts"],
+      ["Confirmed by 2+ sources", people.filter((p) => p.trust === "Confirmed by 2+ sources"), "contacts"], ["Contacts with email", people.filter((p) => p.email), "contacts"],
       ["Signals logged", data.signals, "signals"], ["Conflicts retained", data.conflicts, "conflicts"],
       ["Employment changes", data.history.filter((h) => /change/i.test(str(h.determination))), "history"],
       ["Possible new S2P projects", A.filter((a) => ACT.includes(a.s2p_platform_status)), "accounts"],
@@ -369,8 +399,9 @@ export default function CoPilotApp({ data: all }: { data: AllData }) {
           <div className="panel"><h2>Accounts by S2P signal</h2><Bars entries={countBy(A, (a) => a.s2p_signal_level)} order={sigRank} signal /></div>
           <div className="panel"><h2>Existing S2P platform</h2><Bars entries={countBy(A, (a) => a.existing_s2p_product)} /></div>
           <div className="panel"><h2>ERP landscape</h2><Bars entries={countBy(A, (a) => erpKey(a.erp)).slice(0, 10)} /></div>
-          <div className="panel"><h2>Contacts by role family</h2><Bars entries={countBy(P, (p) => famKey(p.role_family))} /></div>
-          <div className="panel"><h2>Research channel</h2><Bars entries={countBy(P, (p) => p.research_channel)} /></div>
+          <div className="panel"><h2>Contacts by role family</h2><Bars entries={countBy(people, (p) => famKey(p.role_family))} /></div>
+          <div className="panel"><h2>Contact trust</h2><Bars entries={countBy(people, (p) => p.trust)} order={(k) => TRUST_ORDER.indexOf(k as Trust)} /></div>
+          <div className="panel"><h2>Accounts by origin</h2><Bars entries={countBy(A, originName)} /></div>
           <div className="panel"><h2>Accounts by ICP status</h2><Bars entries={countBy(A, (a) => a.icp_status || "Unknown")} order={(k) => icpRank(k)} /></div>
         </div>
         <div className="panel" style={{ marginTop: 16 }}>
@@ -391,8 +422,8 @@ export default function CoPilotApp({ data: all }: { data: AllData }) {
 
   return (
     <div className={`app-shell${collapsed ? " dp-closed" : ""}`}>
-    <DiscoveryPanel criteria={criteria} onChange={setCriteria} onSave={saveCriteria} saved={saved} collapsed={collapsed} onToggle={toggle}
-      matches={{ accounts: Object.values(scores).filter((x) => x.m.total >= 70).length, contacts: P.length }}
+    <DiscoveryPanel criteria={criteria} onApply={setCriteria} onSave={saveCriteria} savedMeta={savedMeta} collapsed={collapsed} onToggle={toggle}
+      matches={{ accounts: A.filter((a) => scores[a.id] && scores[a.id].m.total >= 70 && a.icp_status !== "Not ICP").length, contacts: people.length }}
       country={country} onResearch={researchMore} researchMsg={researchMsg} />
     <div className="app-main">
       <Hero title={(HERO[tab] || HERO.dashboard)[0]} text={(HERO[tab] || HERO.dashboard)[1]} />
@@ -616,6 +647,8 @@ function DrillDown({ d, byCo, onClose, onAccount, onContact }: { d: { title: str
 function ContactCard({ p, data, onClose, onAccount }: { p: Row; data: AllData; onClose: () => void; onAccount: (id: string) => void }) {
   const nk = (n: unknown) => str(n).toLowerCase().replace(/^(dr|eng|mr|ms|mrs|h\.?e)\.?\s+/, "").replace(/[^a-z]/g, "");
   const others = data.contacts.filter((x) => x.id !== p.id && nk(x.full_name) === nk(p.full_name) && (x.company_id === p.company_id || x.company_ref_name === p.company_ref_name));
+  const person = buildPeople([p, ...others.filter((o) => o.company_id === p.company_id)])[0] as Person | undefined;
+  const same = (a: unknown, b: unknown) => !str(a) || !str(b) ? "" : str(a).trim().toLowerCase() === str(b).trim().toLowerCase() ? " ✓" : " ≠";
   const hist = data.history.filter((h) => nk(h.full_name) === nk(p.full_name) && h.company_id === p.company_id);
   const copy = async (t: string) => { try { await navigator.clipboard.writeText(t); } catch { /* ignore */ } };
   return (
@@ -628,6 +661,7 @@ function ContactCard({ p, data, onClose, onAccount }: { p: Row; data: AllData; o
             <div className="muted">{p.role_family} · {p.contact_tier} · {p.channel_state}</div>
             <h3>{p.full_name}</h3>
             <div className="note">{p.title_verbatim}</div>
+            {person && <div style={{ marginTop: 6 }}><TrustTag t={person.trust} why={person.trust_reason} /> <span className="muted">{person.trust_reason}</span></div>}
           </div>
           <button className="btn ghost" type="button" onClick={() => onAccount(p.company_id)}>Company brief</button>
           <button className="btn ghost" type="button" onClick={onClose}>Close</button>
@@ -650,10 +684,14 @@ function ContactCard({ p, data, onClose, onAccount }: { p: Row; data: AllData; o
           {p.claude_check && <div className="block"><h4>Claude check</h4><p>{p.claude_check}</p></div>}
           {p.notes_contact && <div className="block"><h4>Notes / intel</h4><p style={{ whiteSpace: "pre-wrap" }}>{p.notes_contact}</p></div>}
           {p.s2p_contact_signal && <div className="block"><h4>S2P relevance</h4><p>{p.s2p_contact_signal}</p></div>}
-          {others.length > 0 && <div className="block"><h4>Other records for this person ({others.length})</h4>
-            <div className="tablewrap"><table><thead><tr><th>Channel</th><th>Title</th><th>Email</th><th>Phone</th><th>Record</th></tr></thead>
-              <tbody>{others.map((o) => <tr key={o.id}><td>{o.channel_state}</td><td>{o.title_verbatim}</td><td className="mono">{o.email}<div className="muted">{o.email_status}</div></td>
-                <td className="mono">{o.phone}</td><td className="muted">{o.record_status}</td></tr>)}</tbody></table></div></div>}
+          <div className="block"><h4>What each source says ({1 + others.length} record{others.length ? "s" : ""})</h4>
+            <p className="note">✓ = agrees with the record shown above · ≠ = differs · blank = not provided by that source.</p>
+            <div className="tablewrap"><table><thead><tr><th>Source</th><th>Title</th><th>Email</th><th>Phone</th><th>LinkedIn</th><th>Status</th></tr></thead>
+              <tbody>{[p, ...others].map((o) => <tr key={o.id}><td><b>{contributorOf(o)}</b>{o.id === p.id && <div className="muted">shown above</div>}</td>
+                <td>{o.title_verbatim}{o.id !== p.id && same(o.title_verbatim, p.title_verbatim)}</td>
+                <td className="mono">{o.email}{o.id !== p.id && same(o.email, p.email)}<div className="muted">{o.email_status}</div></td>
+                <td className="mono">{o.phone}{o.id !== p.id && same(o.phone, p.phone)}</td><td><Ext href={o.linkedin_url}>profile</Ext></td>
+                <td className="muted">{[o.verification_status, o.employment_status, o.record_status].filter(Boolean).join(" · ")}</td></tr>)}</tbody></table></div></div>
           {hist.length > 0 && <div className="block"><h4>Employment history ({hist.length})</h4>
             {hist.slice(0, 12).map((h) => <p key={h.id} className="note"><b>{h.title}</b> · {h.company} <span className="muted">— {h.determination}{h.evidence ? ` (${h.evidence})` : ""}</span></p>)}</div>}
         </div>

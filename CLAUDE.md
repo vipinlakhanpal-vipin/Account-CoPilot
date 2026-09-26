@@ -62,7 +62,12 @@ The goal is to move accounts out of Likely / Needs check / Unknown by finding of
 - `/guide` documents every feature, the point system and the engine steps. Update it whenever a feature or rule changes (the spend table reads `SPEND_BENCHMARKS` from `lib/icp.ts`).
 - **Research more** (left panel) → `app/api/discover` → `discoverCompanies()` in `lib/research/engine.ts`. It is paid and user-triggered with a confirmation: it adds companies as list "Claude discovery" and, optionally, runs a Quick research per company. `app/api/research` now sets ICP status from the researched revenue (same rule as recompute).
 
-## Source catalogue (v1.13)
+## Source catalogue (v1.17: origin / contributor / trust / evidence)
+- **Origin** (`originOf` in `lib/sources.ts`): exactly one per company (workbook, then Seamless discovery, Claude discovery, Claude research, user list), so the tiles add up to the total. **Contributors** (CoPilot, Claude in Copilot, Claude-Seamless, Claude check, revenue check, user confirmations) are breakdowns, never separate company counts. The user's workbook is ONE source that already combines CoPilot, Claude-in-Copilot and Claude-Seamless work.
+- **People** (`lib/people.ts`): contact rows are grouped by company + name into one person (835 people from 1,093 rows). Trust: Conflicting (CONFLICTING, possible job change, different emails, or differs from the sheet); Confirmed by 2+ sources (2+ contributors, or Claude VERIFIED); otherwise Single source. No rows are deleted.
+- Left panel criteria are a draft until Refresh (apply) or Save (apply + `settings.icp_criteria` with `_meta` {by, at}); Reset asks first.
+
+### Earlier (v1.13)
 `lib/sources.ts` defines every source (channels: workbook, Stakeholders sheet, CoPilot, Claude research, Claude-Seamless, Seamless discovery, revenue check, user knowledge, LinkedIn snippets; evidence: filings, websites/portals, press, Seamless data, aggregators, job posts) with what it provides, how it's collected, its reliability and its cost. The Sources tab shows them as tiles (Source | Region → companies). Add a definition whenever a new source is used. `verify_revenue.mjs --apply` no longer duplicates source rows.
 
 ## Other pipelines

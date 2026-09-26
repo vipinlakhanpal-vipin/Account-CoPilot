@@ -58,7 +58,7 @@ export default async function GuidePage() {
                 ["Dashboard", "KPI tiles (click any tile to see the records behind it), charts by S2P signal, platform, ERP, role family and ICP status, and priority accounts."],
                 ["Pipeline", "Accounts ranked by the Pipeline rank (see Scores). Answers: which accounts should we work first?"],
                 ["Accounts", "Every account with revenue, ICP status, the three scores, record dates, lists, S2P signal and platform, ERP and contact count."],
-                ["Stakeholders", "Contacts with title (verbatim), role family, tier, channel, email, phone, LinkedIn and notes. Filtered by the Contact tab of the left panel."],
+                ["Stakeholders", "One row per person (merged from all sources) with a trust label, or all source rows. Title (verbatim), role family, tier, email, phone, LinkedIn. Select a person to compare what each source says. Filtered by the Contact tab of the left panel."],
                 ["Sources", "Where companies and facts come from: source tiles (Source | Region → companies), a source catalogue and the evidence table."],
                 ["S2P Signals", "Every Source-to-Pay signal with its level, evidence and source."],
                 ["ERP & Apps", "ERP and third-party applications with how each was verified (FACT / LIKELY / UNVERIFIED)."],
@@ -81,7 +81,13 @@ export default async function GuidePage() {
               <p className="note">Seamless revenue bands are unreliable on their own: of 11 companies with official figures, 8 fell on the wrong side of $250M. So a Seamless band only counts when the headcount supports it, and it can never make an account Verified. Hover a status anywhere for its reason.</p></section>
 
             <section id="panel" className="panel"><h2>Account Discovery Criteria panel (left)</h2>
-              <p>The panel <b>searches, filters and ranks accounts already in the app</b>. Only the <b>Research more</b> button (bottom of the panel, amber cost note, asks you to confirm) searches for new companies: pick a country tile first, choose how many (3 / 5 / 10) and whether to profile each. <b>Save as team ICP</b> stores the criteria for everyone; <b>Reset</b> returns to the default (revenue $250M+, 100+ staff, UAE).</p>
+              <p>The panel <b>searches, filters and ranks accounts already in the app</b>. Edits are a draft (the summary shows "changes not applied") until you use the three buttons at the bottom, each showing its own result:</p>
+              <ul className="plain">
+                <li><b>↻ Refresh</b> re-applies your criteria to every tab and shows the new Pipeline and contact counts, with shortcuts to open them.</li>
+                <li><b>✓ Save</b> applies the criteria and saves them as the team ICP (who saved it and when is shown), so everyone ranks the same way.</li>
+                <li><b>↺ Reset</b> asks first, then returns to the default ICP (revenue $250M+, 100+ staff, UAE). The saved team ICP isn't changed until you save.</li>
+              </ul>
+              <p>Only the <b>Research more</b> section (amber cost note, asks you to confirm) searches for new companies: pick a country tile first, choose 3 / 5 / 10 and whether to profile each.</p>
               <h3>Company tab</h3>
               <T head={["Option", "Effect"]} rows={[
                 ["Company name, Website, Headquarters location", "Hard filter: non-matching accounts are hidden in every tab."],
@@ -154,8 +160,14 @@ export default async function GuidePage() {
                   ["other / unknown", "45%", "40%", "15%", "8%", "25%", "12%"]]} /></section>
 
             <section id="sources" className="panel"><h2>Sources</h2>
-              <p>The Sources tab shows tiles "Source | Region" with the number of companies profiled; select a tile to see them. A company can appear under several tiles. The evidence table lists every source used, filterable by source group, tier, type and confidence.</p>
-              <T head={["Source", "Group", "What it provides", "Reliability"]} rows={SOURCES.map((d) => [d.name, d.group === "channel" ? "Channel" : "Evidence", d.provides, d.reliability])} /></section>
+              <p>The Sources tab uses three simple ideas, each as tiles "Name | Region" with a count; select a tile to see the records.</p>
+              <ul className="plain">
+                <li><b>Origin</b>: where each company came from — exactly one per company, so the tiles add up to the total (your workbook, Claude research, Seamless discovery, Claude discovery, your customer list).</li>
+                <li><b>Contributors</b>: who added or checked data inside an origin — e.g. your workbook combines CoPilot, Claude in Copilot and Claude-Seamless rows; Claude checks add verification rows. Shown as a breakdown, never as separate company counts.</li>
+                <li><b>Trust</b>: companies by ICP status (official revenue or estimate); contacts as one record per person — <i>Confirmed by 2+ sources</i> (two or more contributors agree, or Claude verified from an official source), <i>Single source</i>, or <i>Conflicting</i> (sources disagree, different emails, or a possible job change).</li>
+                <li><b>Evidence</b>: the type of document behind each fact; the evidence table lists every source used.</li>
+              </ul>
+              <T head={["Source", "Group", "What it provides", "Reliability"]} rows={SOURCES.map((d) => [d.name, d.group === "origin" ? "Origin" : d.group === "contributor" ? "Contributor" : "Evidence", d.provides, d.reliability])} /></section>
 
             <section id="dates" className="panel"><h2>Record dates</h2>
               <p><b>Added</b> = when the account entered the app · <b>Updated</b> = last change · <b>Status since</b> = when the ICP status last changed (with from → to kept in the record). Shown in Accounts, account briefs, drill-downs and the Excel export.</p></section>

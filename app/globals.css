@@ -326,3 +326,16 @@ aside.brief.contact{width:min(760px,100%);z-index:70}
 .update-bar button.upgrading{animation:upg-flash .8s ease-in-out infinite;cursor:progress}
 .update-bar.done{background:linear-gradient(90deg,rgba(46,204,143,.25),rgba(46,196,166,.18))}
 @media (prefers-reduced-motion:reduce){.update-bar button.upgrading{animation:none;opacity:.7}}
+.trust{display:inline-block;font:600 11px var(--body);border-radius:999px;padding:2px 8px;white-space:nowrap}
+.trust.t-ok{background:rgba(46,204,143,.2);color:#7DF0C0}.trust.t-one{background:rgba(58,160,255,.18);color:#9CCBFF}.trust.t-bad{background:rgba(255,77,106,.18);color:#FF9DAE}
+.seg-toggle{display:inline-flex;gap:4px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:10px;padding:3px;margin-bottom:10px}
+.seg-toggle button{background:none;border:0;color:var(--muted);font:600 12.5px var(--body);padding:6px 12px;border-radius:8px;cursor:pointer}
+.seg-toggle button[aria-pressed="true"]{background:rgba(46,196,166,.22);color:#EFFFFA}
+.src-h3{margin:12px 0 6px;font-size:13px;color:var(--muted)}
+.dp-foot{flex-direction:column;align-items:stretch}.dp-seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:10px;padding:3px}
+.dp-seg button{background:none;border:0;color:var(--text);font:600 12.5px var(--body);padding:7px 4px;border-radius:8px;cursor:pointer}
+.dp-seg button[aria-pressed="true"]{background:rgba(46,196,166,.25);color:#EFFFFA}
+.dp-out{border:1px solid var(--line);border-radius:10px;padding:10px;font-size:12.5px;background:rgba(255,255,255,.03)}.dp-out p{margin:4px 0}
+.dp-out .ok{color:#7DF0C0}.dp-out .warn{color:#FFD27A}.dp-out .bad{color:#FF9DAE}
+.dp-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:6px 0}.dp-stats div{background:rgba(255,255,255,.04);border-radius:8px;padding:6px}.dp-stats small{display:block;color:var(--muted);font-size:11px}.dp-stats b{font-size:18px}
+.dp-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.dp-dirty{color:#FFD27A}
