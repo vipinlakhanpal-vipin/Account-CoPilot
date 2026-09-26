@@ -6,6 +6,7 @@ import Hero from "@/components/Hero";
 import type { AllData, Row } from "@/lib/data";
 import { ALL, COUNTRIES, DEFAULT_COUNTRY, countryCode } from "@/lib/countries";
 import DiscoveryPanel from "@/components/DiscoveryPanel";
+import { SOURCES, indexSources, evidenceGroup } from "@/lib/sources";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { withDefaults, icpMatch, opportunity, coupaFit, companyPasses, contactMatches, estimateSpend, whySelected, recommendedActions,
   type Criteria, type Score } from "@/lib/icp";
@@ -17,7 +18,7 @@ const HERO: Record<string, [string, string]> = {
   signals: ["S2P Signals", "Evidence-based Source-to-Pay, Coupa and SAP Ariba signals, strongest first."],
   erp: ["ERP & Apps", "ERP landscape and third-party applications, with how each was verified."],
   conflicts: ["Conflicts", "Where sources disagree. Both values are kept for you to resolve."],
-  sources: ["Sources", "The audit trail behind every fact: source, type, date and confidence."],
+  sources: ["Sources", "Where every company and fact comes from. Select a source tile to see the companies profiled from it; the catalogue explains what each source provides and how far to trust it."],
   pipeline: ["Pipeline", "Accounts ranked by ICP Match, Opportunity and Coupa Fit against your discovery criteria. Select one for why it was selected and what to do next."],
 };
 type Scores = { m: Score; o: Score; f: ReturnType<typeof coupaFit>; rank: number };
@@ -293,13 +294,43 @@ export default function CoPilotApp({ data: all }: { data: AllData }) {
         { h: "Source B", cell: (c) => c.source_b }, { h: "Determination", cell: (c) => c.determination, wrap: true }]}
       onRow={openRow} />;
   } else if (tab === "sources") {
-    view = <FilterTable unit="sources" title="Source evidence" note="The audit trail behind every fact." rows={data.sources}
+    const region = country === ALL ? "All regions" : country;
+    const idx = indexSources(A, data.sources.filter((s) => A.some((a) => a.id === s.company_id)), data.contacts);
+    const tiles = (group: "channel" | "evidence") => (
+      <div className="kpis src-tiles">{SOURCES.filter((d) => d.group === group).map((d) => {
+        const rows = idx[d.key] || [];
+        const byC = country === ALL ? countBy(rows, (a) => countryCode(a.country)).map(([k, n]) => `${k} ${n}`).join(" · ") : "";
+        return (
+          <button type="button" key={d.key} className={`kpi src-tile${rows.length ? "" : " empty"}`} style={{ "--k": d.color } as React.CSSProperties}
+            onClick={() => rows.length && setDrill({ title: `${d.name} | ${region}`, kind: "accounts", rows })} title={`${d.what}\nProvides: ${d.provides}`}>
+            <small>{d.name} <span className="src-region">| {region}</span></small><b>{rows.length.toLocaleString()}</b>
+            <em>companies profiled{byC && ` · ${byC}`}</em><span className="kpi-go" aria-hidden="true">View →</span>
+          </button>);
+      })}</div>);
+    const catalogue = (group: "channel" | "evidence") => (
+      <details className="src-cat"><summary>What each source is, what it provides and how far to trust it</summary>
+        <div className="tablewrap"><table><thead><tr><th>Source</th><th>What it is</th><th>Provides</th><th>How it's collected</th><th>Reliability</th><th>Cost</th></tr></thead>
+          <tbody>{SOURCES.filter((d) => d.group === group).map((d) => (
+            <tr key={d.key}><td><span className="src-dot" style={{ background: d.color }} /> <b>{d.name}</b></td><td className="wrap">{d.what}</td><td className="wrap">{d.provides}</td>
+              <td className="wrap">{d.how}</td><td className="wrap">{d.reliability}</td><td>{d.cost}</td></tr>))}</tbody></table></div></details>);
+    view = <>
+      <div className="panel src-panel">
+        <h2>Channels — how companies were found and profiled</h2>
+        <p className="note">A company can appear under several channels (for example your workbook, then Claude research, then a revenue check). Select a tile to see its companies.</p>
+        {tiles("channel")}{catalogue("channel")}
+      </div>
+      <div className="panel src-panel">
+        <h2>Evidence types — the documents behind the facts</h2>
+        <p className="note">Counts are companies with at least one fact from that type of source. Tier 1 = official (annual reports, filings, company websites); Tier 3–4 = databases and estimates.</p>
+        {tiles("evidence")}{catalogue("evidence")}
+      </div>
+      <FilterTable unit="sources" title="Source evidence" note="The audit trail behind every fact: one row per source used, with what was found and how confident we are." rows={data.sources}
       search={(s) => [s.company, s.source, s.information_found, s.url].join(" ")}
-      filters={[{ label: "Tier", get: (s) => s.source_tier }, { label: "Type", get: (s) => s.source_type }, { label: "Confidence", get: (s) => s.confidence }]}
+      filters={[{ label: "Source group", get: (s) => evidenceGroup(s) }, { label: "Tier", get: (s) => s.source_tier }, { label: "Type", get: (s) => s.source_type }, { label: "Confidence", get: (s) => s.confidence }]}
       cols={[{ h: "Company", cell: (s) => s.company }, { h: "Source", cell: (s) => s.source }, { h: "Type", cell: (s) => s.source_type }, { h: "Tier", cell: (s) => s.source_tier },
         { h: "Information found", cell: (s) => s.information_found, wrap: true }, { h: "Published", cell: (s) => <span className="mono">{s.date_published}</span> },
         { h: "Confidence", cell: (s) => s.confidence }, { h: "URL", cell: (s) => <Ext href={s.url}>open</Ext> }]}
-      onRow={openRow} />;
+      onRow={openRow} /></>;
   } else {
     const top = A.filter((a) => sigRank(a.s2p_signal_level) <= 1).sort((a, b) => sigRank(a.s2p_signal_level) - sigRank(b.s2p_signal_level));
     const ACT = ["Evaluation", "RFP / Tender", "Currently Implementing", "Replacement / Transformation"];

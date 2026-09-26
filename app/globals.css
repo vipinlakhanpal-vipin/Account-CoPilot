@@ -307,3 +307,10 @@ aside.brief.contact{width:min(760px,100%);z-index:70}
 .spend-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
 .spend-grid div{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:8px;padding:8px}.spend-grid small{display:block;color:var(--muted);font-size:11px}
 .rec-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}.rec-grid p{margin:4px 0 0;font-size:13px}
+.src-panel{margin-bottom:16px}.src-panel h2{margin-top:0}
+.src-tiles{margin-top:10px}
+.src-tile{text-align:left;cursor:pointer;position:relative;background:color-mix(in srgb, var(--k) 10%, transparent)}
+.src-tile:hover{background:color-mix(in srgb, var(--k) 18%, transparent)}.src-tile:hover .kpi-go{opacity:1}
+.src-tile.empty{opacity:.5;cursor:default}.src-region{font-weight:700;color:#fff;opacity:.85}
+.src-cat{margin-top:12px}.src-cat summary{cursor:pointer;font-size:12.5px;color:var(--teal)}.src-cat .tablewrap{margin-top:8px}
+.src-dot{display:inline-block;width:9px;height:9px;border-radius:50%;vertical-align:middle}

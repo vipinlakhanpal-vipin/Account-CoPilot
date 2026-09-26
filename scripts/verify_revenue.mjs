@@ -114,8 +114,11 @@ if (!APPLY) {
       icp_fit_reason: r.reasoning, last_verified: r.checked_at, updated_at: now, profile,
     }).eq("id", c.id);
     if (e) throw e;
-    if (r.source_url) await db.from("sources").insert({ company_id: c.id, source: r.source_name, source_type: r.source_kind, url: r.source_url,
-      information_found: `Revenue ${r.revenue_local || r.net_revenue_usd_m + " USD m"} (${r.fiscal_year}, ${r.revenue_type})`, evidence: r.reasoning,
+    // One source row per company + URL + finding: re-running --apply must not duplicate the audit trail.
+    const info = `Revenue ${r.revenue_local || r.net_revenue_usd_m + " USD m"} (${r.fiscal_year}, ${r.revenue_type})`;
+    const { data: dupe } = r.source_url ? await db.from("sources").select("id").eq("company_id", c.id).eq("url", r.source_url).eq("information_found", info).limit(1) : { data: [] };
+    if (r.source_url && !dupe?.length) await db.from("sources").insert({ company_id: c.id, source: r.source_name, source_type: r.source_kind, url: r.source_url,
+      information_found: info, evidence: r.reasoning,
       confidence: r.revenue_status === "FACT" ? "HIGH" : r.revenue_status === "LIKELY" ? "MEDIUM" : "LOW", supports_s2p_status: "N/A" });
     n++;
   }

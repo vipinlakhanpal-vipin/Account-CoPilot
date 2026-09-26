@@ -6,8 +6,8 @@ import ProfileMenu from "@/components/ProfileMenu";
 import { useNewVersion } from "@/components/useVersion";
 import { APP_VERSION } from "@/lib/version";
 
-const NAV = [["/", "Dashboard"], ["/?tab=pipeline", "Pipeline"], ["/?tab=accounts", "Accounts"], ["/?tab=stakeholders", "Stakeholders"], ["/?tab=signals", "S2P Signals"],
-  ["/?tab=erp", "ERP & Apps"], ["/?tab=conflicts", "Conflicts"], ["/?tab=sources", "Sources"], ["/research", "Research Queue"], ["/settings", "Settings"]];
+const NAV = [["/", "Dashboard"], ["/?tab=pipeline", "Pipeline"], ["/?tab=accounts", "Accounts"], ["/?tab=stakeholders", "Stakeholders"], ["/?tab=sources", "Sources"], ["/?tab=signals", "S2P Signals"],
+  ["/?tab=erp", "ERP & Apps"], ["/?tab=conflicts", "Conflicts"], ["/research", "Research Queue"], ["/settings", "Settings"]];
 
 const Spin = () => (
   <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9M13.5 2.5v3h-3" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>

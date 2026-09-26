@@ -1,7 +1,8 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.12";
+export const APP_VERSION = "1.13";
 
 export const RELEASES: { version: string; date: string; notes: string }[] = [
+  { version: "1.13", date: "2026-09-26", notes: "Sources tab moved next to Stakeholders: colour source tiles (Source | Region, companies profiled, click to view) for channels and evidence types, a source catalogue (what, provides, how collected, reliability, cost) and a Source group filter; duplicate source rows removed." },
   { version: "1.12", date: "2026-09-26", notes: "Account Discovery Criteria panel (left): company and contact criteria saved for the team; ICP Match, Opportunity and Coupa Fit scores with breakdowns; ranked Pipeline tab; AI intelligence in account briefs (why selected, spend estimates, recommended actions); 224 Seamless discovery accounts; user-confirmed Coupa customers." },
   { version: "1.11", date: "2026-09-25", notes: "Footer: Designed and created by Vipin." },
   { version: "1.10", date: "2026-09-25", notes: "Country tiles under the nav filter the dashboard and every tab; record dates (added, updated, status since) in Accounts, briefs and Excel; cost-impact notes on actions that use the Anthropic API; all nav tabs fit on screen; revenue checks keep their notes on recompute." },
