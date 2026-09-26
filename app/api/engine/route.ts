@@ -39,9 +39,12 @@ async function summary(db: ReturnType<typeof supabaseAdmin>) {
     balanceLeft: balance.amount !== undefined ? +(balance.amount - spentSinceBalance).toFixed(2) : null, est: EST };
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   if (!(await requireUser())) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
-  return NextResponse.json(await summary(supabaseAdmin()));
+  const db = supabaseAdmin();
+  // ?only=log → just the scheduled-run notifications (for the bell in the top bar).
+  if (new URL(req.url).searchParams.get("only") === "log") return NextResponse.json(await getSetting(db, "engine_log", { entries: [] }));
+  return NextResponse.json({ ...(await summary(db)), log: (await getSetting<{ entries: unknown[] }>(db, "engine_log", { entries: [] })).entries });
 }
 
 const Body = z.discriminatedUnion("action", [

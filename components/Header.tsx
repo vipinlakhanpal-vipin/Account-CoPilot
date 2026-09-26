@@ -4,6 +4,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Logo from "@/components/Logo";
 import ProfileMenu from "@/components/ProfileMenu";
+import EngineBell from "@/components/EngineBell";
 import { useNewVersion } from "@/components/useVersion";
 import { APP_VERSION } from "@/lib/version";
 
@@ -93,6 +94,7 @@ export default function Header({ active, subtitle }: { active: string; subtitle:
             <a className="btn primary dl" href="/api/export" title="Download Master Book (.xlsx)">
               <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m0 0-3-3m3 3 3-3M3 13h10" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
               <span>Master Book</span></a>
+            <EngineBell />
             <ProfileMenu />
           </div>
         </div>

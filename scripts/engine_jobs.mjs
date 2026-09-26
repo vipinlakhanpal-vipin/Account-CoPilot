@@ -2,6 +2,7 @@
 //   node scripts/engine_jobs.mjs claim            → prints the oldest queued job as JSON and marks it running (or "none")
 //   node scripts/engine_jobs.mjs done <id> "<result summary>"
 //   node scripts/engine_jobs.mjs error <id> "<message>"
+//   node scripts/engine_jobs.mjs log "<summary>" [verified_count] [new_company names separated by ;]   → in-app notification (bell)
 import fs from "node:fs";
 import { createClient } from "@supabase/supabase-js";
 
@@ -24,4 +25,12 @@ if (cmd === "claim") {
   if (!job) throw new Error(`job ${id} not found`);
   job.status = cmd; job.done_at = new Date().toISOString(); job.result = text || "";
   await save(); console.log(`${id} → ${cmd}`);
-} else console.log("usage: claim | done <id> <result> | error <id> <message>");
+} else if (cmd === "log") {
+  const [, summary, verified, names] = process.argv.slice(2);
+  const { data: l } = await db.from("settings").select("value").eq("key", "engine_log").maybeSingle();
+  const entries = l?.value?.entries || [];
+  entries.unshift({ at: new Date().toISOString(), summary: summary || "", verified: Number(verified) || 0,
+    new_companies: String(names || "").split(";").map((x) => x.trim()).filter(Boolean) });
+  await db.from("settings").upsert({ key: "engine_log", value: { entries: entries.slice(0, 60) }, updated_at: new Date().toISOString() });
+  console.log("logged");
+} else console.log("usage: claim | done <id> <result> | error <id> <message> | log <summary> [verified] [names;…]");

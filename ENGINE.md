@@ -31,5 +31,9 @@ If `none`, do step 4 (default work) instead. `count: "max"` = as many as you can
 (or `error <id> "<reason>"`). Claim the next job if time allows.
 Do **not** commit result files (`data/` is git-ignored) and do not change app code.
 
+## 3b. Notify (always, at the very end of the session)
+`node scripts/engine_jobs.mjs log "<one-line summary: what you did, results>" <verified_count> "<new company names separated by ;>"`
+This shows as a notification (bell) in the app's top bar and in Settings → Scheduled run history.
+
 ## 4. Default work when no job is queued
 Verify 30 companies from the revenue queue for UAE (same method), then finish without claiming.
