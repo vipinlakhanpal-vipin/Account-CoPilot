@@ -8,7 +8,7 @@ import { loadAll } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
-const LABELS: Record<string, string> = { accounts: "Accounts", stakeholders: "Stakeholders", signals: "S2P Signals", erp: "ERP & Apps", conflicts: "Conflicts", sources: "Sources" };
+const LABELS: Record<string, string> = { pipeline: "Pipeline", accounts: "Accounts", stakeholders: "Stakeholders", signals: "S2P Signals", erp: "ERP & Apps", conflicts: "Conflicts", sources: "Sources" };
 
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {

@@ -67,6 +67,16 @@ for (const c of cos) {
     else if (yHigh || sHigh) { status = "ICP — Likely"; reason = `${parts.join(" · ")} — above $250M, not yet confirmed from an official source.`; }
     else if ((hasYours && !yHigh) || sLow) { status = "Not ICP"; reason = `${parts.join(" · ")} — below $250M.`; }
     else { status = "ICP — Needs check"; reason = `${parts.join(" · ")} — Seamless band straddles $250M.`; }
+  } else if (c.profile?.["Seamless discovery"]) {
+    // Seamless discovery rows: Seamless revenue bands are unreliable on their own (single hotels show "$1B+"),
+    // so the band only counts when headcount agrees. 1,001+ staff → Likely; 201-1,000 staff → Needs check.
+    const d = c.profile["Seamless discovery"];
+    const staff = Number(String(d.employee_count || "").replace(/\D/g, "")) || 0;
+    const band = BAND[d.revenue_range];
+    display = band ? band[0] : null; displaySrc = "Seamless band";
+    if (band && band[0] >= 250 && staff >= 1001) { status = "ICP — Likely"; reason = `Seamless discovery: revenue band ${d.revenue_range}, ${d.staff_range} — band and headcount agree, not yet confirmed from an official source.`; }
+    else if (band && band[0] >= 250) { status = "ICP — Needs check"; reason = `Seamless discovery: revenue band ${d.revenue_range} but only ${d.staff_range} — headcount looks small for that revenue; needs an official figure.`; }
+    else { status = "Unknown"; reason = "Seamless discovery record without a usable revenue band."; }
   } else {
     status = "Unknown"; reason = "No revenue figure in your data, Seamless or research yet.";
   }

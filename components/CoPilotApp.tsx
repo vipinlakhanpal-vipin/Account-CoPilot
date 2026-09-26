@@ -5,6 +5,10 @@ import { useSearchParams } from "next/navigation";
 import Hero from "@/components/Hero";
 import type { AllData, Row } from "@/lib/data";
 import { ALL, COUNTRIES, DEFAULT_COUNTRY, countryCode } from "@/lib/countries";
+import DiscoveryPanel from "@/components/DiscoveryPanel";
+import { supabaseBrowser } from "@/lib/supabase/browser";
+import { withDefaults, icpMatch, opportunity, coupaFit, companyPasses, contactMatches, estimateSpend, whySelected, recommendedActions,
+  type Criteria, type Score } from "@/lib/icp";
 
 const HERO: Record<string, [string, string]> = {
   dashboard: ["Dashboard", "A live snapshot of UAE target accounts, S2P signals, ERP landscape and decision makers."],
@@ -14,7 +18,11 @@ const HERO: Record<string, [string, string]> = {
   erp: ["ERP & Apps", "ERP landscape and third-party applications, with how each was verified."],
   conflicts: ["Conflicts", "Where sources disagree. Both values are kept for you to resolve."],
   sources: ["Sources", "The audit trail behind every fact: source, type, date and confidence."],
+  pipeline: ["Pipeline", "Accounts ranked by ICP Match, Opportunity and Coupa Fit against your discovery criteria. Select one for why it was selected and what to do next."],
 };
+type Scores = { m: Score; o: Score; f: ReturnType<typeof coupaFit>; rank: number };
+const ScoreChip = ({ s, label }: { s: Score; label: string }) => (
+  <span className={`score ${s.total >= 70 ? "hi" : s.total >= 45 ? "mid" : "lo"}`} title={`${label} ${s.total}/100\n` + s.parts.map((p) => `${p.label}: ${p.score}/${p.max} — ${p.why}`).join("\n")}>{s.total}</span>);
 
 const SIG = ["VERY STRONG SIGNAL", "STRONG SIGNAL", "MODERATE SIGNAL", "WEAK SIGNAL", "NO SIGNAL", "CONFLICTING SIGNAL"];
 const PALETTE = ["#3AA0FF", "#2ECC8F", "#9B6BFF", "#F5A623", "#6C7BFF", "#FF4D6A", "#2EC4A6", "#E052C8", "#5AD1FF", "#B6E36B"];
@@ -172,7 +180,33 @@ export default function CoPilotApp({ data: all }: { data: AllData }) {
     return { ...all, accounts, contacts: all.contacts.filter(mine), signals: all.signals.filter(mine), sources: all.sources.filter(mine),
       conflicts: all.conflicts.filter(mine), apps: all.apps.filter(mine), history: all.history.filter(mine) };
   }, [all, country]);
-  const { accounts: A, contacts: P } = data;
+  const [criteria, setCriteria] = useState<Criteria>(withDefaults());
+  const [saved, setSaved] = useState("");
+  const [collapsed, setCollapsed] = useState(false);
+  useEffect(() => {
+    try { setCollapsed(localStorage.getItem("dp-collapsed") === "1"); } catch {}
+    supabaseBrowser().from("settings").select("value").eq("key", "icp_criteria").maybeSingle()
+      .then(({ data: row }) => { if (row?.value) setCriteria(withDefaults(row.value as Criteria)); });
+  }, []);
+  const toggle = () => setCollapsed((c) => { try { localStorage.setItem("dp-collapsed", c ? "0" : "1"); } catch {} return !c; });
+  async function saveCriteria() {
+    const { error } = await supabaseBrowser().from("settings").upsert({ key: "icp_criteria", value: criteria, updated_at: new Date().toISOString() });
+    setSaved(error ? `Could not save: ${error.message}` : "Saved for the team.");
+    setTimeout(() => setSaved(""), 4000);
+  }
+  // Criteria: text fields filter companies; everything else is scored so accounts are ranked, not hidden.
+  const contactSet = Object.entries(criteria.contact).some(([, v]) => (Array.isArray(v) ? v.length : v));
+  const A = useMemo(() => data.accounts.filter((a) => companyPasses(a, criteria)), [data.accounts, criteria]);
+  const P = useMemo(() => { const ids = new Set(A.map((a) => a.id));
+    return data.contacts.filter((p) => ids.has(p.company_id) && (!contactSet || contactMatches(p, criteria, data.history, famKey))); }, [data, A, criteria, contactSet]);
+  const scores = useMemo(() => {
+    const hires: Record<string, number> = {};
+    data.history.forEach((h) => { if (/change|promot|join|hire/i.test(str(h.determination))) hires[h.company_id] = (hires[h.company_id] || 0) + 1; });
+    const m: Record<string, Scores> = {};
+    A.forEach((a) => { const x = icpMatch(a, criteria), o = opportunity(a, hires[a.id] || 0), f = coupaFit(a);
+      m[a.id] = { m: x, o, f, rank: Math.round(x.total * 0.5 + o.total * 0.3 + f.total * 0.2) }; });
+    return m;
+  }, [A, criteria, data.history]);
   const [open, setOpen] = useState<string | null>(null);
   const [contact, setContact] = useState<string | null>(null);
   const [drill, setDrill] = useState<{ title: string; kind: Kind; rows: Row[] } | null>(null);
@@ -203,9 +237,23 @@ export default function CoPilotApp({ data: all }: { data: AllData }) {
       cols={[{ h: "Company", cell: (a) => <><b>{a.company_name}</b><div className="muted mono">{a.exchange} {a.ticker}</div></> },
         { h: "Industry", cell: (a) => a.industry }, { h: "Revenue", cell: (a) => { const r = bestRevenue(a); return r.v ? <><span className="mono">{usd(r.v)}</span>{r.src && <div className="rev-src">{r.src}</div>}</> : <span className="muted">—</span>; } },
         { h: "ICP status", cell: (a) => <><IcpTag s={a.icp_status} why={a.icp_fit_reason} /><div className="muted mono rec-since">since {statusSince(a) || "—"}</div></> },
+        { h: "ICP match", cell: (a) => scores[a.id] && <ScoreChip s={scores[a.id].m} label="ICP Match" /> },
+        { h: "Opportunity", cell: (a) => scores[a.id] && <ScoreChip s={scores[a.id].o} label="Opportunity" /> },
+        { h: "Coupa fit", cell: (a) => scores[a.id] && <ScoreChip s={scores[a.id].f} label="Coupa Fit" /> },
         { h: "Updated", cell: (a) => <Dates a={a} /> }, { h: "Lists", cell: (a) => <span className="muted">{(a.lists || []).join(", ")}</span> },
         { h: "Signal", cell: (a) => <Pill s={a.s2p_signal_level} /> }, { h: "Existing S2P", cell: (a) => a.existing_s2p_product },
         { h: "S2P status", cell: (a) => a.s2p_platform_status }, { h: "ERP", cell: (a) => a.erp }, { h: "Contacts", cell: (a) => <span className="mono">{(byCo[a.id] || []).length}</span> }]}
+      onRow={openRow} />;
+  } else if (tab === "pipeline") {
+    const ranked = A.filter((a) => scores[a.id] && scores[a.id].m.total >= 70 && a.icp_status !== "Not ICP").sort((a, b) => scores[b.id].rank - scores[a.id].rank);
+    view = <FilterTable unit="accounts" title="Ranked pipeline" note="Rank = 50% ICP Match + 30% Opportunity + 20% Coupa Fit. Accounts with ICP Match below 70 or Not ICP are left out. Hover a score for its breakdown; select a row for why it was selected and the recommended next steps."
+      rows={ranked} search={(a) => [a.company_name, a.industry, a.erp, a.existing_s2p_product].join(" ")}
+      filters={[{ label: "ICP status", get: (a) => a.icp_status }, { label: "S2P", get: (a) => a.existing_s2p_product }, { label: "Industry", get: (a) => a.industry }, { label: "Country", get: (a) => a.country }]}
+      cols={[{ h: "Rank", cell: (a) => <b className="mono">{scores[a.id].rank}</b> }, { h: "Company", cell: (a) => <><b>{a.company_name}</b><div className="muted">{a.industry} · {a.country}</div></> },
+        { h: "ICP match", cell: (a) => <ScoreChip s={scores[a.id].m} label="ICP Match" /> }, { h: "Opportunity", cell: (a) => <ScoreChip s={scores[a.id].o} label="Opportunity" /> },
+        { h: "Coupa fit", cell: (a) => <ScoreChip s={scores[a.id].f} label="Coupa Fit" /> }, { h: "ICP status", cell: (a) => <IcpTag s={a.icp_status} why={a.icp_fit_reason} /> },
+        { h: "Revenue", cell: (a) => <span className="mono">{usd(bestRevenue(a).v)}</span> }, { h: "Existing S2P", cell: (a) => a.existing_s2p_product },
+        { h: "Contacts", cell: (a) => <span className="mono">{(byCo[a.id] || []).length}</span> }]}
       onRow={openRow} />;
   } else if (tab === "stakeholders") {
     view = <FilterTable unit="contacts" title="Stakeholders" note="Company and contact details only. Emails are never pattern-guessed; a blank email means it could not be verified. Select a contact to open their contact card."
@@ -298,16 +346,21 @@ export default function CoPilotApp({ data: all }: { data: AllData }) {
   }
 
   return (
-    <>
+    <div className={`app-shell${collapsed ? " dp-closed" : ""}`}>
+    <DiscoveryPanel criteria={criteria} onChange={setCriteria} onSave={saveCriteria} saved={saved} collapsed={collapsed} onToggle={toggle}
+      matches={{ accounts: Object.values(scores).filter((x) => x.m.total >= 70).length, contacts: P.length }} />
+    <div className="app-main">
       <Hero title={(HERO[tab] || HERO.dashboard)[0]} text={(HERO[tab] || HERO.dashboard)[1]} />
       <section className="view">{A.length === 0
         ? <div className="panel"><h2>No {COUNTRIES.find((c) => c.code === country)?.name || country} accounts yet</h2>
             <p>This market is next on the roadmap. Add companies from the Research Queue (choose the country there), or pick another country above.</p></div>
         : view}</section>
       {drill && <DrillDown d={drill} byCo={byCo} onClose={() => setDrill(null)} onAccount={setOpen} onContact={setContact} />}
-      {open && <Brief a={A.find((x) => x.id === open)!} data={data} people={byCo[open] || []} onClose={() => setOpen(null)} onContact={setContact} />}
+      {open && A.find((x) => x.id === open) && <Brief a={A.find((x) => x.id === open)!} data={data} people={byCo[open] || []} onClose={() => setOpen(null)} onContact={setContact}
+        scores={scores[open]} criteria={criteria} />}
       {contact && (() => { const p = P.find((x) => x.id === contact); return p ? <ContactCard p={p} data={data} onClose={() => setContact(null)} onAccount={(id) => { setContact(null); setOpen(id); }} /> : null; })()}
-    </>
+    </div>
+    </div>
   );
 }
 
@@ -316,7 +369,11 @@ function Fact({ l, children }: { l: string; children: React.ReactNode }) {
   return <div className="fact"><small>{l}</small><div>{children}</div></div>;
 }
 
-function Brief({ a, data, people, onClose, onContact }: { a: Row; data: AllData; people: Row[]; onClose: () => void; onContact: (id: string) => void }) {
+function Brief({ a, data, people, onClose, onContact, scores, criteria }: { a: Row; data: AllData; people: Row[]; onClose: () => void; onContact: (id: string) => void;
+  scores?: Scores; criteria: Criteria }) {
+  const spend = criteria.showSpend ? estimateSpend(a) : null;
+  const why = scores ? whySelected(a, criteria, scores.m, spend) : [];
+  const rec = scores ? recommendedActions(a, people, scores.f) : null;
   const cs = [...people].sort((x, y) => str(x.contact_tier).localeCompare(str(y.contact_tier)));
   const sigs = data.signals.filter((s) => s.company_id === a.id).sort((x, y) => sigRank(x.level) - sigRank(y.level));
   const apps = data.apps.filter((s) => s.company_id === a.id && s.category !== "ERP (core)");
@@ -376,6 +433,30 @@ function Brief({ a, data, people, onClose, onContact }: { a: Row; data: AllData;
             <Fact l="ICP status"><IcpTag s={a.icp_status} why={a.icp_fit_reason} />{a.icp_fit_reason && <div className="note">{a.icp_fit_reason}</div>}</Fact>
             <Fact l="Lists">{(a.lists || []).join(", ")}</Fact>
           </div>
+          {scores && rec && <div className="block ai-block"><h4>AI intelligence</h4>
+            <div className="score-cards">
+              {([["ICP Match", scores.m], ["Opportunity", scores.o], ["Coupa Fit", scores.f]] as [string, Score][]).map(([l, sc]) => (
+                <div key={l} className="score-card"><small>{l}</small><b className={sc.total >= 70 ? "hi" : sc.total >= 45 ? "mid" : "lo"}>{sc.total}</b>
+                  <ul>{sc.parts.map((x) => <li key={x.label}><span>{x.label}</span><span className="mono">{x.score}/{x.max}</span><em>{x.why}</em></li>)}</ul></div>))}
+            </div>
+            <h5>Why this account was selected</h5><ul className="plain">{why.map((w) => <li key={w}>{w}</li>)}</ul>
+            {spend && <><h5>Procurement &amp; spend intelligence <span className="tag unv">ESTIMATE</span></h5>
+              <div className="spend-grid">{([["Total addressable spend", spend.total], ["Direct", spend.direct], ["Indirect", spend.indirect], ["MRO", spend.mro], ["Services", spend.services],
+                ["CAPEX", spend.capex], ["Annual procurement budget", spend.budget]] as [string, number][]).map(([l, v]) => <div key={l}><small>{l}</small><b>{usd(v)}</b></div>)}
+                {([["Invoices / month", spend.invoicesPerMonth], ["POs / month", spend.posPerMonth], ["Suppliers / year", spend.suppliers], ["Active suppliers", spend.activeSuppliers],
+                ["Procurement transactions / year", spend.transactionsPerYear]] as [string, number][]).map(([l, v]) => <div key={l}><small>{l}</small><b>~{v.toLocaleString()}</b></div>)}</div>
+              <p className="note">{spend.basis}</p></>}
+            <h5>Recommended actions</h5>
+            <div className="rec-grid">
+              <div><b>Connect with</b><ul className="plain">{rec.stakeholders.length ? rec.stakeholders.map((x) => <li key={x}>{x}</li>) : <li>No buying-committee contact on file yet: research the CPO / CFO.</li>}</ul></div>
+              <div><b>Suggested messaging</b><p>{rec.messaging}</p></div>
+              <div><b>Discovery questions</b><ul className="plain">{rec.questions.map((x) => <li key={x}>{x}</li>)}</ul></div>
+              <div><b>Potential pain points</b><ul className="plain">{rec.pains.map((x) => <li key={x}>{x}</li>)}</ul></div>
+              <div><b>Potential Coupa use cases</b><ul className="plain">{rec.useCases.map((x) => <li key={x}>{x}</li>)}</ul></div>
+              <div><b>Next steps</b><ul className="plain">{rec.next.map((x) => <li key={x}>{x}</li>)}</ul></div>
+            </div>
+            <p className="note">Scores and recommendations are rule-based on the evidence in this brief (no API cost). For a tailored write-up use Draft pitch plan below.</p>
+          </div>}
           <div className="block"><h4>S2P intelligence</h4><p>{a.s2p_strong_signals || "No S2P evidence found."}</p>
             {a.existing_s2p_detail && <p className="note">Detail: {a.existing_s2p_detail}</p>}
             <p className="note">Coupa: {a.coupa_opportunity_type || "No Evidence"} · Ariba: {a.ariba_opportunity_type || "No Evidence"}</p>

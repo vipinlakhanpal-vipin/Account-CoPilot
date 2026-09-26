@@ -53,6 +53,11 @@ The goal is to move accounts out of Likely / Needs check / Unknown by finding of
    `npx -y -p node@22 node scripts/verify_revenue.mjs --apply && npx -y -p node@22 node scripts/recompute_icp.mjs`
 5. When the session's web-search allowance runs out, stop and report progress. The next session resumes from the queue, which skips companies already done.
 
+## ICP scoring & discovery (v1.12)
+- `lib/icp.ts` is the engine (pure functions, reusable for a future multi-tenant product): criteria types and defaults, ICP Match, Opportunity and Coupa Fit scores (each 0-100 with parts and reasons), benchmark spend and transaction estimates (always labelled ESTIMATE), contact seniority, buying roles and engagement, and recommended actions. `components/DiscoveryPanel.tsx` is the left panel; criteria are saved in `settings.icp_criteria`. Pipeline rank = 50% match + 30% opportunity + 20% fit; the Pipeline tab shows match ≥ 70 and excludes Not ICP.
+- **Seamless discovery import:** `scripts/clean_seamless_discovery.py` sorts rows into buckets: KEEP, DUP (already in the app, or a unit of an account in the app), GOV, SINGLE (single hotel, hospital, school or attraction), BRANCH (local branch of a foreign HQ; not the decision-making entity), REGION and JUNK. Then `scripts/import_seamless_discovery.mjs <COUNTRY>` imports the KEEP rows. In `recompute_icp.mjs`, a Seamless band counts only when headcount agrees: 1,001+ staff gives Likely, 201-1,000 gives Needs check. Seamless revenue is unreliable: 8 of 11 companies with official figures fell on the wrong side of $250M, with some off by 10-1,000×. For UAE (2026-09-26), 224 of 386 were imported.
+- **Phase 2 (not built; needs the user's cost approval):** scheduled autonomous discovery and monitoring (Vercel cron → research engine), which spends Anthropic API credit. LinkedIn activity signals are not available (no scraping).
+
 ## Other pipelines
 - Research new companies (in-app, uses the API): Research Queue page → `app/api/research` → `lib/research/engine.ts` + `reconcile.ts`.
 - Seamless.ai (Claude connector): contact enrichment and verification (`scripts/build_verification.py` → `scripts/apply_verification.mjs`). The user approved credit use; check `get_credits` before and after.
