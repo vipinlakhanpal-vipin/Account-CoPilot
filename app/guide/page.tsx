@@ -107,7 +107,7 @@ export default async function GuidePage() {
               <p>Every score is 0–100 = points earned ÷ points available × 100. Only criteria you have set count towards ICP Match; unset criteria are left out (neutral). Hover a score for its breakdown; the account brief lists every part. Colour: green ≥ 70, amber 45–69, red &lt; 45. Scores are rule-based (no API cost).</p>
               <h3>ICP Match — how well the account fits your criteria</h3>
               <T head={["Part", "Points", "How it's earned"]} rows={[
-                ["Revenue", 30, "30 if the revenue is inside a selected band · 12 if no revenue figure yet · 0 if outside"],
+                ["Revenue", 30, "30 if an official revenue figure (annual report, filing, company-quoted press) is inside a selected band · 10 if only an estimate (your data, Seamless band, aggregator) is inside · 5 if no figure yet or sources disagree (Needs check) · 0 if outside"],
                 ["Employees", 15, "15 inside a selected band · 6 if unknown · 0 outside"],
                 ["Industry", 15, "15 if the industry is selected"],
                 ["Geography", 15, "15 if the country is in Country or Operating regions"],
@@ -136,7 +136,7 @@ export default async function GuidePage() {
               <p className="note">Areas scoring 15+ become the account's suggested Coupa use cases.</p></section>
 
             <section id="pipeline" className="panel"><h2>Pipeline</h2>
-              <p><b>Pipeline rank = 50% ICP Match + 30% Opportunity + 20% Coupa Fit.</b> The Pipeline tab lists accounts with ICP Match ≥ 70 that are not "Not ICP", highest rank first. The "accounts match" number in the left panel uses the same ≥ 70 threshold.</p></section>
+              <p><b>Pipeline rank = 50% ICP Match + 30% Opportunity + 20% Coupa Fit.</b> The Pipeline tab lists accounts with ICP Match ≥ 70 that are not "Not ICP", highest rank first. The "accounts match" number in the left panel uses the same ≥ 70 threshold. Because only official revenue earns full revenue points, the Pipeline in practice holds verified accounts; it grows as more accounts are verified.</p></section>
 
             <section id="brief" className="panel"><h2>Account brief</h2>
               <ul className="plain">

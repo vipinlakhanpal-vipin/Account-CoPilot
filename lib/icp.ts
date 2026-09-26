@@ -64,6 +64,8 @@ export const revenueOf = (a: Row): number | null => {
   const v = Number(d?.value_usd_m ?? a.verified_revenue_usd_m ?? a.revenue_usd_m);
   return isFinite(v) && v > 0 ? v : null;
 };
+/** Revenue confirmed from an official source (FACT revenue check or Claude research from filings/press). */
+export const revenueIsOfficial = (a: Row) => a.verified_revenue_status === "FACT" || ["Verified", "Claude research"].includes(String(a.profile?.["Display revenue"]?.source || ""));
 export const employeesOf = (a: Row): number | null => {
   const m = s(a.employee_range).replace(/,/g, "").match(/\d+/g);
   if (m) { const n = m.map(Number); return n.length > 1 && !/\+/.test(s(a.employee_range)) ? Math.round((n[0] + n[1]) / 2) : n[0]; }
@@ -163,8 +165,13 @@ const maturity = (a: Row) => {
 export function icpMatch(a: Row, c: Criteria): Score {
   const k = c.company, parts: Part[] = [];
   const rev = revenueOf(a), emp = employeesOf(a);
-  if (k.revenue.length) parts.push({ label: "Revenue", max: 30, score: inBands(rev, k.revenue, REV_BAND) ? 30 : rev === null ? 12 : 0,
-    why: rev === null ? "No revenue figure yet (partial credit)" : `${Math.round(rev)}M ${inBands(rev, k.revenue, REV_BAND) ? "in" : "outside"} selected bands` });
+  if (k.revenue.length) {
+    // Full points only for revenue confirmed from an official source; estimates (your data, Seamless bands, aggregators) get a third.
+    const official = revenueIsOfficial(a), inside = inBands(rev, k.revenue, REV_BAND), disputed = a.icp_status === "ICP — Needs check";
+    parts.push({ label: "Revenue", max: 30, score: rev === null || disputed ? 5 : !inside ? 0 : official ? 30 : 10,
+      why: rev === null ? "No revenue figure yet" : disputed ? "Sources disagree about $250M (needs check)"
+        : `${Math.round(rev)}M ${inside ? "in" : "outside"} selected bands — ${official ? "official figure" : "estimate only (not yet verified)"}` });
+  }
   if (k.employees.length) parts.push({ label: "Employees", max: 15, score: inBands(emp, k.employees, EMP_BAND) ? 15 : emp === null ? 6 : 0,
     why: emp === null ? "Headcount unknown (partial credit)" : `~${emp.toLocaleString()} staff` });
   if (k.industries.length) parts.push({ label: "Industry", max: 15, score: k.industries.includes(s(a.industry)) ? 15 : 0, why: s(a.industry) || "Industry unknown" });
