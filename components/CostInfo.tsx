@@ -9,6 +9,8 @@ const ROWS: [string, string, string, string][] = [
   ["Refresh research on an account", "Yes", "Same as a Standard run", "≈ $1.20–1.50"],
   ["Research more (left panel) — discovery search", "Yes", "Up to 8 searches + 4 page reads, then a short extraction", "≈ $0.50–1.00 per search"],
   ["Research more — 'and profile each'", "Yes", "One Quick research run per company found", "≈ $0.55 per company"],
+  ["Settings → Refresh (budgeted)", "Yes", "Updates + discovery + profiles, planned within your budget; unspent budget carries over", "Your budget (measured per run)"],
+  ["Settings → Search companies (scheduled sessions)", "No", "Runs in scheduled Claude sessions on your Claude plan", "$0 API"],
   ["Revenue check script (per company)", "Yes", "Measured: Al Batha 42,000 read + 2,400 written + 6 searches", "$0.33 (Al Ghurair: $1.59)"],
 ];
 

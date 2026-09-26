@@ -13,7 +13,8 @@ const { data, error } = await db.from("companies").select("slug,company_name,com
 if (error) throw error;
 const rank = { "ICP — Needs check": 0, Unknown: 1, "ICP — Likely": 2 };
 const done = new Set(fs.existsSync("data/verification/revenue") ? fs.readdirSync("data/verification/revenue").map((f) => f.replace(/\.json$/, "")) : []);
-const q = data.filter((c) => !done.has(c.slug)).map((c) => ({
+// Also skip companies whose revenue check is already stored in the database (cloud sessions start without local result files).
+const q = data.filter((c) => !done.has(c.slug) && !c.profile?.["Revenue check"]).map((c) => ({
   slug: c.slug, company_name: c.company_name, website: c.company_website || c.domain || "", industry: c.industry || "",
   current_status: c.icp_status, current_reason: c.icp_fit_reason || "",
   your_size_usd_m: c.profile?.["Vipin-Profiling"]?.["Size (USD m)"] ?? null,

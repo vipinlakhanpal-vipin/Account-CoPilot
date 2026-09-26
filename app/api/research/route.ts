@@ -2,7 +2,7 @@ import { NextResponse, after } from "next/server";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { researchNotes, extract, type Depth } from "@/lib/research/engine";
+import { researchNotes, extract, newMeter, meterCost, type Depth } from "@/lib/research/engine";
 import { reconcile } from "@/lib/research/reconcile";
 
 // Vercel Hobby allows up to 300s per function; Pro allows more. Deep research may need Pro.
@@ -14,6 +14,7 @@ const Body = z.object({
   depth: z.enum(["quick", "standard", "deep"]).default("standard"),
   roles: z.array(z.string()).default([]),
   companyId: z.string().uuid().optional(),
+  batchId: z.string().max(64).optional(), // Refresh batch (budget tracking)
 });
 
 export async function POST(req: Request) {
@@ -40,9 +41,10 @@ export async function POST(req: Request) {
 
   after(async () => {
     try {
-      const notes = await researchNotes({ company: b.company, country: b.country, roles: b.roles, depth: b.depth as Depth, existing });
+      const meter = newMeter();
+      const notes = await researchNotes({ company: b.company, country: b.country, roles: b.roles, depth: b.depth as Depth, existing }, meter);
       await db.from("research_runs").update({ status: "extracting" }).eq("id", run.id);
-      const result = await extract(notes, b.company);
+      const result = await extract(notes, b.company, meter);
       await db.from("research_runs").update({ status: "reconciling" }).eq("id", run.id);
       const { companyId, stats } = await reconcile(db, run.id, result, b.companyId);
       // Same rule as scripts/recompute_icp.mjs for Claude research: researched revenue decides Verified / Not ICP.
@@ -57,7 +59,8 @@ export async function POST(req: Request) {
             profile: status !== co.icp_status ? { ...(co.profile || {}), "Status changed": { at: now, from: co.icp_status || null, to: status } } : co.profile }).eq("id", companyId);
         }
       }
-      await db.from("research_runs").update({ status: "done", company_id: companyId, stats, finished_at: new Date().toISOString() }).eq("id", run.id);
+      await db.from("research_runs").update({ status: "done", company_id: companyId, finished_at: new Date().toISOString(),
+        stats: { ...stats, cost_usd: meterCost(meter), usage: meter, batch_id: b.batchId || null, kind: b.companyId ? "update" : "new" } }).eq("id", run.id);
     } catch (e) {
       await db.from("research_runs").update({ status: "error", error: e instanceof Error ? e.message : String(e), finished_at: new Date().toISOString() }).eq("id", run.id);
     }

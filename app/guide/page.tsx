@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 const TOC: [string, string][] = [["start", "Getting around"], ["engine", "How the engine works"], ["tabs", "Tabs"], ["countries", "Country tiles"], ["icp", "ICP status"],
   ["panel", "Discovery criteria panel"], ["scores", "Scores & point system"], ["pipeline", "Pipeline"], ["brief", "Account brief"],
-  ["spend", "Spend estimates"], ["sources", "Sources"], ["dates", "Record dates"], ["costs", "Costs"], ["excel", "Excel Master Book"],
+  ["spend", "Spend estimates"], ["sources", "Sources"], ["dates", "Record dates"], ["engineset", "Engine (Settings)"], ["costs", "Costs"], ["excel", "Excel Master Book"],
   ["rules", "Data rules"], ["limits", "What the app can't do"]];
 
 const T = ({ head, rows }: { head: string[]; rows: (string | number)[][] }) => (
@@ -175,6 +175,13 @@ export default async function GuidePage() {
 
             <section id="dates" className="panel"><h2>Record dates</h2>
               <p><b>Added</b> = when the account entered the app · <b>Updated</b> = last change · <b>Status since</b> = when the ICP status last changed (with from → to kept in the record). Shown in Accounts, account briefs, drill-downs and the Excel export.</p></section>
+
+            <section id="engineset" className="panel"><h2>Discovery & refresh engine (Admin → Settings)</h2>
+              <T head={["Option", "What it does", "Cost"]} rows={[
+                ["1 · Search companies", "Pick a region, how many (30 / 50 / max) and what to do (verify existing, find new, or both). Start queues a job; the next scheduled Claude session does it with its own web search, exactly like a verification session, and writes results into the app. The job list shows queued / running / done with a result summary.", "No API cost (uses your Claude plan's usage)"],
+                ["2 · Refresh", "Updates the companies researched longest ago in the region (re-research + ICP status), finds new ICP companies with one discovery search and profiles each. It plans as many as your budget allows (updates first); unspent budget carries over to the next Refresh. What it will do and its estimated cost are shown before you confirm.", "≈ $0.55 per update, ≈ $0.75 per discovery search, ≈ $0.55 per new profile (measured per run)"],
+                ["3 · API spend & balance", "Measured spend this month and all time (from every research, discovery and refresh run), the carry-over, and an estimated balance: enter the balance shown in the Anthropic Console and the app subtracts its spend from then on (the API key can't read the balance).", "Free"]]} />
+              <p className="note">Scheduled sessions follow ENGINE.md in the repository and need GitHub connected to Claude plus the Supabase keys set in the routine's environment.</p></section>
 
             <section id="costs" className="panel"><h2>Costs</h2>
               <p>Browsing, filtering, scoring and Excel export are free. Only actions with the amber <b>Cost impact</b> note call the Anthropic API: Draft pitch plan (≈ $0.05–0.10), Refresh research (≈ $1.20–1.50), Research Queue runs (≈ $0.55–3.50). Full explainer: Settings → Costs & usage. Automated background discovery (Phase 2) is on hold to avoid API spend; research is done in Claude Code sessions instead.</p></section>

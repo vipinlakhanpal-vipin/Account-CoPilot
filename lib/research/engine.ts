@@ -16,8 +16,16 @@ const DEPTH: Record<Depth, { searches: number; fetches: number; effort: "medium"
 
 const client = new Anthropic();
 
+/** Usage meter: every paid call adds its tokens and searches so each run records its real cost. Opus 5 prices: $5 / $25 per M tokens, $0.01 per search. */
+export type Meter = { input: number; output: number; searches: number };
+export const newMeter = (): Meter => ({ input: 0, output: 0, searches: 0 });
+export const meterCost = (m: Meter) => +(m.input * 5e-6 + m.output * 25e-6 + m.searches * 0.01).toFixed(3);
+type Usage = { input_tokens?: number; output_tokens?: number; cache_read_input_tokens?: number | null; cache_creation_input_tokens?: number | null; server_tool_use?: { web_search_requests?: number } | null };
+const track = (m: Meter | undefined, u?: Usage | null) => { if (!m || !u) return;
+  m.input += (u.input_tokens || 0) + (u.cache_read_input_tokens || 0) + (u.cache_creation_input_tokens || 0); m.output += u.output_tokens || 0; m.searches += u.server_tool_use?.web_search_requests || 0; };
+
 /** RESEARCHER: web search + fetch, returns cited research notes. */
-export async function researchNotes(opts: { company: string; country: string; roles: string[]; depth: Depth; existing?: string }) {
+export async function researchNotes(opts: { company: string; country: string; roles: string[]; depth: Depth; existing?: string }, meter?: Meter) {
   const d = DEPTH[opts.depth];
   const messages: Anthropic.Beta.BetaMessageParam[] = [
     { role: "user", content: researcherPrompt(opts.company, opts.country, opts.roles, opts.existing) },
@@ -40,6 +48,7 @@ export async function researchNotes(opts: { company: string; country: string; ro
       messages,
     } as unknown as Anthropic.Beta.MessageCreateParamsStreaming;
     const msg = await client.beta.messages.stream(params).finalMessage();
+    track(meter, msg.usage as Usage);
     for (const b of msg.content) if (b.type === "text") text += b.text;
     if (msg.stop_reason === "refusal") throw new Error("The research request was declined by the model's safety system.");
     if (msg.stop_reason === "pause_turn") {
@@ -53,7 +62,7 @@ export async function researchNotes(opts: { company: string; country: string; ro
 }
 
 /** EXTRACTOR + VERIFIER: turns notes into the structured record. */
-export async function extract(notes: string, company: string): Promise<ResearchResultT> {
+export async function extract(notes: string, company: string, meter?: Meter): Promise<ResearchResultT> {
   const res = await client.messages.parse({
     model: MODEL,
     max_tokens: 32000,
@@ -62,6 +71,7 @@ export async function extract(notes: string, company: string): Promise<ResearchR
     messages: [{ role: "user", content: `Company: ${company}\n\nRESEARCH NOTES:\n${notes}` }],
     output_config: { effort: "medium", format: zodOutputFormat(ResearchResult) },
   });
+  track(meter, res.usage as Usage);
   if (res.stop_reason === "refusal") throw new Error("Extraction was declined by the model's safety system.");
   if (!res.parsed_output) throw new Error(`Extraction did not return valid data (stop reason: ${res.stop_reason}).`);
   return res.parsed_output;
@@ -95,7 +105,7 @@ const Discovered = z.object({ companies: z.array(z.object({
   revenue_estimate_usd_m: z.number().nullable(), revenue_basis: z.string(), employees: z.string(), why_icp: z.string(), source_url: z.string(),
 })) });
 export type DiscoveredT = z.infer<typeof Discovered>;
-export async function discoverCompanies(opts: { country: string; criteria: string; exclude: string[]; limit: number }): Promise<DiscoveredT> {
+export async function discoverCompanies(opts: { country: string; criteria: string; exclude: string[]; limit: number }, meter?: Meter): Promise<DiscoveredT> {
   const system = `You find new B2B target accounts for a Coupa / SAP Ariba partner. Use web search. Return ONLY real companies headquartered in ${opts.country}
 that are the decision-making entity (group or company HQ). Exclude: ministries, police, military and other government bodies; single hotels, hospitals,
 schools or attractions; local branches of foreign-headquartered groups; companies already listed below. ICP: net revenue >= USD 250M and >= 100 employees
@@ -110,6 +120,7 @@ the best estimate and say it is an estimate. Never invent a company, figure or U
       output_config: { effort: "medium" }, system,
       tools: [{ type: "web_search_20260209", name: "web_search", max_uses: 8 }, { type: "web_fetch_20260209", name: "web_fetch", max_uses: 4 }], messages,
     } as unknown as Anthropic.Beta.MessageCreateParamsStreaming).finalMessage();
+    track(meter, msg.usage as Usage);
     for (const b of msg.content) if (b.type === "text") notes += b.text;
     if (msg.stop_reason === "refusal") throw new Error("The discovery request was declined by the model's safety system.");
     if (msg.stop_reason === "pause_turn") { messages.push({ role: "assistant", content: msg.content as Anthropic.Beta.BetaContentBlockParam[] }); continue; }
@@ -119,5 +130,6 @@ the best estimate and say it is an estimate. Never invent a company, figure or U
     model: MODEL, max_tokens: 8000, system: "Convert the discovery notes into the list. Use only companies and facts the notes support; unknown → empty string or null.",
     messages: [{ role: "user", content: `NOTES:\n${notes}` }], output_config: { effort: "low", format: zodOutputFormat(Discovered) },
   });
+  track(meter, res.usage as Usage);
   return res.parsed_output || { companies: [] };
 }

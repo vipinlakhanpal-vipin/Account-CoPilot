@@ -2,13 +2,13 @@ import { NextResponse, after } from "next/server";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { discoverCompanies } from "@/lib/research/engine";
+import { discoverCompanies, newMeter, meterCost } from "@/lib/research/engine";
 
 // "Research more" from the left panel: finds new ICP-matching companies in one country (paid, user-triggered),
 // adds them as list "Claude discovery", and optionally starts a quick research run for each (paid per company).
 export const maxDuration = 300;
 
-const Body = z.object({ country: z.string().min(2).max(40), limit: z.number().int().min(1).max(10).default(5), criteria: z.string().max(4000), profile: z.boolean().default(false) });
+const Body = z.object({ country: z.string().min(2).max(40), limit: z.number().int().min(1).max(10).default(5), criteria: z.string().max(4000), profile: z.boolean().default(false), batchId: z.string().max(64).optional() });
 const slug = (n: string) => "cd-" + n.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
 const norm = (n: string) => n.toLowerCase().replace(/&/g, " and ").replace(/\b(pjsc|psc|plc|llc|group|holding|company|co|the)\b/g, "").replace(/[^a-z0-9]/g, "");
 
@@ -30,7 +30,8 @@ export async function POST(req: Request) {
 
   after(async () => {
     try {
-      const found = await discoverCompanies({ country: b.country, criteria: b.criteria, exclude: names, limit: b.limit });
+      const meter = newMeter();
+      const found = await discoverCompanies({ country: b.country, criteria: b.criteria, exclude: names, limit: b.limit }, meter);
       const today = new Date().toISOString().slice(0, 10);
       const fresh = found.companies.filter((c) => {
         const dom = c.website.replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
@@ -48,11 +49,11 @@ export async function POST(req: Request) {
           information_found: `Discovered as ICP candidate: ${r.revenue_estimate_usd_m ? `~$${r.revenue_estimate_usd_m}M (${r.revenue_basis})` : "revenue not stated"}`, evidence: r.why_icp, confidence: "MEDIUM" });
       }
       await db.from("research_runs").update({ status: "done", finished_at: new Date().toISOString(),
-        stats: { found: found.companies.length, added: ins?.length || 0, names: (ins || []).map((x) => x.company_name) } }).eq("id", run.id);
+        stats: { found: found.companies.length, added: ins?.length || 0, names: (ins || []).map((x) => x.company_name), cost_usd: meterCost(meter), usage: meter, batch_id: b.batchId || null, kind: "discovery" } }).eq("id", run.id);
       if (b.profile) for (const co of ins || []) {
         // Each profile is its own research run (own function invocation), so the 300s limit applies per company.
         await fetch(`${origin}/api/research`, { method: "POST", headers: { "Content-Type": "application/json", cookie },
-          body: JSON.stringify({ company: co.company_name, country: b.country, depth: "quick", companyId: co.id }) }).catch(() => {});
+          body: JSON.stringify({ company: co.company_name, country: b.country, depth: "quick", companyId: co.id, batchId: b.batchId }) }).catch(() => {});
       }
     } catch (e) {
       await db.from("research_runs").update({ status: "error", error: e instanceof Error ? e.message : String(e), finished_at: new Date().toISOString() }).eq("id", run.id);

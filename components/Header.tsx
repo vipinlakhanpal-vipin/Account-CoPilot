@@ -68,7 +68,7 @@ export default function Header({ active, subtitle }: { active: string; subtitle:
         <div className="update-bar done" role="status"><span>Updated to <b>Account CoPilot v{upgraded}</b> ✓</span></div>
       )}
       <header className="top">
-        <div className="navbar">
+        <div className="navbar has-sub">
           <div className="brand">
             <Logo />
             <div className="brand-text">
@@ -97,7 +97,7 @@ export default function Header({ active, subtitle }: { active: string; subtitle:
           </div>
         </div>
         {(() => { const g = GROUPS.find((x) => x.items.some(([, l]) => l === current));
-          return g && g.items.length > 1 ? (
+          return g ? (
             <nav className="subtabs" aria-label={`${g.label} sections`}>
               {g.items.map(([href, label]) => <Link key={href} href={href} prefetch className="subtab" aria-selected={label === current} onClick={(e) => go(e, href)}>{SUB_LABEL[label] || label}</Link>)}
             </nav>) : null; })()}

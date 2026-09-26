@@ -346,3 +346,20 @@ aside.brief.contact{width:min(760px,100%);z-index:70}
 .dp-state{margin:0;font-size:12px;color:var(--muted)}.dp-state b{color:var(--text)}.dp-state.changed{color:#FFD27A}
 .dp-linkbtn{background:none;border:0;color:var(--muted);font:500 11.5px var(--body);text-decoration:underline;cursor:pointer;padding:0;align-self:flex-start}
 .dp-note.ok{color:#7DF0C0}.dp-note.bad{color:#FF9DAE}.src-def{display:block;line-height:1.4;margin-top:4px}
+/* Navigation option B: active main tab is a solid block joined to a same-colour sub-tab bar */
+.navbar.has-sub{border-radius:14px 14px 0 0;border-bottom:0;padding-bottom:0;align-items:flex-end}
+.navbar.has-sub .brand,.navbar.has-sub .nav-actions{align-self:center;padding-bottom:10px}
+.navbar.has-sub nav.tabs{align-self:flex-end}
+.navbar.has-sub .tab{border-radius:10px 10px 0 0;padding:9px 14px 10px;border:0}
+.navbar.has-sub .tab[aria-selected="true"]{background:#0F6E56;color:#FFFFFF;box-shadow:none}
+.subtabs{max-width:1400px;margin:0 auto;background:#0F6E56;border:1px solid rgba(255,255,255,.08);border-top:0;border-radius:0 0 14px 14px;padding:0 18px;gap:18px}
+.subtab{color:#9FE1CB;padding:9px 2px 8px;border-bottom:2px solid transparent}
+.subtab:hover{color:#FFFFFF}.subtab[aria-selected="true"]{color:#FFFFFF;border-bottom-color:#FFFFFF}
+.engine h3{margin:0;font-size:14px}.eng-card{border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:12px;background:rgba(255,255,255,.02)}
+.eng-card.free{border-left:3px solid #2ECC8F}.eng-card.paid{border-left:3px solid #F5A623}
+.eng-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:space-between;margin-bottom:6px}
+.eng-form{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin:10px 0}.eng-form label{display:flex;flex-direction:column;gap:4px;font:600 11.5px var(--body);color:var(--muted)}
+.eng-form select,.eng-form input{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.15);border-radius:8px;color:var(--text);padding:7px 9px;font:13px var(--body);min-width:120px}
+.eng-explain{background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.35);border-radius:10px;padding:10px 12px;font-size:13px}.eng-explain ol{margin:6px 0 4px 18px;padding:0}.eng-explain li{margin:3px 0}
+.eng-plan{font-size:13px;margin:4px 0 10px}.eng-msg{background:rgba(46,196,166,.12);border-radius:8px;padding:8px 10px;font-size:13px}
+.eng-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:8px 0}.eng-stats div{background:rgba(255,255,255,.04);border-radius:10px;padding:10px}.eng-stats small{display:block;color:var(--muted);font-size:11.5px}.eng-stats b{font-size:20px}
