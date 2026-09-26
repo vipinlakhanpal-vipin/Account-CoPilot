@@ -45,6 +45,18 @@ export async function POST(req: Request) {
       const result = await extract(notes, b.company);
       await db.from("research_runs").update({ status: "reconciling" }).eq("id", run.id);
       const { companyId, stats } = await reconcile(db, run.id, result, b.companyId);
+      // Same rule as scripts/recompute_icp.mjs for Claude research: researched revenue decides Verified / Not ICP.
+      if (companyId) {
+        const { data: co } = await db.from("companies").select("icp_status,revenue_usd_m,revenue_fy,revenue_source_url,lists,profile").eq("id", companyId).maybeSingle();
+        const v = Number(co?.revenue_usd_m);
+        if (co && isFinite(v) && v > 0) {
+          const status = v >= 250 ? "ICP — Verified" : "Not ICP", now = new Date().toISOString();
+          await db.from("companies").update({ icp_status: status, icp_fit: v >= 250 ? "Yes" : "No", updated_at: now,
+            icp_fit_reason: `Claude research: ${v >= 1000 ? `$${(v / 1000).toFixed(2)}B` : `$${Math.round(v)}M`} (${co.revenue_fy || "latest FY"}) from ${co.revenue_source_url || "company disclosures"}.`,
+            lists: [...new Set([...(co.lists || []), "Claude research"])],
+            profile: status !== co.icp_status ? { ...(co.profile || {}), "Status changed": { at: now, from: co.icp_status || null, to: status } } : co.profile }).eq("id", companyId);
+        }
+      }
       await db.from("research_runs").update({ status: "done", company_id: companyId, stats, finished_at: new Date().toISOString() }).eq("id", run.id);
     } catch (e) {
       await db.from("research_runs").update({ status: "error", error: e instanceof Error ? e.message : String(e), finished_at: new Date().toISOString() }).eq("id", run.id);

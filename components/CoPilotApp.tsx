@@ -195,6 +195,19 @@ export default function CoPilotApp({ data: all }: { data: AllData }) {
     setSaved(error ? `Could not save: ${error.message}` : "Saved for the team.");
     setTimeout(() => setSaved(""), 4000);
   }
+  const [researchMsg, setResearchMsg] = useState("");
+  async function researchMore(limit: number, profile: boolean) {
+    const k = criteria.company;
+    const est = profile ? `≈ $0.50–1.00 for the search plus ≈ $0.55 per company profiled (up to ≈ $${(1 + limit * 0.55).toFixed(2)})` : "≈ $0.50–1.00";
+    if (!window.confirm(`Research more in ${country}: find up to ${limit} new companies matching your criteria${profile ? " and profile each one" : ""}.\n\nThis uses the Anthropic API: ${est}.\n\nContinue?`)) return;
+    const summary = [`Revenue bands: ${k.revenue.join(", ") || "any (ICP minimum $250M)"}`, `Employees: ${k.employees.join(", ") || "100+"}`,
+      k.industries.length && `Industries: ${k.industries.join(", ")}`, k.ownership.length && `Ownership: ${k.ownership.join(", ")}`,
+      k.erp.length && `ERP: ${k.erp.join(", ")}`, k.procurement.length && `Procurement platform: ${k.procurement.join(", ")}`,
+      k.triggers.length && `Business triggers: ${k.triggers.join(", ")}`, k.hq && `HQ: ${k.hq}`].filter(Boolean).join("\n");
+    setResearchMsg("Starting…");
+    const r = await fetch("/api/discover", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ country, limit, profile, criteria: summary }) });
+    setResearchMsg(r.ok ? "Discovery started. Follow it in Research Queue; new companies appear under list \"Claude discovery\" (refresh the page when done)." : "Could not start discovery.");
+  }
   // Criteria: text fields filter companies; everything else is scored so accounts are ranked, not hidden.
   const contactSet = Object.entries(criteria.contact).some(([, v]) => (Array.isArray(v) ? v.length : v));
   const A = useMemo(() => data.accounts.filter((a) => companyPasses(a, criteria)), [data.accounts, criteria]);
@@ -379,7 +392,8 @@ export default function CoPilotApp({ data: all }: { data: AllData }) {
   return (
     <div className={`app-shell${collapsed ? " dp-closed" : ""}`}>
     <DiscoveryPanel criteria={criteria} onChange={setCriteria} onSave={saveCriteria} saved={saved} collapsed={collapsed} onToggle={toggle}
-      matches={{ accounts: Object.values(scores).filter((x) => x.m.total >= 70).length, contacts: P.length }} />
+      matches={{ accounts: Object.values(scores).filter((x) => x.m.total >= 70).length, contacts: P.length }}
+      country={country} onResearch={researchMore} researchMsg={researchMsg} />
     <div className="app-main">
       <Hero title={(HERO[tab] || HERO.dashboard)[0]} text={(HERO[tab] || HERO.dashboard)[1]} />
       <section className="view">{A.length === 0

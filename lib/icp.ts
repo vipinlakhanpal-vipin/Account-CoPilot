@@ -114,7 +114,7 @@ export const triggersOf = (a: Row) => Object.entries(TRIGGER_RE).filter(([, re])
 
 // ---------- procurement & spend estimates (industry benchmarks, always labelled ESTIMATE) ----------
 // Addressable spend as a share of revenue and its split; benchmarks are typical third-party-spend ratios by sector.
-const SPEND: Record<string, { ratio: number; direct: number; indirect: number; mro: number; services: number; capex: number }> = {
+export const SPEND_BENCHMARKS: Record<string, { ratio: number; direct: number; indirect: number; mro: number; services: number; capex: number }> = {
   retail_lifestyle: { ratio: 0.65, direct: 0.7, indirect: 0.12, mro: 0.03, services: 0.1, capex: 0.05 },
   construction: { ratio: 0.7, direct: 0.6, indirect: 0.08, mro: 0.07, services: 0.15, capex: 0.1 },
   chemicals_oil_gas: { ratio: 0.5, direct: 0.35, indirect: 0.1, mro: 0.15, services: 0.2, capex: 0.2 },
@@ -132,7 +132,7 @@ export type Spend = { total: number; direct: number; indirect: number; mro: numb
 export function estimateSpend(a: Row): Spend | null {
   const rev = revenueOf(a);
   if (!rev) return null;
-  const b = SPEND[s(a.industry)] || { ratio: 0.45, direct: 0.4, indirect: 0.15, mro: 0.08, services: 0.25, capex: 0.12 };
+  const b = SPEND_BENCHMARKS[s(a.industry)] || { ratio: 0.45, direct: 0.4, indirect: 0.15, mro: 0.08, services: 0.25, capex: 0.12 };
   const total = rev * b.ratio;
   // Transaction benchmarks: ~1 invoice per $12k of spend, ~0.7 POs per invoice, ~1 supplier per $0.6M of spend, ~45% of suppliers active in a year.
   const invoicesYear = (total * 1e6) / 12000;

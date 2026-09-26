@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import CostNote from "@/components/CostNote";
 import { OPTIONS, UNAVAILABLE_ENGAGEMENT, DEFAULT_CRITERIA, activeCount, type Criteria } from "@/lib/icp";
 
 const LABEL: Record<string, string> = { banking_financial: "Banking & financial", chemicals_oil_gas: "Oil, gas & chemicals", construction: "Construction",
@@ -30,11 +31,13 @@ function Section({ title, children, open = false }: { title: string; children: R
 }
 
 // Left-side "Account Discovery Criteria" panel. Criteria filter and rank every view; Save stores them for the whole team.
-export default function DiscoveryPanel({ criteria, onChange, onSave, saved, collapsed, onToggle, matches }: {
+export default function DiscoveryPanel({ criteria, onChange, onSave, saved, collapsed, onToggle, matches, country, onResearch, researchMsg }: {
   criteria: Criteria; onChange: (c: Criteria) => void; onSave: () => void; saved: string; collapsed: boolean; onToggle: () => void;
-  matches: { accounts: number; contacts: number };
+  matches: { accounts: number; contacts: number }; country: string; onResearch: (limit: number, profile: boolean) => void; researchMsg: string;
 }) {
   const [tab, setTab] = useState<"company" | "contact">("company");
+  const [limit, setLimit] = useState(5);
+  const [profile, setProfile] = useState(false);
   const co = criteria.company, ct = criteria.contact;
   const setCo = (k: keyof Criteria["company"], v: unknown) => onChange({ ...criteria, company: { ...co, [k]: v } });
   const setCt = (k: keyof Criteria["contact"], v: unknown) => onChange({ ...criteria, contact: { ...ct, [k]: v } });
@@ -75,7 +78,7 @@ export default function DiscoveryPanel({ criteria, onChange, onSave, saved, coll
             <Chips label="Annual revenue" options={OPTIONS.revenue} value={co.revenue} onChange={(v) => setCo("revenue", v)} />
             <Chips label="Employees" options={OPTIONS.employees} value={co.employees} onChange={(v) => setCo("employees", v)} />
           </Section>
-          <Section title="Procurement & spend intelligence">
+          <Section title="Procurement & spend intelligence" open>
             <p className="dp-q">Show procurement spend and transaction estimates on account briefs?</p>
             <div className="dp-yn">
               <button type="button" className={criteria.showSpend ? "on" : ""} onClick={() => onChange({ ...criteria, showSpend: true })}>Yes, show estimates</button>
@@ -122,6 +125,17 @@ export default function DiscoveryPanel({ criteria, onChange, onSave, saved, coll
         </div>
       )}
 
+      <div className="dp-research">
+        <b>Research more in {country === "All" ? "a country (pick one above)" : country}</b>
+        <p className="dp-note">Searches the web for new companies in this country that match the criteria above (same ICP rules: group HQs only; no government bodies, single sites or foreign branches), and adds them as "Claude discovery".</p>
+        <div className="dp-rrow">
+          <label>Find up to <select value={limit} onChange={(e) => setLimit(Number(e.target.value))}>{[3, 5, 10].map((n) => <option key={n}>{n}</option>)}</select></label>
+          <label><input type="checkbox" checked={profile} onChange={(e) => setProfile(e.target.checked)} /> and profile each</label>
+        </div>
+        <button type="button" className="btn" disabled={country === "All"} onClick={() => onResearch(limit, profile)}>Research more</button>
+        <CostNote cost={profile ? `≈ $0.50–1.00 + $0.55 per company profiled (up to ≈ $${(1 + limit * 0.55).toFixed(2)})` : "≈ $0.50–1.00 per search"} />
+        {researchMsg && <p className="dp-saved">{researchMsg}</p>}
+      </div>
       <div className="dp-foot">
         <button type="button" className="btn primary" onClick={onSave}>Save as team ICP</button>
         <button type="button" className="btn ghost" onClick={() => onChange(DEFAULT_CRITERIA)}>Reset</button>

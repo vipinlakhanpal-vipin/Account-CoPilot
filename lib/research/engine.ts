@@ -1,6 +1,7 @@
 import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
+import { z } from "zod";
 import { ResearchResult, type ResearchResultT } from "./schema";
 import { RESEARCHER_SYSTEM, EXTRACTOR_SYSTEM, researcherPrompt } from "./prompts";
 
@@ -86,4 +87,37 @@ Use ONLY the facts given. Where something is unknown, say it must be validated. 
   const msg = await client.beta.messages.create(params);
   if (msg.stop_reason === "refusal") return "The pitch plan request was declined. Try again with fewer details.";
   return msg.content.map((b) => (b.type === "text" ? b.text : "")).join("").trim();
+}
+
+/** DISCOVERY: find new companies in a country that match the ICP (user-triggered from the left panel; paid). */
+const Discovered = z.object({ companies: z.array(z.object({
+  name: z.string(), website: z.string(), industry: z.string(), hq_city: z.string(), ownership: z.string(),
+  revenue_estimate_usd_m: z.number().nullable(), revenue_basis: z.string(), employees: z.string(), why_icp: z.string(), source_url: z.string(),
+})) });
+export type DiscoveredT = z.infer<typeof Discovered>;
+export async function discoverCompanies(opts: { country: string; criteria: string; exclude: string[]; limit: number }): Promise<DiscoveredT> {
+  const system = `You find new B2B target accounts for a Coupa / SAP Ariba partner. Use web search. Return ONLY real companies headquartered in ${opts.country}
+that are the decision-making entity (group or company HQ). Exclude: ministries, police, military and other government bodies; single hotels, hospitals,
+schools or attractions; local branches of foreign-headquartered groups; companies already listed below. ICP: net revenue >= USD 250M and >= 100 employees
+(listing not required). Prefer companies with an official revenue figure (annual report, results, filing, reputable press quoting the company); otherwise give
+the best estimate and say it is an estimate. Never invent a company, figure or URL. Cite a source URL for each company.`;
+  const prompt = `Find up to ${opts.limit} NEW companies in ${opts.country} matching these criteria:\n${opts.criteria}\n\nAlready in the app (do not return): ${opts.exclude.slice(0, 600).join("; ")}`;
+  const messages: Anthropic.Beta.BetaMessageParam[] = [{ role: "user", content: prompt }];
+  let notes = "";
+  for (let turn = 0; turn < 4; turn++) {
+    const msg = await client.beta.messages.stream({
+      model: MODEL, max_tokens: 16000, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default", thinking: { type: "adaptive" },
+      output_config: { effort: "medium" }, system,
+      tools: [{ type: "web_search_20260209", name: "web_search", max_uses: 8 }, { type: "web_fetch_20260209", name: "web_fetch", max_uses: 4 }], messages,
+    } as unknown as Anthropic.Beta.MessageCreateParamsStreaming).finalMessage();
+    for (const b of msg.content) if (b.type === "text") notes += b.text;
+    if (msg.stop_reason === "refusal") throw new Error("The discovery request was declined by the model's safety system.");
+    if (msg.stop_reason === "pause_turn") { messages.push({ role: "assistant", content: msg.content as Anthropic.Beta.BetaContentBlockParam[] }); continue; }
+    break;
+  }
+  const res = await client.messages.parse({
+    model: MODEL, max_tokens: 8000, system: "Convert the discovery notes into the list. Use only companies and facts the notes support; unknown → empty string or null.",
+    messages: [{ role: "user", content: `NOTES:\n${notes}` }], output_config: { effort: "low", format: zodOutputFormat(Discovered) },
+  });
+  return res.parsed_output || { companies: [] };
 }

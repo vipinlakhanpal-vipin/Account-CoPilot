@@ -7,6 +7,8 @@ const ROWS: [string, string, string, string][] = [
   ["Research Queue — Standard (up to 10 searches)", "Yes", "~150,000 read + ~15,000 written + 10 searches", "≈ $1.20–1.50"],
   ["Research Queue — Deep (up to 20 searches)", "Yes", "~350,000 read + ~30,000 written + 20 searches", "≈ $2.50–3.50"],
   ["Refresh research on an account", "Yes", "Same as a Standard run", "≈ $1.20–1.50"],
+  ["Research more (left panel) — discovery search", "Yes", "Up to 8 searches + 4 page reads, then a short extraction", "≈ $0.50–1.00 per search"],
+  ["Research more — 'and profile each'", "Yes", "One Quick research run per company found", "≈ $0.55 per company"],
   ["Revenue check script (per company)", "Yes", "Measured: Al Batha 42,000 read + 2,400 written + 6 searches", "$0.33 (Al Ghurair: $1.59)"],
 ];
 
