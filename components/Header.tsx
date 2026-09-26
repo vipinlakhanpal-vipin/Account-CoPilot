@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import Logo from "@/components/Logo";
 import ProfileMenu from "@/components/ProfileMenu";
 import { useNewVersion } from "@/components/useVersion";
@@ -18,6 +19,21 @@ const TAB_LABEL: Record<string, string> = { pipeline: "Pipeline", accounts: "Acc
 
 export default function Header({ active, subtitle }: { active: string; subtitle: string }) {
   const latest = useNewVersion();
+  // Upgrade feedback: the button flashes while the new version loads, then a steady "Updated" bar confirms it.
+  const [upgrading, setUpgrading] = useState(false);
+  const [upgraded, setUpgraded] = useState("");
+  useEffect(() => {
+    try {
+      const v = sessionStorage.getItem("upgradedTo");
+      if (v) { sessionStorage.removeItem("upgradedTo"); setUpgraded(v); const t = setTimeout(() => setUpgraded(""), 5000); return () => clearTimeout(t); }
+    } catch {}
+  }, []);
+  const upgrade = () => {
+    if (!latest || upgrading) return;
+    setUpgrading(true);
+    try { sessionStorage.setItem("upgradedTo", latest); } catch {}
+    setTimeout(() => window.location.reload(), 900);
+  };
   const path = usePathname();
   const params = useSearchParams();
   // On the dashboard page, tabs switch instantly on the client (the data is already loaded).
@@ -34,11 +50,15 @@ export default function Header({ active, subtitle }: { active: string; subtitle:
   };
   return (
     <>
-      {latest && (
+      {latest && !upgraded && (
         <div className="update-bar" role="status">
-          <span>A new version of <b>Account CoPilot</b> (v{latest}) is available.</span>
-          <button type="button" onClick={() => window.location.reload()}>Click Refresh to upgrade to v{latest}</button>
+          <span>{upgrading ? <>Upgrading <b>Account CoPilot</b> to v{latest}…</> : <>A new version of <b>Account CoPilot</b> (v{latest}) is available.</>}</span>
+          <button type="button" className={upgrading ? "upgrading" : undefined} disabled={upgrading} onClick={upgrade}>
+            {upgrading ? `Upgrading to v${latest}…` : `Click Refresh to upgrade to v${latest}`}</button>
         </div>
+      )}
+      {upgraded && (
+        <div className="update-bar done" role="status"><span>Updated to <b>Account CoPilot v{upgraded}</b> ✓</span></div>
       )}
       <header className="top">
         <div className="navbar">

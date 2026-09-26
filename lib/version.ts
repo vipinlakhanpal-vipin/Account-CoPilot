@@ -1,7 +1,8 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.15";
+export const APP_VERSION = "1.16";
 
 export const RELEASES: { version: string; date: string; notes: string }[] = [
+  { version: "1.16", date: "2026-09-26", notes: "Upgrade button flashes while the new version loads, then a steady 'Updated to vX ✓' bar confirms it." },
   { version: "1.15", date: "2026-09-26", notes: "Pipeline scoring fix: full revenue points only for official revenue figures (estimates get a third), so the Pipeline shows genuinely verified targets (UAE: 432 → 78)." },
   { version: "1.14", date: "2026-09-26", notes: "Guide tab: every feature, the scoring point system, spend-estimate formulas and how the engine works. Research more button in the left panel (finds and optionally profiles new ICP companies for the selected country; cost note and confirmation). ICP status set automatically after in-app research." },
   { version: "1.13", date: "2026-09-26", notes: "Sources tab moved next to Stakeholders: colour source tiles (Source | Region, companies profiled, click to view) for channels and evidence types, a source catalogue (what, provides, how collected, reliability, cost) and a Source group filter; duplicate source rows removed." },

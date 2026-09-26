@@ -322,3 +322,7 @@ aside.brief.contact{width:min(760px,100%);z-index:70}
 .dp-research{border-top:1px solid var(--line);padding:10px 14px;display:flex;flex-direction:column;gap:6px;font-size:12.5px}
 .dp-rrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:12px}.dp-rrow select{background:rgba(255,255,255,.06);color:var(--text);border:1px solid rgba(255,255,255,.14);border-radius:6px}
 .guide-pitch{background:rgba(46,196,166,.1);border-left:3px solid var(--teal);padding:10px 12px;border-radius:8px}
+@keyframes upg-flash{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(46,196,166,.7)}50%{opacity:.45;box-shadow:0 0 0 6px rgba(46,196,166,0)}}
+.update-bar button.upgrading{animation:upg-flash .8s ease-in-out infinite;cursor:progress}
+.update-bar.done{background:linear-gradient(90deg,rgba(46,204,143,.25),rgba(46,196,166,.18))}
+@media (prefers-reduced-motion:reduce){.update-bar button.upgrading{animation:none;opacity:.7}}
