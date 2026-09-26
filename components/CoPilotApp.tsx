@@ -186,11 +186,12 @@ export default function CoPilotApp({ data: all }: { data: AllData }) {
   }, [all, country]);
   const [criteria, setCriteria] = useState<Criteria>(withDefaults());
   const [savedMeta, setSavedMeta] = useState<{ by?: string; at?: string } | null>(null);
+  const [teamCriteria, setTeamCriteria] = useState<Criteria | null>(null);
   const [collapsed, setCollapsed] = useState(false);
   useEffect(() => {
     try { setCollapsed(localStorage.getItem("dp-collapsed") === "1"); } catch {}
     supabaseBrowser().from("settings").select("value").eq("key", "icp_criteria").maybeSingle()
-      .then(({ data: row }) => { if (row?.value) { setCriteria(withDefaults(row.value as Criteria)); setSavedMeta((row.value as { _meta?: { by?: string; at?: string } })._meta || null); } });
+      .then(({ data: row }) => { if (row?.value) { setCriteria(withDefaults(row.value as Criteria)); setTeamCriteria(withDefaults(row.value as Criteria)); setSavedMeta((row.value as { _meta?: { by?: string; at?: string } })._meta || null); } });
   }, []);
   const toggle = () => setCollapsed((c) => { try { localStorage.setItem("dp-collapsed", c ? "0" : "1"); } catch {} return !c; });
   async function saveCriteria(c: Criteria) {
@@ -198,7 +199,7 @@ export default function CoPilotApp({ data: all }: { data: AllData }) {
     const { data: u } = await sb.auth.getUser();
     const by = (u.user?.user_metadata?.name as string) || u.user?.email || "";
     const { error } = await sb.from("settings").upsert({ key: "icp_criteria", value: { ...c, _meta: { by, at } }, updated_at: at });
-    if (!error) setSavedMeta({ by, at });
+    if (!error) { setSavedMeta({ by, at }); setTeamCriteria(c); }
     return error ? { ok: false, error: error.message } : { ok: true, by, at };
   }
   const [researchMsg, setResearchMsg] = useState("");
@@ -341,7 +342,12 @@ export default function CoPilotApp({ data: all }: { data: AllData }) {
           <tbody>{SOURCES.filter((d) => d.group === group).map((d) => (
             <tr key={d.key}><td><span className="src-dot" style={{ background: d.color }} /> <b>{d.name}</b></td><td className="wrap">{d.what}</td><td className="wrap">{d.provides}</td>
               <td className="wrap">{d.how}</td><td className="wrap">{d.reliability}</td><td>{d.cost}</td></tr>))}</tbody></table></div></details>);
-    const icpBuckets: [string, string, string[]][] = [["Verified", "#2ECC8F", ["ICP — Verified"]], ["Likely", "#3AA0FF", ["ICP — Likely"]], ["Needs check / Unknown", "#F5A623", ["ICP — Needs check", "Unknown"]], ["Not ICP", "#FF4D6A", ["Not ICP"]]];
+    const icpBuckets: [string, string, string[], string][] = [["Verified", "#2ECC8F", ["ICP — Verified"], "Revenue ≥ $250M confirmed from an official document (annual report, filing, company-quoted press)"],
+      ["Likely", "#3AA0FF", ["ICP — Likely"], "An estimate says ≥ $250M (your workbook, Seamless with matching headcount, aggregators) — not yet checked against an official document"],
+      ["Needs check / Unknown", "#F5A623", ["ICP — Needs check", "Unknown"], "Sources disagree across $250M, only an estimate below $250M, or no figure at all"],
+      ["Not ICP", "#FF4D6A", ["Not ICP"], "Official revenue below $250M"]];
+    const trustDef: Record<Trust, string> = { "Confirmed by 2+ sources": "Two or more independent sources agree on this person at this company (e.g. CoPilot and Seamless), or Claude verified them from an official page",
+      "Single source": "Only one source has this person; nothing contradicts it yet", Conflicting: "Sources disagree (different emails or titles), a check flagged a conflict, or the person may have changed job" };
     const trustColor: Record<Trust, string> = { "Confirmed by 2+ sources": "#2ECC8F", "Single source": "#3AA0FF", Conflicting: "#FF4D6A" };
     view = <>
       <div className="panel src-panel">
@@ -355,11 +361,11 @@ export default function CoPilotApp({ data: all }: { data: AllData }) {
         <h2>2 · Trust — how many independent sources agree</h2>
         <p className="note">Companies: revenue confirmed from an official source (Verified) or only estimated. Contacts: one record per person; Confirmed = two or more contributors agree (or Claude verified from an official source), Conflicting = sources disagree or the person may have moved.</p>
         <h3 className="src-h3">Companies</h3>
-        <div className="kpis src-tiles">{icpBuckets.map(([n, c, st]) => { const rows = A.filter((a) => st.includes(a.icp_status || "Unknown"));
-          return tile(n, n, c, rows, "accounts", "companies"); })}</div>
+        <div className="kpis src-tiles">{icpBuckets.map(([n, c, st, def]) => { const rows = A.filter((a) => st.includes(a.icp_status || "Unknown"));
+          return tile(n, n, c, rows, "accounts", <span className="src-def">{def}</span>, def); })}</div>
         <h3 className="src-h3">Contacts ({people.length} people)</h3>
         <div className="kpis src-tiles">{TRUST_ORDER.map((t) => { const rows = people.filter((p) => p.trust === t);
-          return tile(t, t, trustColor[t], rows, "contacts", "people"); })}</div>
+          return tile(t, t, trustColor[t], rows, "contacts", <span className="src-def">{trustDef[t]}</span>, trustDef[t]); })}</div>
       </div>
       <div className="panel src-panel">
         <h2>3 · Evidence — the documents behind the facts</h2>
@@ -422,7 +428,7 @@ export default function CoPilotApp({ data: all }: { data: AllData }) {
 
   return (
     <div className={`app-shell${collapsed ? " dp-closed" : ""}`}>
-    <DiscoveryPanel criteria={criteria} onApply={setCriteria} onSave={saveCriteria} savedMeta={savedMeta} collapsed={collapsed} onToggle={toggle}
+    <DiscoveryPanel criteria={criteria} onApply={setCriteria} onSave={saveCriteria} savedMeta={savedMeta} teamCriteria={teamCriteria} collapsed={collapsed} onToggle={toggle}
       matches={{ accounts: A.filter((a) => scores[a.id] && scores[a.id].m.total >= 70 && a.icp_status !== "Not ICP").length, contacts: people.length }}
       country={country} onResearch={researchMore} researchMsg={researchMsg} />
     <div className="app-main">

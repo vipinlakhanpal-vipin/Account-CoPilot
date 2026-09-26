@@ -78,15 +78,18 @@ export default async function GuidePage() {
                 ["● ICP — Likely", "≥ $250M per your data, Seamless (only when headcount agrees) or estimates, not yet confirmed officially."],
                 ["! ICP — Needs check", "Sources disagree across the $250M line, an estimate is below $250M, or a Seamless band is high but headcount is small (201–1,000)."],
                 ["? Unknown", "No revenue figure from any source."],
+              ]} />
+              <p><b>Why are big, well-known companies "Likely"?</b> Likely is about <i>evidence</i>, not size or reputation: the figure we hold came from your workbook, Seamless or an estimate, and nobody has yet opened the company's annual report or results to confirm it. Well-known companies usually publish results, so they move to Verified quickly once checked (it's in the verification queue, largest first). Using a world-class platform doesn't affect ICP status; it affects the Opportunity and Coupa Fit scores.</p>
+              <T head={["Status", "Meaning"]} rows={[
                 ["✕ Not ICP", "Official revenue below $250M."]]} />
               <p className="note">Seamless revenue bands are unreliable on their own: of 11 companies with official figures, 8 fell on the wrong side of $250M. So a Seamless band only counts when the headcount supports it, and it can never make an account Verified. Hover a status anywhere for its reason.</p></section>
 
             <section id="panel" className="panel"><h2>Account Discovery Criteria panel (left)</h2>
-              <p>The panel <b>searches, filters and ranks accounts already in the app</b>. Edits are a draft (the summary shows "changes not applied") until you use the three buttons at the bottom, each showing its own result:</p>
+              <p>The panel <b>searches, filters and ranks accounts already in the app</b>. Changes apply instantly to every tab. The line at the bottom tells you what you're looking at:</p>
               <ul className="plain">
-                <li><b>↻ Refresh</b> re-applies your criteria to every tab and shows the new Pipeline and contact counts, with shortcuts to open them.</li>
-                <li><b>✓ Save</b> applies the criteria and saves them as the team ICP (who saved it and when is shown), so everyone ranks the same way.</li>
-                <li><b>↺ Reset</b> asks first, then returns to the default ICP (revenue $250M+, 100+ staff, UAE). The saved team ICP isn't changed until you save.</li>
+                <li><b>✓ Showing the team ICP</b> (or the default ICP if none is saved yet): nothing to do.</li>
+                <li><b>● Showing your changes</b>: two buttons appear. <b>Save for team</b> makes your criteria everyone's ICP; <b>Discard changes</b> goes back to the saved team ICP.</li>
+                <li><b>Restore default ICP</b> (small link) returns to revenue $250M+, 100+ staff, UAE after asking you to confirm; it only affects your view until you save.</li>
               </ul>
               <p>Only the <b>Research more</b> section (amber cost note, asks you to confirm) searches for new companies: pick a country tile first, choose 3 / 5 / 10 and whether to profile each.</p>
               <h3>Company tab</h3>

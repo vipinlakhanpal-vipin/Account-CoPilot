@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import CostNote from "@/components/CostNote";
 import { OPTIONS, UNAVAILABLE_ENGAGEMENT, DEFAULT_CRITERIA, activeCount, type Criteria } from "@/lib/icp";
@@ -33,16 +33,17 @@ function Section({ title, children, open = false }: { title: string; children: R
 // Left-side "Account Discovery Criteria" panel. Criteria filter and rank every view; Save stores them for the whole team.
 export type SaveResult = { ok: boolean; error?: string; by?: string; at?: string };
 // Criteria edits are a draft until Refresh (apply) or Save (apply + store for the team). Reset asks first.
-export default function DiscoveryPanel({ criteria: applied, onApply, onSave, savedMeta, collapsed, onToggle, matches, country, onResearch, researchMsg }: {
-  criteria: Criteria; onApply: (c: Criteria) => void; onSave: (c: Criteria) => Promise<SaveResult>; savedMeta: { by?: string; at?: string } | null;
+export default function DiscoveryPanel({ criteria: applied, onApply, onSave, savedMeta, teamCriteria, collapsed, onToggle, matches, country, onResearch, researchMsg }: {
+  criteria: Criteria; onApply: (c: Criteria) => void; onSave: (c: Criteria) => Promise<SaveResult>; savedMeta: { by?: string; at?: string } | null; teamCriteria: Criteria | null;
   collapsed: boolean; onToggle: () => void; matches: { accounts: number; contacts: number }; country: string;
   onResearch: (limit: number, profile: boolean) => void; researchMsg: string;
 }) {
-  const [criteria, onChange] = useState<Criteria>(applied);
-  useEffect(() => { onChange(applied); }, [applied]);
-  const dirty = JSON.stringify(criteria) !== JSON.stringify(applied);
-  const [action, setAction] = useState<"" | "refresh" | "save" | "reset">("");
+  // Changes apply instantly; "Save for team" shares them, "Discard changes" goes back to the saved team ICP.
+  const criteria = applied, onChange = onApply;
+  const base = teamCriteria || DEFAULT_CRITERIA;
+  const dirty = JSON.stringify(criteria) !== JSON.stringify(base);
   const [saveRes, setSaveRes] = useState<SaveResult | null>(null);
+  const [confirmDefault, setConfirmDefault] = useState(false);
   const [tab, setTab] = useState<"company" | "contact">("company");
   const [limit, setLimit] = useState(5);
   const [profile, setProfile] = useState(false);
@@ -65,7 +66,7 @@ export default function DiscoveryPanel({ criteria: applied, onApply, onSave, sav
         <h2>Account Discovery Criteria</h2>
         <button type="button" className="dp-toggle-sm" onClick={onToggle} aria-expanded="true" title="Collapse panel">«</button>
       </div>
-      <p className="dp-summary"><b>{matches.accounts}</b> accounts · <b>{matches.contacts}</b> contacts match · {n} criteria set{dirty && <span className="dp-dirty"> · changes not applied</span>}</p>
+      <p className="dp-summary"><b>{matches.accounts}</b> accounts · <b>{matches.contacts}</b> contacts match · {n} criteria set</p>
       <div className="dp-tabs" role="tablist">
         <button type="button" role="tab" aria-selected={tab === "company"} onClick={() => setTab("company")}>Company</button>
         <button type="button" role="tab" aria-selected={tab === "contact"} onClick={() => setTab("contact")}>Contact</button>
@@ -145,28 +146,18 @@ export default function DiscoveryPanel({ criteria: applied, onApply, onSave, sav
         {researchMsg && <p className="dp-saved">{researchMsg}</p>}
       </div>
       <div className="dp-foot">
-        <div className="dp-seg" role="group" aria-label="Criteria actions">
-          <button type="button" aria-pressed={action === "refresh"} onClick={() => { onApply(criteria); setAction("refresh"); }}>↻ Refresh</button>
-          <button type="button" aria-pressed={action === "save"} onClick={async () => { setAction("save"); setSaveRes(null); onApply(criteria); setSaveRes(await onSave(criteria)); }}>✓ Save</button>
-          <button type="button" aria-pressed={action === "reset"} onClick={() => setAction("reset")}>↺ Reset</button>
-        </div>
-        {action === "refresh" && <div className="dp-out">
-          <b>Results refreshed</b><p>Your criteria were re-applied to every tab.</p>
-          <div className="dp-stats"><div><small>Pipeline</small><b>{matches.accounts}</b></div><div><small>Contacts</small><b>{matches.contacts}</b></div></div>
-          <div className="dp-acts"><Link href="/?tab=pipeline" className="btn tiny">Open pipeline</Link><Link href="/?tab=stakeholders" className="btn tiny">Open stakeholders</Link></div></div>}
-        {action === "save" && <div className="dp-out">
-          {!saveRes ? <p>Saving…</p> : saveRes.ok ? <>
-            <b className="ok">✓ Saved as team ICP</b>
-            <p>Everyone now ranks accounts with these criteria.{saveRes.at && ` Saved ${new Date(saveRes.at).toLocaleString()}`}{saveRes.by && ` by ${saveRes.by}`}.</p>
-            <p className="dp-note">{n} criteria · {[...criteria.company.countries, ...criteria.company.revenue.slice(0, 1).map((r) => `${r}+`), ...criteria.company.industries.slice(0, 2), ...criteria.company.procurement].join(" · ") || "default ICP"}</p>
-            <div className="dp-acts"><Link href="/?tab=pipeline" className="btn tiny">Open pipeline</Link><a href="#dp-research" className="btn tiny">Research more with these</a></div></>
-            : <b className="bad">Couldn't save: {saveRes.error}</b>}</div>}
-        {action === "reset" && <div className="dp-out">
-          <b className="warn">Reset to the default ICP?</b>
-          <p>Clears your {n} criteria and goes back to revenue $250M+, 100+ staff, UAE. The saved team ICP isn't changed until you save.</p>
-          <div className="dp-acts"><button type="button" className="btn tiny" onClick={() => { onChange(DEFAULT_CRITERIA); onApply(DEFAULT_CRITERIA); setAction("refresh"); }}>Reset criteria</button>
-            <button type="button" className="btn tiny ghost" onClick={() => setAction("")}>Keep my criteria</button></div></div>}
-        {!action && savedMeta?.at && <p className="dp-note">Team ICP last saved {new Date(savedMeta.at).toLocaleString()}{savedMeta.by && ` by ${savedMeta.by}`}.</p>}
+        <p className={`dp-state${dirty ? " changed" : ""}`}>{dirty
+          ? <>● Showing <b>your changes</b> (not saved for the team)</>
+          : <>✓ Showing the <b>{teamCriteria ? "team ICP" : "default ICP"}</b>{savedMeta?.at && <> · saved {new Date(savedMeta.at).toLocaleDateString()}{savedMeta.by && ` by ${savedMeta.by}`}</>}</>}</p>
+        {dirty && <div className="dp-acts">
+          <button type="button" className="btn primary" onClick={async () => { setSaveRes(null); setSaveRes(await onSave(criteria)); }}>Save for team</button>
+          <button type="button" className="btn ghost" onClick={() => { onChange(base); setSaveRes(null); }}>Discard changes</button>
+        </div>}
+        {saveRes && (saveRes.ok ? <p className="dp-note ok">✓ Saved. Everyone now ranks accounts with these criteria.</p> : <p className="dp-note bad">Couldn't save: {saveRes.error}</p>)}
+        {!confirmDefault ? <button type="button" className="dp-linkbtn" onClick={() => setConfirmDefault(true)}>Restore default ICP</button>
+          : <div className="dp-out"><b className="warn">Restore the default ICP?</b><p>Revenue $250M+, 100+ staff, UAE. Shown only to you until you save it for the team.</p>
+            <div className="dp-acts"><button type="button" className="btn tiny" onClick={() => { onChange(DEFAULT_CRITERIA); setConfirmDefault(false); }}>Restore</button>
+              <button type="button" className="btn tiny ghost" onClick={() => setConfirmDefault(false)}>Cancel</button></div></div>}
       </div>
     </aside>
   );
