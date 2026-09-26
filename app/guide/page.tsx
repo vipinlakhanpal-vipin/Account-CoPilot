@@ -54,6 +54,7 @@ export default async function GuidePage() {
               <p>Yes, two layers: the <b>fixed ICP rule</b> (revenue ≥ $250M and ≥ 100 employees, which sets the ICP status) and your <b>Discovery criteria</b> in the left panel (industries, regions, ownership, systems, triggers, contact roles), which rank accounts and steer Research more. Save the panel as the team ICP so everyone ranks, and discovers, the same way.</p></section>
 
             <section id="tabs" className="panel"><h2>Tabs</h2>
+              <p>Five main tabs; selecting one shows its sub-tabs on the line beneath the top bar: <b>Dashboard</b> · <b>Accounts</b> (Pipeline, All accounts, S2P Signals, ERP & Apps) · <b>Stakeholders</b> · <b>Data</b> (Sources, Conflicts, Research Queue) · <b>Admin</b> (Settings, Guide).</p>
               <T head={["Tab", "What it shows"]} rows={[
                 ["Dashboard", "KPI tiles (click any tile to see the records behind it), charts by S2P signal, platform, ERP, role family and ICP status, and priority accounts."],
                 ["Pipeline", "Accounts ranked by the Pipeline rank (see Scores). Answers: which accounts should we work first?"],

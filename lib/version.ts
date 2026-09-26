@@ -1,7 +1,8 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.17";
+export const APP_VERSION = "1.18";
 
 export const RELEASES: { version: string; date: string; notes: string }[] = [
+  { version: "1.18", date: "2026-09-26", notes: "Navigation grouped into five main tabs (Dashboard, Accounts, Stakeholders, Data, Admin) with sub-tabs on a line beneath the top bar, so every tab fits." },
   { version: "1.17", date: "2026-09-26", notes: "Simpler sources: Origin (one per company, adds up to the total), Contributors (inside your workbook), Trust (companies by ICP status; contacts as one record per person: Confirmed by 2+ sources / Single source / Conflicting) and Evidence. Stakeholders one row per person with a source-by-source comparison on the contact card. Left panel: Refresh, Save and Reset each show their own result; edits are a draft until applied." },
   { version: "1.16", date: "2026-09-26", notes: "Upgrade button flashes while the new version loads, then a steady 'Updated to vX ✓' bar confirms it." },
   { version: "1.15", date: "2026-09-26", notes: "Pipeline scoring fix: full revenue points only for official revenue figures (estimates get a third), so the Pipeline shows genuinely verified targets (UAE: 432 → 78)." },

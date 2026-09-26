@@ -7,8 +7,15 @@ import ProfileMenu from "@/components/ProfileMenu";
 import { useNewVersion } from "@/components/useVersion";
 import { APP_VERSION } from "@/lib/version";
 
-const NAV = [["/", "Dashboard"], ["/?tab=pipeline", "Pipeline"], ["/?tab=accounts", "Accounts"], ["/?tab=stakeholders", "Stakeholders"], ["/?tab=sources", "Sources"], ["/?tab=signals", "S2P Signals"],
-  ["/?tab=erp", "ERP & Apps"], ["/?tab=conflicts", "Conflicts"], ["/research", "Research Queue"], ["/settings", "Settings"], ["/guide", "Guide"]];
+// Main tabs with sub-tabs underneath (Coupa-style). A main tab opens its first sub-tab.
+const GROUPS: { label: string; items: [string, string][] }[] = [
+  { label: "Dashboard", items: [["/", "Dashboard"]] },
+  { label: "Accounts", items: [["/?tab=pipeline", "Pipeline"], ["/?tab=accounts", "Accounts"], ["/?tab=signals", "S2P Signals"], ["/?tab=erp", "ERP & Apps"]] },
+  { label: "Stakeholders", items: [["/?tab=stakeholders", "Stakeholders"]] },
+  { label: "Data", items: [["/?tab=sources", "Sources"], ["/?tab=conflicts", "Conflicts"], ["/research", "Research Queue"]] },
+  { label: "Admin", items: [["/settings", "Settings"], ["/guide", "Guide"]] },
+];
+const SUB_LABEL: Record<string, string> = { Accounts: "All accounts" };
 
 const Spin = () => (
   <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9M13.5 2.5v3h-3" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -78,8 +85,8 @@ export default function Header({ active, subtitle }: { active: string; subtitle:
             </div>
           </div>
           <nav className="tabs" aria-label="Sections">
-            {NAV.map(([href, label]) => (
-              <Link key={href} href={href} prefetch className="tab" aria-selected={current === label} onClick={(e) => go(e, href)}>{label}</Link>
+            {GROUPS.map((g) => (
+              <Link key={g.label} href={g.items[0][0]} prefetch className="tab" aria-selected={g.items.some(([, l]) => l === current)} onClick={(e) => go(e, g.items[0][0])}>{g.label}</Link>
             ))}
           </nav>
           <div className="nav-actions">
@@ -89,6 +96,11 @@ export default function Header({ active, subtitle }: { active: string; subtitle:
             <ProfileMenu />
           </div>
         </div>
+        {(() => { const g = GROUPS.find((x) => x.items.some(([, l]) => l === current));
+          return g && g.items.length > 1 ? (
+            <nav className="subtabs" aria-label={`${g.label} sections`}>
+              {g.items.map(([href, label]) => <Link key={href} href={href} prefetch className="subtab" aria-selected={label === current} onClick={(e) => go(e, href)}>{SUB_LABEL[label] || label}</Link>)}
+            </nav>) : null; })()}
       </header>
     </>
   );
