@@ -12,10 +12,16 @@ export default function EngineBell() {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     try { setSeen(localStorage.getItem("engine-seen") || ""); } catch {}
-    fetch("/api/engine?only=log").then((r) => (r.ok ? r.json() : { entries: [] })).then((j) => setEntries(j.entries || [])).catch(() => {});
+    // Check now, every minute, and whenever the tab regains focus, so a run that finishes while the page is open still shows the red badge.
+    const load = () => fetch("/api/engine?only=log", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((j) => j && setEntries(j.entries || [])).catch(() => {});
+    load();
+    const t = setInterval(load, 60000);
+    const onFocus = () => { if (document.visibilityState === "visible") load(); };
+    document.addEventListener("visibilitychange", onFocus);
+    window.addEventListener("focus", onFocus);
     const close = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
     document.addEventListener("click", close);
-    return () => document.removeEventListener("click", close);
+    return () => { clearInterval(t); document.removeEventListener("visibilitychange", onFocus); window.removeEventListener("focus", onFocus); document.removeEventListener("click", close); };
   }, []);
   const unread = entries.filter((e) => e.at > seen).length;
   const toggle = () => {

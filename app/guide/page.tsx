@@ -81,7 +81,7 @@ export default async function GuidePage() {
               ]} />
               <p><b>Why are big, well-known companies "Likely"?</b> Likely is about <i>evidence</i>, not size or reputation: the figure we hold came from your workbook, Seamless or an estimate, and nobody has yet opened the company's annual report or results to confirm it. Well-known companies usually publish results, so they move to Verified quickly once checked (it's in the verification queue, largest first). Using a world-class platform doesn't affect ICP status; it affects the Opportunity and Coupa Fit scores.</p>
               <T head={["Status", "Meaning"]} rows={[
-                ["✕ Not ICP", "Official revenue below $250M."]]} />
+                ["✕ Not ICP", "Official revenue below $250M — or, on estimates only, below $100M with 1,000 staff or fewer (\"Not ICP (estimate)\"; reopened automatically if an official figure appears)."]]} />
               <p className="note">Seamless revenue bands are unreliable on their own: of 11 companies with official figures, 8 fell on the wrong side of $250M. So a Seamless band only counts when the headcount supports it, and it can never make an account Verified. Hover a status anywhere for its reason.</p></section>
 
             <section id="panel" className="panel"><h2>Account Discovery Criteria panel (left)</h2>

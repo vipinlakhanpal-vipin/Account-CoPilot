@@ -26,7 +26,7 @@ Status scale (`companies.icp_status`), recomputed by `scripts/recompute_icp.mjs`
 - `ICP — Likely`: ≥ 250 per the user's data, Seamless or estimates only
 - `ICP — Needs check`: sources disagree across the $250M line
 - `Unknown`: no figure from any source
-- `Not ICP`: below 250
+- `Not ICP`: official revenue below 250, or, on estimates only, below 100 with headcount ≤ 1,000 ("Not ICP (estimate)", user rule 2026-09-27; reopens if an official figure appears)
 
 ## Current task: ICP revenue verification (no API cost)
 The goal is to move accounts out of Likely / Needs check / Unknown by finding official revenue figures with **this session's own web search**. Don't use `verify_revenue.mjs` without `--apply`: that path spends the user's Anthropic API credit.

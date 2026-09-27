@@ -10,6 +10,7 @@ import { createHash, randomBytes } from "node:crypto";
 //  • balance — record the Anthropic credit balance shown in the Console (the API key cannot read it).
 // State lives in the settings table: engine_jobs, engine_refresh, engine_balance. Spend = sum of research_runs.stats.cost_usd.
 export const maxDuration = 60;
+export const dynamic = "force-dynamic";
 const EST = { update: 0.55, discovery: 0.75, profile: 0.55 }; // USD per Quick research / discovery search / new-company profile
 
 type Job = { id: string; region: string; count: number | "max"; mode: "verify" | "discover" | "both"; requested_by: string; requested_at: string;
@@ -45,7 +46,8 @@ export async function GET(req: Request) {
   if (!(await requireUser())) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
   const db = supabaseAdmin();
   // ?only=log → just the scheduled-run notifications (for the bell in the top bar).
-  if (new URL(req.url).searchParams.get("only") === "log") return NextResponse.json(await getSetting(db, "engine_log", { entries: [] }));
+  if (new URL(req.url).searchParams.get("only") === "log")
+    return NextResponse.json(await getSetting(db, "engine_log", { entries: [] }), { headers: { "Cache-Control": "no-store" } });
   return NextResponse.json({ ...(await summary(db)), log: (await getSetting<{ entries: unknown[] }>(db, "engine_log", { entries: [] })).entries });
 }
 
