@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { invalidateAllData } from "@/lib/dataCache";
 import { statusPatch, applyRevenueResult } from "@/lib/icpStatus.mjs";
 
 // Limited API for scheduled Claude sessions (no Supabase key needed in the cloud environment).
@@ -86,6 +87,7 @@ export async function POST(req: Request) {
       await db.from("companies").update(patch).eq("id", c.id);
       out.push(`${r.company_name}: ${status}`);
     }
+    invalidateAllData();
     return NextResponse.json({ applied: out });
   }
   if (b.action === "add_companies") {
@@ -100,6 +102,7 @@ export async function POST(req: Request) {
       lists: ["Claude discovery"], icp_status: "Unknown", account_notes: `Found by a scheduled Claude session on ${day}: ${c.why_icp} Source: ${c.source_url}`,
       profile: { "Claude discovery": { why: c.why_icp, source_url: c.source_url, via: "scheduled session (no API cost)" } } }));
     if (rows.length) await db.from("companies").upsert(rows, { onConflict: "slug", ignoreDuplicates: true });
+    invalidateAllData();
     return NextResponse.json({ added: rows.map((r) => ({ slug: r.slug, company_name: r.company_name })), skipped: b.companies.length - rows.length });
   }
   // log → bell notification

@@ -2,6 +2,7 @@ import { NextResponse, after } from "next/server";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { invalidateAllData } from "@/lib/dataCache";
 import { discoverCompanies, newMeter, meterCost } from "@/lib/research/engine";
 
 // "Research more" from the left panel: finds new ICP-matching companies in one country (paid, user-triggered),
@@ -48,6 +49,7 @@ export async function POST(req: Request) {
         if (co) await db.from("sources").insert({ company_id: co.id, source: "Claude discovery (web search)", source_type: "Discovery", source_tier: "Tier 3", url: r.source_url,
           information_found: `Discovered as ICP candidate: ${r.revenue_estimate_usd_m ? `~$${r.revenue_estimate_usd_m}M (${r.revenue_basis})` : "revenue not stated"}`, evidence: r.why_icp, confidence: "MEDIUM" });
       }
+      invalidateAllData();
       await db.from("research_runs").update({ status: "done", finished_at: new Date().toISOString(),
         stats: { found: found.companies.length, added: ins?.length || 0, names: (ins || []).map((x) => x.company_name), cost_usd: meterCost(meter), usage: meter, batch_id: b.batchId || null, kind: "discovery" } }).eq("id", run.id);
       if (b.profile) for (const co of ins || []) {

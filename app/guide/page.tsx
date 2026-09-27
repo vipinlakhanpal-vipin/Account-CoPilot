@@ -1,11 +1,10 @@
 import { requirePageUser } from "@/lib/auth";
-import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import GuideNav from "@/components/GuideNav";
 import { SPEND_BENCHMARKS } from "@/lib/icp";
 import { SOURCES, indexSources } from "@/lib/sources";
 import { supabaseServer } from "@/lib/supabase/server";
-import { loadAll } from "@/lib/data";
+import { loadAllCached } from "@/lib/dataCache";
 import { statusPatch } from "@/lib/icpStatus.mjs";
 import { buildPeople } from "@/lib/people";
 import { withDefaults, icpMatch } from "@/lib/icp";
@@ -14,7 +13,7 @@ type Check = { label: string; ok: boolean; result: string };
 /** Live logic checks against the app's data (same rules the app and daily engine use). */
 async function liveChecks() {
   const sb = await supabaseServer();
-  const d = await loadAll(sb);
+  const d = await loadAllCached();
   const A = d.accounts, ids = new Set(A.map((a) => a.id));
   const n = (x: number) => x.toLocaleString();
   const mism = A.filter((c) => statusPatch(c).status !== c.icp_status).length;
@@ -69,7 +68,6 @@ export default async function GuidePage() {
   const live = await liveChecks();
   return (
     <>
-      <Header active="Guide" subtitle="How every part of Account CoPilot works" />
       <div className="wrap guide">
         <Hero title="Guide" text="Everything the app does, how each number is calculated, and where the data comes from." />
         <div className="guide-grid">

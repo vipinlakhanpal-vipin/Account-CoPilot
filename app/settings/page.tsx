@@ -1,5 +1,4 @@
 import { requirePageUser } from "@/lib/auth";
-import Header from "@/components/Header";
 import TierSettings from "@/components/TierSettings";
 import Hero from "@/components/Hero";
 import TeamSettings from "@/components/TeamSettings";
@@ -15,7 +14,6 @@ export default async function SettingsPage() {
   const { data } = await sb.from("settings").select("value").eq("key", "contact_tiers").maybeSingle();
   return (
     <>
-      <Header active="Settings" subtitle="Configurable contact tiering" />
       <div className="wrap"><Hero title="Settings" text="Discovery & refresh engine, API spend, contact tiers, your team, and what uses the Anthropic API key." /><EngineSettings /><TierSettings initial={(data?.value as Tier[]) || []} /><TeamSettings /><CostInfo /></div>
     </>
   );

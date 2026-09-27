@@ -2,6 +2,7 @@ import { NextResponse, after } from "next/server";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { invalidateAllData } from "@/lib/dataCache";
 import { researchNotes, extract, newMeter, meterCost, type Depth } from "@/lib/research/engine";
 import { reconcile } from "@/lib/research/reconcile";
 
@@ -59,6 +60,7 @@ export async function POST(req: Request) {
             profile: status !== co.icp_status ? { ...(co.profile || {}), "Status changed": { at: now, from: co.icp_status || null, to: status } } : co.profile }).eq("id", companyId);
         }
       }
+      invalidateAllData();
       await db.from("research_runs").update({ status: "done", company_id: companyId, finished_at: new Date().toISOString(),
         stats: { ...stats, cost_usd: meterCost(meter), usage: meter, batch_id: b.batchId || null, kind: b.companyId ? "update" : "new" } }).eq("id", run.id);
     } catch (e) {

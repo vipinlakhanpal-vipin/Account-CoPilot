@@ -26,12 +26,15 @@ const Spin = () => (
 const TAB_LABEL: Record<string, string> = { pipeline: "Pipeline", accounts: "Accounts", stakeholders: "Stakeholders", signals: "S2P Signals", erp: "ERP & Apps",
   conflicts: "Conflicts", sources: "Sources" };
 
-export default function Header({ active, subtitle }: { active: string; subtitle: string }) {
+const PAGE_LABEL: Record<string, string> = { "/research": "Research Queue", "/settings": "Settings", "/guide": "Guide" };
+
+// Rendered once in the root layout, so it stays put across page changes (no rebuild, no jump).
+export default function Header({ subtitle }: { subtitle: string }) {
   const latest = useNewVersion();
   // Sub-tabs sit right under the active main tab: the row is right-aligned so its last sub-tab ends beneath the active tab.
   const barRef = useRef<HTMLDivElement>(null);
   const subRef = useRef<HTMLDivElement>(null);
-  const [subOffset, setSubOffset] = useState(0);
+  const [subOffset, setSubOffset] = useState<number | null>(null); // null = not measured yet (row hidden, so it never slides into place)
   // Upgrade feedback: the button flashes while the new version loads, then a steady "Updated" bar confirms it.
   const [upgrading, setUpgrading] = useState(false);
   const [upgraded, setUpgraded] = useState("");
@@ -50,7 +53,7 @@ export default function Header({ active, subtitle }: { active: string; subtitle:
   const path = usePathname();
   const params = useSearchParams();
   // On the dashboard page, tabs switch instantly on the client (the data is already loaded).
-  const current = path === "/" ? TAB_LABEL[params.get("tab") || ""] || "Dashboard" : active;
+  const current = path === "/" ? TAB_LABEL[params.get("tab") || ""] || "Dashboard" : PAGE_LABEL[path] || "Dashboard";
   useLayoutEffect(() => {
     const place = () => {
       const bar = barRef.current, row = subRef.current;
@@ -74,6 +77,7 @@ export default function Header({ active, subtitle }: { active: string; subtitle:
       window.scrollTo({ top: 0 });
     }
   };
+  if (path.startsWith("/login") || path.startsWith("/auth")) return null;
   return (
     <>
       {latest && !upgraded && (
@@ -120,7 +124,7 @@ export default function Header({ active, subtitle }: { active: string; subtitle:
         {(() => { const g = GROUPS.find((x) => x.items.some(([, l]) => l === current));
           return g ? (
             <nav className="subtabs" aria-label={`${g.label} sections`}>
-              <div className="subtabs-row" ref={subRef} style={{ marginLeft: subOffset }}>
+              <div className="subtabs-row" ref={subRef} style={{ marginLeft: subOffset ?? 0, visibility: subOffset === null ? "hidden" : "visible" }}>
                 {g.items.map(([href, label]) => <Link key={href} href={href} prefetch className="subtab" aria-selected={label === current} onClick={(e) => go(e, href)}>{SUB_LABEL[label] || label}</Link>)}
               </div>
             </nav>) : null; })()}
