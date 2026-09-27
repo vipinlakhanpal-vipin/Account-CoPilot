@@ -316,7 +316,7 @@ export default async function GuidePage() {
               <h3>What each sheet contains</h3>
               <T head={["Sheet", "What's in it", "Use it for"]} rows={[
                 ["Executive Dashboard", "Headline counts and charts: accounts by ICP status, S2P signal, platform, ERP", "A one-page summary for management"],
-                ["Contact List (new)", "One row per person: Company Name, Company Website, Contact Person (full name), Job Title, Phone (tel / mobile), Official Email, Location, LinkedIn Profile, Existing SCP Customer", "Outreach and campaigns — clean, no duplicates, official emails only"],
+                ["Contact List (new)", "One row per person: Company Name, Company Website, Contact Person (full name), Job Title, Phone (tel / mobile), Official Email, Location, LinkedIn Profile, Existing SCP Customer, Company Stage and Company Owner (from HubSpot)", "Outreach and campaigns — clean, no duplicates, official emails only"],
                 ["Accounts", "Every account with ICP status, Status Since / Date Added / Last Updated, revenue and its source, listing, ERP, S2P platform and signals, opportunity notes; gold columns for owner, priority and next step", "Account planning and prioritisation"],
                 ["Contacts", "Every contact row as stored (your sheet rows and Claude rows), with verification, channel and notes", "Checking where a contact detail came from"],
                 ["Stakeholders", "Campaign view of contacts sorted by S2P signal then tier", "Building call lists by account"],
@@ -337,7 +337,7 @@ export default async function GuidePage() {
                 ["4", "Use S2P Signals and ERP & Apps to prepare the pitch; Source Evidence if someone asks how we know."],
                 ["5", "Fill the gold columns (owner, priority, next step) and share; resolve anything in Conflicts."],
               ]} />
-              <p className="note"><b>Existing SCP Customer</b> shows Yes / No from HubSpot once HubSpot is connected; until then it reads &quot;Not checked (HubSpot not connected)&quot;.</p></section>
+              <p className="note"><b>Existing SCP Customer</b> = <b>Yes</b> when the company exists in SCP&apos;s HubSpot, <b>No</b> when it doesn&apos;t; <b>Company Stage</b> is its HubSpot lifecycle stage and <b>Company Owner</b> its HubSpot owner. Companies not yet checked read &quot;Not checked yet&quot;.</p></section>
 
             <section id="rules" className="panel"><h2>Data rules</h2>
               <ul className="plain">

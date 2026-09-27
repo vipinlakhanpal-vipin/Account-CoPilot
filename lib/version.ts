@@ -1,7 +1,8 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.37";
+export const APP_VERSION = "1.38";
 
 export const RELEASES: { version: string; date: string; notes: string }[] = [
+  { version: "1.38", date: "2026-09-27", notes: "Master Book Contact List: Existing SCP Customer (company exists in HubSpot), Company Stage and Company Owner from HubSpot." },
   { version: "1.37", date: "2026-09-27", notes: "Master Book: new Contact List sheet (one row per person; company, website, full name, job title, phone, official email, location, LinkedIn, Existing SCP Customer). Guide explains how the Master Book is prepared, every sheet and how to study it." },
   { version: "1.36", date: "2026-09-27", notes: "Spend estimates re-based on published industry benchmarks (McKinsey, AHA, CBRE, CFMA, APQC and others) with a confidence label and source for every sector; shown in the Guide and in each estimate." },
   { version: "1.35", date: "2026-09-27", notes: "Guide: Pipeline explained in tables — weights and why, entry rules, and worked examples showing how 50% / 30% / 20% combine into the rank." },

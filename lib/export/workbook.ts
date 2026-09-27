@@ -104,14 +104,15 @@ export async function buildWorkbook(d: AllData): Promise<Buffer> {
     return { company: p.company || co.company_name || "", website: co.company_website || (co.domain ? `https://${co.domain}` : ""),
       full_name: p.full_name, title: p.title_verbatim, phone: phones.join(" / "), email,
       location: p.location || [co.hq_city, co.country].filter(Boolean).join(", "), linkedin: p.linkedin_url || "",
-      scp_customer: hs ? (hs.is_customer ? "Yes" : "No") : "Not checked (HubSpot not connected)" };
+      scp_customer: hs ? (hs.in_hubspot ? "Yes" : "No") : "Not checked yet",
+      hs_stage: hs?.in_hubspot ? hs.stage || "" : "", hs_owner: hs?.in_hubspot ? hs.owner || "" : "" };
   }).filter((r) => r.email || r.phone || r.linkedin)
     .sort((a, b) => String(a.company).localeCompare(String(b.company)) || String(a.full_name).localeCompare(String(b.full_name)));
   table(wb, "Contact List", "CONTACT LIST — Outreach-ready contacts",
     `Exported ${today} · one row per person (all sources merged) · official emails only, never guessed · conflicting records excluded (see Contacts sheet)`,
     [["Company Name", "company", 30], ["Company Website", "website", 26, "url"], ["Contact Person (Full Name)", "full_name", 26], ["Job Title", "title", 34, "wrap"],
       ["Phone (Tel / Mobile)", "phone", 22], ["Official Email", "email", 30], ["Location", "location", 20], ["LinkedIn Profile", "linkedin", 32, "url"],
-      ["Existing SCP Customer", "scp_customer", 18]], contactRows, 2);
+      ["Existing SCP Customer", "scp_customer", 16], ["Company Stage (HubSpot)", "hs_stage", 20], ["Company Owner (HubSpot)", "hs_owner", 22]], contactRows, 2);
 
   const accCols: Col[] = [
     ["Company", "company_name", 30], ["Website", "company_website", 24, "url"], ["Country", "country", 9], ["Exchange", "exchange", 10], ["Ticker", "ticker", 10],
