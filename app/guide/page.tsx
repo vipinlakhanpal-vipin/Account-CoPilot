@@ -305,7 +305,39 @@ export default async function GuidePage() {
               <p className="note">Every paid run records its real cost; see Admin → Settings → Anthropic API spend &amp; balance for this month, all time, carry-over and your estimated balance. Actual spend is also shown in the Anthropic Console.</p></section>
 
             <section id="excel" className="panel"><h2>Excel Master Book</h2>
-              <p>The Master Book button downloads the full workbook: executive dashboard, accounts (with ICP status, Status Since, Date Added, Last Updated, revenue and sources), contacts, stakeholders and supporting sheets. Gold columns are for your team's input.</p></section>
+              <p>The <b>Master Book</b> button (top bar) builds a fresh Excel file from the live database the moment you click — nothing is pre-made or stale. It contains everything in the app, arranged for reporting, campaigns and offline review. Gold column headers are for your team&apos;s own input.</p>
+              <h3>How it is prepared</h3>
+              <T head={["Step", "What happens"]} rows={[
+                ["1 · Read", "Every account, contact, signal, source, conflict, application and employment record is read from the database at the moment you click."],
+                ["2 · Merge people", "Contact rows from all sources (your sheet's CoPilot / Claude in Copilot / Claude-Seamless rows and Claude checks) are merged into one record per person for the Contact List."],
+                ["3 · Apply the rules", "ICP status, dates and scores exactly as in the app; emails are never guessed; generic mailboxes and personal addresses are left out of the Contact List; conflicting records are kept only in the detailed sheets."],
+                ["4 · Format", "Frozen headers, filters on every column, clickable website and LinkedIn links, $ revenue formatting, colour-coded tabs."],
+              ]} />
+              <h3>What each sheet contains</h3>
+              <T head={["Sheet", "What's in it", "Use it for"]} rows={[
+                ["Executive Dashboard", "Headline counts and charts: accounts by ICP status, S2P signal, platform, ERP", "A one-page summary for management"],
+                ["Contact List (new)", "One row per person: Company Name, Company Website, Contact Person (full name), Job Title, Phone (tel / mobile), Official Email, Location, LinkedIn Profile, Existing SCP Customer", "Outreach and campaigns — clean, no duplicates, official emails only"],
+                ["Accounts", "Every account with ICP status, Status Since / Date Added / Last Updated, revenue and its source, listing, ERP, S2P platform and signals, opportunity notes; gold columns for owner, priority and next step", "Account planning and prioritisation"],
+                ["Contacts", "Every contact row as stored (your sheet rows and Claude rows), with verification, channel and notes", "Checking where a contact detail came from"],
+                ["Stakeholders", "Campaign view of contacts sorted by S2P signal then tier", "Building call lists by account"],
+                ["S2P Signals", "Every Source-to-Pay signal with evidence and source", "Why an account is warm"],
+                ["ERP & Apps Landscape", "ERP and third-party applications with verification status", "Integration and displacement planning"],
+                ["Source Evidence", "The audit trail: every source used, what it said, confidence", "Proving a fact to a customer or colleague"],
+                ["Employment History", "Current vs previous roles, recent moves", "Spotting new hires and job changes"],
+                ["Conflicts", "Where sources disagree — both values kept, resolve in the gold column", "Data clean-up"],
+                ["Target List (Reference)", "Your original profiling workbook columns, unchanged", "Comparing with your own list"],
+                ["Pivot Analysis", "Pre-built pivots by status, industry, platform", "Quick slicing without building pivots yourself"],
+                ["Settings & Legend", "Definitions of statuses, tiers, signal levels and colours", "Reading the other sheets correctly"],
+              ]} />
+              <h3>How to study it</h3>
+              <T head={["Step", "What to do"]} rows={[
+                ["1", "Start with the Executive Dashboard for the big picture."],
+                ["2", "Go to Accounts and filter ICP Status = ICP — Verified, then sort by S2P Signal: these are the accounts to work first (the same as the Pipeline)."],
+                ["3", "For those accounts, filter the Contact List by Company Name to get the people to call or email."],
+                ["4", "Use S2P Signals and ERP & Apps to prepare the pitch; Source Evidence if someone asks how we know."],
+                ["5", "Fill the gold columns (owner, priority, next step) and share; resolve anything in Conflicts."],
+              ]} />
+              <p className="note"><b>Existing SCP Customer</b> shows Yes / No from HubSpot once HubSpot is connected; until then it reads &quot;Not checked (HubSpot not connected)&quot;.</p></section>
 
             <section id="rules" className="panel"><h2>Data rules</h2>
               <ul className="plain">

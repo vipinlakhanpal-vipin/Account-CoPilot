@@ -1,6 +1,7 @@
 import "server-only";
 import ExcelJS from "exceljs";
 import type { AllData, Row } from "@/lib/data";
+import { buildPeople } from "@/lib/people";
 
 const FONT = "Arial";
 const CARBON = { fg: "FF1B263B", bg: "FF0B1320" };
@@ -87,6 +88,30 @@ export async function buildWorkbook(d: AllData): Promise<Buffer> {
   wb.calcProperties.fullCalcOnLoad = true;
   const today = new Date().toISOString().slice(0, 10);
   const dash = wb.addWorksheet("Executive Dashboard", { properties: { tabColor: { argb: TABS[0] } }, views: [{ showGridLines: false }] });
+
+  // Contact List — clean, outreach-ready: one row per person (all sources merged), only the nine agreed fields.
+  // Kept: people with at least one way to reach them (email, phone or LinkedIn) whose sources don't conflict.
+  // Official email only: generic mailboxes (info@, sales@ …) and personal domains (gmail, hotmail …) are left blank. Emails are never guessed.
+  const PERSONAL = /@(gmail|googlemail|hotmail|outlook|live|yahoo|icloud|me|aol|proton(mail)?|gmx|yandex|mail)\./i;
+  const GENERIC = /^(info|sales|contact|enquiries|inquiries|admin|office|hello|support|marketing|hr|careers|jobs|procurement|purchasing|finance|accounts|tenders?)@/i;
+  const coById = new Map(d.accounts.map((a) => [a.id, a]));
+  const cleanEmail = (e: unknown) => { const v = String(e || "").trim(); return v && !PERSONAL.test(v) && !GENERIC.test(v) ? v : ""; };
+  const contactRows = buildPeople(d.contacts).filter((p) => p.trust !== "Conflicting").map((p): Row => {
+    const co = coById.get(p.company_id) || {};
+    const phones = [...new Set(p.rows.map((r) => String(r.phone || "").trim()).filter(Boolean))];
+    const email = cleanEmail(p.email) || p.rows.map((r) => cleanEmail(r.email)).find(Boolean) || "";
+    const hs = co.profile?.["HubSpot"];
+    return { company: p.company || co.company_name || "", website: co.company_website || (co.domain ? `https://${co.domain}` : ""),
+      full_name: p.full_name, title: p.title_verbatim, phone: phones.join(" / "), email,
+      location: p.location || [co.hq_city, co.country].filter(Boolean).join(", "), linkedin: p.linkedin_url || "",
+      scp_customer: hs ? (hs.is_customer ? "Yes" : "No") : "Not checked (HubSpot not connected)" };
+  }).filter((r) => r.email || r.phone || r.linkedin)
+    .sort((a, b) => String(a.company).localeCompare(String(b.company)) || String(a.full_name).localeCompare(String(b.full_name)));
+  table(wb, "Contact List", "CONTACT LIST — Outreach-ready contacts",
+    `Exported ${today} · one row per person (all sources merged) · official emails only, never guessed · conflicting records excluded (see Contacts sheet)`,
+    [["Company Name", "company", 30], ["Company Website", "website", 26, "url"], ["Contact Person (Full Name)", "full_name", 26], ["Job Title", "title", 34, "wrap"],
+      ["Phone (Tel / Mobile)", "phone", 22], ["Official Email", "email", 30], ["Location", "location", 20], ["LinkedIn Profile", "linkedin", 32, "url"],
+      ["Existing SCP Customer", "scp_customer", 18]], contactRows, 2);
 
   const accCols: Col[] = [
     ["Company", "company_name", 30], ["Website", "company_website", 24, "url"], ["Country", "country", 9], ["Exchange", "exchange", 10], ["Ticker", "ticker", 10],
