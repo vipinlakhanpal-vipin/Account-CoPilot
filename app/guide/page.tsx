@@ -291,12 +291,44 @@ export default async function GuidePage() {
                 <li>No paywall or login bypass (LinkedIn, ZoomInfo, D&B); search snippets are cited as snippets.</li>
               </ul></section>
 
-            <section id="limits" className="panel"><h2>What the app can't do</h2>
-              <ul className="plain">
-                <li>LinkedIn activity signals (posts, events, activity) — would require scraping LinkedIn.</li>
-                <li>Real spend, invoice, PO or supplier data — only estimates until a customer shares figures.</li>
-                <li>Automatic discovery and monitoring — Phase 2, on hold.</li>
-              </ul></section>
+            <section id="limits" className="panel"><h2>What the app can&apos;t do (yet) — and why</h2>
+              <h3>1 · LinkedIn activity signals</h3>
+              <T head={["Question", "Answer"]} rows={[
+                ["What's missing", "\"Posted procurement content\", \"Attended procurement event\", \"Active on LinkedIn\" — the greyed-out engagement options in the left panel."],
+                ["Why it can't be fetched", "LinkedIn's User Agreement forbids scraping and automated access; there is no public API that returns other people's posts, likes or event attendance; automating your own login to read it risks your account being restricted or banned. Search-engine snippets only show a profile's title and employer, not activity."],
+                ["What it would take", "Any one of: (a) a Sales Navigator export you run yourself (leads/accounts CSV, including \"changed jobs\" and \"posted recently\" filters) that the app imports; (b) access to LinkedIn's Sales Navigator Application Platform (SNAP) — a partner programme with approval and a subscription; (c) a licensed data provider that offers job-change / activity alerts (e.g. Seamless job-change signals)."],
+                ["What the app does today", "Uses public LinkedIn profile links and snippets to confirm people and titles, and derives promotions / new hires / company changes from employment checks (Seamless and public sources)."],
+                ["What it would add", "Engagement filters that actually work, a 'warm now' flag on contacts, and better timing for outreach."],
+              ]} />
+              <h3>2 · Real procurement spend and transaction data</h3>
+              <T head={["Question", "Answer"]} rows={[
+                ["What's missing", "Actual total / direct / indirect / MRO / services / CAPEX spend, procurement budget, monthly invoice and PO volumes, supplier counts."],
+                ["Why it can't be fetched", "These are internal accounting and ERP figures. Companies don't publish them: annual reports give revenue, cost of sales and operating expenses, but not addressable spend, invoice counts or supplier numbers. Tender portals show individual tenders, not totals. No legitimate database sells it company by company."],
+                ["What it would take", "The customer shares it — typically on a discovery call or in an assessment: an AP/spend extract or spend cube from their ERP (SAP, Oracle…), PO and invoice counts per month, and the active supplier master. Occasionally a sustainability report states supplier numbers or local-spend totals; the app can capture those as FACT when found."],
+                ["What the app does today", "Shows benchmark ESTIMATES (sector ratio × revenue; transactions from spend benchmarks), clearly labelled and switchable in the left panel, with the formula in this Guide."],
+                ["What it would add", "Exact business cases (savings, touchless-invoice ROI) instead of benchmark ranges."],
+              ]} />
+              <h3>3 · Automatic discovery &amp; monitoring through the API — Phase 2 (on hold)</h3>
+              <p>Part of this already runs at <b>no API cost</b>: the daily 6am engine finds 5 new companies and verifies 25 every day. Phase 2 is the paid, in-app version that goes further. It's on hold at your request to avoid API spend.</p>
+              <T head={["", "Daily 6am engine (live today)", "Phase 2 (if enabled)"]} rows={[
+                ["Runs on", "Scheduled Claude session on your Claude plan", "The app itself (a scheduled job on Vercel) calling the Anthropic API"],
+                ["Cost", "No API cost", "API cost within a monthly budget cap you set"],
+                ["Adds new companies", "5 a day (UAE)", "Any number you choose, in every selected region, following your saved ICP criteria"],
+                ["Refreshes existing accounts", "Revenue checks (25 a day, re-checks every 180 days)", "Full re-research: revenue, ERP, S2P platform, signals, leadership and contacts"],
+                ["Monitoring", "—", "Watches for triggers: new CPO/CFO, ERP or procurement-platform change, transformation programme, M&A, expansion — and alerts you"],
+                ["Speed", "Once a day", "As often as hourly"],
+              ]} />
+              <h3>How Phase 2 would add, refresh and update data</h3>
+              <T head={["Step", "What happens"]} rows={[
+                ["1 · Schedule", "A job runs on a timer (e.g. every night, or hourly for monitoring) and checks the remaining monthly budget first; if the cap is reached it stops and tells you."],
+                ["2 · Pick work", "New-company discovery for each selected region (same exclusion rules), plus existing accounts that are due: oldest research first, Pipeline accounts more often, and any account with a fresh trigger."],
+                ["3 · Research", "The research engine runs: a Researcher reads the web (annual reports, filings, company sites, supplier portals, press, job posts) and an Extractor turns the notes into a structured record — the same engine as Refresh research today."],
+                ["4 · Update without overwriting", "Reconcile merges the record into the app: your workbook data is never overwritten, differences are kept as Conflicts, every fact gets its source and FACT / LIKELY label, new contacts are added as Claude rows."],
+                ["5 · Re-score", "ICP status, ICP Match, Opportunity and Coupa Fit are recalculated; newly Verified accounts enter the Pipeline, others stay in Accounts."],
+                ["6 · Tell you", "A summary under the bell and in Settings: companies added, accounts refreshed, triggers found, and the cost of the run against your budget."],
+                ["Typical cost", "≈ $0.55–1.50 per company researched and ≈ $0.75 per discovery search — e.g. 50 refreshes + 10 new a week ≈ $70–85 a week."],
+              ]} />
+              <p className="note">To switch Phase 2 on later, tell Claude the monthly budget cap and the regions; nothing runs until you do.</p></section>
           </div>
         </div>
       </div>
