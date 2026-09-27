@@ -337,6 +337,18 @@ export default async function GuidePage() {
                 ["4", "Use S2P Signals and ERP & Apps to prepare the pitch; Source Evidence if someone asks how we know."],
                 ["5", "Fill the gold columns (owner, priority, next step) and share; resolve anything in Conflicts."],
               ]} />
+              <h3>HubSpot connection</h3>
+              <p><b>SCP&apos;s HubSpot is connected</b> to the Account CoPilot agent (through Claude, read-only). The agent looks each company up in HubSpot and writes the result into the app; nothing is changed in HubSpot.</p>
+              <T head={["Information the agent can read from HubSpot", "Used today", "Where it shows"]} rows={[
+                ["Whether the company exists in HubSpot (and its HubSpot ID)", "Yes", "Contact List → Existing SCP Customer (Yes / No)"],
+                ["Company lifecycle stage (e.g. Lead, Opportunity, Customer)", "Yes", "Contact List → Company Stage"],
+                ["Company owner (SCP account owner)", "Yes", "Contact List → Company Owner"],
+                ["Associated contacts in HubSpot (names, titles, emails)", "Available", "Can flag which app contacts SCP already knows, and add missing ones"],
+                ["Deals — stage, amount, close date", "Available", "Can show open pipeline or past wins per account"],
+                ["Last activity / last contacted date", "Available", "Can highlight accounts nobody has touched recently"],
+                ["Company properties recorded in HubSpot (industry, size, revenue, domain)", "Available", "Can be compared with the app's verified data"],
+              ]} />
+              <p className="note">&quot;Available&quot; items can be switched on on request. HubSpot matches are refreshed in Claude sessions (and can be added to the daily 6am run).</p>
               <p className="note"><b>Existing SCP Customer</b> = <b>Yes</b> when the company exists in SCP&apos;s HubSpot, <b>No</b> when it doesn&apos;t; <b>Company Stage</b> is its HubSpot lifecycle stage and <b>Company Owner</b> its HubSpot owner. Companies not yet checked read &quot;Not checked yet&quot;.</p></section>
 
             <section id="rules" className="panel"><h2>Data rules</h2>
