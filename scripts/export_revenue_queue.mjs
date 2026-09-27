@@ -9,12 +9,14 @@ for (const line of fs.readFileSync(".env.local", "utf8").split("\n")) {
 }
 const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SECRET_KEY, { auth: { persistSession: false } });
 const { data, error } = await db.from("companies").select("slug,company_name,company_website,domain,industry,icp_status,icp_fit_reason,profile")
-  .in("icp_status", ["ICP — Needs check", "Unknown", "ICP — Likely"]);
+  .in("icp_status", ["ICP — Needs check", "Unknown", "ICP — Likely", "Not ICP"]);
 if (error) throw error;
-const rank = { "ICP — Needs check": 0, Unknown: 1, "ICP — Likely": 2 };
+const rank = { "ICP — Needs check": 0, Unknown: 1, "ICP — Likely": 2, "Not ICP": 3 };
 const done = new Set(fs.existsSync("data/verification/revenue") ? fs.readdirSync("data/verification/revenue").map((f) => f.replace(/\.json$/, "")) : []);
 // Also skip companies whose revenue check is already stored in the database (cloud sessions start without local result files).
-const q = data.filter((c) => !done.has(c.slug) && !c.profile?.["Revenue check"]).map((c) => ({
+// Re-check any non-Verified company 180 days after its last revenue check (growing companies move up the ladder).
+const stale = (c) => { const at = c.profile?.["Revenue check"]?.at; return !!at && Date.now() - new Date(at).getTime() > 180 * 864e5; };
+const q = data.filter((c) => (!done.has(c.slug) && !c.profile?.["Revenue check"] && c.icp_status !== "Not ICP") || stale(c)).map((c) => ({
   slug: c.slug, company_name: c.company_name, website: c.company_website || c.domain || "", industry: c.industry || "",
   current_status: c.icp_status, current_reason: c.icp_fit_reason || "",
   your_size_usd_m: c.profile?.["Vipin-Profiling"]?.["Size (USD m)"] ?? null,

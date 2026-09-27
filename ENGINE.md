@@ -15,7 +15,7 @@ If `null`, do step 4. `count: "max"` = as many as you can in this session (aim f
 
 ## 2. Do the job
 - **verify** — `node scripts/engine_client.mjs queue <region> <count>` writes `data/verification/revenue_queue.json`
-  (order: Needs check → Unknown → Likely, largest first; companies already checked are excluded). Verify each with web search exactly as
+  (order: Needs check → Unknown → Likely, largest first; then re-checks of any non-Verified company whose last check is over 180 days old — entries marked `"recheck": true`; overwrite their result file with the new finding). Verify each with web search exactly as
   CLAUDE.md "Current task" describes and write `data/verification/revenue/<slug>.json` in the CLAUDE.md format.
   Every ~10 companies run `node scripts/engine_client.mjs submit` (it applies results and recalculates ICP status in the app).
 - **discover** — find up to `count` NEW companies in `region` that meet the ICP (group HQs only; exclude ministries/government bodies,

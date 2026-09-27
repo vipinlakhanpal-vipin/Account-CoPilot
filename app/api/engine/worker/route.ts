@@ -63,12 +63,17 @@ export async function POST(req: Request) {
   }
   if (b.action === "queue") {
     const { data } = await db.from("companies").select("slug,company_name,company_website,domain,industry,country,icp_status,profile")
-      .eq("country", b.region).in("icp_status", ["ICP — Needs check", "Unknown", "ICP — Likely"]);
+      .eq("country", b.region).in("icp_status", ["ICP — Needs check", "Unknown", "ICP — Likely", "Not ICP"]);
+    // Re-check: any company that isn't Verified is checked again 180 days after its last revenue check (so growing companies move up).
+    const stale = (c: { profile?: Record<string, { at?: string }> }) => { const at = c.profile?.["Revenue check"]?.at; return !!at && Date.now() - new Date(at).getTime() > 180 * 864e5; };
     const rank: Record<string, number> = { "ICP — Needs check": 0, Unknown: 1, "ICP — Likely": 2 };
     const size = (c: { profile?: Record<string, { "Size (USD m)"?: number; revenue_range?: string; employee_count?: string }> }) =>
       Number(c.profile?.["Vipin-Profiling"]?.["Size (USD m)"]) || (c.profile?.["Seamless discovery"]?.revenue_range === "$1B+" ? 1000 : c.profile?.["Seamless discovery"] ? 500 : 0);
-    const q = (data || []).filter((c) => !c.profile?.["Revenue check"]).sort((x, y) => rank[x.icp_status] - rank[y.icp_status] || size(y) - size(x)).slice(0, b.limit)
-      .map((c) => ({ slug: c.slug, company_name: c.company_name, website: c.company_website || c.domain || "", industry: c.industry || "", current_status: c.icp_status }));
+    const first = (data || []).filter((c) => !c.profile?.["Revenue check"] && c.icp_status !== "Not ICP").sort((x, y) => rank[x.icp_status] - rank[y.icp_status] || size(y) - size(x));
+    const again = (data || []).filter(stale).sort((x, y) => size(y) - size(x));
+    const q = [...first, ...again].slice(0, b.limit)
+      .map((c) => ({ slug: c.slug, company_name: c.company_name, website: c.company_website || c.domain || "", industry: c.industry || "", current_status: c.icp_status,
+        recheck: !!c.profile?.["Revenue check"] }));
     return NextResponse.json({ queue: q });
   }
   if (b.action === "submit") {
