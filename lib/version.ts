@@ -1,7 +1,8 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.30";
+export const APP_VERSION = "1.31";
 
 export const RELEASES: { version: string; date: string; notes: string }[] = [
+  { version: "1.31", date: "2026-09-27", notes: "Guide: Costs and Record dates explained in tables with worked examples." },
   { version: "1.30", date: "2026-09-27", notes: "Faster, steadier navigation: the top bar is built once and stays put across pages (no jumping), an instant loading placeholder shows while a page loads, and the full data load is cached for 60 seconds (refreshed after every update). Fixed: Guide 'Get to know me' now shows when selected." },
   { version: "1.29", date: "2026-09-27", notes: "Guide shows one section at a time: click a tile in the contents to open it (selected tile highlighted, remembered in the link)." },
   { version: "1.28", date: "2026-09-27", notes: "Colourful Guide: each section has its own accent colour, filled table headers and striped rows; 'Get to know me' is a highlighted panel; live checks show as filled badges; the contents list is a coloured panel of clickable tiles. Light mode: selected main tab and selected sub-tab are now clearly different." },

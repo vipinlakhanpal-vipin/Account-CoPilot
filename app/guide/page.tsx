@@ -243,7 +243,13 @@ export default async function GuidePage() {
               <T head={["Source", "Group", "What it provides", "Reliability"]} rows={SOURCES.map((d) => [d.name, d.group === "origin" ? "Origin" : d.group === "contributor" ? "Contributor" : "Evidence", d.provides, d.reliability])} /></section>
 
             <section id="dates" className="panel"><h2>Record dates</h2>
-              <p><b>Added</b> = when the account entered the app · <b>Updated</b> = last change · <b>Status since</b> = when the ICP status last changed (with from → to kept in the record). Shown in Accounts, account briefs, drill-downs and the Excel export.</p></section>
+              <T head={["Date", "What it means", "Where you see it", "Example"]} rows={[
+                ["Added", "When the account first entered the app (workbook import, Seamless discovery, research or your list)", "Accounts → Updated column (\"added …\"), account brief → Record dates, Excel → Date Added", "Added 2026-09-26 — imported from Seamless discovery"],
+                ["Updated", "The last time anything about the account changed (research, a revenue check, a merge, a status change)", "Accounts → Updated column, account brief, Excel → Last Updated, header \"data updated\"", "Updated 2026-09-27 — revenue verified by the daily engine"],
+                ["Status since", "When the ICP status last changed; the record also keeps the previous and new status", "Accounts → under the ICP status (\"since …\"), account brief, Excel → Status Since", "Since 2026-09-27 — moved from Likely to ICP — Verified"],
+                ["Last researched", "When Claude last ran full research on the account", "Account brief → Last researched", "2026-09-25 — Claude research (annual report, supplier portal)"],
+                ["Revenue check", "When the revenue was last verified; drives the 180-day re-check", "Account brief → ICP reason; re-checked automatically", "Checked 2026-09-27 → next re-check due about 2027-03-26 if not Verified"],
+              ]} /></section>
 
             <section id="engineset" className="panel"><h2>Discovery & refresh engine (Admin → Settings)</h2>
               <T head={["Option", "What it does", "Cost"]} rows={[
@@ -253,7 +259,26 @@ export default async function GuidePage() {
               <p className="note">Scheduled sessions follow ENGINE.md in the repository and need GitHub connected to Claude plus the Supabase keys set in the routine's environment.</p></section>
 
             <section id="costs" className="panel"><h2>Costs</h2>
-              <p>Browsing, filtering, scoring and Excel export are free. Only actions with the amber <b>Cost impact</b> note call the Anthropic API: Draft pitch plan (≈ $0.05–0.10), Refresh research (≈ $1.20–1.50), Research Queue runs (≈ $0.55–3.50). Full explainer: Settings → Costs & usage. Automated background discovery (Phase 2) is on hold to avoid API spend; research is done in Claude Code sessions instead.</p></section>
+              <p>Browsing, filtering, scoring, the Guide and Excel export are always free. Only actions marked with the amber <b>Cost impact</b> note use the Anthropic API. The daily 6am engine uses your Claude plan, not the API.</p>
+              <T head={["Action", "Where", "Uses the API?", "Typical cost", "Example"]} rows={[
+                ["Browse, filter, scores, Pipeline, Guide", "Everywhere", "No", "$0", "Open the Pipeline, filter by Coupa, read a brief — free"],
+                ["Download Master Book (Excel)", "Top bar", "No", "$0", "Export all 464 accounts — free"],
+                ["Daily 6am engine (find 5 + verify 25)", "Runs by itself", "No — your Claude plan", "$0 API", "Tomorrow's run adds 5 companies and verifies 25 — no API charge"],
+                ["Search companies (queued job)", "Admin → Settings → engine", "No — your Claude plan", "$0 API", "Queue 'Verify 50 in UAE' — done in the next scheduled session"],
+                ["Draft pitch plan", "Account brief", "Yes", "≈ $0.05–0.10", "Drafting a plan for GEMS Education ≈ $0.07"],
+                ["Refresh research (one account)", "Account brief", "Yes", "≈ $1.20–1.50", "Re-researching Emaar (Standard) ≈ $1.35"],
+                ["Research Queue — Quick / Standard / Deep", "Admin → Data → Research Queue", "Yes", "≈ $0.55 / $1.20–1.50 / $2.50–3.50", "Deep research on a new KSA company ≈ $3.00"],
+                ["Research more (left panel)", "Left panel", "Yes", "≈ $0.50–1.00 per search, + ≈ $0.55 per company profiled", "Find 5 + profile each ≈ $0.75 + 5 × $0.55 ≈ $3.50"],
+                ["Refresh (budgeted)", "Admin → Settings → engine", "Yes", "Your budget; unspent carries over", "Budget $20 → 10 updates ($5.50) + 5 new ($0.75 + $2.75) = $9.00; $11.00 carries over"],
+              ]} />
+              <h3>How a cost is calculated</h3>
+              <T head={["Part", "Price", "Example (one Standard research run)"]} rows={[
+                ["Tokens read (instructions, pages Claude opens)", "$5 per million", "150,000 read → $0.75"],
+                ["Tokens written (notes, record, reasoning)", "$25 per million", "15,000 written → $0.38"],
+                ["Web searches", "$10 per 1,000 ($0.01 each)", "10 searches → $0.10"],
+                ["Total", "", "≈ $1.23"],
+              ]} />
+              <p className="note">Every paid run records its real cost; see Admin → Settings → Anthropic API spend &amp; balance for this month, all time, carry-over and your estimated balance. Actual spend is also shown in the Anthropic Console.</p></section>
 
             <section id="excel" className="panel"><h2>Excel Master Book</h2>
               <p>The Master Book button downloads the full workbook: executive dashboard, accounts (with ICP status, Status Since, Date Added, Last Updated, revenue and sources), contacts, stakeholders and supporting sheets. Gold columns are for your team's input.</p></section>
