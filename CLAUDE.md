@@ -58,8 +58,21 @@ The goal is to move accounts out of Likely / Needs check / Unknown by finding of
 - **Seamless discovery import:** `scripts/clean_seamless_discovery.py` sorts rows into buckets: KEEP, DUP (already in the app, or a unit of an account in the app), GOV, SINGLE (single hotel, hospital, school or attraction), BRANCH (local branch of a foreign HQ; not the decision-making entity), REGION and JUNK. Then `scripts/import_seamless_discovery.mjs <COUNTRY>` imports the KEEP rows. In `recompute_icp.mjs`, a Seamless band counts only when headcount agrees: 1,001+ staff gives Likely, 201-1,000 gives Needs check. Seamless revenue is unreliable: 8 of 11 companies with official figures fell on the wrong side of $250M, with some off by 10-1,000×. For UAE (2026-09-26), 224 of 386 were imported.
 - **Phase 2: ON HOLD (user decision, 2026-09-26; no API spend for now).** Continue verification in Claude Code sessions, and at the start of each session state how many companies will be verified (40–60 has been realistic). Phase 2 would be scheduled autonomous discovery and monitoring (Vercel cron → research engine), which spends Anthropic API credit. LinkedIn activity signals are not available (no scraping).
 
-## HubSpot (v1.38–1.39)
-SCP's HubSpot is connected on claude.ai (read-only use). "Existing SCP Customer" means the company exists in HubSpot, per the user; we also store its lifecycle stage and owner. The workflow: in a session with the HubSpot connector, match app companies to HubSpot and write `data/verification/hubspot_matches.json`, then run `node scripts/apply_hubspot.mjs`. This writes `profile["HubSpot"]` {in_hubspot, hubspot_id, stage, owner, checked_at}, which the Master Book Contact List reads (Existing SCP Customer, Company Stage, Company Owner).
+## HubSpot (v1.38–1.40)
+SCP's HubSpot is connected through the user's own HubSpot login (the claude.ai connector), and we only read from it; never write to HubSpot.
+
+**Rule:** the user wants HubSpot data kept inside this app only (the database, the account page and the Master Book). Never commit it; the repo is public. Keep the working files in the scratchpad or in the git-ignored `data/verification/`.
+
+Matching steps:
+1. Match companies by domain first (`query_crm_data` with `domain IN (...)`, batches of about 120; HubSpot domains can start with `www.`), then by normalised name against HubSpot's Gulf-country companies and those with no country set (the query caps at 500 rows, so page with `hs_object_id >`).
+2. Reject false name hits by eye.
+3. Pull `lifecyclestage`, `hubspot_owner_id` and `num_associated_deals`, then resolve owners with `search_owners`.
+4. Pull deals with `SELECT … FROM DEAL WHERE COMPANY.hs_object_id IN (...)`.
+5. Match contacts with `CONTACT email IN (...)`.
+6. Run `node scripts/apply_hubspot.mjs <matches.json> <hubspot_contacts.txt>`.
+
+This writes `profile["HubSpot"]` = {in_hubspot, hubspot_id, hubspot_name, records, stage, owner, deals[], contact_emails[], checked_at}. The account page shows it in its HubSpot block. The Master Book shows it in the Contact List (Company in HubSpot, Stage, Owner, Deals, Latest Deal, Contact in HubSpot, HubSpot Import Action) and in the HubSpot Deals sheet.
+
 
 ## Spend benchmarks (v1.36)
 `SPEND_BENCHMARKS` in `lib/icp.ts` holds, per sector: the addressable ratio, the split, a confidence `level` (Sourced / Partly sourced / Judgement) and a source string, researched on 2026-09-27. Oil & gas, logistics and utilities are still Judgement; update them when a credible published split is found. The Guide table and every estimate's "basis" show the level and source.
