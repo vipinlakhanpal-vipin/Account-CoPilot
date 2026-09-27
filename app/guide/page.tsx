@@ -238,7 +238,7 @@ export default async function GuidePage() {
                 ["Emaar Properties — Verified, few buying signals", "96 × 0.5 = 48", "51 × 0.3 = 15.3", "83 × 0.2 = 16.6", "79.9 → 80", "Yes — lower because signals are weaker"],
                 ["A Seamless company — revenue only estimated", "66 × 0.5 = 33", "20 × 0.3 = 6", "70 × 0.2 = 14", "53", "No — ICP Match below 70 until revenue is verified; stays in Accounts"],
               ]} />
-              <p className="note">Example scores are from the app&apos;s data on 26 Sep 2026 and change as accounts are researched. Hover any score in the app to see its parts; the account brief lists every part and the reason for it. Rank ties are broken by the order shown in the table (highest first).</p></section>
+              <p className="note">Example scores are from the app&apos;s data on 26 Sep 2026 and change as accounts are researched. Hover any score in the app to see its parts; the account brief lists every part and the reason for it.</p></section>
 
             <section id="brief" className="panel"><h2>Account brief</h2>
               <ul className="plain">
