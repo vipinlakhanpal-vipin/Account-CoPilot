@@ -104,15 +104,25 @@ export async function buildWorkbook(d: AllData): Promise<Buffer> {
     return { company: p.company || co.company_name || "", website: co.company_website || (co.domain ? `https://${co.domain}` : ""),
       full_name: p.full_name, title: p.title_verbatim, phone: phones.join(" / "), email,
       location: p.location || [co.hq_city, co.country].filter(Boolean).join(", "), linkedin: p.linkedin_url || "",
-      scp_customer: hs ? (hs.in_hubspot ? "Yes" : "No") : "Not checked yet",
-      hs_stage: hs?.in_hubspot ? hs.stage || "" : "", hs_owner: hs?.in_hubspot ? hs.owner || "" : "" };
+      ...hubspotCols(hs, email) };
   }).filter((r) => r.email || r.phone || r.linkedin)
     .sort((a, b) => String(a.company).localeCompare(String(b.company)) || String(a.full_name).localeCompare(String(b.full_name)));
   table(wb, "Contact List", "CONTACT LIST — Outreach-ready contacts",
     `Exported ${today} · one row per person (all sources merged) · official emails only, never guessed · conflicting records excluded (see Contacts sheet)`,
     [["Company Name", "company", 30], ["Company Website", "website", 26, "url"], ["Contact Person (Full Name)", "full_name", 26], ["Job Title", "title", 34, "wrap"],
       ["Phone (Tel / Mobile)", "phone", 22], ["Official Email", "email", 30], ["Location", "location", 20], ["LinkedIn Profile", "linkedin", 32, "url"],
-      ["Existing SCP Customer", "scp_customer", 16], ["Company Stage (HubSpot)", "hs_stage", 20], ["Company Owner (HubSpot)", "hs_owner", 22]], contactRows, 2);
+      ["Company in HubSpot", "scp_customer", 14], ["Company Stage (HubSpot)", "hs_stage", 20], ["Company Owner (HubSpot)", "hs_owner", 22],
+      ["Deals (HubSpot)", "hs_deals", 26, "wrap"], ["Latest Deal (HubSpot)", "hs_latest", 44, "wrap"], ["Contact in HubSpot", "hs_contact", 14],
+      ["HubSpot Import Action", "hs_action", 30, "wrap"]], contactRows, 2);
+
+  // HubSpot deals linked to profiled companies (read-only copy; stays inside this app and its export)
+  const dealRows = d.accounts.flatMap((a) => (a.profile?.["HubSpot"]?.deals || []).map((x: Row) => ({ company: a.company_name, hs_name: a.profile["HubSpot"].hubspot_name,
+    deal: x.name, stage: x.stage, amount: x.amount ?? "", close: x.close, owner: a.profile["HubSpot"].owner })))
+    .sort((a, b) => String(a.company).localeCompare(String(b.company)) || String(b.close).localeCompare(String(a.close)));
+  table(wb, "HubSpot Deals", "HUBSPOT DEALS — Deals on profiled companies",
+    `Exported ${today} · read-only from SCP HubSpot · company matched by domain, then name`,
+    [["Company (app)", "company", 30], ["Company (HubSpot)", "hs_name", 28], ["Deal", "deal", 44, "wrap"], ["Deal Stage", "stage", 16], ["Amount", "amount", 14, "usd"],
+      ["Close Date", "close", 12], ["Company Owner", "owner", 22]], dealRows, 2);
 
   const accCols: Col[] = [
     ["Company", "company_name", 30], ["Website", "company_website", 24, "url"], ["Country", "country", 9], ["Exchange", "exchange", 10], ["Ticker", "ticker", 10],
@@ -257,4 +267,22 @@ export async function buildWorkbook(d: AllData): Promise<Buffer> {
   legend.getColumn(1).width = 46; legend.getColumn(2).width = 60;
 
   return Buffer.from(await wb.xlsx.writeBuffer());
+}
+
+/** HubSpot columns for one Contact List row. Used to avoid importing records that already exist in HubSpot. */
+function hubspotCols(hs: Row | undefined, email: string): Row {
+  if (!hs) return { scp_customer: "Not checked yet", hs_stage: "", hs_owner: "", hs_deals: "", hs_latest: "", hs_contact: "", hs_action: "" };
+  const inContact = !!email && (hs.contact_emails || []).includes(email.toLowerCase());
+  const deals: Row[] = hs.deals || [];
+  const count = (re: RegExp) => deals.filter((x) => re.test(String(x.stage))).length;
+  const won = count(/won/i), lost = count(/lost|disqualified/i), open = deals.length - won - lost - count(/inactive/i);
+  const money = (n: unknown) => (n === null || n === undefined || n === "" ? "" : ` · $${Number(n).toLocaleString("en-US")}`);
+  const latest = deals[0] ? `${deals[0].name} · ${deals[0].stage}${money(deals[0].amount)} · ${deals[0].close}` : "";
+  return {
+    scp_customer: hs.in_hubspot ? "Yes" : "No",
+    hs_stage: hs.in_hubspot ? hs.stage || "" : "", hs_owner: hs.in_hubspot ? hs.owner || "" : "",
+    hs_deals: deals.length ? `${deals.length} (${won} won, ${open} open, ${lost} lost)` : hs.in_hubspot ? "None" : "",
+    hs_latest: latest, hs_contact: email ? (inContact ? "Yes" : "No") : "",
+    hs_action: inContact ? "Skip — contact already in HubSpot" : hs.in_hubspot ? "Add contact to existing HubSpot company" : "New company + contact",
+  };
 }

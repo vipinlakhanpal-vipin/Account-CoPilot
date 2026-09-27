@@ -74,11 +74,18 @@ export default async function GuidePage() {
           <GuideNav items={TOC} />
           <div className="guide-body">
 
-            <section id="start" className="panel"><h2 className="heartbeat"><span className="hb-heart" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.8 4.5c2.1 0 3.6 1.2 4.4 2.5.8-1.3 2.3-2.5 4.4-2.5 3.8 0 5.9 3.9 4.4 7.3C19.5 16.4 12 21 12 21Z" /></svg>
-                <svg className="hb-ecg" viewBox="0 0 60 24"><path d="M0 12h14l3-6 4 12 4-18 4 18 3-6h28" /></svg></span>
-                <span className="hb-text">Get to know me — I&apos;m your Account CoPilot AI Agent (Autonomous)</span></h2>
-              <p>Every morning I find new companies that fit your ICP, verify their revenue against official sources, keep every account up to date and move the ones that qualify into your Pipeline. Verified accounts are in <b>Pipeline</b>; every account — Verified, Likely, Needs check or Not ICP — stays in <b>Accounts</b>.</p>
+            <section id="start" className="panel"><h2 className="attn">Get to know me — I&apos;m your Account CoPilot AI Agent (Autonomous)</h2>
+              <p>I&apos;m an AI agent that runs on my own every morning at 6am Dubai time. First I <b>find</b> new companies that could fit your Ideal Customer Profile (ICP), using public web search, annual reports, stock-exchange filings, company websites and supplier portals, reputable business press, job posts and Seamless.ai. Then I <b>verify</b> each company against your ICP: <b>revenue of $250M or more and at least 100 staff</b>, in the UAE first and then the wider Gulf. I trust official figures (annual reports, filings, company-quoted results) above estimates. Every fact is labelled FACT, LIKELY or UNVERIFIED and linked to its source, so you can always see why an account is Verified, Likely, Needs check or Not ICP.</p>
+              <p>Next I <b>check SCP&apos;s HubSpot</b> (read-only) to see which companies and contacts are already there, with their stage, owner and any deals. That way your team never imports a duplicate, and knows straight away whether an account is new, being worked or already a customer. Along the way I work smartly and keep costs down:
+                <ul>
+                  <li>I only add a company once, and merge duplicates.</li>
+                  <li>I never guess an email or phone number.</li>
+                  <li>I keep conflicting information side by side instead of overwriting it.</li>
+                  <li>I re-check every account every 180 days.</li>
+                  <li>I skip paywalls and logins.</li>
+                  <li>I use only free sources unless you approve a paid refresh within your budget.</li>
+                </ul>
+              Accounts that qualify move into your <b>Pipeline</b>. Every account, whether Verified, Likely, Needs check or Not ICP, stays in <b>Accounts</b>, and the bell tells you what changed overnight.</p>
 
               <h3>Daily 6AM Run Process</h3>
               <T head={["Step", "What happens"]} rows={[
@@ -316,7 +323,8 @@ export default async function GuidePage() {
               <h3>What each sheet contains</h3>
               <T head={["Sheet", "What's in it", "Use it for"]} rows={[
                 ["Executive Dashboard", "Headline counts and charts: accounts by ICP status, S2P signal, platform, ERP", "A one-page summary for management"],
-                ["Contact List (new)", "One row per person: Company Name, Company Website, Contact Person (full name), Job Title, Phone (tel / mobile), Official Email, Location, LinkedIn Profile, Existing SCP Customer, Company Stage and Company Owner (from HubSpot)", "Outreach and campaigns — clean, no duplicates, official emails only"],
+                ["Contact List (new)", "One row per person: Company Name, Company Website, Contact Person (full name), Job Title, Phone (tel / mobile), Official Email, Location, LinkedIn Profile, then HubSpot columns: Company in HubSpot, Company Stage, Company Owner, Deals, Latest Deal, Contact in HubSpot and HubSpot Import Action", "Outreach and campaigns, and importing into HubSpot without creating duplicates"],
+                ["HubSpot Deals (new)", "Every HubSpot deal on a profiled company: deal name, stage, amount, close date, company owner", "Seeing past wins, losses and open deals per account"],
                 ["Accounts", "Every account with ICP status, Status Since / Date Added / Last Updated, revenue and its source, listing, ERP, S2P platform and signals, opportunity notes; gold columns for owner, priority and next step", "Account planning and prioritisation"],
                 ["Contacts", "Every contact row as stored (your sheet rows and Claude rows), with verification, channel and notes", "Checking where a contact detail came from"],
                 ["Stakeholders", "Campaign view of contacts sorted by S2P signal then tier", "Building call lists by account"],
@@ -338,18 +346,23 @@ export default async function GuidePage() {
                 ["5", "Fill the gold columns (owner, priority, next step) and share; resolve anything in Conflicts."],
               ]} />
               <h3>HubSpot connection</h3>
-              <p><b>SCP&apos;s HubSpot is connected</b> to the Account CoPilot agent (through Claude, read-only). The agent looks each company up in HubSpot and writes the result into the app; nothing is changed in HubSpot.</p>
+              <p><b>SCP&apos;s HubSpot is connected</b> to the Account CoPilot agent (through Claude, read-only, using the connecting user&apos;s own HubSpot permissions). The agent looks each company and contact up in HubSpot and keeps the result inside this app only (the account page and the Master Book); nothing is changed in HubSpot and nothing goes to the public code repository.</p>
               <T head={["Information the agent can read from HubSpot", "Used today", "Where it shows"]} rows={[
-                ["Whether the company exists in HubSpot (and its HubSpot ID)", "Yes", "Contact List → Existing SCP Customer (Yes / No)"],
+                ["Whether the company exists in HubSpot (matched by domain, then name)", "Yes", "Contact List → Company in HubSpot (Yes / No); account page → HubSpot block"],
                 ["Company lifecycle stage (e.g. Lead, Opportunity, Customer)", "Yes", "Contact List → Company Stage"],
                 ["Company owner (SCP account owner)", "Yes", "Contact List → Company Owner"],
-                ["Associated contacts in HubSpot (names, titles, emails)", "Available", "Can flag which app contacts SCP already knows, and add missing ones"],
-                ["Deals — stage, amount, close date", "Available", "Can show open pipeline or past wins per account"],
+                ["Whether each contact already exists in HubSpot (matched by email)", "Yes", "Contact List → Contact in HubSpot"],
+                ["Deals on the company — name, stage, amount, close date", "Yes", "Contact List → Deals, Latest Deal; HubSpot Deals sheet; account page"],
                 ["Last activity / last contacted date", "Available", "Can highlight accounts nobody has touched recently"],
                 ["Company properties recorded in HubSpot (industry, size, revenue, domain)", "Available", "Can be compared with the app's verified data"],
               ]} />
               <p className="note">&quot;Available&quot; items can be switched on on request. HubSpot matches are refreshed in Claude sessions (and can be added to the daily 6am run).</p>
-              <p className="note"><b>Existing SCP Customer</b> = <b>Yes</b> when the company exists in SCP&apos;s HubSpot, <b>No</b> when it doesn&apos;t; <b>Company Stage</b> is its HubSpot lifecycle stage and <b>Company Owner</b> its HubSpot owner. Companies not yet checked read &quot;Not checked yet&quot;.</p></section>
+              <p className="note"><b>Company in HubSpot</b> = <b>Yes</b> when the company exists in SCP&apos;s HubSpot, <b>No</b> when it doesn&apos;t; <b>Company Stage</b> is its HubSpot lifecycle stage and <b>Company Owner</b> its HubSpot owner. Companies not yet checked read &quot;Not checked yet&quot;.</p>
+              <T head={["HubSpot Import Action", "Meaning"]} rows={[
+                ["Skip — contact already in HubSpot", "The email already exists in HubSpot; do not import this row"],
+                ["Add contact to existing HubSpot company", "The company exists in HubSpot but this person doesn't; import the contact and associate it with that company"],
+                ["New company + contact", "Neither exists in HubSpot; import both"],
+              ]} /></section>
 
             <section id="rules" className="panel"><h2>Data rules</h2>
               <ul className="plain">

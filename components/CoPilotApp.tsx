@@ -557,6 +557,7 @@ function Brief({ a, data, people, onClose, onContact, scores, criteria }: { a: R
             {a.known_implementation_partner && <p><b>Implementation partner:</b> {a.known_implementation_partner}</p>}
             {a.subsidiaries && <p className="note"><b>Subsidiaries:</b> {a.subsidiaries}</p>}
           </div>
+          {a.profile?.["HubSpot"] && <HubSpotBlock hs={a.profile["HubSpot"]} />}
           {a.profile && <Profile profile={a.profile} />}
           <div className="block"><h4>Opportunity observations</h4><p>{a.potential_opportunity || "—"}</p>{a.account_notes && <p className="note">{a.account_notes}</p>}</div>
           <div className="block"><h4>Stakeholders ({cs.length}) · select a person for their contact card</h4>
@@ -582,8 +583,23 @@ function Brief({ a, data, people, onClose, onContact, scores, criteria }: { a: R
   );
 }
 
+/** HubSpot match (read-only from SCP HubSpot; kept inside this app). */
+function HubSpotBlock({ hs }: { hs: Record<string, any> }) {
+  const deals: Record<string, any>[] = hs.deals || [];
+  return (
+    <div className="block"><h4>HubSpot (read-only) · checked {String(hs.checked_at || "").slice(0, 10)}</h4>
+      {!hs.in_hubspot ? <p className="note">Not in HubSpot. Safe to import as a new company.</p> : <>
+        <p><b>{hs.hubspot_name}</b> · Stage: <b>{hs.stage || "—"}</b> · Owner: {hs.owner || "—"}{hs.records > 1 ? ` · ${hs.records} HubSpot records share this domain` : ""}</p>
+        {deals.length > 0 ? deals.map((x, i) => <p key={i} className="note">{x.name} · {x.stage}{x.amount != null ? ` · $${Number(x.amount).toLocaleString("en-US")}` : ""} · {x.close}</p>)
+          : <p className="note">No deals.</p>}
+        {(hs.contact_emails || []).length > 0 && <p className="note">{hs.contact_emails.length} of this company&apos;s contacts already in HubSpot.</p>}
+      </>}
+    </div>
+  );
+}
+
 function Profile({ profile }: { profile: Record<string, Record<string, unknown>> }) {
-  const sheets = Object.entries(profile).filter(([, v]) => v && Object.keys(v).length);
+  const sheets = Object.entries(profile).filter(([k, v]) => k !== "HubSpot" && v && Object.keys(v).length);
   if (!sheets.length) return null;
   return (
     <div className="block input-block">

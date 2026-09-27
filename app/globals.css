@@ -484,14 +484,7 @@ td.chk-bad > span{background:color-mix(in srgb, #FF4D6A 16%, var(--surface));bor
 @keyframes skel{from{background-position:200% 0}to{background-position:-200% 0}}
 @media (prefers-reduced-motion:reduce){.skel{animation:none}}
 
-/* Heartbeat on the Guide's "Get to know me" title: lub-dub at ~72 bpm */
-.heartbeat{display:flex;align-items:center;gap:10px}
-.hb-heart{position:relative;display:inline-grid;place-items:center;width:30px;height:30px;flex:none}
-.hb-heart svg:first-child{width:26px;height:26px;fill:#FF4D6A;filter:drop-shadow(0 0 6px rgba(255,77,106,.55));animation:hb-beat .83s ease-in-out infinite;transform-origin:center}
-.hb-ecg{position:absolute;left:30px;top:3px;width:46px;height:24px;fill:none;stroke:#FF4D6A;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;
-  stroke-dasharray:80;stroke-dashoffset:80;animation:hb-ecg .83s linear infinite;opacity:.9}
-.heartbeat .hb-text{margin-left:44px;animation:hb-glow .83s ease-in-out infinite}
-@keyframes hb-beat{0%{transform:scale(1)}14%{transform:scale(1.28)}28%{transform:scale(1)}42%{transform:scale(1.18)}70%,100%{transform:scale(1)}}
-@keyframes hb-ecg{0%{stroke-dashoffset:80}60%{stroke-dashoffset:0}100%{stroke-dashoffset:-80}}
-@keyframes hb-glow{0%,70%,100%{text-shadow:none}14%{text-shadow:0 0 12px color-mix(in srgb, #FF4D6A 45%, transparent)}42%{text-shadow:0 0 8px color-mix(in srgb, #FF4D6A 30%, transparent)}}
-@media (prefers-reduced-motion:reduce){.hb-heart svg:first-child,.hb-ecg,.heartbeat .hb-text{animation:none}.hb-ecg{stroke-dashoffset:0}}
+/* Guide "Get to know me" title: slow pulse to draw attention (no icon) */
+.attn{animation:attn 2.4s ease-in-out infinite;transform-origin:left center}
+@keyframes attn{0%,100%{opacity:1;transform:scale(1);text-shadow:none}50%{opacity:.55;transform:scale(1.015);text-shadow:0 0 14px color-mix(in srgb, var(--accent, #3AA0FF) 55%, transparent)}}
+@media (prefers-reduced-motion:reduce){.attn{animation:none}}
