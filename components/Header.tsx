@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Logo from "@/components/Logo";
 import ProfileMenu from "@/components/ProfileMenu";
 import EngineBell from "@/components/EngineBell";
@@ -27,6 +27,10 @@ const TAB_LABEL: Record<string, string> = { pipeline: "Pipeline", accounts: "Acc
 
 export default function Header({ active, subtitle }: { active: string; subtitle: string }) {
   const latest = useNewVersion();
+  // Sub-tabs sit right under the active main tab: the row is right-aligned so its last sub-tab ends beneath the active tab.
+  const barRef = useRef<HTMLDivElement>(null);
+  const subRef = useRef<HTMLDivElement>(null);
+  const [subOffset, setSubOffset] = useState(0);
   // Upgrade feedback: the button flashes while the new version loads, then a steady "Updated" bar confirms it.
   const [upgrading, setUpgrading] = useState(false);
   const [upgraded, setUpgraded] = useState("");
@@ -46,6 +50,19 @@ export default function Header({ active, subtitle }: { active: string; subtitle:
   const params = useSearchParams();
   // On the dashboard page, tabs switch instantly on the client (the data is already loaded).
   const current = path === "/" ? TAB_LABEL[params.get("tab") || ""] || "Dashboard" : active;
+  useLayoutEffect(() => {
+    const place = () => {
+      const bar = barRef.current, row = subRef.current;
+      const tab = bar?.querySelector<HTMLElement>('nav.tabs .tab[aria-selected="true"]');
+      if (!bar || !row || !tab) return;
+      const barLeft = bar.getBoundingClientRect().left, tabRight = tab.getBoundingClientRect().right;
+      setSubOffset(Math.max(0, tabRight - barLeft - row.scrollWidth));
+    };
+    place();
+    window.addEventListener("resize", place);
+    const t = setTimeout(place, 300); // after web fonts settle
+    return () => { window.removeEventListener("resize", place); clearTimeout(t); };
+  }, [current]);
   const go = (e: React.MouseEvent, href: string) => {
     if (path === "/" && href.startsWith("/?") || (path === "/" && href === "/")) {
       e.preventDefault();
@@ -69,7 +86,7 @@ export default function Header({ active, subtitle }: { active: string; subtitle:
         <div className="update-bar done" role="status"><span>Updated to <b>Account CoPilot v{upgraded}</b> ✓</span></div>
       )}
       <header className="top">
-        <div className="navbar has-sub">
+        <div className="navbar has-sub" ref={barRef}>
           <div className="brand">
             <Logo />
             <div className="brand-text">
@@ -101,7 +118,9 @@ export default function Header({ active, subtitle }: { active: string; subtitle:
         {(() => { const g = GROUPS.find((x) => x.items.some(([, l]) => l === current));
           return g ? (
             <nav className="subtabs" aria-label={`${g.label} sections`}>
-              {g.items.map(([href, label]) => <Link key={href} href={href} prefetch className="subtab" aria-selected={label === current} onClick={(e) => go(e, href)}>{SUB_LABEL[label] || label}</Link>)}
+              <div className="subtabs-row" ref={subRef} style={{ marginLeft: subOffset }}>
+                {g.items.map(([href, label]) => <Link key={href} href={href} prefetch className="subtab" aria-selected={label === current} onClick={(e) => go(e, href)}>{SUB_LABEL[label] || label}</Link>)}
+              </div>
             </nav>) : null; })()}
       </header>
     </>

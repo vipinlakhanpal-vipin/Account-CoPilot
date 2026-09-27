@@ -368,3 +368,8 @@ aside.brief.contact{width:min(760px,100%);z-index:70}
 .bell-pop{position:absolute;right:0;top:42px;width:340px;max-height:420px;overflow:auto;background:#14233F;border:1px solid var(--line);border-radius:12px;padding:12px;z-index:40;box-shadow:0 12px 30px rgba(0,0,0,.4);display:flex;flex-direction:column;gap:8px}
 .bell-item{border-top:1px solid var(--line);padding-top:6px}.bell-item small{color:var(--muted);font-size:11px}.bell-item p{margin:3px 0;font-size:12.5px}.bell-item.new small{color:#7DF0C0}
 .eng-token{margin-top:8px;background:rgba(46,196,166,.1);border:1px solid rgba(46,196,166,.4);border-radius:10px;padding:10px}.eng-token pre{white-space:pre-wrap;word-break:break-all;font:12px var(--mono);margin:6px 0}
+.subtabs{padding:0}.subtabs-row{display:flex;gap:4px;width:max-content;transition:margin-left .15s ease}
+.subtabs .subtab{padding:9px 14px 8px}
+/* Master Book, bell and profile sit on the same row as the main tabs */
+.navbar.has-sub .nav-actions{align-self:flex-end;padding-bottom:4px}
+.navbar.has-sub .nav-actions .btn.dl{padding:6px 12px}.navbar.has-sub .avatar,.navbar.has-sub .bell-btn{width:30px;height:30px}

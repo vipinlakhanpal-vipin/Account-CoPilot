@@ -1,7 +1,8 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.23";
+export const APP_VERSION = "1.24";
 
 export const RELEASES: { version: string; date: string; notes: string }[] = [
+  { version: "1.24", date: "2026-09-27", notes: "Sub-tabs line up under their main tab (the last sub-tab ends beneath it); Master Book, bell and profile sit on the same row as the main tabs." },
   { version: "1.23", date: "2026-09-27", notes: "Bell checks for new engine runs every minute and when you return to the tab. New ICP rule: companies whose estimates are below $100M with 1,000 staff or fewer become Not ICP (estimate) instead of staying in Needs check; reopened automatically if an official figure appears." },
   { version: "1.22", date: "2026-09-26", notes: "Scheduled session access: a limited engine token (Settings) lets the 6am Claude session read queues, submit results, add companies and post notifications without any database key. ICP status rules shared by scripts and the app." },
   { version: "1.21", date: "2026-09-26", notes: "Notification bell in the top bar: each scheduled 6am engine run posts a summary (companies verified, new companies added); also listed in Settings → Scheduled run history." },
