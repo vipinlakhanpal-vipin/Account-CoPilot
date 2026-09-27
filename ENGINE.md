@@ -6,8 +6,8 @@ using **your own web search** — never the Anthropic API key. You do NOT have d
 Read `CLAUDE.md` first: its data rules, ICP definition, revenue source ladder and result-file format apply exactly.
 
 ## 0. Setup
-`npm ci --silent` (the environment's setup script may already have done it). If `APP_URL` or `ENGINE_TOKEN` is empty, stop and report
-"Engine token missing in the routine environment".
+No install is needed: `scripts/engine_client.mjs` uses only built-in Node (fetch, fs). If `APP_URL` or `ENGINE_TOKEN` is empty, stop and report
+"Engine token missing in the routine environment". (The cloud environment's setup script must be empty — it runs before the repo is cloned.)
 
 ## 1. Claim a job
 `node scripts/engine_client.mjs claim` prints e.g. `{"id":"ab12cd34","region":"UAE","count":50,"mode":"verify"}` or `null`.
