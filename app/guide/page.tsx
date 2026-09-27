@@ -74,7 +74,10 @@ export default async function GuidePage() {
           <GuideNav items={TOC} />
           <div className="guide-body">
 
-            <section id="start" className="panel"><h2>Get to know me — I&apos;m your Account CoPilot AI Agent (Autonomous)</h2>
+            <section id="start" className="panel"><h2 className="heartbeat"><span className="hb-heart" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.8 4.5c2.1 0 3.6 1.2 4.4 2.5.8-1.3 2.3-2.5 4.4-2.5 3.8 0 5.9 3.9 4.4 7.3C19.5 16.4 12 21 12 21Z" /></svg>
+                <svg className="hb-ecg" viewBox="0 0 60 24"><path d="M0 12h14l3-6 4 12 4-18 4 18 3-6h28" /></svg></span>
+                <span className="hb-text">Get to know me — I&apos;m your Account CoPilot AI Agent (Autonomous)</span></h2>
               <p>Every morning I find new companies that fit your ICP, verify their revenue against official sources, keep every account up to date and move the ones that qualify into your Pipeline. Verified accounts are in <b>Pipeline</b>; every account — Verified, Likely, Needs check or Not ICP — stays in <b>Accounts</b>.</p>
 
               <h3>Daily 6AM Run Process</h3>
