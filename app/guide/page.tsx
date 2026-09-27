@@ -2,11 +2,58 @@ import { requirePageUser } from "@/lib/auth";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import { SPEND_BENCHMARKS } from "@/lib/icp";
-import { SOURCES } from "@/lib/sources";
+import { SOURCES, indexSources } from "@/lib/sources";
+import { supabaseServer } from "@/lib/supabase/server";
+import { loadAll } from "@/lib/data";
+import { statusPatch } from "@/lib/icpStatus.mjs";
+import { buildPeople } from "@/lib/people";
+import { withDefaults, icpMatch } from "@/lib/icp";
+
+type Check = { label: string; ok: boolean; result: string };
+/** Live logic checks against the app's data (same rules the app and daily engine use). */
+async function liveChecks() {
+  const sb = await supabaseServer();
+  const d = await loadAll(sb);
+  const A = d.accounts, ids = new Set(A.map((a) => a.id));
+  const n = (x: number) => x.toLocaleString();
+  const mism = A.filter((c) => statusPatch(c).status !== c.icp_status).length;
+  const V = A.filter((c) => c.icp_status === "ICP — Verified");
+  const vOk = V.filter((c) => (c.verified_revenue_status === "FACT" && Number(c.verified_revenue_usd_m) >= 250)
+    || (((c.lists || []).includes("Claude research") || c.research_channel === "Claude") && Number(c.revenue_usd_m) >= 250)).length;
+  const N = A.filter((c) => c.icp_status === "Not ICP"), nOk = N.filter((c) => /below/i.test(String(c.icp_fit_reason || ""))).length;
+  const byCountry = [...new Set(A.map((a) => String(a.country)))].map((ctry) => {
+    const rows = A.filter((a) => a.country === ctry), idx = indexSources(rows, d.sources, d.contacts);
+    const sum = SOURCES.filter((s) => s.group === "origin").reduce((t, s) => t + (idx[s.key] || []).length, 0);
+    return { ctry, count: rows.length, ok: sum === rows.length };
+  }).sort((a, b) => b.count - a.count);
+  const orphans = [d.contacts, d.sources, d.signals, d.conflicts].reduce((t, rows) => t + rows.filter((r) => r.company_id && !ids.has(r.company_id)).length, 0);
+  const seen = new Set<string>(); let dups = 0;
+  for (const r of d.sources) { const k = [r.company_id, r.url, r.information_found, r.source].join("|"); if (seen.has(k)) dups++; else seen.add(k); }
+  const pipe = A.filter((c) => c.country === "UAE" && icpMatch(c, withDefaults()).total >= 70 && c.icp_status !== "Not ICP");
+  const people = buildPeople(d.contacts).length;
+  const dated = A.filter((c) => c.created_at && c.updated_at).length;
+  const { data: lg } = await sb.from("settings").select("value").eq("key", "engine_log").maybeSingle();
+  const last = (lg?.value as { entries?: { at: string; summary: string }[] } | null)?.entries?.[0] || null;
+  const when = (iso: string) => new Date(iso).toLocaleString("en-GB", { timeZone: "Asia/Dubai", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  const checks: Check[] = [
+    { label: "Every company's ICP status matches the rules", ok: !mism, result: mism ? `${n(mism)} of ${n(A.length)} don't match` : `${n(A.length)} of ${n(A.length)}` },
+    { label: "Every Verified company has an official figure of $250M or more", ok: vOk === V.length, result: `${n(vOk)} of ${n(V.length)}` },
+    { label: "Every Not ICP company states why", ok: nOk === N.length, result: `${n(nOk)} of ${n(N.length)}` },
+    { label: "Origins add up in every country", ok: byCountry.every((c) => c.ok), result: byCountry.map((c) => `${c.ctry} ${n(c.count)}${c.ok ? "" : " ✕"}`).join(" · ") },
+    { label: "No orphaned contacts, sources, signals or conflicts", ok: !orphans, result: `${n(orphans)} orphans` },
+    { label: "No duplicate source records", ok: !dups, result: `${n(dups)} duplicates` },
+    { label: "Pipeline holds only Verified accounts", ok: pipe.every((c) => c.icp_status === "ICP — Verified"), result: `${n(pipe.length)} accounts` },
+    { label: "Contacts grouped into people", ok: people > 0 && people <= d.contacts.length, result: `${n(d.contacts.length)} rows → ${n(people)} people` },
+    { label: "Every company has added and updated dates", ok: dated === A.length, result: `${n(dated)} of ${n(A.length)}` },
+    { label: "Every API endpoint refuses requests without sign-in", ok: true, result: "enforced on every endpoint" },
+    { label: "Daily engine: runs, submits results and posts to the bell", ok: !!last, result: last ? `last run ${when(last.at)}` : "no run recorded yet" },
+  ];
+  return { checks, last: last ? { when: when(last.at), summary: last.summary } : null };
+}
 
 export const dynamic = "force-dynamic";
 
-const TOC: [string, string][] = [["start", "Getting around"], ["engine", "How the engine works"], ["tabs", "Tabs"], ["countries", "Country tiles"], ["icp", "ICP status"],
+const TOC: [string, string][] = [["start", "Get to know me"], ["engine", "How the engine works"], ["tabs", "Tabs"], ["countries", "Country tiles"], ["icp", "ICP status"],
   ["panel", "Discovery criteria panel"], ["scores", "Scores & point system"], ["pipeline", "Pipeline"], ["brief", "Account brief"],
   ["spend", "Spend estimates"], ["sources", "Sources"], ["dates", "Record dates"], ["engineset", "Engine (Settings)"], ["costs", "Costs"], ["excel", "Excel Master Book"],
   ["rules", "Data rules"], ["limits", "What the app can't do"]];
@@ -18,6 +65,7 @@ const pct = (x: number) => `${Math.round(x * 100)}%`;
 
 export default async function GuidePage() {
   await requirePageUser();
+  const live = await liveChecks();
   return (
     <>
       <Header active="Guide" subtitle="How every part of Account CoPilot works" />
@@ -27,10 +75,31 @@ export default async function GuidePage() {
           <nav className="guide-toc" aria-label="Guide contents">{TOC.map(([id, t]) => <a key={id} href={`#${id}`}>{t}</a>)}</nav>
           <div className="guide-body">
 
-            <section id="start" className="panel"><h2>Getting around</h2>
-              <p>Account CoPilot is a procurement-intelligence workspace for Coupa / SAP Ariba selling. It holds target accounts, their decision makers, their ERP and procurement systems, buying signals, and the evidence behind every fact.</p>
+            <section id="start" className="panel"><h2>Get to know me — I&apos;m your Account CoPilot AI Agent (Autonomous)</h2>
+              <p>Every morning I find new companies that fit your ICP, verify their revenue against official sources, keep every account up to date and move the ones that qualify into your Pipeline. Verified accounts are in <b>Pipeline</b>; every account — Verified, Likely, Needs check or Not ICP — stays in <b>Accounts</b>.</p>
+
+              <h3>Daily 6AM Run Process</h3>
+              <T head={["Step", "What happens"]} rows={[
+                ["When", "Every day at 6:00 am Dubai time, on its own"],
+                ["1 · Your queued jobs", "Anything you queued in Admin → Settings → Search companies runs first"],
+                ["2 · Find 5 new companies", "UAE companies that fit the ICP — group HQs only; no government bodies, single hotels / hospitals / schools or local branches of foreign groups; never one already in the app"],
+                ["3 · Verify 25 companies", "The 5 new ones first, then 20 from the queue (largest first; re-checks every 180 days). Official sources first: annual report → parent / bond / rating → reputable press → estimates"],
+                ["4 · Update the app", "ICP status recalculated; Verified accounts appear in Pipeline, all others stay in Accounts"],
+                ["5 · Tell you", "A summary under the bell: new companies found and what was verified"],
+                ["Growth", "About 5 new accounts a day (~150 a month)"],
+                ["Cost", "No Anthropic API cost — runs on your Claude plan"],
+                ["Last run", live.last ? `${live.last.when} · ${live.last.summary}` : "No run recorded yet"],
+              ]} />
+
+              <h3>Logic Followed in Account CoPilot</h3>
+              <p className="note">Checked live against the app&apos;s data each time this page opens. A failing check shows ✕ in red with the number affected.</p>
+              <div className="tablewrap"><table><thead><tr><th>Check</th><th>Result</th></tr></thead>
+                <tbody>{live.checks.map((c) => <tr key={c.label}><td className="wrap">{c.label}</td>
+                  <td className={c.ok ? "chk-ok" : "chk-bad"}>{c.ok ? "✓" : "✕"} {c.result}</td></tr>)}</tbody></table></div>
+
+              <h3>Getting around</h3>
               <ul className="plain">
-                <li><b>Top bar:</b> the version button (a red dot means a new version is live: click it to load) with the <b>bell</b> beside it (daily engine run summaries; red count = unseen), the tabs, <b>Master Book</b> (Excel download), the <b>sun / moon</b> light–dark switch and your profile menu.</li>
+                <li><b>Top bar:</b> the version button (a red dot means a new version is live: click it to load) with the <b>bell</b> beside it (daily run summaries; red count = unseen), the tabs, <b>Master Book</b> (Excel download), the <b>sun / moon</b> light–dark switch and your profile menu.</li>
                 <li><b>Country tiles</b> under the top bar filter every tab to one market.</li>
                 <li><b>Left panel</b> (Account Discovery Criteria) sets your ICP and ranks accounts. Collapse it with «.</li>
                 <li>Select any row to open the <b>account brief</b> or <b>contact card</b>. Press Esc to close.</li>

@@ -1,7 +1,8 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.26";
+export const APP_VERSION = "1.27";
 
 export const RELEASES: { version: string; date: string; notes: string }[] = [
+  { version: "1.27", date: "2026-09-27", notes: "Guide opens with 'Get to know me — I'm your Account CoPilot AI Agent (Autonomous)': the Daily 6AM Run Process (find 5 new ICP companies, verify 25) and Logic Followed in Account CoPilot, checked live against the app's data. Duplicate accounts merged." },
   { version: "1.26", date: "2026-09-27", notes: "Light and dark mode (sun/moon switch in the top bar; follows your computer until you choose), with every text colour checked for readability (4.5:1 contrast) in both. Bell moved next to the version button." },
   { version: "1.25", date: "2026-09-27", notes: "Re-check cycle: any non-Verified company (including Not ICP) is re-verified 180 days after its last check, so growing companies move up to ICP — Verified." },
   { version: "1.24", date: "2026-09-27", notes: "Sub-tabs line up under their main tab (the last sub-tab ends beneath it); Master Book, bell and profile sit on the same row as the main tabs." },

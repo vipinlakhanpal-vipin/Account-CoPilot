@@ -422,3 +422,4 @@ aside.brief.contact{width:min(760px,100%);z-index:70}
 /* light theme touches: softer shadows */
 :root[data-theme="light"] .navbar,:root[data-theme="light"] .bell-pop{box-shadow:0 8px 24px rgba(20,34,60,.10)}
 @media (prefers-color-scheme: light){:root:not([data-theme="dark"]) .navbar{box-shadow:0 8px 24px rgba(20,34,60,.10)}}
+.chk-ok{color:var(--ok-text);font-weight:600;white-space:nowrap}.chk-bad{color:var(--bad-text);font-weight:600}
