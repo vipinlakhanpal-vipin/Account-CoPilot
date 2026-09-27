@@ -30,5 +30,10 @@ If `null`, do step 4. `count: "max"` = as many as you can in this session (aim f
 `node scripts/engine_client.mjs log "<one-line summary>" <verified_count> "<new company names separated by ;>"`
 — this is the notification under the bell in the app. Do not commit or push anything and do not change app code.
 
-## 4. Default work when no job is queued
-Verify 30 UAE companies from the queue (step 2 verify), then notify (step 3 log).
+## 4. Default daily work (always, after any queued jobs)
+1. **Discover 5 new UAE companies** that meet the ICP (same rules as **discover** in step 2: group HQs only; no ministries/government bodies,
+   single hotels/hospitals/schools/attractions or local branches of foreign HQs; not already in the app). Add them with
+   `node scripts/engine_client.mjs add data/verification/new_companies.json`.
+2. **Verify 25 companies**: first the 5 you just added (use the returned slugs), then 20 from `node scripts/engine_client.mjs queue UAE 20`.
+   Submit every ~10 with `node scripts/engine_client.mjs submit`.
+3. Notify (step 3b) with the new company names and the verification counts.
