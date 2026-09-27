@@ -218,7 +218,27 @@ export default async function GuidePage() {
               <p className="note">Areas scoring 15+ become the account's suggested Coupa use cases.</p></section>
 
             <section id="pipeline" className="panel"><h2>Pipeline</h2>
-              <p><b>Pipeline rank = 50% ICP Match + 30% Opportunity + 20% Coupa Fit.</b> The Pipeline tab lists accounts with ICP Match ≥ 70 that are not "Not ICP", highest rank first. The "accounts match" number in the left panel uses the same ≥ 70 threshold. Because only official revenue earns full revenue points, the Pipeline in practice holds verified accounts; it grows as more accounts are verified.</p></section>
+              <p>The Pipeline answers <b>&quot;which accounts should we work first?&quot;</b> It lists accounts that pass the ICP and ranks them by one number — the <b>Pipeline rank</b> (0–100).</p>
+              <h3>How the rank is built</h3>
+              <T head={["Part", "Weight", "What it measures", "Why this weight"]} rows={[
+                ["ICP Match", "50%", "How well the account fits your ICP — official revenue in range, employees, industry, geography, ownership, technology, triggers, procurement maturity", "Fit matters most: a great signal at a company that doesn't fit is not worth chasing"],
+                ["Opportunity", "30%", "How likely it is to buy soon — S2P signal strength, procurement / ERP / digital transformation, cost programmes, leadership hires, growth", "Timing: an active programme or new CPO makes the account warm now"],
+                ["Coupa Fit", "20%", "How well Coupa solves their needs — source-to-pay, supplier, contract, spend analytics, invoice automation", "Solution fit: sharpens the order between accounts that fit and are active"],
+              ]} />
+              <h3>Who gets into the Pipeline</h3>
+              <T head={["Rule", "Meaning"]} rows={[
+                ["ICP Match ≥ 70", "Only strong fits. Because full revenue points need an official figure, in practice this means ICP Verified accounts"],
+                ["Not \"Not ICP\"", "Accounts below the revenue line are never shown, whatever their score"],
+                ["Everyone else", "Stays in Accounts (Likely, Needs check, Unknown, Not ICP) and moves in automatically once verified"],
+              ]} />
+              <h3>Worked examples</h3>
+              <T head={["Account (example)", "ICP Match × 50%", "Opportunity × 30%", "Coupa Fit × 20%", "Pipeline rank", "In the Pipeline?"]} rows={[
+                ["Agthia Group — Verified, Coupa signals, S2P programme", "100 × 0.5 = 50", "70 × 0.3 = 21", "88 × 0.2 = 17.6", "88.6 → 89", "Yes — near the top"],
+                ["Aldar Properties — Verified, SAP Ariba in place", "100 × 0.5 = 50", "75 × 0.3 = 22.5", "45 × 0.2 = 9", "81.5 → 82", "Yes — strong fit and active, but Coupa would have to displace Ariba"],
+                ["Emaar Properties — Verified, few buying signals", "96 × 0.5 = 48", "51 × 0.3 = 15.3", "83 × 0.2 = 16.6", "79.9 → 80", "Yes — lower because signals are weaker"],
+                ["A Seamless company — revenue only estimated", "66 × 0.5 = 33", "20 × 0.3 = 6", "70 × 0.2 = 14", "53", "No — ICP Match below 70 until revenue is verified; stays in Accounts"],
+              ]} />
+              <p className="note">Example scores are from the app&apos;s data on 26 Sep 2026 and change as accounts are researched. Hover any score in the app to see its parts; the account brief lists every part and the reason for it. Rank ties are broken by the order shown in the table (highest first).</p></section>
 
             <section id="brief" className="panel"><h2>Account brief</h2>
               <ul className="plain">

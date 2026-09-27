@@ -1,7 +1,8 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.34";
+export const APP_VERSION = "1.35";
 
 export const RELEASES: { version: string; date: string; notes: string }[] = [
+  { version: "1.35", date: "2026-09-27", notes: "Guide: Pipeline explained in tables — weights and why, entry rules, and worked examples showing how 50% / 30% / 20% combine into the rank." },
   { version: "1.34", date: "2026-09-27", notes: "Guide: the 'Get to know me' title now has a live heartbeat (pulsing heart, ECG line and glow in a lub-dub rhythm)." },
   { version: "1.33", date: "2026-09-27", notes: "Main tabs without sub-tabs (Dashboard, Stakeholders) no longer repeat their name in the sub-tab bar; the bar keeps its height so nothing jumps." },
   { version: "1.32", date: "2026-09-27", notes: "Guide: 'What the app can\'t do (yet) — and why' now explains LinkedIn signals, real spend data and Phase 2 (how it would add, refresh and update data) in detail." },
