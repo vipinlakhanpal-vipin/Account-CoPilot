@@ -1,7 +1,7 @@
 import { requirePageUser } from "@/lib/auth";
 import Hero from "@/components/Hero";
 import GuideNav from "@/components/GuideNav";
-import { SPEND_BENCHMARKS } from "@/lib/icp";
+import { SPEND_BENCHMARKS, DEFAULT_SPEND } from "@/lib/icp";
 import { SOURCES, indexSources } from "@/lib/sources";
 import { supabaseServer } from "@/lib/supabase/server";
 import { loadAllCached } from "@/lib/dataCache";
@@ -251,9 +251,10 @@ export default async function GuidePage() {
             <section id="spend" className="panel"><h2>Spend estimates</h2>
               <p><b>Where:</b> left panel → Company tab → <i>Procurement & spend intelligence</i> → choose <b>Yes, show estimates</b>. They then appear in every account brief under AI intelligence, tagged <span className="tag unv">ESTIMATE</span>. Companies do not publish spend, invoice or PO volumes, so these are benchmarks, never company data.</p>
               <p><b>Formula:</b> total addressable spend = revenue × sector ratio; split into direct / indirect / MRO / services / CAPEX by sector mix; procurement budget = indirect + services + MRO. Transactions: 1 invoice per $12k of spend, 0.7 POs per invoice, 1 supplier per $0.6M of spend, 45% of suppliers active in a year, transactions ≈ 1.7 × invoices.</p>
-              <T head={["Sector", "Addressable spend", "Direct", "Indirect", "MRO", "Services", "CAPEX"]}
-                rows={[...Object.entries(SPEND_BENCHMARKS).map(([k, b]) => [k, pct(b.ratio), pct(b.direct), pct(b.indirect), pct(b.mro), pct(b.services), pct(b.capex)]),
-                  ["other / unknown", "45%", "40%", "15%", "8%", "25%", "12%"]]} /></section>
+              <T head={["Sector", "Addressable spend (% of revenue)", "Direct", "Indirect", "MRO", "Services", "CAPEX", "Confidence", "Source / basis"]}
+                rows={[...Object.entries(SPEND_BENCHMARKS).map(([k, b]) => [k, pct(b.ratio), pct(b.direct), pct(b.indirect), pct(b.mro), pct(b.services), pct(b.capex), b.level, b.src]),
+                  ["other / unknown", pct(DEFAULT_SPEND.ratio), pct(DEFAULT_SPEND.direct), pct(DEFAULT_SPEND.indirect), pct(DEFAULT_SPEND.mro), pct(DEFAULT_SPEND.services), pct(DEFAULT_SPEND.capex), DEFAULT_SPEND.level, DEFAULT_SPEND.src]]} />
+              <p className="note">Direct / Indirect / MRO / Services / CAPEX are shares of the addressable spend (they add up to 100%). Updated 27 Sep 2026 from published benchmarks — McKinsey (bank IT spend; retail indirect), American Hospital Association (hospital supplies), CBRE and hotel cost studies, CFMA (contractor margins), Centerpoint Group (manufacturing MRO), Varisource and APQC (indirect spend), Journal of Supply Chain Management (indirect share by sector). &quot;Judgement&quot; sectors had no credible published split and will be updated when one is found; figures stay estimates either way.</p></section>
 
             <section id="sources" className="panel"><h2>Sources</h2>
               <p>The Sources tab uses three simple ideas, each as tiles "Name | Region" with a count; select a tile to see the records.</p>

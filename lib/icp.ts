@@ -116,25 +116,41 @@ export const triggersOf = (a: Row) => Object.entries(TRIGGER_RE).filter(([, re])
 
 // ---------- procurement & spend estimates (industry benchmarks, always labelled ESTIMATE) ----------
 // Addressable spend as a share of revenue and its split; benchmarks are typical third-party-spend ratios by sector.
-export const SPEND_BENCHMARKS: Record<string, { ratio: number; direct: number; indirect: number; mro: number; services: number; capex: number }> = {
-  retail_lifestyle: { ratio: 0.65, direct: 0.7, indirect: 0.12, mro: 0.03, services: 0.1, capex: 0.05 },
-  construction: { ratio: 0.7, direct: 0.6, indirect: 0.08, mro: 0.07, services: 0.15, capex: 0.1 },
-  chemicals_oil_gas: { ratio: 0.5, direct: 0.35, indirect: 0.1, mro: 0.15, services: 0.2, capex: 0.2 },
-  mining_resources: { ratio: 0.55, direct: 0.45, indirect: 0.08, mro: 0.15, services: 0.15, capex: 0.17 },
-  logistics_shipping: { ratio: 0.55, direct: 0.3, indirect: 0.15, mro: 0.15, services: 0.25, capex: 0.15 },
-  hospitality: { ratio: 0.45, direct: 0.35, indirect: 0.2, mro: 0.1, services: 0.25, capex: 0.1 },
-  healthcare_pharma: { ratio: 0.45, direct: 0.45, indirect: 0.15, mro: 0.05, services: 0.25, capex: 0.1 },
-  banking_financial: { ratio: 0.25, direct: 0, indirect: 0.35, mro: 0.02, services: 0.48, capex: 0.15 },
-  tech_ai: { ratio: 0.35, direct: 0.3, indirect: 0.2, mro: 0.02, services: 0.33, capex: 0.15 },
-  professional_services: { ratio: 0.25, direct: 0.05, indirect: 0.35, mro: 0.02, services: 0.48, capex: 0.1 },
-  utilities: { ratio: 0.5, direct: 0.35, indirect: 0.08, mro: 0.17, services: 0.15, capex: 0.25 },
+// Sector benchmarks (updated 2026-09-27 from published sources where available). level: "Sourced" = figures from a cited study;
+// "Partly sourced" = some shares cited, the rest derived; "Judgement" = no credible published split found. All outputs stay labelled ESTIMATE.
+export type SpendBenchmark = { ratio: number; direct: number; indirect: number; mro: number; services: number; capex: number; level: "Sourced" | "Partly sourced" | "Judgement"; src: string };
+export const SPEND_BENCHMARKS: Record<string, SpendBenchmark> = {
+  retail_lifestyle: { ratio: 0.80, direct: 0.78, indirect: 0.15, mro: 0.02, services: 0.03, capex: 0.02, level: "Partly sourced",
+    src: "Indirect ≈ 10–15% of sales (McKinsey, via Varisource); goods for resale (cost of sales) typically 65–75% of revenue" },
+  construction: { ratio: 0.72, direct: 0.70, indirect: 0.06, mro: 0.04, services: 0.12, capex: 0.08, level: "Partly sourced",
+    src: "Contractor gross margin ≈ 15% (CFMA 2024 benchmarks) — materials and subcontractors make up most direct project cost" },
+  chemicals_oil_gas: { ratio: 0.50, direct: 0.35, indirect: 0.10, mro: 0.15, services: 0.20, capex: 0.20, level: "Judgement",
+    src: "No credible published split found; weighted to MRO, oilfield services and capex" },
+  mining_resources: { ratio: 0.60, direct: 0.70, indirect: 0.10, mro: 0.06, services: 0.08, capex: 0.06, level: "Partly sourced",
+    src: "Manufacturing: direct up to 80% of procurement spend; MRO 0.5–4.5% of revenue (Centerpoint Group)" },
+  logistics_shipping: { ratio: 0.55, direct: 0.30, indirect: 0.15, mro: 0.15, services: 0.25, capex: 0.15, level: "Judgement",
+    src: "No credible published split found; weighted to fuel, subcontracted transport, maintenance and fleet capex" },
+  hospitality: { ratio: 0.38, direct: 0.30, indirect: 0.25, mro: 0.18, services: 0.22, capex: 0.05, level: "Partly sourced",
+    src: "Hotel operating costs 60–75% of revenue with labour 30–35% and utilities 4–10% (CBRE; industry cost studies) — non-labour spend ≈ 35–40%" },
+  healthcare_pharma: { ratio: 0.45, direct: 0.35, indirect: 0.15, mro: 0.05, services: 0.35, capex: 0.10, level: "Partly sourced",
+    src: "Supplies ≈ 13–15% of hospital expenses (American Hospital Association 'Cost of Caring' 2024); purchased services a similar share" },
+  banking_financial: { ratio: 0.12, direct: 0, indirect: 0.45, mro: 0.02, services: 0.43, capex: 0.10, level: "Partly sourced",
+    src: "Bank IT spend ≈ 6–12% of revenue (McKinsey); third-party spend is mostly IT, professional services and premises" },
+  tech_ai: { ratio: 0.35, direct: 0.25, indirect: 0.45, mro: 0.02, services: 0.25, capex: 0.03, level: "Partly sourced",
+    src: "Technology and services firms: indirect ≈ 60–80% of spend (Varisource indirect-spend benchmark)" },
+  professional_services: { ratio: 0.22, direct: 0.05, indirect: 0.40, mro: 0.02, services: 0.45, capex: 0.08, level: "Partly sourced",
+    src: "Service organisations: indirect ≈ 63% of spend vs 31% in manufacturing (Journal of Supply Chain Management survey); services 60–80% (Varisource)" },
+  utilities: { ratio: 0.50, direct: 0.35, indirect: 0.08, mro: 0.17, services: 0.15, capex: 0.25, level: "Judgement",
+    src: "No credible published split found; weighted to fuel, network maintenance and capex" },
 };
+export const DEFAULT_SPEND: SpendBenchmark = { ratio: 0.45, direct: 0.4, indirect: 0.15, mro: 0.08, services: 0.25, capex: 0.12, level: "Judgement",
+  src: "Cross-industry default; APQC median indirect spend ≈ 9.2% of revenue ($92.31 per $1,000, 283 companies)" };
 export type Spend = { total: number; direct: number; indirect: number; mro: number; services: number; capex: number; budget: number;
   invoicesPerMonth: number; posPerMonth: number; suppliers: number; activeSuppliers: number; transactionsPerYear: number; basis: string };
 export function estimateSpend(a: Row): Spend | null {
   const rev = revenueOf(a);
   if (!rev) return null;
-  const b = SPEND_BENCHMARKS[s(a.industry)] || { ratio: 0.45, direct: 0.4, indirect: 0.15, mro: 0.08, services: 0.25, capex: 0.12 };
+  const b = SPEND_BENCHMARKS[s(a.industry)] || DEFAULT_SPEND;
   const total = rev * b.ratio;
   // Transaction benchmarks: ~1 invoice per $12k of spend, ~0.7 POs per invoice, ~1 supplier per $0.6M of spend, ~45% of suppliers active in a year.
   const invoicesYear = (total * 1e6) / 12000;
@@ -142,7 +158,7 @@ export function estimateSpend(a: Row): Spend | null {
   return { total, direct: total * b.direct, indirect: total * b.indirect, mro: total * b.mro, services: total * b.services, capex: total * b.capex,
     budget: total * (b.indirect + b.services + b.mro), invoicesPerMonth: Math.round(invoicesYear / 12), posPerMonth: Math.round((invoicesYear * 0.7) / 12),
     suppliers, activeSuppliers: Math.round(suppliers * 0.45), transactionsPerYear: Math.round(invoicesYear * 1.7),
-    basis: `ESTIMATE from revenue ${Math.round(rev)}M × ${Math.round(b.ratio * 100)}% addressable-spend benchmark for ${s(a.industry) || "this sector"}; transaction volumes from spend benchmarks. Not company data.` };
+    basis: `ESTIMATE from revenue ${Math.round(rev)}M × ${Math.round(b.ratio * 100)}% addressable-spend benchmark for ${s(a.industry) || "this sector"} (${b.level}: ${b.src}); transaction volumes from spend benchmarks. Not company data.` };
 }
 
 // ---------- scores ----------
