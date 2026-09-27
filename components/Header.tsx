@@ -125,7 +125,9 @@ export default function Header({ subtitle }: { subtitle: string }) {
           return g ? (
             <nav className="subtabs" aria-label={`${g.label} sections`}>
               <div className="subtabs-row" ref={subRef} style={{ marginLeft: subOffset ?? 0, visibility: subOffset === null ? "hidden" : "visible" }}>
-                {g.items.map(([href, label]) => <Link key={href} href={href} prefetch className="subtab" aria-selected={label === current} onClick={(e) => go(e, href)}>{SUB_LABEL[label] || label}</Link>)}
+                {g.items.length > 1
+                  ? g.items.map(([href, label]) => <Link key={href} href={href} prefetch className="subtab" aria-selected={label === current} onClick={(e) => go(e, href)}>{SUB_LABEL[label] || label}</Link>)
+                  : <span className="subtab" aria-hidden="true" style={{ visibility: "hidden" }}>&nbsp;</span> /* keeps the bar's height so nothing jumps */}
               </div>
             </nav>) : null; })()}
       </header>
