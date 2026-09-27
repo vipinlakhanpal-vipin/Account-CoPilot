@@ -97,12 +97,18 @@ if (!APPLY) {
     }));
   }
 } else {
+  // Only apply result files that are new or changed since the last --apply (tracked in .applied.json); --all re-applies everything.
+  const ledgerFile = path.join(OUT, ".applied.json");
+  const ledger = fs.existsSync(ledgerFile) && !args.includes("--all") ? JSON.parse(fs.readFileSync(ledgerFile, "utf8")) : {};
   let n = 0;
   for (const c of companies) {
     const file = path.join(OUT, `${c.slug}.json`);
     if (!fs.existsSync(file)) continue;
+    const mtime = fs.statSync(file).mtimeMs;
+    if (ledger[c.slug] === mtime) continue;
     await applyRevenueResult(db, c, JSON.parse(fs.readFileSync(file, "utf8")));
-    n++;
+    ledger[c.slug] = mtime; n++;
   }
+  fs.writeFileSync(ledgerFile, JSON.stringify(ledger));
   console.log(`applied ${n} revenue checks — now run: node scripts/recompute_icp.mjs`);
 }

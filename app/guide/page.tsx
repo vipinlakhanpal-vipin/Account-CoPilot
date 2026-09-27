@@ -30,7 +30,7 @@ export default async function GuidePage() {
             <section id="start" className="panel"><h2>Getting around</h2>
               <p>Account CoPilot is a procurement-intelligence workspace for Coupa / SAP Ariba selling. It holds target accounts, their decision makers, their ERP and procurement systems, buying signals, and the evidence behind every fact.</p>
               <ul className="plain">
-                <li><b>Top bar:</b> the tabs, the version button (a red dot means a new version is live: click it to load), <b>Master Book</b> (Excel download) and your profile menu.</li>
+                <li><b>Top bar:</b> the version button (a red dot means a new version is live: click it to load) with the <b>bell</b> beside it (daily engine run summaries; red count = unseen), the tabs, <b>Master Book</b> (Excel download), the <b>sun / moon</b> light–dark switch and your profile menu.</li>
                 <li><b>Country tiles</b> under the top bar filter every tab to one market.</li>
                 <li><b>Left panel</b> (Account Discovery Criteria) sets your ICP and ranks accounts. Collapse it with «.</li>
                 <li>Select any row to open the <b>account brief</b> or <b>contact card</b>. Press Esc to close.</li>
