@@ -95,7 +95,7 @@ export default async function GuidePage() {
               <p className="note">Checked live against the app&apos;s data each time this page opens. A failing check shows ✕ in red with the number affected.</p>
               <div className="tablewrap"><table><thead><tr><th>Check</th><th>Result</th></tr></thead>
                 <tbody>{live.checks.map((c) => <tr key={c.label}><td className="wrap">{c.label}</td>
-                  <td className={c.ok ? "chk-ok" : "chk-bad"}>{c.ok ? "✓" : "✕"} {c.result}</td></tr>)}</tbody></table></div>
+                  <td className={c.ok ? "chk-ok" : "chk-bad"}><span>{c.ok ? "✓" : "✕"} {c.result}</span></td></tr>)}</tbody></table></div>
 
               <h3>Getting around</h3>
               <ul className="plain">
