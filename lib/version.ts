@@ -1,7 +1,8 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.28";
+export const APP_VERSION = "1.29";
 
 export const RELEASES: { version: string; date: string; notes: string }[] = [
+  { version: "1.29", date: "2026-09-27", notes: "Guide shows one section at a time: click a tile in the contents to open it (selected tile highlighted, remembered in the link)." },
   { version: "1.28", date: "2026-09-27", notes: "Colourful Guide: each section has its own accent colour, filled table headers and striped rows; 'Get to know me' is a highlighted panel; live checks show as filled badges; the contents list is a coloured panel of clickable tiles. Light mode: selected main tab and selected sub-tab are now clearly different." },
   { version: "1.27", date: "2026-09-27", notes: "Guide opens with 'Get to know me — I'm your Account CoPilot AI Agent (Autonomous)': the Daily 6AM Run Process (find 5 new ICP companies, verify 25) and Logic Followed in Account CoPilot, checked live against the app's data. Duplicate accounts merged." },
   { version: "1.26", date: "2026-09-27", notes: "Light and dark mode (sun/moon switch in the top bar; follows your computer until you choose), with every text colour checked for readability (4.5:1 contrast) in both. Bell moved next to the version button." },

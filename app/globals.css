@@ -425,7 +425,6 @@ aside.brief.contact{width:min(760px,100%);z-index:70}
 .chk-ok{color:var(--ok-text);font-weight:600;white-space:nowrap}.chk-bad{color:var(--bad-text);font-weight:600}
 
 /* ---- Guide: coloured sections, tables and contents ---- */
-html{scroll-behavior:smooth}
 .guide-body section{--k:#3AA0FF;border-top:4px solid var(--k);background:linear-gradient(180deg,color-mix(in srgb, var(--k) 6%, var(--surface)),var(--surface) 140px)}
 .guide-body section:nth-child(8n+1){--k:#2EC4A6}.guide-body section:nth-child(8n+2){--k:#3AA0FF}.guide-body section:nth-child(8n+3){--k:#9B6BFF}.guide-body section:nth-child(8n+4){--k:#F5A623}
 .guide-body section:nth-child(8n+5){--k:#E052C8}.guide-body section:nth-child(8n+6){--k:#2ECC8F}.guide-body section:nth-child(8n+7){--k:#6C7BFF}.guide-body section:nth-child(8n+8){--k:#FF6B6B}
@@ -471,3 +470,13 @@ td.chk-bad > span{background:color-mix(in srgb, #FF4D6A 16%, var(--surface));bor
 :root:not([data-theme="dark"]) .subtabs .subtab:hover{color:#0B3D35;background:rgba(11,122,102,.12)}
 :root:not([data-theme="dark"]) .subtabs .subtab[aria-selected="true"]{color:#FFFFFF;background:#0B7A66;font-weight:700}
 }
+
+/* Guide: one section at a time (selected tile in the contents). Before the script runs only the first section shows. */
+.guide-body > section{display:none}
+.guide-body > section#start{display:block}
+.guide-body.one > section#start{display:none}
+.guide-body.one > section.on{display:block;animation:guide-in .18s ease}
+@keyframes guide-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.guide-toc a[aria-current="page"]{background:color-mix(in srgb, var(--k) 55%, #0B1830);color:#FFFFFF;border-color:var(--k);box-shadow:0 4px 14px color-mix(in srgb, var(--k) 35%, transparent)}
+.guide-toc a[aria-current="page"]:hover{background:color-mix(in srgb, var(--k) 55%, #0B1830);color:#FFFFFF}
+@media (prefers-reduced-motion:reduce){.guide-body.one > section.on{animation:none}}

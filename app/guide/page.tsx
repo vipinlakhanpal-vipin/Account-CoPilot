@@ -1,6 +1,7 @@
 import { requirePageUser } from "@/lib/auth";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
+import GuideNav from "@/components/GuideNav";
 import { SPEND_BENCHMARKS } from "@/lib/icp";
 import { SOURCES, indexSources } from "@/lib/sources";
 import { supabaseServer } from "@/lib/supabase/server";
@@ -72,7 +73,7 @@ export default async function GuidePage() {
       <div className="wrap guide">
         <Hero title="Guide" text="Everything the app does, how each number is calculated, and where the data comes from." />
         <div className="guide-grid">
-          <nav className="guide-toc" aria-label="Guide contents">{TOC.map(([id, t]) => <a key={id} href={`#${id}`}>{t}</a>)}</nav>
+          <GuideNav items={TOC} />
           <div className="guide-body">
 
             <section id="start" className="panel"><h2>Get to know me — I&apos;m your Account CoPilot AI Agent (Autonomous)</h2>
