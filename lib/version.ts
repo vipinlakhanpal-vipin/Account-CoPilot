@@ -1,11 +1,18 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.70";
+export const APP_VERSION = "1.71";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.71", date: "2026-09-28", notes: "Settings → Search companies: 'Add one specific company' (free — done by the next scheduled session), and smaller batches (1, 5, 10). Requested companies are re-checked weekly until an official figure is found.",
+    changes: [
+      { what: "'Add one specific company': enter a name (and website if you know it) and a region; the next scheduled session checks it isn't already in the app, researches it, adds it to that region and verifies its revenue — no API cost; the bell reports the result", where: "Setup → Settings → 1 · Search companies → What to do", why: "To add a particular company for free, without a paid instant research" },
+      { what: "Watch list: companies requested this way are re-checked every week, in any region, until an official revenue figure is found", where: "Behind the scenes (daily run); the result appears in the account and the bell", why: "So a requested company keeps being verified until the data is available" },
+      { what: "How many now includes 1, 5 and 10", where: "Setup → Settings → 1 · Search companies", why: "Small batches when you don't need 30 or 50" },
+      { what: "Learn Me intro and engine table explain one-company requests and the watch list", where: "Setup → Learn Me", why: "The intro always describes how the agent works" },
+    ] },
   { version: "1.70", date: "2026-09-28", notes: "Research more follows the countries ticked in the panel (e.g. 'Research more in KSA and Qatar'), one search per country, with the cost shown per country and one PIN for the batch.",
     changes: [
       { what: "Research more uses the countries ticked in the panel's Country list — one or several (e.g. 'Research more in KSA and Qatar'); with none ticked it uses the country tile you're viewing", where: "Left panel → Research more", why: "It always showed the top tile's country, even when you had ticked others" },

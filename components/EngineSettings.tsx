@@ -5,19 +5,19 @@ import { useEffect, useState } from "react";
 import CostNote from "@/components/CostNote";
 import { COUNTRIES } from "@/lib/countries";
 
-type Job = { id: string; region: string; count: number | "max"; mode: string; requested_by: string; requested_at: string; status: string; done_at?: string; result?: string };
+type Job = { id: string; region: string; count: number | "max"; mode: string; company_name?: string; website?: string; requested_by: string; requested_at: string; status: string; done_at?: string; result?: string };
 type Batch = { id: string; region: string; budget: number; available: number; planned_update: number; planned_new: number; spent: number; runs: number; running: number; at: string; requested_by: string; companies: string[] };
 type Summary = { pin?: { set: boolean; ask_super: boolean; set_by: string; set_at: string }; token_info: { created_at?: string; by?: string; hint?: string } | null; token?: string | null; jobs: Job[]; batches: Batch[]; carry: number; spentAll: number; spentMonth: number; balance: { amount?: number; as_of?: string; by?: string };
   balanceLeft: number | null; est: { update: number; discovery: number; profile: number }; log?: { at: string; summary: string; verified: number; new_companies: string[] }[] };
 
-const MODE: Record<string, string> = { verify: "Verify existing companies", discover: "Find new companies", both: "Verify existing + find new" };
+const MODE: Record<string, string> = { company: "Add one specific company", verify: "Verify existing companies", discover: "Find new companies", both: "Verify existing + find new" };
 const money = (n: number) => `$${n.toFixed(2)}`;
 
 // Settings → Discovery & refresh engine.
 export default function EngineSettings() {
   const [s, setS] = useState<Summary | null>(null);
   const [msg, setMsg] = useState("");
-  const [q, setQ] = useState({ region: "UAE", count: "50", mode: "verify" });
+  const [q, setQ] = useState({ region: "UAE", count: "50", mode: "verify", company: "", website: "" });
   const [r, setR] = useState({ region: "UAE", update: 10, fresh: 5, budget: 20 });
   const [pinNew, setPinNew] = useState("");
   const [askSuper, setAskSuper] = useState(false);
@@ -67,12 +67,18 @@ export default function EngineSettings() {
           <p className="note">Queues a job for the scheduled Claude sessions, which work like the verification sessions you run today (web search, official sources first) and write results straight into the app. Runs on the next scheduled session; counts against your Claude plan's usage, not the Anthropic API key.</p>
           <div className="eng-form">
             <label>Region<select value={q.region} onChange={(e) => setQ({ ...q, region: e.target.value })}>{COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}</select></label>
-            <label>How many<select value={q.count} onChange={(e) => setQ({ ...q, count: e.target.value })}>{["30", "50", "max"].map((n) => <option key={n} value={n}>{n === "max" ? "Max (as many as a session can)" : n}</option>)}</select></label>
             <label>What to do<select value={q.mode} onChange={(e) => setQ({ ...q, mode: e.target.value })}>{Object.entries(MODE).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></label>
-            <button type="button" className="btn primary" onClick={() => post({ action: "queue", region: q.region, count: q.count === "max" ? "max" : Number(q.count), mode: q.mode }, "Job queued. It starts in the next scheduled session.")}>Start</button>
+            {q.mode === "company" ? <>
+              <label>Company name<input value={q.company} onChange={(e) => setQ({ ...q, company: e.target.value })} placeholder="e.g. Almarai" /></label>
+              <label>Website (optional)<input value={q.website} onChange={(e) => setQ({ ...q, website: e.target.value })} placeholder="e.g. almarai.com" /></label>
+            </> : <label>How many<select value={q.count} onChange={(e) => setQ({ ...q, count: e.target.value })}>{["1", "5", "10", "30", "50", "max"].map((n) => <option key={n} value={n}>{n === "max" ? "Max (as many as a session can)" : n}</option>)}</select></label>}
+            <button type="button" className="btn primary" disabled={q.mode === "company" && q.company.trim().length < 2}
+              onClick={() => post(q.mode === "company" ? { action: "queue", region: q.region, count: 1, mode: "company", company_name: q.company.trim(), website: q.website.trim() }
+                : { action: "queue", region: q.region, count: q.count === "max" ? "max" : Number(q.count), mode: q.mode },
+                q.mode === "company" ? `Queued: ${q.company.trim()} (${q.region}). The next scheduled session researches it, adds it if it's new and verifies it; the bell tells you when it's done.` : "Job queued. It starts in the next scheduled session.")}>Start</button>
           </div>
           {s && s.jobs.length > 0 && <div className="tablewrap"><table><thead><tr><th>Job</th><th>Region</th><th>How many</th><th>Status</th><th>Requested</th><th>Result</th><th></th></tr></thead>
-            <tbody>{s.jobs.slice(0, 10).map((j) => <tr key={j.id}><td>{MODE[j.mode] || j.mode}</td><td>{j.region}</td><td>{j.count}</td><td><span className={`tag ${j.status === "done" ? "fact" : j.status === "error" ? "unv" : "likely"}`}>{j.status}</span></td>
+            <tbody>{s.jobs.slice(0, 10).map((j) => <tr key={j.id}><td>{MODE[j.mode] || j.mode}{j.company_name && <div className="muted">{j.company_name}{j.website ? ` · ${j.website}` : ""}</div>}</td><td>{j.region}</td><td>{j.count}</td><td><span className={`tag ${j.status === "done" ? "fact" : j.status === "error" ? "unv" : "likely"}`}>{j.status}</span></td>
               <td className="muted">{new Date(j.requested_at).toLocaleString()}<div>{j.requested_by}</div></td><td className="wrap">{j.result}</td>
               <td>{j.status === "queued" && <button type="button" className="btn tiny ghost" onClick={() => post({ action: "cancel", id: j.id }, "Job cancelled.")}>Cancel</button>}</td></tr>)}</tbody></table></div>}
         </div>

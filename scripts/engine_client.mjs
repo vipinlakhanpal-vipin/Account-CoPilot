@@ -48,6 +48,12 @@ else if (cmd === "queue") {
   console.log(`ICP definition (updated ${j.updated_at || "never — defaults"}${j.updated_by ? " by " + j.updated_by : ""}) written to data/verification/icp_rules.json`);
   j.summary.forEach((x) => console.log("  " + x));
   console.log("Active regions: " + (j.active.map((a) => `${a.region} (find ${a.discover_per_day}, verify ${a.verify_per_day})`).join(", ") || "none"));
+} else if (cmd === "watch") {
+  // watch            → writes the watch list that is due for a re-check to data/verification/revenue_queue.json
+  // watch <slug>     → adds an existing company to the watch list
+  if (a) { console.log(JSON.stringify(await call({ action: "watch", slug: a }))); }
+  else { const { queue } = await call({ action: "watch" }); fs.mkdirSync("data/verification", { recursive: true });
+    fs.writeFileSync("data/verification/revenue_queue.json", JSON.stringify(queue, null, 1)); console.log(`${queue.length} watched compan${queue.length === 1 ? "y" : "ies"} due for a re-check`); }
 } else if (cmd === "names") {
   const { companies } = await call({ action: "names" });
   fs.mkdirSync("data/verification", { recursive: true });
@@ -55,4 +61,4 @@ else if (cmd === "queue") {
   console.log(`${companies.length} existing companies written to data/verification/existing_companies.json — do not propose any of these (or their group/subsidiary under another name)`);
 } else if (cmd === "finish") console.log(JSON.stringify(await call({ action: "finish", id: a, status: b === "error" ? "error" : "done", result: c || "" })));
 else if (cmd === "log") console.log(JSON.stringify(await call({ action: "log", summary: a || "", verified: Number(b) || 0, new_companies: String(c || "").split(";").map((x) => x.trim()).filter(Boolean) })));
-else console.log("usage: claim | icp | names | queue <region> <limit> | submit [dir] | add <file> | finish <id> done|error <result> | log <summary> <verified> <names;…>");
+else console.log("usage: claim | icp | names | watch [slug] | queue <region> <limit> | submit [dir] | add <file> | finish <id> done|error <result> | log <summary> <verified> <names;…>");

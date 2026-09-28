@@ -31,7 +31,7 @@ const Result = z.object({ slug: z.string(), company_name: z.string(), checked_at
   revenue_type: z.string(), revenue_local: z.string().optional().default(""), source_name: z.string().optional().default(""), source_url: z.string().optional().default(""),
   source_kind: z.string(), revenue_status: z.enum(["FACT", "LIKELY", "UNVERIFIED", "UNKNOWN"]), employees: z.string().optional().default(""),
   employees_source_url: z.string().optional().default(""), icp_verdict: z.enum(["Verified ICP", "Likely ICP", "Below minimum", "Below $250M", "Revenue not found"]), reasoning: z.string() });
-const NewCo = z.object({ name: z.string().min(2), website: z.string().optional().default(""), country: z.string().default("UAE"), industry: z.string().optional().default(""),
+const NewCo = z.object({ name: z.string().min(2), website: z.string().optional().default(""), country: z.string().default("UAE"), industry: z.string().optional().default(""), watch: z.boolean().optional().default(false),
   hq_city: z.string().optional().default(""), why_icp: z.string().optional().default(""), source_url: z.string().optional().default("") });
 const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("claim") }),
@@ -41,6 +41,7 @@ const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("add_companies"), companies: z.array(NewCo).max(50) }),
   z.object({ action: z.literal("names") }),
   z.object({ action: z.literal("icp") }),
+  z.object({ action: z.literal("watch"), slug: z.string().optional() }),
   z.object({ action: z.literal("log"), summary: z.string().max(1000), verified: z.number().int().min(0).default(0), new_companies: z.array(z.string()).max(100).default([]) }),
 ]);
 type Job = { id: string; status: string; started_at?: string; done_at?: string; result?: string };
@@ -100,6 +101,21 @@ export async function POST(req: Request) {
     invalidateAllData();
     return NextResponse.json({ applied: out });
   }
+  if (b.action === "watch") {
+    // Watch list: companies requested one by one (Settings → Add one specific company) are re-checked weekly, in any region,
+    // until an official (FACT) revenue figure is found. With a slug: add that existing company to the watch list.
+    if (b.slug) {
+      const { data: c } = await db.from("companies").select("id,profile").eq("slug", b.slug).maybeSingle();
+      if (!c) return NextResponse.json({ error: "Company not found." }, { status: 404 });
+      await db.from("companies").update({ profile: { ...(c.profile || {}), Watch: { since: now, reason: "requested in Settings" } } }).eq("id", c.id);
+      return NextResponse.json({ ok: true });
+    }
+    const { data } = await db.from("companies").select("slug,company_name,company_website,domain,industry,country,icp_status,verified_revenue_status,profile").not("profile->Watch", "is", null);
+    const due = (data || []).filter((c) => c.verified_revenue_status !== "FACT")
+      .filter((c) => { const at = c.profile?.["Revenue check"]?.at; return !at || Date.now() - new Date(at).getTime() > 7 * 864e5; })
+      .map((c) => ({ slug: c.slug, company_name: c.company_name, website: c.company_website || c.domain || "", industry: c.industry || "", country: c.country, current_status: c.icp_status, recheck: true }));
+    return NextResponse.json({ queue: due });
+  }
   if (b.action === "names") {
     // Existing company names and domains, so a session can skip them before searching (no contacts, nothing else)
     const { data } = await db.from("companies").select("company_name,domain,country,profile");
@@ -121,7 +137,7 @@ export async function POST(req: Request) {
         slug: "cd-" + c.name.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60), company_name: c.name, country: c.country,
         company_website: c.website || null, domain: dom(c.website) || null, hq_city: c.hq_city || null, industry: c.industry || null, research_channel: "Claude discovery",
         lists: ["Claude discovery"], icp_status: "Unknown", account_notes: `Found by a scheduled Claude session on ${day}: ${c.why_icp} Source: ${c.source_url}`,
-        profile: { "Claude discovery": { why: c.why_icp, source_url: c.source_url, via: "scheduled session (no API cost)" } } };
+        profile: { "Claude discovery": { why: c.why_icp, source_url: c.source_url, via: "scheduled session (no API cost)" }, ...(c.watch ? { Watch: { since: now, reason: "requested in Settings" } } : {}) } };
       const { error } = await db.from("companies").upsert([row], { onConflict: "slug", ignoreDuplicates: true });
       if (!error) { added.push({ slug: row.slug, company_name: row.company_name }); pool.push({ name: row.company_name, domain: row.domain || "", as: row.company_name }); }
     }

@@ -33,6 +33,12 @@ If `null`, do step 4. `count: "max"` = as many as you can in this session (aim f
   as `[{"name","website","country","industry","hq_city","why_icp","source_url"}]`, run `node scripts/engine_client.mjs add data/verification/new_companies.json`,
   then verify the added companies' revenue as in **verify** (use the returned slugs).
 - **both** — half verify, half discover.
+- **company** — one specific company the user asked for (`company_name`, optional `website`, `region`). Run `node scripts/engine_client.mjs names` and check
+  whether it is already in the app (any spelling, acronym or domain). **If it is**: verify its revenue now (as in **verify**) and add it to the watch list with
+  `node scripts/engine_client.mjs watch <slug>`. **If not**: research it, write `data/verification/new_companies.json` with ONE entry and `"watch": true`
+  (country = the job's region), run `node scripts/engine_client.mjs add data/verification/new_companies.json`, then verify it using the returned slug.
+  Finish with `finish <id> done "<Company>: added|already in the app — <ICP status>, <revenue or 'no official figure yet'>"`. Add it even if it looks
+  below the ICP (the user asked for it); its status will say so.
 
 ## 3. Finish and notify
 `node scripts/engine_client.mjs finish <id> done "<N verified: X Verified, Y Likely, Z Needs check, W Not ICP; M new companies added>"`
@@ -51,6 +57,8 @@ For **each region in `active`** of `icp_rules.json` (default: UAE, find 5, verif
    If it prints SKIPPED lines (the app found a duplicate), find replacements and add again until the day's number is actually added.
 2. **Verify `verify_per_day` companies**: first the ones you just added (use the returned slugs), then the rest from
    `node scripts/engine_client.mjs queue <region> <verify_per_day minus new>`. Submit every ~10 with `node scripts/engine_client.mjs submit`.
-3. Notify (step 3b) once for the whole run, in this form (one clause per active region):
+3. **Watch list**: `node scripts/engine_client.mjs watch` writes the requested companies that are due for a weekly re-check (any region, until an official
+   figure is found) to `data/verification/revenue_queue.json`; verify each and submit.
+4. Notify (step 3b) once for the whole run, in this form (one clause per active region):
    `"UAE — Added 5 new: A; B; C; D; E. Checked 25 (5 new + 20 from the queue): X Verified, Y Likely, Z Needs check, W Not ICP, U Unknown"`
    (counts are the ICP status of the checked companies after the check; mention any duplicates skipped).

@@ -16,7 +16,7 @@ export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 const EST = { update: 0.55, discovery: 0.75, profile: 0.55 }; // USD per Quick research / discovery search / new-company profile
 
-type Job = { id: string; region: string; count: number | "max"; mode: "verify" | "discover" | "both"; requested_by: string; requested_at: string;
+type Job = { id: string; region: string; count: number | "max"; mode: "verify" | "discover" | "both" | "company"; company_name?: string; website?: string; requested_by: string; requested_at: string;
   status: "queued" | "running" | "done" | "error"; done_at?: string; result?: string };
 type Batch = { id: string; region: string; update_count: number; new_count: number; budget: number; available: number; planned_update: number; planned_new: number;
   requested_by: string; at: string; companies: string[] };
@@ -56,7 +56,8 @@ export async function GET(req: Request) {
 }
 
 const Body = z.discriminatedUnion("action", [
-  z.object({ action: z.literal("queue"), region: z.string().min(2).max(40), count: z.union([z.number().int().min(1).max(500), z.literal("max")]), mode: z.enum(["verify", "discover", "both"]) }),
+  z.object({ action: z.literal("queue"), region: z.string().min(2).max(40), count: z.union([z.number().int().min(1).max(500), z.literal("max")]), mode: z.enum(["verify", "discover", "both", "company"]),
+    company_name: z.string().trim().max(120).optional(), website: z.string().trim().max(200).optional() }),
   z.object({ action: z.literal("refresh"), region: z.string().min(2).max(40), update_count: z.number().int().min(0).max(50), new_count: z.number().int().min(0).max(10), budget: z.number().min(0).max(500) }),
   z.object({ action: z.literal("balance"), amount: z.number().min(0).max(100000) }),
   z.object({ action: z.literal("cancel"), id: z.string() }),
@@ -104,7 +105,9 @@ export async function POST(req: Request) {
   }
   if (b.action === "queue" || b.action === "cancel") {
     const st = await getSetting<{ jobs: Job[] }>(db, "engine_jobs", { jobs: [] });
-    if (b.action === "queue") st.jobs.unshift({ id, region: b.region, count: b.count, mode: b.mode, requested_by: user.email || "", requested_at: now, status: "queued" });
+    if (b.action === "queue" && b.mode === "company" && !(b.company_name && b.company_name.length >= 2)) return NextResponse.json({ error: "Enter the company name." }, { status: 400 });
+    if (b.action === "queue") st.jobs.unshift({ id, region: b.region, count: b.mode === "company" ? 1 : b.count, mode: b.mode, ...(b.mode === "company" ? { company_name: b.company_name, website: b.website || "" } : {}),
+      requested_by: user.email || "", requested_at: now, status: "queued" });
     else st.jobs = st.jobs.filter((j) => !(j.id === b.id && j.status === "queued"));
     await setSetting(db, "engine_jobs", { jobs: st.jobs.slice(0, 50) });
   } else if (b.action === "balance") {
