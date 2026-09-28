@@ -699,3 +699,19 @@ td.logo-cell{width:40px;padding-top:0;padding-bottom:0;text-align:center}
 .eng-sub.pin{border-color:color-mix(in srgb, #5B4BC4 40%, transparent);background:color-mix(in srgb, #5B4BC4 8%, var(--surface))}
 .eng-sub.pin.off{border-color:color-mix(in srgb, #E0A21B 50%, transparent);background:color-mix(in srgb, #E0A21B 10%, var(--surface))}
 .eng-form label.chk{flex-direction:row;align-items:center;gap:8px;font-weight:500}
+/* Team invite: one row — email · name · role · region · how · invite — with light-filled fields */
+.team-form{display:grid !important;grid-template-columns:minmax(200px,1.4fr) minmax(160px,1.1fr) minmax(150px,.9fr) minmax(170px,1fr) minmax(170px,1fr) auto;gap:12px;align-items:end}
+@media (max-width:1100px){.team-form{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.team-form .team-access{display:contents}
+.team-form label{font:600 13px var(--body);color:var(--text-strong)}
+.team-form .f-role,.team-form .f-region{display:flex;flex-direction:column;gap:6px}
+.team-form .input-frame,.team-edit .input-frame{width:100%;box-sizing:border-box;height:42px;border-radius:10px;border:1px solid rgba(var(--ink),.18);color:var(--text-strong);font:500 14px var(--body);padding:0 12px}
+.team-form .f-email .input-frame{background:color-mix(in srgb, #3AA0FF 10%, var(--surface));border-color:color-mix(in srgb, #3AA0FF 35%, transparent)}
+.team-form .f-name .input-frame{background:color-mix(in srgb, #3AA0FF 10%, var(--surface));border-color:color-mix(in srgb, #3AA0FF 35%, transparent)}
+.team-form .f-role .input-frame,.team-edit .f-role .input-frame{background:color-mix(in srgb, #5B4BC4 11%, var(--surface));border-color:color-mix(in srgb, #5B4BC4 38%, transparent)}
+.team-form .f-region .input-frame,.team-edit .f-region .input-frame{background:color-mix(in srgb, #2ECC8F 12%, var(--surface));border-color:color-mix(in srgb, #2ECC8F 40%, transparent)}
+.team-form .f-how .input-frame{background:color-mix(in srgb, #E0A21B 11%, var(--surface));border-color:color-mix(in srgb, #E0A21B 38%, transparent)}
+.team-form .btn.primary{height:42px}
+.team-all{display:flex;align-items:center;padding:0 12px !important;color:var(--muted) !important}
+.team-edit .team-access{display:flex;gap:8px;align-items:flex-end}
+.team-edit .f-role,.team-edit .f-region{display:flex;flex-direction:column;gap:4px;font:600 12px var(--body)}

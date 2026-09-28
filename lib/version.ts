@@ -1,11 +1,16 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.58";
+export const APP_VERSION = "1.59";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.59", date: "2026-09-28", notes: "Team invite form on one row — Work email · Name · Role · Region · How · Invite — with light-filled fields.",
+    changes: [
+      { what: "Invite form in one aligned row: Work email, Name, Role, Region, How, Invite (Role now sits before Region instead of above it)", where: "Setup → Settings → Team", why: "Role was stacked above Region, which looked out of order" },
+      { what: "Light colour fills per field: blue for email and name, purple for Role, green for Region, amber for How; the same colours in 'Change access'", where: "Setup → Settings → Team", why: "Easier to scan and see which choice is which" },
+    ] },
   { version: "1.58", date: "2026-09-28", notes: "Paid-actions PIN: anything that costs Anthropic API money asks for a PIN in the app first; set by a Super Admin, checked on the server.",
     changes: [
       { what: "Paid-actions PIN: Research more, Draft pitch plan, Research Queue, Research again and the paid Refresh ask for a PIN in an in-app window before anything is spent; a wrong PIN spends nothing, and 5 wrong tries lock it for 15 minutes", where: "Any paid button (amber Cost impact note)", why: "So colleagues can use the app without accidentally spending your API credit" },

@@ -13,17 +13,17 @@ const ROLE_HELP: Record<Role, string> = {
 function AccessPicker({ role, regions, onChange }: { role: Role; regions: string[]; onChange: (role: Role, regions: string[]) => void }) {
   return (
     <div className="team-access">
-      <label>Role
+      <label className="f-role">Role
         <select className="input-frame" value={role} onChange={(e) => onChange(e.target.value as Role, regions)}>
           <option value="standard">Standard User</option><option value="super_admin">Super Admin</option>
         </select></label>
       {role === "standard" ? (
-        <label>Region
+        <label className="f-region">Region
           <select className="input-frame" value={regions[0] || ""} onChange={(e) => onChange(role, e.target.value ? [e.target.value] : [])}>
             <option value="">Choose a region…</option>
             {REGIONS.map((r) => <option key={r.key} value={r.key}>{r.name}</option>)}
           </select></label>
-      ) : <span className="team-all">All regions</span>}
+      ) : <label className="f-region">Region<span className="input-frame team-all">All regions</span></label>}
     </div>
   );
 }
@@ -73,12 +73,12 @@ export default function TeamSettings() {
       {!ready && <p className="team-warn">Roles and regions are saved, but they take effect only after the one-time region-access database update has been run in Supabase (see the release notes). Until then everyone sees every region.</p>}
       <p className="note">Invite colleagues from an allowed email domain and choose what they can see. <b>Temporary password</b> creates the account immediately: share the password privately; they can change it later. <b>Email invitation</b> uses Supabase&apos;s mailer, which company mail filters sometimes block.</p>
       <form onSubmit={invite} className="form-grid team-form" style={{ marginTop: 10 }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}><label htmlFor="inv-email">Work email</label>
+        <div className="f-email" style={{ display: "flex", flexDirection: "column", gap: 6 }}><label htmlFor="inv-email">Work email</label>
           <input id="inv-email" type="email" required className="input-frame" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="colleague@scp-worldwide.com" /></div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}><label htmlFor="inv-name">Name</label>
+        <div className="f-name" style={{ display: "flex", flexDirection: "column", gap: 6 }}><label htmlFor="inv-name">Name</label>
           <input id="inv-name" type="text" className="input-frame" value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" /></div>
         <AccessPicker role={role} regions={regions} onChange={(r, g) => { setRole(r); setRegions(g); }} />
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}><label htmlFor="inv-mode">How</label>
+        <div className="f-how" style={{ display: "flex", flexDirection: "column", gap: 6 }}><label htmlFor="inv-mode">How</label>
           <select id="inv-mode" className="input-frame" value={mode} onChange={(e) => setMode(e.target.value as "password" | "email")}>
             <option value="password">Temporary password</option><option value="email">Email invitation</option></select></div>
         <div><button className="btn primary">Invite</button></div>
