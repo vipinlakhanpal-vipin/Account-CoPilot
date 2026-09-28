@@ -1,7 +1,8 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.40";
+export const APP_VERSION = "1.41";
 
 export const RELEASES: { version: string; date: string; notes: string }[] = [
+  { version: "1.41", date: "2026-09-28", notes: "Daily engine: stronger duplicate check before adding discovered companies (spelling variants, acronyms, domains, group vs subsidiary); the run reads the existing company list first and replaces any duplicate so 5 genuinely new companies are added. Clearer bell summary. Guide explains the check." },
   { version: "1.40", date: "2026-09-27", notes: "HubSpot sync (read-only, kept inside this app): each account shows whether it is in SCP's HubSpot, its stage, owner and deals. Master Book Contact List adds Deals, Latest Deal, Contact in HubSpot and a HubSpot Import Action (skip / add contact / new company) to avoid duplicate imports; new HubSpot Deals sheet. Guide: new plain-language introduction; the title now gently pulses (heart removed)." },
   { version: "1.39", date: "2026-09-27", notes: "Guide Master Book: HubSpot connection explained — what the agent reads from HubSpot, what is used today and where it shows." },
   { version: "1.38", date: "2026-09-27", notes: "Master Book Contact List: Existing SCP Customer (company exists in HubSpot), Company Stage and Company Owner from HubSpot." },

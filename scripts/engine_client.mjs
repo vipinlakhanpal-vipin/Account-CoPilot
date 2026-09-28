@@ -37,8 +37,15 @@ else if (cmd === "queue") {
   console.log(`submitted ${files.length} result file(s)`);
 } else if (cmd === "add") {
   const list = JSON.parse(fs.readFileSync(a || "data/verification/new_companies.json", "utf8"));
-  const { added, skipped } = await call({ action: "add_companies", companies: list });
-  added.forEach((x) => console.log(`added ${x.company_name} (${x.slug})`)); console.log(`${added.length} added, ${skipped} already in the app`);
+  const { added, skipped, skipped_detail = [] } = await call({ action: "add_companies", companies: list });
+  added.forEach((x) => console.log(`added ${x.company_name} (${x.slug})`));
+  skipped_detail.forEach((x) => console.log(`SKIPPED ${x.name}: already in the app as "${x.matches}"`));
+  console.log(`${added.length} added, ${skipped} already in the app${skipped ? " (find replacements so the day still adds 5)" : ""}`);
+} else if (cmd === "names") {
+  const { companies } = await call({ action: "names" });
+  fs.mkdirSync("data/verification", { recursive: true });
+  fs.writeFileSync("data/verification/existing_companies.json", JSON.stringify(companies, null, 1));
+  console.log(`${companies.length} existing companies written to data/verification/existing_companies.json — do not propose any of these (or their group/subsidiary under another name)`);
 } else if (cmd === "finish") console.log(JSON.stringify(await call({ action: "finish", id: a, status: b === "error" ? "error" : "done", result: c || "" })));
 else if (cmd === "log") console.log(JSON.stringify(await call({ action: "log", summary: a || "", verified: Number(b) || 0, new_companies: String(c || "").split(";").map((x) => x.trim()).filter(Boolean) })));
-else console.log("usage: claim | queue <region> <limit> | submit [dir] | add <file> | finish <id> done|error <result> | log <summary> <verified> <names;…>");
+else console.log("usage: claim | names | queue <region> <limit> | submit [dir] | add <file> | finish <id> done|error <result> | log <summary> <verified> <names;…>");

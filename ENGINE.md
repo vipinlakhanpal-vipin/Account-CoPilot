@@ -18,7 +18,7 @@ If `null`, do step 4. `count: "max"` = as many as you can in this session (aim f
   (order: Needs check → Unknown → Likely, largest first; then re-checks of any non-Verified company whose last check is over 180 days old — entries marked `"recheck": true`; overwrite their result file with the new finding). Verify each with web search exactly as
   CLAUDE.md "Current task" describes and write `data/verification/revenue/<slug>.json` in the CLAUDE.md format.
   Every ~10 companies run `node scripts/engine_client.mjs submit` (it applies results and recalculates ICP status in the app).
-- **discover** — find up to `count` NEW companies in `region` that meet the ICP (group HQs only; exclude ministries/government bodies,
+- **discover** — run `node scripts/engine_client.mjs names` first (existing companies; never propose any of them, under any name or domain), then find up to `count` NEW companies in `region` that meet the ICP (group HQs only; exclude ministries/government bodies,
   single hotels/hospitals/schools/attractions and local branches of foreign HQs). Write them to `data/verification/new_companies.json`
   as `[{"name","website","country","industry","hq_city","why_icp","source_url"}]`, run `node scripts/engine_client.mjs add data/verification/new_companies.json`,
   then verify the added companies' revenue as in **verify** (use the returned slugs).
@@ -32,8 +32,14 @@ If `null`, do step 4. `count: "max"` = as many as you can in this session (aim f
 
 ## 4. Default daily work (always, after any queued jobs)
 1. **Discover 5 new UAE companies** that meet the ICP (same rules as **discover** in step 2: group HQs only; no ministries/government bodies,
-   single hotels/hospitals/schools/attractions or local branches of foreign HQs; not already in the app). Add them with
-   `node scripts/engine_client.mjs add data/verification/new_companies.json`.
+   single hotels/hospitals/schools/attractions or local branches of foreign HQs; not already in the app).
+   **First run `node scripts/engine_client.mjs names`** and read `data/verification/existing_companies.json`. Do not propose any company on it,
+   including the same company under another name, spelling or domain (e.g. "Al Fara'a Group" = "Al Faraa Construction and Industrial Group",
+   "Al Shafar General Contracting (ASGC)" = "ASGC Construction LLC"), or the parent group of a company already in the app ("Khansaheb Group" when
+   "Khansaheb Civil Engineering LLC" is in). Add them with `node scripts/engine_client.mjs add data/verification/new_companies.json`.
+   If it prints SKIPPED lines (the app found a duplicate), find replacements and add again until 5 are actually added.
 2. **Verify 25 companies**: first the 5 you just added (use the returned slugs), then 20 from `node scripts/engine_client.mjs queue UAE 20`.
    Submit every ~10 with `node scripts/engine_client.mjs submit`.
-3. Notify (step 3b) with the new company names and the verification counts.
+3. Notify (step 3b) with the new company names and the verification counts, in this form:
+   `"Added 5 new: A; B; C; D; E. Checked 25 (5 new + 20 from the queue): X Verified, Y Likely, Z Needs check, W Not ICP, U Unknown"`
+   (counts are the ICP status of those 25 after the check; mention any duplicates skipped).

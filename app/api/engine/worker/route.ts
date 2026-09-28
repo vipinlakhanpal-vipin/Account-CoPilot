@@ -38,6 +38,7 @@ const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("queue"), region: z.string().default("UAE"), limit: z.number().int().min(1).max(200).default(50) }),
   z.object({ action: z.literal("submit"), results: z.array(Result).max(50) }),
   z.object({ action: z.literal("add_companies"), companies: z.array(NewCo).max(50) }),
+  z.object({ action: z.literal("names") }),
   z.object({ action: z.literal("log"), summary: z.string().max(1000), verified: z.number().int().min(0).default(0), new_companies: z.array(z.string()).max(100).default([]) }),
 ]);
 type Job = { id: string; status: string; started_at?: string; done_at?: string; result?: string };
@@ -90,24 +91,60 @@ export async function POST(req: Request) {
     invalidateAllData();
     return NextResponse.json({ applied: out });
   }
+  if (b.action === "names") {
+    // Existing company names and domains, so a session can skip them before searching (no contacts, nothing else)
+    const { data } = await db.from("companies").select("company_name,domain,country");
+    return NextResponse.json({ companies: (data || []).map((c) => ({ name: c.company_name, domain: c.domain || "", country: c.country || "" })) });
+  }
   if (b.action === "add_companies") {
-    const norm = (n: string) => n.toLowerCase().replace(/&/g, " and ").replace(/\b(pjsc|psc|plc|llc|group|holding|company|co|the)\b/g, "").replace(/[^a-z0-9]/g, "");
-    const dom = (w: string) => w.replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
     const { data: have } = await db.from("companies").select("company_name,domain");
-    const known = new Set([...(have || []).map((c) => norm(c.company_name)), ...(have || []).map((c) => c.domain).filter(Boolean)]);
     const day = now.slice(0, 10);
-    const rows = b.companies.filter((c) => !known.has(norm(c.name)) && !(dom(c.website) && known.has(dom(c.website)))).map((c) => ({
-      slug: "cd-" + c.name.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60), company_name: c.name, country: c.country,
-      company_website: c.website || null, domain: dom(c.website) || null, hq_city: c.hq_city || null, industry: c.industry || null, research_channel: "Claude discovery",
-      lists: ["Claude discovery"], icp_status: "Unknown", account_notes: `Found by a scheduled Claude session on ${day}: ${c.why_icp} Source: ${c.source_url}`,
-      profile: { "Claude discovery": { why: c.why_icp, source_url: c.source_url, via: "scheduled session (no API cost)" } } }));
-    if (rows.length) await db.from("companies").upsert(rows, { onConflict: "slug", ignoreDuplicates: true });
+    const added: { slug: string; company_name: string }[] = [], skipped: { name: string; matches: string }[] = [];
+    const pool = (have || []).map((c) => ({ name: c.company_name as string, domain: (c.domain as string) || "" }));
+    for (const c of b.companies) {
+      const hit = pool.find((x) => sameCompany(c.name, c.website, x.name, x.domain));
+      if (hit) { skipped.push({ name: c.name, matches: hit.name }); continue; }
+      const row = {
+        slug: "cd-" + c.name.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60), company_name: c.name, country: c.country,
+        company_website: c.website || null, domain: dom(c.website) || null, hq_city: c.hq_city || null, industry: c.industry || null, research_channel: "Claude discovery",
+        lists: ["Claude discovery"], icp_status: "Unknown", account_notes: `Found by a scheduled Claude session on ${day}: ${c.why_icp} Source: ${c.source_url}`,
+        profile: { "Claude discovery": { why: c.why_icp, source_url: c.source_url, via: "scheduled session (no API cost)" } } };
+      const { error } = await db.from("companies").upsert([row], { onConflict: "slug", ignoreDuplicates: true });
+      if (!error) { added.push({ slug: row.slug, company_name: row.company_name }); pool.push({ name: row.company_name, domain: row.domain || "" }); }
+    }
     invalidateAllData();
-    return NextResponse.json({ added: rows.map((r) => ({ slug: r.slug, company_name: r.company_name })), skipped: b.companies.length - rows.length });
+    return NextResponse.json({ added, skipped: skipped.length, skipped_detail: skipped });
   }
   // log → bell notification
   const l = await get<{ entries: unknown[] }>(db, "engine_log", { entries: [] });
   l.entries.unshift({ at: now, summary: b.summary, verified: b.verified, new_companies: b.new_companies });
   await put(db, "engine_log", { entries: l.entries.slice(0, 60) });
   return NextResponse.json({ ok: true });
+}
+
+// ---- duplicate detection for discovered companies ----
+const dom = (w: string) => String(w || "").toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
+/** Domain label without TLD and generic suffixes: asgcgroup.com → asgc, alfaraagroup.com → alfaraa */
+const domRoot = (d: string) => dom(d).split(".")[0].replace(/(group|holding|holdings|intl|international|uae|me|global|co)$/g, "");
+const GENERIC = /\b(pjsc|psc|plc|llc|l l c|fze|fzco|fzc|group|groups|holding|holdings|company|companies|co|the|of|and|international|enterprises|general|contracting|construction|industrial|engineering|civil|trading|investment|investments|services|uae|emirates)\b/g;
+const core = (n: string) => n.toLowerCase().replace(/&/g, " and ").replace(/\(.*?\)/g, " ").replace(/[\'’]/g, "").replace(/[^a-z0-9 ]/g, " ").replace(GENERIC, " ").replace(/\s+/g, "");
+const acronym = (n: string) => (n.match(/\(([A-Za-z]{2,8})\)/)?.[1] || "").toLowerCase();
+// Words too common to identify a company on their own (a core equal to one of these never matches by prefix)
+const WEAK = new Set(["dubai", "abudhabi", "sharjah", "ajman", "emirates", "emirati", "gulf", "arabian", "arabia", "national", "united", "first", "royal", "al", "middleeast", "global", "golden", "star", "new", "modern", "commercial", "commercialbank", "islamicbank", "nationalbank"]);
+function sameCompany(aName: string, aWeb: string, bName: string, bDom: string) {
+  const ad = dom(aWeb), bd = dom(bDom);
+  if (ad && bd && ad === bd) return true;
+  const ar = domRoot(ad), br = domRoot(bd);
+  if (ar.length >= 4 && !WEAK.has(ar) && ar === br) return true;
+  const ac = core(aName), bc = core(bName);
+  if (ac.length >= 3 && ac === bc && !WEAK.has(ac)) return true;
+  // one name is the other plus extra words (group vs its main company), e.g. "khansaheb" / "khansahebcivil…"
+  const [short, long] = ac.length <= bc.length ? [ac, bc] : [bc, ac];
+  if (short.length >= 5 && !WEAK.has(short) && long.startsWith(short)) return true;
+  const aa = acronym(aName), ba = acronym(bName);
+  if (aa && bc && (aa === bc || aa === br || aa === ba)) return true;
+  if (ba && ac && (ba === ac || ba === ar)) return true;
+  if (ar.length >= 4 && !WEAK.has(ar) && ar === bc) return true;
+  if (br.length >= 4 && !WEAK.has(br) && br === ac) return true;
+  return false;
 }

@@ -75,7 +75,7 @@ export default async function GuidePage() {
           <div className="guide-body">
 
             <section id="start" className="panel"><h2 className="attn">Get to know me — I&apos;m your Account CoPilot AI Agent (Autonomous)</h2>
-              <p>I&apos;m an AI agent that runs on my own every morning at 6am Dubai time. First I <b>find</b> new companies that could fit your Ideal Customer Profile (ICP), using public web search, annual reports, stock-exchange filings, company websites and supplier portals, reputable business press, job posts and Seamless.ai. Then I <b>verify</b> each company against your ICP: <b>revenue of $250M or more and at least 100 staff</b>, in the UAE first and then the wider Gulf. I trust official figures (annual reports, filings, company-quoted results) above estimates. Every fact is labelled FACT, LIKELY or UNVERIFIED and linked to its source, so you can always see why an account is Verified, Likely, Needs check or Not ICP.</p>
+              <p><b>Account CoPilot</b> is an AI Agent that runs on its own every morning at 6am Dubai time. First I <b>find</b> new companies that could fit your Ideal Customer Profile (ICP), using public web search, annual reports, stock-exchange filings, company websites and supplier portals, reputable business press, job posts and Seamless.ai. Then I <b>verify</b> each company against your ICP: <b>revenue of $250M or more and at least 100 staff</b>, in the UAE first and then the wider Gulf. I trust official figures (annual reports, filings, company-quoted results) above estimates. Every fact is labelled FACT, LIKELY or UNVERIFIED and linked to its source, so you can always see why an account is Verified, Likely, Needs check or Not ICP.</p>
               <p>Next I <b>check SCP&apos;s HubSpot</b> (read-only) to see which companies and contacts are already there, with their stage, owner and any deals. That way your team never imports a duplicate, and knows straight away whether an account is new, being worked or already a customer. Along the way I work smartly and keep costs down:
                 <ul>
                   <li>I only add a company once, and merge duplicates.</li>
@@ -91,10 +91,10 @@ export default async function GuidePage() {
               <T head={["Step", "What happens"]} rows={[
                 ["When", "Every day at 6:00 am Dubai time, on its own"],
                 ["1 · Your queued jobs", "Anything you queued in Admin → Settings → Search companies runs first"],
-                ["2 · Find 5 new companies", "UAE companies that fit the ICP — group HQs only; no government bodies, single hotels / hospitals / schools or local branches of foreign groups; never one already in the app"],
+                ["2 · Find 5 new companies", "UAE companies that fit the ICP — group HQs only; no government bodies, single hotels / hospitals / schools or local branches of foreign groups; never one already in the app. Before adding, the app checks each name and website against every account (spelling variants, acronyms, group vs subsidiary) and skips duplicates; the agent then finds replacements"],
                 ["3 · Verify 25 companies", "The 5 new ones first, then 20 from the queue (largest first; re-checks every 180 days). Official sources first: annual report → parent / bond / rating → reputable press → estimates"],
                 ["4 · Update the app", "ICP status recalculated; Verified accounts appear in Pipeline, all others stay in Accounts"],
-                ["5 · Tell you", "A summary under the bell: new companies found and what was verified"],
+                ["5 · Tell you", "A summary under the bell: the new companies added, then the 25 checked with their ICP status after the check (Verified / Likely / Needs check / Not ICP / Unknown). A check can confirm, raise or lower a status; many private groups publish no official figures, so Verified is rare on some days"],
                 ["Growth", "About 5 new accounts a day (~150 a month)"],
                 ["Cost", "No Anthropic API cost — runs on your Claude plan"],
                 ["Last run", live.last ? `${live.last.when} · ${live.last.summary}` : "No run recorded yet"],
