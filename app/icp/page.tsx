@@ -9,12 +9,14 @@ export const dynamic = "force-dynamic";
 // Setup → Define ICP: the rules the agent follows, one profile per region. Saved rules drive ICP status, the Pipeline,
 // the left panel defaults, in-app research and the daily 6am run (which reads them through the engine worker API).
 export default async function DefineIcpPage() {
-  await requirePageUser();
+  const user = await requirePageUser();
   const db = supabaseAdmin();
-  const [{ data: row }, { data: cos }] = await Promise.all([
+  const [{ data: row }, { data: cos }, { data: own }] = await Promise.all([
     db.from("settings").select("value").eq("key", "icp_definition").maybeSingle(),
     db.from("companies").select("country"),
+    db.from("settings").select("value").eq("key", "icp_owner").maybeSingle(),
   ]);
+  const owners = ((own?.value as { emails?: string[] } | null)?.emails || []).map((e) => e.toLowerCase());
   const counts: Record<string, number> = {};
   for (const c of cos || []) { const k = regionOf(c.country); counts[k] = (counts[k] || 0) + 1; }
   return (
@@ -30,7 +32,7 @@ export default async function DefineIcpPage() {
         </ol>
         <p className="note">Each setting is tagged with what it drives (Status, Discovery, Verification, Pipeline, Contacts, Daily run). Use <b>Preview impact</b> to see how many accounts would change before you save. Every save is recorded in the change history.</p>
       </section>
-      <IcpEditor initial={normalizeDefinition(row?.value)} counts={counts} />
+      <IcpEditor initial={normalizeDefinition(row?.value)} counts={counts} me={(user.email || "").toLowerCase()} initialOwners={owners} />
     </div>
   );
 }

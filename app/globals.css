@@ -639,3 +639,9 @@ td.logo-cell{width:40px;padding-top:0;padding-bottom:0;text-align:center}
 .icp-status-change .icp-hint{align-self:center}
 .icp-status-btn{max-width:420px}
 .icp-field input.bad{border-color:#E06C75;box-shadow:0 0 0 1px #E06C75}
+/* Define ICP owner-only lock */
+.icp-owner{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:12px 0 0;padding:10px 14px;border-radius:12px;font:400 13.5px/1.45 var(--body);
+  background:color-mix(in srgb, var(--teal) 8%, var(--surface));border:1px solid color-mix(in srgb, var(--teal) 30%, transparent)}
+.icp-owner.ro{background:color-mix(in srgb, #8792A3 12%, var(--surface));border-color:color-mix(in srgb, #8792A3 40%, transparent)}
+.icp-owner>span:not(.lock):not(.icp-hint){flex:1;min-width:240px}
+.icp-owner .lock{font-size:16px}.icp-owner .grow{flex:1;min-width:260px;margin:0}

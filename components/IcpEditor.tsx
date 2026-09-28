@@ -102,7 +102,20 @@ function Toggle({ label, value, onChange, help }: { label: string; value: boolea
   return <label className="icp-toggle"><input type="checkbox" checked={value} onChange={(e) => onChange(e.target.checked)} /><span>{label}{help && <small>{help}</small>}</span></label>;
 }
 
-export default function IcpEditor({ initial, counts }: { initial: Definition; counts: Record<string, number> }) {
+export default function IcpEditor({ initial, counts, me, initialOwners }: { initial: Definition; counts: Record<string, number>; me: string; initialOwners: string[] }) {
+  const [owners, setOwners] = useState<string[]>(initialOwners);
+  const readOnly = owners.length > 0 && !owners.includes(me); // owner-only lock
+  const [ownerEdit, setOwnerEdit] = useState<string | null>(null);
+  const [ownerMsg, setOwnerMsg] = useState("");
+  async function ownerCall(action: "claim" | "owners", emails?: string[]) {
+    if (action === "claim" && !window.confirm(`Make ${me} the owner of Define ICP?\n\nAfter this, only the owner(s) can save changes to the ICP. Everyone else can view and preview.`)) return;
+    if (action === "owners" && emails && !emails.includes(me) && !window.confirm("You are removing yourself as owner. You won't be able to change the ICP afterwards. Continue?")) return;
+    setOwnerMsg("");
+    const res = await fetch("/api/icp", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action, emails }) });
+    const j = await res.json();
+    if (j.ok) { setOwners(j.owners.emails); setOwnerEdit(null); setOwnerMsg(action === "claim" ? "You are now the ICP owner." : "Owners updated."); }
+    else setOwnerMsg(j.error || "Could not update owners.");
+  }
   const [saved, setSaved] = useState<Definition>(normalizeDefinition(initial));
   const [def, setDef] = useState<Definition>(normalizeDefinition(initial));
   const [region, setRegion] = useState("UAE");
@@ -111,7 +124,7 @@ export default function IcpEditor({ initial, counts }: { initial: Definition; co
   const [copyFrom, setCopyFrom] = useState("");
   const [unlocked, setUnlocked] = useState<Record<string, boolean>>({});
   const r = def.regions[region];
-  const locked = r.status !== "active" && !unlocked[region]; // only an active region (or one being prepared) can be edited
+  const locked = readOnly || (r.status !== "active" && !unlocked[region]); // owner-only lock; only an active region (or one being prepared) can be edited
   const dirty = JSON.stringify(def.regions) !== JSON.stringify(saved.regions);
   const dirtyRegions = REGIONS.filter(({ key }) => JSON.stringify(def.regions[key]) !== JSON.stringify(saved.regions[key])).map((x) => x.key);
   const problems = useMemo(() => REGIONS.flatMap(({ key }) => validateRules(key, def.regions[key])), [def]);
@@ -145,8 +158,26 @@ export default function IcpEditor({ initial, counts }: { initial: Definition; co
           <span className="icp-dirty" aria-live="polite">{problems.length ? `${problems.length} to fix (see below)` : dirty ? `Unsaved: ${dirtyRegions.join(", ")}` : ""}</span>
           <button type="button" className="btn" disabled={!dirty || !!busy} onClick={() => { setDef(clone(saved)); setResult(null); }}>Discard changes</button>
           <button type="button" className="btn" disabled={!!busy || !!problems.length} onClick={() => call("preview")}>{busy === "preview" ? "Checking…" : "Preview impact"}</button>
-          <button type="button" className="btn primary" disabled={!dirty || !!busy || !!problems.length} onClick={() => call("save")}>{busy === "save" ? "Saving…" : "Save & apply"}</button>
+          {!readOnly && <button type="button" className="btn primary" disabled={!dirty || !!busy || !!problems.length} onClick={() => call("save")}>{busy === "save" ? "Saving…" : "Save & apply"}</button>}
         </div>
+      </div>
+
+      <div className={`icp-owner${readOnly ? " ro" : ""}`}>
+        <span className="lock" aria-hidden="true">{owners.length ? "🔒" : "🔓"}</span>
+        {!owners.length ? (
+          <><span><b>No owner yet.</b> Anyone signed in can change the ICP. Make yourself the owner so only you can save changes.</span>
+            <button type="button" className="btn primary" onClick={() => ownerCall("claim")}>Make me the ICP owner</button></>
+        ) : readOnly ? (
+          <span><b>View only.</b> Only the ICP owner ({owners.join(", ")}) can change these rules. You can read everything and use Preview impact.</span>
+        ) : ownerEdit === null ? (
+          <><span><b>Owner-only lock is on.</b> Owner{owners.length > 1 ? "s" : ""}: {owners.join(", ")}. Only {owners.length > 1 ? "they" : "you"} can save changes; teammates can view and preview.</span>
+            <button type="button" className="btn" onClick={() => setOwnerEdit(owners.join(", "))}>Manage owners</button></>
+        ) : (
+          <><label className="icp-field grow"><span>Owners (sign-in emails, comma-separated)</span><input value={ownerEdit} onChange={(e) => setOwnerEdit(e.target.value)} /></label>
+            <button type="button" className="btn primary" onClick={() => ownerCall("owners", ownerEdit.split(/[,;\s]+/).map((x) => x.trim().toLowerCase()).filter(Boolean))}>Save owners</button>
+            <button type="button" className="btn" onClick={() => setOwnerEdit(null)}>Cancel</button></>
+        )}
+        {ownerMsg && <span className="icp-hint">{ownerMsg}</span>}
       </div>
 
       <p className="icp-step"><b>Step 1</b> · Choose a region</p>
@@ -167,7 +198,7 @@ export default function IcpEditor({ initial, counts }: { initial: Definition; co
       <p className="icp-step"><b>Step 2</b> · Set the rules for {REGIONS.find((x) => x.key === region)?.name || region}</p>
       <p className="icp-summary">{summarizeRules(region, r)}</p>
 
-      <div className="icp-first">
+      <fieldset className="icp-first icp-fields" disabled={readOnly}>
         <section className="panel icp-card">
           <h3>1 · Region & daily run <Uses items={["Daily run"]} /></h3>
           <p className="icp-explain">Controls only the daily 6am run for <b>{region}</b>. Its rules below apply whatever you choose.</p>
@@ -187,9 +218,9 @@ export default function IcpEditor({ initial, counts }: { initial: Definition; co
           </div>
         </section>
 
-      </div>
+      </fieldset>
 
-      {locked && (
+      {locked && !readOnly && (
         <div className={`icp-lock r-${r.status}`} role="note">
           <div><b>{region} is {r.status === "paused" ? "Paused" : "Next phase"} — its rules are locked.</b>
             <span>{r.status === "paused" ? ` They still decide the ICP status of the ${counts[region] || 0} ${region} account${counts[region] === 1 ? "" : "s"} already here, but nothing new is searched.` : " Nothing runs for this market yet."} Make it Active to edit and start the daily run, or prepare the rules first.</span></div>

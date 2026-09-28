@@ -1,11 +1,16 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.51";
+export const APP_VERSION = "1.52";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.52", date: "2026-09-28", notes: "Owner-only lock on Define ICP: once you make yourself the ICP owner, only owners can save changes; teammates can view and preview.",
+    changes: [
+      { what: "Owner-only lock: click 'Make me the ICP owner' once; after that only the owner(s) can change and save the ICP. Teammates see the page read-only and can still use Preview impact", where: "Setup → Define ICP → owner strip above the region tiles", why: "The ICP drives every search, verification and Pipeline rank, so one accountable owner prevents accidental changes" },
+      { what: "Manage owners: add co-owners or hand over ownership (at least one owner is always kept)", where: "Setup → Define ICP → Manage owners", why: "So ownership can be shared or passed on without a code change" },
+    ] },
   { version: "1.51", date: "2026-09-28", notes: "Define ICP shows money in USD as $250M / $3.5B; you can type 250M or 3.5B. Local currency is used only for conversion.",
     changes: [
       { what: "Revenue fields show USD amounts the way you read them: $250M, and $3.5B from $1,000M upward; type 250, 250M or 3.5B and the field confirms the value", where: "Setup → Define ICP → Company size, Evidence & verification", why: "A bare '250' with 'USD M' beside it was easy to misread" },

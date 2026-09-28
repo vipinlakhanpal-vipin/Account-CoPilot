@@ -19,6 +19,15 @@ async function load(db: ReturnType<typeof supabaseAdmin>): Promise<Definition> {
   return normalizeDefinition(data?.value);
 }
 
+/** Owner-only lock: settings.icp_owner = { emails: string[], set_at, set_by }. Empty = not claimed yet (anyone may claim it once). */
+type Owners = { emails: string[]; set_at?: string; set_by?: string };
+async function owners(db: ReturnType<typeof supabaseAdmin>): Promise<Owners> {
+  const { data } = await db.from("settings").select("value").eq("key", "icp_owner").maybeSingle();
+  const v = (data?.value as Partial<Owners> | null) || {};
+  return { ...v, emails: Array.isArray(v.emails) ? v.emails : [] };
+}
+const isOwner = (o: Owners, email?: string | null) => !o.emails.length || (!!email && o.emails.map((e) => e.toLowerCase()).includes(email.toLowerCase()));
+
 export async function GET() {
   if (!(await requireUser())) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
   return NextResponse.json(await load(supabaseAdmin()));
@@ -46,9 +55,27 @@ function diff(a: Definition, b: Definition) {
 export async function POST(req: Request) {
   const user = await requireUser();
   if (!user) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
-  const body = await req.json().catch(() => null) as { action?: string; definition?: Definition } | null;
-  if (!body?.definition?.regions || !["preview", "save"].includes(String(body.action))) return NextResponse.json({ error: "Bad request." }, { status: 400 });
+  const body = await req.json().catch(() => null) as { action?: string; definition?: Definition; emails?: string[] } | null;
   const db = supabaseAdmin();
+  const own = await owners(db);
+  // Owner management: claim (only when nobody owns it yet) or set the owner list (owners only; must keep yourself unless handing over).
+  if (body?.action === "claim") {
+    if (own.emails.length) return NextResponse.json({ error: "Define ICP already has an owner." }, { status: 409 });
+    const v = { emails: [String(user.email)], set_at: new Date().toISOString(), set_by: String(user.email) };
+    await db.from("settings").upsert({ key: "icp_owner", value: v, updated_at: v.set_at });
+    return NextResponse.json({ ok: true, owners: v });
+  }
+  if (body?.action === "owners") {
+    if (!own.emails.length || !isOwner(own, user.email)) return NextResponse.json({ error: "Only the ICP owner can change owners." }, { status: 403 });
+    const emails = [...new Set((body.emails || []).map((e) => String(e).trim().toLowerCase()).filter((e) => /^[^@\s]+@[^@\s]+\.[a-z]{2,}$/.test(e)))];
+    if (!emails.length) return NextResponse.json({ error: "Keep at least one owner." }, { status: 400 });
+    const v = { emails, set_at: new Date().toISOString(), set_by: String(user.email) };
+    await db.from("settings").upsert({ key: "icp_owner", value: v, updated_at: v.set_at });
+    return NextResponse.json({ ok: true, owners: v });
+  }
+  if (!body?.definition?.regions || !["preview", "save"].includes(String(body.action))) return NextResponse.json({ error: "Bad request." }, { status: 400 });
+  if (body.action === "save" && !isOwner(own, user.email))
+    return NextResponse.json({ ok: false, error: `Only the ICP owner can save changes (${own.emails.join(", ")}). You can still preview.` }, { status: 403 });
   const current = await load(db);
   const next = normalizeDefinition({ ...current, regions: body.definition.regions });
   const problems = REGIONS.flatMap(({ key }) => validateRules(key, next.regions[key] as Rules));
