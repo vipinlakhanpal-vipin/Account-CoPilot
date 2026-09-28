@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import CostNote from "@/components/CostNote";
 import { OPTIONS, UNAVAILABLE_ENGAGEMENT, DEFAULT_CRITERIA, activeCount, type Criteria } from "@/lib/icp";
 
 const LABEL: Record<string, string> = { banking_financial: "Banking & financial", chemicals_oil_gas: "Oil, gas & chemicals", construction: "Construction",
@@ -33,17 +32,16 @@ function Section({ title, children, open = false }: { title: string; children: R
 // Left-side "Account Discovery Criteria" panel. Criteria filter and rank every view; Save stores them for the whole team.
 export type SaveResult = { ok: boolean; error?: string; by?: string; at?: string };
 // Criteria edits are a draft until Refresh (apply) or Save (apply + store for the team). Reset asks first.
-export default function DiscoveryPanel({ criteria: applied, onApply, onSave, savedMeta, teamCriteria, collapsed, onToggle, matches, country, researchTargets = [], onResearch, researchMsg }: {
+export default function DiscoveryPanel({ criteria: applied, onApply, onSave, savedMeta, teamCriteria, collapsed, onToggle, matches, country, researchTargets = [], onResearch, researchMsg, isSuper = true }: {
   criteria: Criteria; onApply: (c: Criteria) => void; onSave: (c: Criteria) => Promise<SaveResult>; savedMeta: { by?: string; at?: string } | null; teamCriteria: Criteria | null;
   collapsed: boolean; onToggle: () => void; matches: { accounts: number; contacts: number }; country: string; researchTargets?: string[];
-  onResearch: (limit: number, profile: boolean) => void; researchMsg: string;
+  onResearch: (limit: number, profile: boolean) => void; researchMsg: string; isSuper?: boolean;
 }) {
-  // Changes apply instantly; "Save for team" shares them, "Discard changes" goes back to the saved team ICP.
+  // Three jobs: 1 search the app, 2 filter your view (instant, only for you; Undo / Share as team default), 3 find new companies on the web (paid).
   const criteria = applied, onChange = onApply;
   const base = teamCriteria || DEFAULT_CRITERIA;
   const dirty = JSON.stringify(criteria) !== JSON.stringify(base);
   const [saveRes, setSaveRes] = useState<SaveResult | null>(null);
-  const [confirmDefault, setConfirmDefault] = useState(false);
   const [tab, setTab] = useState<"company" | "contact">("company");
   const [limit, setLimit] = useState(5);
   const [profile, setProfile] = useState(false);
@@ -51,6 +49,13 @@ export default function DiscoveryPanel({ criteria: applied, onApply, onSave, sav
   const setCo = (k: keyof Criteria["company"], v: unknown) => onChange({ ...criteria, company: { ...co, [k]: v } });
   const setCt = (k: keyof Criteria["contact"], v: unknown) => onChange({ ...criteria, contact: { ...ct, [k]: v } });
   const n = activeCount(criteria);
+  // How many filters differ from the team's saved ones (for the footer).
+  const changed = [...Object.keys(criteria.company), ...Object.keys(criteria.contact).map((k) => `c:${k}`)].filter((k) => {
+    const [a, b] = k.startsWith("c:") ? [criteria.contact[k.slice(2) as keyof Criteria["contact"]], base.contact[k.slice(2) as keyof Criteria["contact"]]]
+      : [criteria.company[k as keyof Criteria["company"]], base.company[k as keyof Criteria["company"]]];
+    return JSON.stringify(a) !== JSON.stringify(b);
+  }).length + (criteria.showSpend !== base.showSpend ? 1 : 0);
+  const where = researchTargets.length > 1 ? `${researchTargets.slice(0, -1).join(", ")} and ${researchTargets[researchTargets.length - 1]}` : researchTargets[0] || "";
 
   if (collapsed) return (
     <aside className="dp dp-collapsed" aria-label="Account Discovery Criteria">
@@ -67,6 +72,13 @@ export default function DiscoveryPanel({ criteria: applied, onApply, onSave, sav
         <button type="button" className="dp-toggle-sm" onClick={onToggle} aria-expanded="true" title="Collapse panel">«</button>
       </div>
       <p className="dp-summary"><b>{matches.accounts}</b> accounts · <b>{matches.contacts}</b> contacts match · {n} criteria set</p>
+      <div className="dp-step s1">
+        <p className="dp-step-h"><span className="dp-n">1</span>Search the app</p>
+        <p className="dp-step-sub">Find a company already in the app. Free, instant; filters every tab.</p>
+        <input type="search" className="dp-search" value={co.name} onChange={(e) => setCo("name", e.target.value)} placeholder="Company name…" aria-label="Search companies in the app" />
+      </div>
+      <p className="dp-step-h s2h"><span className="dp-n">2</span>Filter your view</p>
+      <p className="dp-step-sub s2sub">Changes apply straight away and only for you.</p>
       <div className="dp-tabs" role="tablist">
         <button type="button" role="tab" aria-selected={tab === "company"} onClick={() => setTab("company")}>Company</button>
         <button type="button" role="tab" aria-selected={tab === "contact"} onClick={() => setTab("contact")}>Contact</button>
@@ -134,30 +146,25 @@ export default function DiscoveryPanel({ criteria: applied, onApply, onSave, sav
         </div>
       )}
 
-      <div className="dp-research" id="dp-research">
-        <b>Research more in {researchTargets.length > 1 ? `${researchTargets.slice(0, -1).join(", ")} and ${researchTargets[researchTargets.length - 1]}` : researchTargets[0] || "a country (tick one above)"}</b>
-        <p className="dp-note">{researchTargets.length > 1 ? `One search per country (${researchTargets.length}). ` : ""}Follows the countries ticked in Country above{country !== "All" && !applied.company.countries.length ? ` (none ticked, so the ${country} tile you are viewing)` : ""}. Searches the web for new companies that match the criteria above (same ICP rules: group HQs only; no government bodies, single sites or foreign branches), and adds them as "Claude discovery".</p>
-        <div className="dp-rrow">
-          <label>Find up to <select value={limit} onChange={(e) => setLimit(Number(e.target.value))}>{[3, 5, 10].map((n) => <option key={n}>{n}</option>)}</select></label>
-          <label><input type="checkbox" checked={profile} onChange={(e) => setProfile(e.target.checked)} /> and profile each</label>
-        </div>
-        <button type="button" className="btn" disabled={!researchTargets.length} onClick={() => onResearch(limit, profile)}>Research more{researchTargets.length > 1 ? ` (${researchTargets.length} countries)` : ""}</button>
-        <CostNote cost={`${profile ? "≈ $0.50–1.00 + $0.55 per company profiled" : "≈ $0.50–1.00 per search"}${researchTargets.length > 1 ? `, × ${researchTargets.length} countries` : ""}`} />
+      <div className="dp-research dp-step s3" id="dp-research">
+        <p className="dp-step-h"><span className="dp-n">3</span>Find new companies on the web</p>
+        <p className="dp-step-sub">{where ? <>Adds companies not yet in the app, in <b>{where}</b> ({applied.company.countries.length ? "the countries ticked in step 2" : `the ${country} tile you are viewing`}). Same ICP rules: group HQs only; no government bodies, single sites or foreign branches.</> : "Tick a country in step 2 first."}</p>
+        <div className="dp-find">Find up to <select className="dp-amber" value={limit} onChange={(e) => setLimit(Number(e.target.value))}>{[3, 5, 10].map((x) => <option key={x}>{x}</option>)}</select>{researchTargets.length > 1 ? " per country" : ""}</div>
+        <label className="dp-deep"><input type="checkbox" checked={profile} onChange={(e) => setProfile(e.target.checked)} /> Also research each one in depth</label>
+        <button type="button" className="btn primary dp-go" disabled={!researchTargets.length} onClick={() => onResearch(limit, profile)}>Search the web{where ? ` — ${where}` : ""}</button>
+        <p className="dp-cost">Uses the Anthropic API ≈ {profile ? "$0.50–1.00 per search + $0.55 per company researched" : "$0.50–1.00 per search"}{researchTargets.length > 1 ? ` × ${researchTargets.length} countries` : ""} · asks for your PIN</p>
         {researchMsg && <p className="dp-saved">{researchMsg}</p>}
       </div>
       <div className="dp-foot">
-        <p className={`dp-state${dirty ? " changed" : ""}`}>{dirty
-          ? <>● Showing <b>your changes</b> (not saved for the team)</>
-          : <>✓ Showing the <b>{teamCriteria ? "team ICP" : "default ICP"}</b>{savedMeta?.at && <> · saved {new Date(savedMeta.at).toLocaleDateString()}{savedMeta.by && ` by ${savedMeta.by}`}</>}</>}</p>
-        {dirty && <div className="dp-acts">
-          <button type="button" className="btn primary" onClick={async () => { setSaveRes(null); setSaveRes(await onSave(criteria)); }}>Save for team</button>
-          <button type="button" className="btn ghost" onClick={() => { onChange(base); setSaveRes(null); }}>Discard changes</button>
-        </div>}
-        {saveRes && (saveRes.ok ? <p className="dp-note ok">✓ Saved. Everyone now ranks accounts with these criteria.</p> : <p className="dp-note bad">Couldn't save: {saveRes.error}</p>)}
-        {!confirmDefault ? <button type="button" className="dp-linkbtn" onClick={() => setConfirmDefault(true)}>Restore default ICP</button>
-          : <div className="dp-out"><b className="warn">Restore the default ICP?</b><p>Revenue $250M+, 100+ staff, UAE. Shown only to you until you save it for the team.</p>
-            <div className="dp-acts"><button type="button" className="btn tiny" onClick={() => { onChange(DEFAULT_CRITERIA); setConfirmDefault(false); }}>Restore</button>
-              <button type="button" className="btn tiny ghost" onClick={() => setConfirmDefault(false)}>Cancel</button></div></div>}
+        {!dirty ? <p className="dp-state">✓ Showing the <b>team&apos;s filters</b>{savedMeta?.at && <> (saved {new Date(savedMeta.at).toLocaleDateString()}{savedMeta.by && ` by ${savedMeta.by}`})</>}</p>
+          : <>
+            <p className="dp-state changed">You changed {changed || "some"} filter{changed === 1 ? "" : "s"} — only you see this view.</p>
+            <div className="dp-acts">
+              <button type="button" className="btn" onClick={() => { onChange(base); setSaveRes(null); }}>Undo my changes</button>
+              {isSuper && <button type="button" className="btn" title="Makes these filters everyone's starting view" onClick={async () => { setSaveRes(null); setSaveRes(await onSave(criteria)); }}>Share as team default</button>}
+            </div>
+          </>}
+        {saveRes && (saveRes.ok ? <p className="dp-note ok">✓ Shared. Everyone now starts from these filters.</p> : <p className="dp-note bad">Couldn&apos;t share: {saveRes.error}</p>)}
       </div>
     </aside>
   );

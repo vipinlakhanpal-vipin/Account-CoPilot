@@ -489,7 +489,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
     <div className={`app-shell${collapsed ? " dp-closed" : ""}`}>
     <DiscoveryPanel criteria={criteria} onApply={setCriteria} onSave={saveCriteria} savedMeta={savedMeta} teamCriteria={teamCriteria} collapsed={collapsed} onToggle={toggle}
       matches={{ accounts: A.filter((a) => inPipe(a, scores[a.id])).length, contacts: people.length }}
-      country={country} researchTargets={researchTargets} onResearch={researchMore} researchMsg={researchMsg} />
+      country={country} researchTargets={researchTargets} onResearch={researchMore} researchMsg={researchMsg} isSuper={isSuper} />
     <div className="app-main">
       <Hero title={(HERO[tab] || HERO.dashboard)[0]} text={(HERO[tab] || HERO.dashboard)[1]} />
       <section className="view">{A.length === 0

@@ -1,11 +1,17 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.75";
+export const APP_VERSION = "1.76";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.76", date: "2026-09-28", notes: "Simpler left panel in three steps: 1 Search the app, 2 Filter your view (Undo my changes / Share as team default), 3 Find new companies on the web (amber 'Find up to' box, clear button and cost).",
+    changes: [
+      { what: "Step 1 · Search the app: a search box at the top of the panel for companies already in the app (free, instant, filters every tab)", where: "Left panel", why: "Searching what you already have was hidden among the criteria" },
+      { what: "Step 2 · Filter your view: filters apply straight away, only for you; buttons appear only after a change — 'Undo my changes' and, for Super Admins, 'Share as team default' (replacing Save for team / Discard changes / Restore default ICP)", where: "Left panel", why: "It wasn't clear when to save, discard or restore" },
+      { what: "Step 3 · Find new companies on the web: green card naming the countries it will search, an amber 'Find up to' box, 'Also research each one in depth', a clear 'Search the web — UAE' button, and the cost with the PIN note", where: "Left panel", why: "The only paid action in the panel is now clearly separate and labelled" },
+    ] },
   { version: "1.75", date: "2026-09-28", notes: "Team has its own tab: Setup → Team (next to Learn Me), moved out of Settings.",
     changes: [
       { what: "Team (invite colleagues, roles, regions, change access) is now its own tab after Learn Me; Settings keeps the engine, API credit and PIN, contact tiers and costs", where: "Setup → Team", why: "Managing people is separate from configuring the engine, and easier to find on its own tab" },

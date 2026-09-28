@@ -795,3 +795,19 @@ th .infotip{margin-left:3px}.infotip-btn{width:15px;height:15px;font-size:10px}
 .filters:has(.cf-builder),.filters:has(.cf-chips){flex-wrap:wrap}
 .filters .btn.cf-add{flex:none}
 .filters .cf-builder select,.filters .cf-builder input{flex:0 1 auto;max-width:280px}
+/* Left panel: three clear jobs */
+.dp-step{border-radius:12px;padding:10px 12px;margin:8px 0 10px}
+.dp-step.s1{background:color-mix(in srgb, #3AA0FF 11%, var(--surface));border:1px solid color-mix(in srgb, #3AA0FF 38%, transparent)}
+.dp-step.s3{background:color-mix(in srgb, #2ECC8F 11%, var(--surface));border:1px solid color-mix(in srgb, #2ECC8F 42%, transparent)}
+.dp-step-h{display:flex;align-items:center;gap:8px;margin:0 0 3px;font:700 14px var(--body);color:var(--text-strong)}
+.dp-step-h.s2h{margin-top:4px}
+.dp-n{width:20px;height:20px;border-radius:50%;display:inline-grid;place-items:center;font:700 11px var(--body);color:#fff;background:#5F5E5A;flex:none}
+.s1 .dp-n{background:#185FA5}.s3 .dp-n{background:#0F6E56}
+.dp-step-sub{margin:0 0 8px;font:400 12.5px/1.45 var(--body);color:var(--muted)}
+.dp-search{width:100%;box-sizing:border-box;font:500 14px var(--body);padding:8px 10px;border-radius:9px;border:1px solid color-mix(in srgb, #3AA0FF 45%, transparent);background:var(--surface);color:var(--text-strong)}
+.dp-find{display:flex;align-items:center;gap:8px;margin:4px 0 6px;font:600 13px var(--body);color:var(--text-strong)}
+.dp-amber{font:700 14px var(--body);padding:5px 10px;border-radius:9px;color:#8A5A00;background:color-mix(in srgb, #E0A21B 18%, var(--surface));border:1px solid color-mix(in srgb, #E0A21B 55%, transparent)}
+.dp-deep{display:flex;align-items:center;gap:8px;font:500 12.5px var(--body);color:var(--text);margin:0 0 8px}
+.dp-go{width:100%}
+.dp-cost{margin:8px 0 0;padding:6px 9px;border-radius:9px;font:500 11.5px/1.4 var(--body);color:#8A5A00;background:color-mix(in srgb, #E0A21B 14%, var(--surface));border:1px solid color-mix(in srgb, #E0A21B 40%, transparent)}
+.dp-state.changed{padding:7px 9px;border-radius:9px;background:color-mix(in srgb, #E0A21B 14%, var(--surface));color:var(--text)}
