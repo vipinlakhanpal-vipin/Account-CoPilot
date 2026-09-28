@@ -69,7 +69,7 @@ export default async function GuidePage() {
   return (
     <>
       <div className="wrap guide">
-        <Hero title="Guide" text="Everything the app does, how each number is calculated, and where the data comes from." />
+        <Hero title="Learn Me" text="Everything the app does, how each number is calculated, and where the data comes from." />
         <div className="guide-grid">
           <GuideNav items={TOC} />
           <div className="guide-body">
@@ -105,7 +105,7 @@ export default async function GuidePage() {
               <h3>Daily 6AM Run Process</h3>
               <T head={["Step", "What happens"]} rows={[
                 ["When", "Every day at 6:00 am Dubai time, on its own"],
-                ["1 · Your queued jobs", "Anything you queued in Admin → Settings → Search companies runs first"],
+                ["1 · Your queued jobs", "Anything you queued in Setup → Settings → Search companies runs first"],
                 ["2 · Find 5 new companies", "UAE companies that fit the ICP — group HQs only; no government bodies, single hotels / hospitals / schools or local branches of foreign groups; never one already in the app. Before adding, the app checks each name and website against every account (spelling variants, acronyms, group vs subsidiary) and skips duplicates; the agent then finds replacements"],
                 ["3 · Verify 25 companies", "The 5 new ones first, then 20 from the queue (largest first; re-checks every 180 days). Official sources first: annual report → parent / bond / rating → reputable press → estimates"],
                 ["4 · Update the app", "ICP status recalculated; Verified accounts appear in Pipeline, all others stay in Accounts"],
@@ -147,7 +147,7 @@ export default async function GuidePage() {
               <p>Yes, two layers: the <b>fixed ICP rule</b> (revenue ≥ $250M and ≥ 100 employees, which sets the ICP status) and your <b>Discovery criteria</b> in the left panel (industries, regions, ownership, systems, triggers, contact roles), which rank accounts and steer Research more. Save the panel as the team ICP so everyone ranks, and discovers, the same way.</p></section>
 
             <section id="tabs" className="panel"><h2>Tabs</h2>
-              <p>Five main tabs; selecting one shows its sub-tabs on the line beneath the top bar: <b>Dashboard</b> · <b>Accounts</b> (Pipeline, All accounts, S2P Signals, ERP & Apps) · <b>Stakeholders</b> · <b>Data</b> (Sources, Conflicts, Research Queue) · <b>Admin</b> (Settings, Guide).</p>
+              <p>Five main tabs; selecting one shows its sub-tabs on the line beneath the top bar: <b>Dashboard</b> · <b>Accounts</b> (Pipeline, All accounts, S2P Signals, ERP & Apps) · <b>Stakeholders</b> · <b>Data</b> (Sources, Conflicts, Research Queue) · <b>Setup</b> (Define ICP, Settings, Learn Me).</p>
               <T head={["Tab", "What it shows"]} rows={[
                 ["Dashboard", "KPI tiles (click any tile to see the records behind it), charts by S2P signal, platform, ERP, role family and ICP status, and priority accounts."],
                 ["Pipeline", "Accounts ranked by the Pipeline rank (see Scores). Answers: which accounts should we work first?"],
@@ -158,8 +158,9 @@ export default async function GuidePage() {
                 ["ERP & Apps", "ERP and third-party applications with how each was verified (FACT / LIKELY / UNVERIFIED)."],
                 ["Conflicts", "Where two sources disagree. Both values are kept; nothing is overwritten."],
                 ["Research Queue", "Start new company research (uses the paid API; see Costs)."],
-                ["Settings", "Contact tiers, team invites, and the Costs & usage explainer."],
-                ["Guide", "This page."]]} /></section>
+                ["Define ICP", "Your Ideal Customer Profile for each region: every rule the agent follows when it searches, verifies and scores companies."],
+                ["Settings", "Contact tiers, team invites, the discovery & refresh engine and the Costs & usage explainer."],
+                ["Learn Me", "This page."]]} /></section>
 
             <section id="countries" className="panel"><h2>Country tiles</h2>
               <p>All countries · UAE · Saudi Arabia · Qatar · Kuwait · Oman · Egypt. Each shows its account count ("soon" = none yet). Selecting one filters the dashboard, every tab and the source tiles to that market; the choice stays when you switch tabs. UAE is the default.</p></section>
@@ -297,7 +298,7 @@ export default async function GuidePage() {
                 ["Revenue check", "When the revenue was last verified; drives the 180-day re-check", "Account brief → ICP reason; re-checked automatically", "Checked 2026-09-27 → next re-check due about 2027-03-26 if not Verified"],
               ]} /></section>
 
-            <section id="engineset" className="panel"><h2>Discovery & refresh engine (Admin → Settings)</h2>
+            <section id="engineset" className="panel"><h2>Discovery & refresh engine (Setup → Settings)</h2>
               <T head={["Option", "What it does", "Cost"]} rows={[
                 ["1 · Search companies", "Pick a region, how many (30 / 50 / max) and what to do (verify existing, find new, or both). Start queues a job; the next scheduled Claude session does it with its own web search, exactly like a verification session, and writes results into the app. The job list shows queued / running / done with a result summary.", "No API cost (uses your Claude plan's usage)"],
                 ["2 · Refresh", "Updates the companies researched longest ago in the region (re-research + ICP status), finds new ICP companies with one discovery search and profiles each. It plans as many as your budget allows (updates first); unspent budget carries over to the next Refresh. What it will do and its estimated cost are shown before you confirm.", "≈ $0.55 per update, ≈ $0.75 per discovery search, ≈ $0.55 per new profile (measured per run)"],
@@ -305,17 +306,17 @@ export default async function GuidePage() {
               <p className="note">Scheduled sessions follow ENGINE.md in the repository and need GitHub connected to Claude plus the Supabase keys set in the routine's environment.</p></section>
 
             <section id="costs" className="panel"><h2>Costs</h2>
-              <p>Browsing, filtering, scoring, the Guide and Excel export are always free. Only actions marked with the amber <b>Cost impact</b> note use the Anthropic API. The daily 6am engine uses your Claude plan, not the API.</p>
+              <p>Browsing, filtering, scoring, Learn Me and Excel export are always free. Only actions marked with the amber <b>Cost impact</b> note use the Anthropic API. The daily 6am engine uses your Claude plan, not the API.</p>
               <T head={["Action", "Where", "Uses the API?", "Typical cost", "Example"]} rows={[
                 ["Browse, filter, scores, Pipeline, Guide", "Everywhere", "No", "$0", "Open the Pipeline, filter by Coupa, read a brief — free"],
                 ["Download Master Book (Excel)", "Top bar", "No", "$0", "Export all 464 accounts — free"],
                 ["Daily 6am engine (find 5 + verify 25)", "Runs by itself", "No — your Claude plan", "$0 API", "Tomorrow's run adds 5 companies and verifies 25 — no API charge"],
-                ["Search companies (queued job)", "Admin → Settings → engine", "No — your Claude plan", "$0 API", "Queue 'Verify 50 in UAE' — done in the next scheduled session"],
+                ["Search companies (queued job)", "Setup → Settings → engine", "No — your Claude plan", "$0 API", "Queue 'Verify 50 in UAE' — done in the next scheduled session"],
                 ["Draft pitch plan", "Account brief", "Yes", "≈ $0.05–0.10", "Drafting a plan for GEMS Education ≈ $0.07"],
                 ["Refresh research (one account)", "Account brief", "Yes", "≈ $1.20–1.50", "Re-researching Emaar (Standard) ≈ $1.35"],
-                ["Research Queue — Quick / Standard / Deep", "Admin → Data → Research Queue", "Yes", "≈ $0.55 / $1.20–1.50 / $2.50–3.50", "Deep research on a new KSA company ≈ $3.00"],
+                ["Research Queue — Quick / Standard / Deep", "Data → Research Queue", "Yes", "≈ $0.55 / $1.20–1.50 / $2.50–3.50", "Deep research on a new KSA company ≈ $3.00"],
                 ["Research more (left panel)", "Left panel", "Yes", "≈ $0.50–1.00 per search, + ≈ $0.55 per company profiled", "Find 5 + profile each ≈ $0.75 + 5 × $0.55 ≈ $3.50"],
-                ["Refresh (budgeted)", "Admin → Settings → engine", "Yes", "Your budget; unspent carries over", "Budget $20 → 10 updates ($5.50) + 5 new ($0.75 + $2.75) = $9.00; $11.00 carries over"],
+                ["Refresh (budgeted)", "Setup → Settings → engine", "Yes", "Your budget; unspent carries over", "Budget $20 → 10 updates ($5.50) + 5 new ($0.75 + $2.75) = $9.00; $11.00 carries over"],
               ]} />
               <h3>How a cost is calculated</h3>
               <T head={["Part", "Price", "Example (one Standard research run)"]} rows={[
@@ -324,7 +325,7 @@ export default async function GuidePage() {
                 ["Web searches", "$10 per 1,000 ($0.01 each)", "10 searches → $0.10"],
                 ["Total", "", "≈ $1.23"],
               ]} />
-              <p className="note">Every paid run records its real cost; see Admin → Settings → Anthropic API spend &amp; balance for this month, all time, carry-over and your estimated balance. Actual spend is also shown in the Anthropic Console.</p></section>
+              <p className="note">Every paid run records its real cost; see Setup → Settings → Anthropic API spend &amp; balance for this month, all time, carry-over and your estimated balance. Actual spend is also shown in the Anthropic Console.</p></section>
 
             <section id="excel" className="panel"><h2>Excel Master Book</h2>
               <p>The <b>Master Book</b> button (top bar) builds a fresh Excel file from the live database the moment you click — nothing is pre-made or stale. It contains everything in the app, arranged for reporting, campaigns and offline review. Gold column headers are for your team&apos;s own input.</p>

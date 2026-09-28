@@ -6,7 +6,7 @@ import Logo from "@/components/Logo";
 import ProfileMenu from "@/components/ProfileMenu";
 import EngineBell from "@/components/EngineBell";
 import ThemeToggle from "@/components/ThemeToggle";
-import { useNewVersion } from "@/components/useVersion";
+import { useNewVersionInfo } from "@/components/useVersion";
 import { APP_VERSION } from "@/lib/version";
 
 // Main tabs with sub-tabs underneath (Coupa-style). A main tab opens its first sub-tab.
@@ -15,7 +15,7 @@ const GROUPS: { label: string; items: [string, string][] }[] = [
   { label: "Accounts", items: [["/?tab=pipeline", "Pipeline"], ["/?tab=accounts", "Accounts"], ["/?tab=signals", "S2P Signals"], ["/?tab=erp", "ERP & Apps"]] },
   { label: "Stakeholders", items: [["/?tab=stakeholders", "Stakeholders"]] },
   { label: "Data", items: [["/?tab=sources", "Sources"], ["/?tab=conflicts", "Conflicts"], ["/research", "Research Queue"]] },
-  { label: "Admin", items: [["/settings", "Settings"], ["/guide", "Guide"]] },
+  { label: "Setup", items: [["/icp", "Define ICP"], ["/settings", "Settings"], ["/guide", "Learn Me"]] },
 ];
 const SUB_LABEL: Record<string, string> = { Accounts: "All accounts" };
 
@@ -26,11 +26,23 @@ const Spin = () => (
 const TAB_LABEL: Record<string, string> = { pipeline: "Pipeline", accounts: "Accounts", stakeholders: "Stakeholders", signals: "S2P Signals", erp: "ERP & Apps",
   conflicts: "Conflicts", sources: "Sources" };
 
-const PAGE_LABEL: Record<string, string> = { "/research": "Research Queue", "/settings": "Settings", "/guide": "Guide" };
+const PAGE_LABEL: Record<string, string> = { "/research": "Research Queue", "/settings": "Settings", "/guide": "Learn Me", "/icp": "Define ICP" };
 
 // Rendered once in the root layout, so it stays put across page changes (no rebuild, no jump).
 export default function Header({ subtitle }: { subtitle: string }) {
-  const latest = useNewVersion();
+  const { latest, releases, author } = useNewVersionInfo();
+  const [showChanges, setShowChanges] = useState(false);
+  // Open the "what's new" window once per new version (per browser session); the user can close it and reopen it from the banner.
+  useEffect(() => {
+    if (!latest || !releases.some((r) => r.changes?.length)) return;
+    try { if (sessionStorage.getItem("changesSeen") === latest) return; sessionStorage.setItem("changesSeen", latest); } catch {}
+    setShowChanges(true);
+  }, [latest, releases]);
+  useEffect(() => {
+    if (!showChanges) return;
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") setShowChanges(false); };
+    window.addEventListener("keydown", esc); return () => window.removeEventListener("keydown", esc);
+  }, [showChanges]);
   // Sub-tabs sit right under the active main tab: the row is right-aligned so its last sub-tab ends beneath the active tab.
   const barRef = useRef<HTMLDivElement>(null);
   const subRef = useRef<HTMLDivElement>(null);
@@ -82,9 +94,44 @@ export default function Header({ subtitle }: { subtitle: string }) {
     <>
       {latest && !upgraded && (
         <div className="update-bar" role="status">
-          <span>{upgrading ? <>Upgrading <b>Account CoPilot</b> to v{latest}…</> : <>A new version of <b>Account CoPilot</b> (v{latest}) is available.</>}</span>
-          <button type="button" className={upgrading ? "upgrading" : undefined} disabled={upgrading} onClick={upgrade}>
-            {upgrading ? `Upgrading to v${latest}…` : `Click Refresh to upgrade to v${latest}`}</button>
+          <div className="update-head">
+            <span>{upgrading ? <>Upgrading <b>Account CoPilot</b> to v{latest}…</> : <>Update available: <b>Account CoPilot v{latest}</b></>}</span>
+            <button type="button" className={upgrading ? "upgrading" : undefined} disabled={upgrading} onClick={upgrade}>
+              {upgrading ? `Upgrading to v${latest}…` : `Click Refresh to upgrade to v${latest}`}</button>
+            {releases.some((r) => r.changes?.length) && (
+              <button type="button" className="link" onClick={() => setShowChanges(true)}>What&apos;s changing?</button>)}
+          </div>
+        </div>
+      )}
+      {latest && showChanges && releases.some((r) => r.changes?.length) && (
+        <div className="wn-backdrop" onClick={() => setShowChanges(false)}>
+          <div className="wn" role="dialog" aria-modal="true" aria-labelledby="wn-title" onClick={(e) => e.stopPropagation()}>
+            <div className="wn-head">
+              <div><p className="wn-kicker">Update available</p><h2 id="wn-title">What&apos;s new in Account CoPilot v{latest}</h2></div>
+              <button type="button" className="wn-close" onClick={() => setShowChanges(false)} aria-label="Close">×</button>
+            </div>
+            <div className="wn-body">
+              {releases.filter((r) => r.changes?.length).map((r) => (
+                <section key={r.version}>
+                  {releases.filter((x) => x.changes?.length).length > 1 && <h3>v{r.version} · {r.date}</h3>}
+                  <ol>
+                    {r.changes!.map((c, i) => (
+                      <li key={i}><p className="wn-what">{c.what}</p>
+                        <p className="wn-meta"><span className="wn-tag where">Where</span>{c.where}</p>
+                        <p className="wn-meta"><span className="wn-tag why">Why</span>{c.why}</p></li>
+                    ))}
+                  </ol>
+                </section>
+              ))}
+            </div>
+            <div className="wn-foot">
+              {author && <span className="wn-by">Changes/upgrades were made by — <b>{author}</b></span>}
+              <span className="wn-actions">
+                <button type="button" className="btn" onClick={() => setShowChanges(false)}>Close</button>
+                <button type="button" className="btn primary" disabled={upgrading} onClick={() => { setShowChanges(false); upgrade(); }}>Upgrade to v{latest}</button>
+              </span>
+            </div>
+          </div>
         </div>
       )}
       {upgraded && (

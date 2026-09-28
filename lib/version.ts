@@ -1,7 +1,20 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.42";
+export const APP_VERSION = "1.43";
 
-export const RELEASES: { version: string; date: string; notes: string }[] = [
+/** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
+export type Change = { what: string; where: string; why: string };
+export const RELEASE_AUTHOR = "Vipin";
+
+export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.43", date: "2026-09-28", notes: "Master Book redesigned (Nunito 12, clear colour tags, dashboard cards with a sheet guide, HubSpot columns in Accounts); bigger tab fonts; Admin renamed Setup with Define ICP, Settings and Learn Me; the update banner now lists what changed, where and why.",
+    changes: [
+      { what: "Master Book redesigned: Nunito 12 throughout, navy-and-white layout, soft row banding, colour tags for ICP status, S2P signals and HubSpot actions; prints landscape on one page width", where: "Master Book button (top bar) → every sheet", why: "Easier to read, scan and present to your team" },
+      { what: "Executive Dashboard rebuilt as cards (Verified, Likely, Needs check, in HubSpot, people to contact…) with a clickable guide to every sheet; ICP line corrected (a stock listing is not required)", where: "Master Book → Executive Dashboard", why: "The first sheet should answer 'where do we stand?' at a glance and show where to go next" },
+      { what: "Accounts sheet shows In HubSpot, HubSpot Stage and HubSpot Owner; HubSpot columns have a teal header everywhere", where: "Master Book → Accounts, Contact List", why: "See straight away which accounts SCP already works, without switching to HubSpot" },
+      { what: "Larger main-tab and sub-tab text", where: "Top navigation", why: "Tabs now have two rows, so they no longer need to be squeezed" },
+      { what: "Admin renamed Setup, with Define ICP · Settings · Learn Me (Guide renamed Learn Me)", where: "Top navigation → Setup", why: "Groups everything that sets up how the agent works; Define ICP becomes the home of your ICP rules" },
+      { what: "This banner lists every change with where to see it and why", where: "Update banner (top of the page)", why: "So you know exactly what to look at after each upgrade" },
+    ] },
   { version: "1.42", date: "2026-09-28", notes: "Duplicates merged into one record per company (ASGC, Al Faraa, Khansaheb): original record kept, empty fields filled, stronger revenue evidence kept, other names and websites stored as aliases so the engine never re-adds them. Guide 'Get to know me': the whole agent explained in framed steps (find, verify, one record per company, HubSpot, smart moves). Today's bell message corrected." },
   { version: "1.41", date: "2026-09-28", notes: "Daily engine: stronger duplicate check before adding discovered companies (spelling variants, acronyms, domains, group vs subsidiary); the run reads the existing company list first and replaces any duplicate so 5 genuinely new companies are added. Clearer bell summary. Guide explains the check." },
   { version: "1.40", date: "2026-09-27", notes: "HubSpot sync (read-only, kept inside this app): each account shows whether it is in SCP's HubSpot, its stage, owner and deals. Master Book Contact List adds Deals, Latest Deal, Contact in HubSpot and a HubSpot Import Action (skip / add contact / new company) to avoid duplicate imports; new HubSpot Deals sheet. Guide: new plain-language introduction; the title now gently pulses (heart removed)." },
