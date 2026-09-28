@@ -812,4 +812,4 @@ th .infotip{margin-left:3px}.infotip-btn{width:15px;height:15px;font-size:10px}
 .dp-cost{margin:8px 0 0;padding:6px 9px;border-radius:9px;font:500 11.5px/1.4 var(--body);color:#8A5A00;background:color-mix(in srgb, #E0A21B 14%, var(--surface));border:1px solid color-mix(in srgb, #E0A21B 40%, transparent)}
 .dp-state.changed{padding:7px 9px;border-radius:9px;background:color-mix(in srgb, #E0A21B 14%, var(--surface));color:var(--text)}
 .eng-form label.eng-co{min-width:230px}
-.eng-form label.eng-co small{font:400 12px var(--body);color:var(--muted);margin-top:2px}
+
