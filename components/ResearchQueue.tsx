@@ -32,6 +32,12 @@ export default function ResearchQueue() {
       else setPersonaNote("");
     }).catch(() => {});
   }, [country]);
+  // Pre-fill from a link, e.g. "Research 'X' in Saudi Arabia" when a search found nothing.
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    if (q.get("company")) setCompany(q.get("company") || "");
+    if (q.get("country") && COUNTRIES.includes(q.get("country") || "")) setCountry(q.get("country") || "UAE");
+  }, []);
   useEffect(() => {
     load();
     const t = setInterval(load, 8000);

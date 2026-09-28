@@ -777,3 +777,5 @@ th .infotip{margin-left:3px}.infotip-btn{width:15px;height:15px;font-size:10px}
 @media (max-width:760px){.pipe-rank-row{grid-template-columns:1fr}}
 .pipe-rank-row>div:first-child{padding:9px 12px;border-radius:10px;background:var(--surface);border:1px solid rgba(var(--ink),.12);font:400 13px/1.45 var(--body);color:var(--text)}
 .pipe-rank-row .pipe-example{grid-column:auto}
+.search-miss{margin:0 0 10px;padding:12px 14px;border-radius:12px;background:color-mix(in srgb, var(--teal) 9%, var(--surface));border:1px solid color-mix(in srgb, var(--teal) 40%, transparent);font:400 14px/1.5 var(--body)}
+.search-miss p{margin:0 0 6px}.search-miss .acts{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0}

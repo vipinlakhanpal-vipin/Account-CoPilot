@@ -133,8 +133,8 @@ function Bars({ entries, order, signal }: { entries: [string, number][]; order?:
 type ColDef = { h: string; cell: (r: Row) => React.ReactNode; wrap?: boolean; cls?: string; tip?: string };
 type FilterDef = { label: string; get: (r: Row) => string };
 
-function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "rows", tipW }: {
-  title: string; note?: React.ReactNode; tipW?: Weights; rows: Row[]; cols: ColDef[]; filters: FilterDef[]; search: (r: Row) => string; onRow?: (r: Row) => void; unit?: string;
+function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "rows", tipW, empty }: {
+  title: string; note?: React.ReactNode; tipW?: Weights; empty?: (q: string) => React.ReactNode; rows: Row[]; cols: ColDef[]; filters: FilterDef[]; search: (r: Row) => string; onRow?: (r: Row) => void; unit?: string;
 }) {
   const [q, setQ] = useState("");
   const [fv, setFv] = useState<string[]>(filters.map(() => ""));
@@ -157,6 +157,7 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "
       </div>
       <p className="filter-count">{out.length} of {rows.length} rows
           {rows.some((r) => r.company_id) && <> · {new Set(out.map((r) => r.company_id)).size} {new Set(out.map((r) => r.company_id)).size === 1 ? "company" : "companies"}</>}</p>
+      {empty && q.trim().length >= 2 && out.length === 0 && empty(q.trim())}
       <div className="tablewrap">
         <table>
           <thead><tr><th className="num">#</th>{cols.map((c) => <th key={c.h} className={c.cls}>{c.h}{c.tip && <InfoTip k={c.tip} w={tipW} />}</th>)}</tr></thead>
@@ -235,15 +236,30 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
     return data.contacts.filter((p) => ids.has(p.company_id) && (!contactSet || contactMatches(p, criteria, data.history, famKey))); }, [data, A, criteria, contactSet]);
   const people = useMemo(() => buildPeople(P), [P]);
   const [perPerson, setPerPerson] = useState(true);
+  // Geography follows the country tile you selected (so KSA accounts aren't marked down for not being in the panel's default UAE).
+  const scoreCriteria = useMemo<Criteria>(() => country === ALL ? criteria : { ...criteria, company: { ...criteria.company, countries: [country], regions: [] } }, [criteria, country]);
   const scores = useMemo(() => {
     const hires: Record<string, number> = {};
     data.history.forEach((h) => { if (/change|promot|join|hire/i.test(str(h.determination))) hires[h.company_id] = (hires[h.company_id] || 0) + 1; });
     const m: Record<string, Scores> = {};
     // Focus (platforms, ERP, triggers) comes from each account's region in Define ICP.
-    A.forEach((a) => { const fz = rulesFor(icpDef, a.country).focus, x = icpMatch(a, criteria), o = opportunity(a, hires[a.id] || 0, fz), f = coupaFit(a, fz);
+    A.forEach((a) => { const fz = rulesFor(icpDef, a.country).focus, x = icpMatch(a, scoreCriteria), o = opportunity(a, hires[a.id] || 0, fz), f = coupaFit(a, fz);
       m[a.id] = { m: x, o, f, rank: Math.round((x.total * pipe.w_match + o.total * pipe.w_opportunity + f.total * pipe.w_fit) / 100) }; });
     return m;
-  }, [A, criteria, data.history, pipe, icpDef]);
+  }, [A, scoreCriteria, data.history, pipe, icpDef]);
+  // Search found nothing → offer to research that company (Research Queue, pre-filled; paid) or to ask in a free Claude session.
+  const notFound = (q: string) => {
+    const inApp = all.accounts.find((a) => str(a.company_name).toLowerCase().includes(q.toLowerCase()));
+    const cName = country === ALL ? "" : (COUNTRIES.find((c) => c.code === country)?.name || country);
+    return (
+      <div className="search-miss">
+        {inApp ? <p><b>&quot;{q}&quot;</b> is in the app as <b>{inApp.company_name}</b> ({regionOf(inApp.country)}, {inApp.icp_status}) but not in this list. {tab === "pipeline" ? "The Pipeline only shows accounts that pass your ICP — look in Accounts." : "Check the country tile and filters."}</p>
+          : <><p><b>&quot;{q}&quot;</b> isn&apos;t in {cName ? `your ${cName} accounts` : "the app"} yet.</p>
+            <p className="acts"><a className="btn primary" href={`/research?company=${encodeURIComponent(q)}${cName ? `&country=${encodeURIComponent(cName)}` : ""}`}>Research &quot;{q}&quot;{cName ? ` in ${cName}` : ""} →</a>
+              <span className="note">Adds it with revenue, ICP status, contacts and signals. Uses the Anthropic API (asks for the PIN). Free alternative: ask in a Claude session.</span></p></>}
+      </div>
+    );
+  };
   const [open, setOpen] = useState<string | null>(null);
   const [contact, setContact] = useState<string | null>(null);
   const [drill, setDrill] = useState<{ title: string; kind: Kind; rows: Row[] } | null>(null);
@@ -265,7 +281,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
 
   let view: React.ReactNode = null;
   if (tab === "accounts") {
-    view = <FilterTable unit="companies" title="Accounts" note="ICP = net revenue ≥ $250M and 100+ employees (stock listing not required). ✓ Verified: confirmed from an official source · ● Likely: your data / Seamless say ≥ $250M, not yet confirmed · ! Needs check: sources disagree about $250M · ? Unknown: no revenue figure yet · ✕ Not ICP: below $250M. Hover a status for the reason; select a row to open the account brief."
+    view = <FilterTable unit="companies" title="Accounts" empty={notFound} note="ICP = net revenue ≥ $250M and 100+ employees (stock listing not required). ✓ Verified: confirmed from an official source · ● Likely: your data / Seamless say ≥ $250M, not yet confirmed · ! Needs check: sources disagree about $250M · ? Unknown: no revenue figure yet · ✕ Not ICP: below $250M. Hover a status for the reason; select a row to open the account brief."
       rows={[...A].sort((a, b) => icpRank(a.icp_status) - icpRank(b.icp_status) || sigRank(a.s2p_signal_level) - sigRank(b.s2p_signal_level) || (bestRevenue(b).v || 0) - (bestRevenue(a).v || 0))}
       search={(a) => [a.company_name, a.industry, a.erp, a.existing_s2p_product, a.s2p_strong_signals].join(" ")}
       filters={[{ label: "ICP status", get: (a) => a.icp_status }, { label: "List", get: (a) => (a.lists || []).join(" + ") },
@@ -283,7 +299,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
       onRow={openRow} />;
   } else if (tab === "pipeline") {
     const ranked = A.filter((a) => inPipe(a, scores[a.id])).sort((a, b) => scores[b.id].rank - scores[a.id].rank);
-    view = <FilterTable unit="accounts" title="Ranked pipeline" tipW={pipe} note={<>
+    view = <FilterTable unit="accounts" title="Ranked pipeline" tipW={pipe} empty={notFound} note={<>
         <div className="pipe-rank-row">
           <div><b>Rank</b> — which account to work first: <b>{pipe.w_match}% × ICP Match + {pipe.w_opportunity}% × Opportunity + {pipe.w_fit}% × Coupa Fit</b>.</div>
           {ranked[0] && (() => { const t = ranked[0], sc = scores[t.id], p1 = sc.m.total * pipe.w_match / 100, p2 = sc.o.total * pipe.w_opportunity / 100, p3 = sc.f.total * pipe.w_fit / 100;

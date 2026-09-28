@@ -1,11 +1,16 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.68";
+export const APP_VERSION = "1.69";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.69", date: "2026-09-28", notes: "Geography in ICP Match follows the country tile you select; when a search finds nothing, a button offers to research that company in the selected country.",
+    changes: [
+      { what: "ICP Match's geography now follows the selected country tile (e.g. KSA), instead of the left panel's default UAE — KSA accounts went from 30–43% to 51–64%", where: "Pipeline and Accounts when a country other than UAE is selected", why: "Saudi accounts were marked down for not being in the UAE" },
+      { what: "When a search in Pipeline or Accounts finds nothing, you see why (e.g. it's in Accounts but not the Pipeline) or a 'Research \"name\" in Saudi Arabia →' button that opens the Research Queue pre-filled", where: "Pipeline and Accounts search", why: "The search box only filters accounts already in the app; this is the quick way to add a new one" },
+    ] },
   { version: "1.68", date: "2026-09-28", notes: "Logos back to the earlier size; the Rank live example sits beside the Rank definition.",
     changes: [
       { what: "Company logos back to the earlier, smaller size in every row", where: "Pipeline, Accounts and other tables", why: "The larger logos in tall rows didn't look good" },
