@@ -8,8 +8,9 @@ import { COUNTRIES } from "@/lib/countries";
 
 type Job = { id: string; region: string; count: number | "max"; mode: string; company_name?: string; website?: string; slug?: string; requested_by: string; requested_at: string; status: string; done_at?: string; result?: string };
 type Batch = { id: string; region: string; budget: number; available: number; planned_update: number; planned_new: number; spent: number; runs: number; running: number; at: string; requested_by: string; companies: string[] };
+type Pending = { id: string; name: string; website?: string; country: string; region: string; region_status: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; requested_at: string };
 type Summary = { pin?: { set: boolean; ask_super: boolean; set_by: string; set_at: string }; token_info: { created_at?: string; by?: string; hint?: string } | null; token?: string | null; jobs: Job[]; batches: Batch[]; carry: number; spentAll: number; spentMonth: number; balance: { amount?: number; as_of?: string; by?: string };
-  balanceLeft: number | null; est: { update: number; discovery: number; profile: number }; log?: { at: string; summary: string; verified: number; new_companies: string[] }[] };
+  balanceLeft: number | null; est: { update: number; discovery: number; profile: number }; log?: { at: string; summary: string; verified: number; new_companies: string[] }[]; pending?: Pending[] };
 
 /** Next daily run: 02:00 UTC = 6:00am Dubai. */
 const nextRun = () => { const n = new Date(), t = new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate(), 2, 0, 0)); if (t <= n) t.setUTCDate(t.getUTCDate() + 1);
@@ -105,6 +106,22 @@ export default function EngineSettings() {
           <div className="tablewrap"><table><thead><tr><th>When</th><th>Summary</th><th>Verified</th><th>New companies</th></tr></thead>
             <tbody>{s.log.slice(0, 10).map((e) => <tr key={e.at}><td className="muted">{new Date(e.at).toLocaleString()}</td><td className="wrap">{e.summary}</td><td>{e.verified}</td>
               <td className="wrap">{e.new_companies.join(", ") || "—"}</td></tr>)}</tbody></table></div></div>}
+
+        {s?.pending && s.pending.length > 0 && <div className="eng-card">
+          <div className="eng-head"><h3>Pending — waiting for region activation</h3><span className="tag unv">{s.pending.length}</span></div>
+          <p className="note">Each of these belongs to a region that isn&apos;t Active yet, so it hasn&apos;t been added as a live account. Activate the region in Define ICP, then click Add — or dismiss it.</p>
+          <div className="tablewrap"><table><thead><tr><th>Company</th><th>Region</th><th>Why</th><th>Requested</th><th></th></tr></thead>
+            <tbody>{s.pending.map((p) => <tr key={p.id}>
+              <td>{p.name}{p.website && <div className="muted">{p.website}</div>}</td>
+              <td>{p.region} <span className={`tag ${p.region_status === "active" ? "fact" : "unv"}`}>{p.region_status === "active" ? "Active" : p.region_status === "next" ? "Next phase" : "Paused"}</span></td>
+              <td className="wrap">{p.why_icp}</td>
+              <td className="muted">{new Date(p.requested_at).toLocaleString()}</td>
+              <td>{p.region_status === "active"
+                ? <button type="button" className="btn tiny" onClick={() => post({ action: "release_pending", id: p.id }, `${p.name} added.`)}>Add now</button>
+                : <a className="job-link" href="/icp">Activate {p.region} →</a>}
+                {" "}<button type="button" className="btn tiny ghost" onClick={async () => { if (await ask({ title: `Dismiss ${p.name}?`, tone: "danger", confirm: "Dismiss", points: ["It will not be added — you'd have to find it again later."] })) post({ action: "dismiss_pending", id: p.id }, `${p.name} dismissed.`); }}>Dismiss</button></td>
+            </tr>)}</tbody></table></div>
+        </div>}
 
         <div className="eng-card">
           <div className="eng-head"><h3>Scheduled session access</h3><span className={`tag ${s?.token_info ? "fact" : "unv"}`} title={s?.token_info ? "Last 4 characters of the current token — the app only stores its hash, not the full value. Check this matches the ENGINE_TOKEN you pasted into the cloud environment." : undefined}>{s?.token_info ? `Active · token ends in ${s.token_info.hint}` : "Not set up"}</span></div>

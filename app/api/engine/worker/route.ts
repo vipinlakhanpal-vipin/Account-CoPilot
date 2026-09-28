@@ -39,12 +39,14 @@ const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("queue"), region: z.string().default("UAE"), limit: z.number().int().min(1).max(200).default(50) }),
   z.object({ action: z.literal("submit"), results: z.array(Result).max(50) }),
   z.object({ action: z.literal("add_companies"), companies: z.array(NewCo).max(50) }),
+  z.object({ action: z.literal("hold_companies"), companies: z.array(NewCo).max(50) }),
   z.object({ action: z.literal("names") }),
   z.object({ action: z.literal("icp") }),
   z.object({ action: z.literal("watch"), slug: z.string().optional() }),
   z.object({ action: z.literal("log"), summary: z.string().max(1000), verified: z.number().int().min(0).default(0), new_companies: z.array(z.string()).max(100).default([]) }),
 ]);
 type Job = { id: string; status: string; started_at?: string; done_at?: string; result?: string };
+type PendingCo = { id: string; name: string; website?: string; country: string; region: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; watch?: boolean; requested_at: string };
 
 export async function POST(req: Request) {
   const db = supabaseAdmin();
@@ -126,10 +128,7 @@ export async function POST(req: Request) {
     const { data: have } = await db.from("companies").select("company_name,domain,profile");
     const day = now.slice(0, 10);
     const added: { slug: string; company_name: string }[] = [], skipped: { name: string; matches: string }[] = [];
-    // merged duplicates count as the account they were merged into
-    const pool = (have || []).flatMap((c) => [{ name: c.company_name as string, domain: (c.domain as string) || "" },
-      ...aliases(c).map((a) => ({ name: c.company_name as string, domain: a.domain, alias: a.name }))])
-      .flatMap((x) => ("alias" in x ? [{ name: x.alias as string, domain: x.domain, as: x.name }] : [{ ...x, as: x.name }]));
+    const pool = existingPool(have || []);
     for (const c of b.companies) {
       const hit = pool.find((x) => sameCompany(c.name, c.website, x.name, x.domain));
       if (hit) { skipped.push({ name: c.name, matches: hit.as }); continue; }
@@ -143,6 +142,25 @@ export async function POST(req: Request) {
     }
     invalidateAllData();
     return NextResponse.json({ added, skipped: skipped.length, skipped_detail: skipped });
+  }
+  if (b.action === "hold_companies") {
+    // A discovered/requested company whose real country's region isn't Active yet: keep it queued (not added as a live
+    // account) in settings.engine_pending until a Super Admin activates that region — surfaced as a banner in the app.
+    const { data: have } = await db.from("companies").select("company_name,domain,profile");
+    const pool = existingPool(have || []);
+    const st = await get<{ items: PendingCo[] }>(db, "engine_pending", { items: [] });
+    for (const p of st.items) pool.push({ name: p.name, domain: dom(p.website || ""), as: p.name });
+    const held: { name: string; region: string }[] = [], skipped: { name: string; matches: string }[] = [];
+    for (const c of b.companies) {
+      const hit = pool.find((x) => sameCompany(c.name, c.website, x.name, x.domain));
+      if (hit) { skipped.push({ name: c.name, matches: hit.as }); continue; }
+      const region = regionOf(c.country);
+      const item: PendingCo = { id: crypto.randomUUID().slice(0, 8), name: c.name, website: c.website, country: c.country, region, industry: c.industry,
+        hq_city: c.hq_city, why_icp: c.why_icp, source_url: c.source_url, watch: c.watch, requested_at: now };
+      st.items.unshift(item); held.push({ name: c.name, region }); pool.push({ name: c.name, domain: dom(c.website), as: c.name });
+    }
+    await put(db, "engine_pending", { items: st.items.slice(0, 200) });
+    return NextResponse.json({ held, skipped: skipped.length, skipped_detail: skipped });
   }
   // log → bell notification
   const l = await get<{ entries: unknown[] }>(db, "engine_log", { entries: [] });
@@ -158,6 +176,12 @@ function aliases(c: Record<string, unknown>): { name: string; domain: string }[]
   return Array.isArray(m) ? m.map((x: { name?: string; domain?: string; website?: string }) => ({ name: String(x.name || ""), domain: String(x.domain || x.website || "") })).filter((x) => x.name) : [];
 }
 const dom = (w: string) => String(w || "").toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
+/** Existing companies (and their merged aliases) as a flat {name,domain,as} pool for dedupe checks. */
+function existingPool(have: { company_name: string; domain?: string | null; profile?: Record<string, unknown> | null }[]) {
+  return have.flatMap((c) => [{ name: c.company_name, domain: c.domain || "" },
+    ...aliases(c as Record<string, unknown>).map((a) => ({ name: c.company_name, domain: a.domain, alias: a.name }))])
+    .flatMap((x) => ("alias" in x ? [{ name: x.alias as string, domain: x.domain, as: x.name }] : [{ ...x, as: x.name }]));
+}
 /** Domain label without TLD and generic suffixes: asgcgroup.com → asgc, alfaraagroup.com → alfaraa */
 const domRoot = (d: string) => dom(d).split(".")[0].replace(/(group|holding|holdings|intl|international|uae|me|global|co)$/g, "");
 const GENERIC = /\b(pjsc|psc|plc|llc|l l c|fze|fzco|fzc|group|groups|holding|holdings|company|companies|co|the|of|and|international|enterprises|general|contracting|construction|industrial|engineering|civil|trading|investment|investments|services|uae|emirates)\b/g;

@@ -4,6 +4,7 @@
 //   node scripts/engine_client.mjs queue <REGION> <LIMIT>              → writes data/verification/revenue_queue.json
 //   node scripts/engine_client.mjs submit [dir]                         → sends every result file in data/verification/revenue (default) not yet sent
 //   node scripts/engine_client.mjs add <file.json>                      → adds discovered companies (format: see scripts/add_companies.mjs)
+//   node scripts/engine_client.mjs hold <file.json>                     → queues a company whose real country's region isn't Active yet (same format as add); shown as a banner until a Super Admin activates that region
 //   node scripts/engine_client.mjs finish <id> done|error "<result>"
 //   node scripts/engine_client.mjs log "<summary>" <verified_count> "<new names;…>"
 import fs from "node:fs";
@@ -41,6 +42,12 @@ else if (cmd === "queue") {
   added.forEach((x) => console.log(`added ${x.company_name} (${x.slug})`));
   skipped_detail.forEach((x) => console.log(`SKIPPED ${x.name}: already in the app as "${x.matches}"`));
   console.log(`${added.length} added, ${skipped} already in the app${skipped ? " (find replacements so the day still adds 5)" : ""}`);
+} else if (cmd === "hold") {
+  const list = JSON.parse(fs.readFileSync(a || "data/verification/new_companies.json", "utf8"));
+  const { held, skipped, skipped_detail = [] } = await call({ action: "hold_companies", companies: list });
+  held.forEach((x) => console.log(`held ${x.name} — queued for ${x.region} (not Active yet)`));
+  skipped_detail.forEach((x) => console.log(`SKIPPED ${x.name}: already in the app or already held as "${x.matches}"`));
+  console.log(`${held.length} held, ${skipped} already in the app or already held`);
 } else if (cmd === "icp") {
   const j = await call({ action: "icp" });
   fs.mkdirSync("data/verification", { recursive: true });
@@ -61,4 +68,4 @@ else if (cmd === "queue") {
   console.log(`${companies.length} existing companies written to data/verification/existing_companies.json — do not propose any of these (or their group/subsidiary under another name)`);
 } else if (cmd === "finish") console.log(JSON.stringify(await call({ action: "finish", id: a, status: b === "error" ? "error" : "done", result: c || "", ...(process.argv[6] ? { slug: process.argv[6] } : {}) })));
 else if (cmd === "log") console.log(JSON.stringify(await call({ action: "log", summary: a || "", verified: Number(b) || 0, new_companies: String(c || "").split(";").map((x) => x.trim()).filter(Boolean) })));
-else console.log("usage: claim | icp | names | watch [slug] | queue <region> <limit> | submit [dir] | add <file> | finish <id> done|error <result> | log <summary> <verified> <names;…>");
+else console.log("usage: claim | icp | names | watch [slug] | queue <region> <limit> | submit [dir] | add <file> | hold <file> | finish <id> done|error <result> | log <summary> <verified> <names;…>");

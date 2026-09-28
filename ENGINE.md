@@ -35,10 +35,17 @@ If `null`, do step 4. `count: "max"` = as many as you can in this session (aim f
 - **both** — half verify, half discover.
 - **company** — one specific company the user asked for (`company_name`, optional `website`, `region`). Run `node scripts/engine_client.mjs names` and check
   whether it is already in the app (any spelling, acronym or domain). **If it is**: verify its revenue now (as in **verify**) and add it to the watch list with
-  `node scripts/engine_client.mjs watch <slug>`. **If not**: research it, write `data/verification/new_companies.json` with ONE entry and `"watch": true`
-  (country = the job's region), run `node scripts/engine_client.mjs add data/verification/new_companies.json`, then verify it using the returned slug.
-  Finish with `finish <id> done "<Company>: added|already in the app — <ICP status>, <revenue or 'no official figure yet'>" <slug>` (the slug makes a "View" link in the app). Add it even if it looks
-  below the ICP (the user asked for it); its status will say so.
+  `node scripts/engine_client.mjs watch <slug>`. **If not**: research it and determine its **real** country — never assume it's the job's `region` (that's only
+  where the request happened to be queued from). The domain's country-code TLD is a strong signal (`.ae` → UAE, `.sa` / `.com.sa` → KSA, `.qa` → Qatar, `.kw` → Kuwait,
+  `.om` → Oman, `.bh` → Bahrain, `.eg` → Egypt); otherwise use its HQ address, exchange listing or press coverage. Write `data/verification/new_companies.json` with
+  ONE entry, `"country"` set to the **real** country and `"watch": true`. Then check `data/verification/icp_rules.json`'s `active` list for that real region:
+  - **Region is Active** → run `node scripts/engine_client.mjs add data/verification/new_companies.json`, then verify it using the returned slug.
+  - **Region is Paused or Next phase** → do **not** add it yet. Run `node scripts/engine_client.mjs hold data/verification/new_companies.json` instead (same file format) —
+    this queues it in the app (Settings → a "Pending — waiting for region activation" card) without creating a live account, until a Super Admin activates that region.
+    Do not verify its revenue yet.
+  Finish with `finish <id> done "<Company>: added|held pending <region> activation|already in the app — <ICP status or 'queued until <region> is Active'>, <revenue or 'no official figure yet'>" <slug>`
+  (the slug makes a "View" link in the app; omit it for a held company — there is no account yet). Research and record it even if it looks below the ICP or its region is inactive
+  (the user asked for it); its status or hold note will say so.
 
 ## 3. Finish and notify
 `node scripts/engine_client.mjs finish <id> done "<N verified: X Verified, Y Likely, Z Needs check, W Not ICP; M new companies added>"`

@@ -3,8 +3,9 @@ import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { getAccess, canSeeRegion } from "@/lib/access";
 import { requirePaidApproval, pinSetting, savePin } from "@/lib/paidGuard";
-import { regionOf } from "@/lib/icpDefinition.mjs";
+import { regionOf, normalizeDefinition } from "@/lib/icpDefinition.mjs";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { invalidateAllData } from "@/lib/dataCache";
 import { createHash, randomBytes } from "node:crypto";
 
 // Engine control (Settings → Discovery & refresh engine).
@@ -20,6 +21,7 @@ type Job = { id: string; region: string; count: number | "max"; mode: "verify" |
   status: "queued" | "running" | "done" | "error"; done_at?: string; result?: string };
 type Batch = { id: string; region: string; update_count: number; new_count: number; budget: number; available: number; planned_update: number; planned_new: number;
   requested_by: string; at: string; companies: string[] };
+type PendingCo = { id: string; name: string; website?: string; country: string; region: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; watch?: boolean; requested_at: string };
 
 async function getSetting<T>(db: ReturnType<typeof supabaseAdmin>, key: string, fallback: T): Promise<T> {
   const { data } = await db.from("settings").select("value").eq("key", key).maybeSingle();
@@ -41,8 +43,11 @@ async function summary(db: ReturnType<typeof supabaseAdmin>) {
     return { ...b, spent: +rs.reduce((t, r) => t + cost(r), 0).toFixed(2), runs: rs.length, running: rs.filter((r) => r.status !== "done" && r.status !== "error").length }; });
   const carry = Math.max(0, +batches.reduce((t, b) => t + b.budget - b.spent, 0).toFixed(2));
   const spentSinceBalance = balance.as_of ? (runs || []).filter((r) => String(r.started_at) >= String(balance.as_of)).reduce((t, r) => t + cost(r), 0) : 0;
+  const pending = await getSetting<{ items: PendingCo[] }>(db, "engine_pending", { items: [] });
+  const icpDef = normalizeDefinition((await db.from("settings").select("value").eq("key", "icp_definition").maybeSingle()).data?.value);
+  const pendingWithStatus = pending.items.map((p) => ({ ...p, region_status: icpDef.regions[p.region]?.status || "paused" }));
   return { token_info: tk.hash ? { created_at: tk.created_at, by: tk.by, hint: tk.hint } : null, jobs: jobs.jobs, batches, carry, spentAll: +spentAll.toFixed(2), spentMonth: +spentMonth.toFixed(2), balance,
-    balanceLeft: balance.amount !== undefined ? +(balance.amount - spentSinceBalance).toFixed(2) : null, est: EST,
+    balanceLeft: balance.amount !== undefined ? +(balance.amount - spentSinceBalance).toFixed(2) : null, est: EST, pending: pendingWithStatus,
     pin: await pinSetting().then((p) => ({ set: !!p.hash, ask_super: !!p.ask_super, set_by: p.set_by || "", set_at: p.set_at || "" })) };
 }
 
@@ -63,6 +68,8 @@ const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("cancel"), id: z.string() }),
   z.object({ action: z.literal("token"), op: z.enum(["generate", "revoke"]) }),
   z.object({ action: z.literal("pin"), pin: z.string().regex(/^\d{6,12}$/).nullable(), ask_super: z.boolean() }),
+  z.object({ action: z.literal("release_pending"), id: z.string() }),
+  z.object({ action: z.literal("dismiss_pending"), id: z.string() }),
 ]);
 
 export async function POST(req: Request) {
@@ -102,6 +109,27 @@ export async function POST(req: Request) {
     const token = randomBytes(32).toString("hex");
     await setSetting(db, "engine_token", { hash: createHash("sha256").update(token).digest("hex"), created_at: now, by: user.email, hint: token.slice(-4) });
     return NextResponse.json({ ...(await summary(db)), token });
+  }
+  if (b.action === "release_pending" || b.action === "dismiss_pending") {
+    // A held company (its real region wasn't Active when found): add it now, or dismiss it. Region-activation gate
+    // only matters for "release" — dismiss always works so a stale/unwanted entry isn't stuck forever.
+    const st = await getSetting<{ items: PendingCo[] }>(db, "engine_pending", { items: [] });
+    const p = st.items.find((x) => x.id === b.id);
+    if (!p) return NextResponse.json({ error: "Not found — it may already have been added or dismissed." }, { status: 404 });
+    if (b.action === "release_pending") {
+      const icpDef = normalizeDefinition((await db.from("settings").select("value").eq("key", "icp_definition").maybeSingle()).data?.value);
+      if (icpDef.regions[p.region]?.status !== "active") return NextResponse.json({ error: `${p.region} is not Active yet — activate it in Define ICP first.` }, { status: 400 });
+      const slug = "cd-" + p.name.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
+      const row = { slug, company_name: p.name, country: p.country, company_website: p.website || null, domain: (p.website || "").toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0] || null,
+        hq_city: p.hq_city || null, industry: p.industry || null, research_channel: "Claude discovery", lists: ["Claude discovery"], icp_status: "Unknown",
+        account_notes: `Found by a scheduled Claude session, held until ${p.region} was activated: ${p.why_icp} Source: ${p.source_url}`,
+        profile: { "Claude discovery": { why: p.why_icp, source_url: p.source_url, via: "scheduled session (no API cost)" }, ...(p.watch ? { Watch: { since: now, reason: "requested in Settings" } } : {}) } };
+      const { error } = await db.from("companies").upsert([row], { onConflict: "slug", ignoreDuplicates: true });
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      invalidateAllData();
+    }
+    await setSetting(db, "engine_pending", { items: st.items.filter((x) => x.id !== b.id) });
+    return NextResponse.json(await summary(db));
   }
   if (b.action === "queue" || b.action === "cancel") {
     const st = await getSetting<{ jobs: Job[] }>(db, "engine_jobs", { jobs: [] });

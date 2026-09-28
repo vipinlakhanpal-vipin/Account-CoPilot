@@ -1,11 +1,18 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.80";
+export const APP_VERSION = "1.81";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.81", date: "2026-09-28", notes: "Fixed: a requested company is now tagged with its real country (not the region the request was queued from). If that real region isn't Active, it's held in a new 'Pending' list until you activate it, instead of being added under the wrong region.",
+    changes: [
+      { what: "A one-company request (Setup → Settings → Search companies → Add one specific company) is now tagged with the company's real country — found from its domain's country code and research — instead of whatever region you picked in the search box; a UAE search that turns up a Saudi company now correctly goes to KSA", where: "Setup → Settings → Search companies; the account page", why: "A Saudi company (baja.com.sa) was added as UAE because the old rule blindly copied the search box's region" },
+      { what: "New 'Pending — waiting for region activation' card: if a requested company's real region isn't Active yet, it's held here (not added as a live account) with an 'Activate <region> →' link to Define ICP, or 'Add now' once you've activated it; Dismiss removes one you don't want", where: "Setup → Settings → Discovery & refresh engine", why: "So a company is never silently added under the wrong, unintended region just because that's the only one running" },
+      { what: "New script scripts/audit_country_vs_domain.mjs flags any company whose stored country contradicts its domain's country-code TLD (read-only)", where: "Repository scripts", why: "A repeatable check for this exact class of mistake going forward" },
+      { what: "Corrected Baja Food Industries Company from UAE to KSA and recomputed its ICP status", where: "Behind the scenes (one-off data fix)", why: "It was added under the wrong region before this fix existed" },
+    ] },
   { version: "1.80", date: "2026-09-28", notes: "Scheduled session access: clearer token label and a Done button to close it; Contact tiers: matching light colour and centred alignment on both fields.",
     changes: [
       { what: "The active-token tag now reads 'Active · token ends in <4 chars>' with a hover tip explaining it's the last 4 characters of the current token (the app only stores its hash) — check it matches what you pasted into the cloud environment", where: "Setup → Settings → Scheduled session access", why: "The old '…ends …xxxx' wording read as a truncated value rather than an intentional fingerprint" },
