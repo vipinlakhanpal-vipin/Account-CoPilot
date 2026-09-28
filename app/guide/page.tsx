@@ -75,17 +75,32 @@ export default async function GuidePage() {
           <div className="guide-body">
 
             <section id="start" className="panel"><h2 className="attn">Get to know me — I&apos;m your Account CoPilot AI Agent (Autonomous)</h2>
-              <p><b>Account CoPilot</b> is an AI Agent that runs on its own every morning at 6am Dubai time. First I <b>find</b> new companies that could fit your Ideal Customer Profile (ICP), using public web search, annual reports, stock-exchange filings, company websites and supplier portals, reputable business press, job posts and Seamless.ai. Then I <b>verify</b> each company against your ICP: <b>revenue of $250M or more and at least 100 staff</b>, in the UAE first and then the wider Gulf. I trust official figures (annual reports, filings, company-quoted results) above estimates. Every fact is labelled FACT, LIKELY or UNVERIFIED and linked to its source, so you can always see why an account is Verified, Likely, Needs check or Not ICP.</p>
-              <p>Next I <b>check SCP&apos;s HubSpot</b> (read-only) to see which companies and contacts are already there, with their stage, owner and any deals. That way your team never imports a duplicate, and knows straight away whether an account is new, being worked or already a customer. Along the way I work smartly and keep costs down:
+              <p className="intro-box"><b>Account CoPilot</b> is an AI Agent that runs on its own every morning at 6am Dubai time. First I <b>find</b> new companies that could fit your Ideal Customer Profile (ICP), using public web search, annual reports, stock-exchange filings, company websites and supplier portals, reputable business press, job posts and Seamless.ai. I look for group headquarters only, and skip ministries and government bodies, single hotels, hospitals and schools, and local branches of foreign groups.</p>
+              <p className="intro-box">Then I <b>verify</b> each company against your ICP: <b>revenue of $250M or more and at least 100 staff</b>, in the UAE first and then the wider Gulf. I trust official figures (annual reports, filings, company-quoted results) above estimates. Every fact is labelled FACT, LIKELY or UNVERIFIED and linked to its source, so you can always see why an account is Verified, Likely, Needs check or Not ICP.</p>
+              <p className="intro-box"><b>One record per company.</b> Before I add anything, I read the full list of accounts already in the app. The app then double-checks every new name and website against it, catching:
                 <ul>
-                  <li>I only add a company once, and merge duplicates.</li>
+                  <li>spelling variants (&quot;Al Fara&apos;a&quot; vs &quot;Al Faraa&quot;)</li>
+                  <li>acronyms (&quot;ASGC&quot;)</li>
+                  <li>different websites for the same company (asgc.ae vs asgcgroup.com)</li>
+                  <li>a group vs its own subsidiary</li>
+                </ul>
+              A duplicate is never added; I find a genuinely new company instead. If a duplicate is found later, it is <b>merged</b> into one record:
+                <ul>
+                  <li>The original record is kept (your workbook first, then the earliest added), and none of its values are overwritten.</li>
+                  <li>Contacts, sources and signals move across, and only empty fields are filled in.</li>
+                  <li>The stronger revenue evidence wins (FACT, then LIKELY, then UNVERIFIED).</li>
+                  <li>The other name and website are kept as aliases, so the same company can never come back as &quot;new&quot;.</li>
+                </ul></p>
+              <p className="intro-box">Next I <b>check SCP&apos;s HubSpot</b> (read-only) to see which companies and contacts are already there, with their stage, owner and any deals. That way your team never imports a duplicate, and knows straight away whether an account is new, being worked or already a customer. HubSpot information stays inside this app.</p>
+              <p className="intro-box">Along the way I work smartly and keep costs down:
+                <ul>
                   <li>I never guess an email or phone number.</li>
                   <li>I keep conflicting information side by side instead of overwriting it.</li>
-                  <li>I re-check every account every 180 days.</li>
+                  <li>I re-check every account every 180 days, so growing companies move up.</li>
                   <li>I skip paywalls and logins.</li>
                   <li>I use only free sources unless you approve a paid refresh within your budget.</li>
                 </ul>
-              Accounts that qualify move into your <b>Pipeline</b>. Every account, whether Verified, Likely, Needs check or Not ICP, stays in <b>Accounts</b>, and the bell tells you what changed overnight.</p>
+              Accounts that qualify move into your <b>Pipeline</b>. Every account, whether Verified, Likely, Needs check or Not ICP, stays in <b>Accounts</b>. The bell tells you what changed overnight: the new companies added, any duplicates merged, and the ICP status of the 25 companies checked.</p>
 
               <h3>Daily 6AM Run Process</h3>
               <T head={["Step", "What happens"]} rows={[

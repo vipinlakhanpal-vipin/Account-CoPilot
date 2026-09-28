@@ -439,7 +439,7 @@ aside.brief.contact{width:min(760px,100%);z-index:70}
 .guide-body section#start{border-top-width:5px;background:linear-gradient(135deg,color-mix(in srgb, #2EC4A6 16%, var(--surface)) 0%,color-mix(in srgb, #3AA0FF 10%, var(--surface)) 55%,var(--surface) 100%);
   box-shadow:0 10px 30px color-mix(in srgb, #2EC4A6 12%, transparent)}
 .guide-body section#start h2{font-size:20px}
-.guide-body section#start > p:first-of-type{font-size:14px;line-height:1.6;background:color-mix(in srgb, var(--surface) 70%, transparent);border:1px solid color-mix(in srgb, #2EC4A6 30%, var(--line));border-radius:10px;padding:10px 12px}
+.guide-body section#start .intro-box{margin:0 0 10px;font-size:14px;line-height:1.6;background:color-mix(in srgb, var(--surface) 70%, transparent);border:1px solid color-mix(in srgb, #2EC4A6 30%, var(--line));border-radius:10px;padding:10px 12px}
 /* live check results as filled badges */
 .chk-ok,.chk-bad{white-space:normal}
 .chk-ok::before,.chk-bad::before{content:none}

@@ -86,6 +86,14 @@ This writes `profile["HubSpot"]` = {in_hubspot, hubspot_id, hubspot_name, record
 - **Settings → Discovery & refresh engine** (`components/EngineSettings.tsx`, `app/api/engine`). It stores its state in `settings`: `engine_jobs` (queued no-cost jobs), `engine_refresh` (paid batches: budget, planned counts) and `engine_balance` (the Console balance the user enters). Spend is the sum of `research_runs.stats.cost_usd`; every paid call is metered (`Meter` in `lib/research/engine.ts`). Carry-over = total budgets − total spent.
 - **Scheduled sessions** follow `ENGINE.md` and have NO database key. They use `scripts/engine_client.mjs` → `app/api/engine/worker`, authenticated by `ENGINE_TOKEN`. Only the token's SHA-256 is stored, in `settings.engine_token`; generate or revoke it in Settings. The worker can claim and finish jobs, read the queue, submit results, add companies and log notifications, and nothing else. The routine is `trig_01AeGrW9KXEgLXF6udy4tSm7` (daily 02:00 UTC = 6am Dubai, Sonnet 5). It runs on environment "Account CoPilot engine (token)" (`env_01ULPSCoxGFcwiTYsay38HzL`), clones the public repo itself (GitHub isn't connected) and needs an empty setup script. That environment needs `APP_URL` and `ENGINE_TOKEN` only (never put the Supabase secret key there). ICP rules live in `lib/icpStatus.mjs`, shared by the scripts and the app. `scripts/engine_jobs.mjs` and `scripts/add_companies.mjs` are local (DB-key) equivalents.
 
+## Duplicates & the Guide intro (v1.41–1.42)
+- **Discovery duplicate check:** `sameCompany()` in `app/api/engine/worker/route.ts` compares every discovered company with existing names, domains and merged aliases (spelling variants, acronyms, domain roots, group vs subsidiary). The routine runs `engine_client.mjs names` before searching.
+- **Merging (standing user approval, 2026-09-28):** the same entity must be one record. Run `node scripts/merge_companies.mjs <keep_slug> <drop_slug> "note"`, then `recompute_icp.mjs`.
+  - Keep the workbook record first, then the earliest added; fill only empty fields.
+  - Stronger revenue evidence wins.
+  - Aliases are stored in `profile["Merged companies"]`; the engine treats them as existing.
+- **Guide "Get to know me" intro** (`.intro-box` frames) must be updated in the same release whenever engine logic changes.
+
 ## Guide & Research more (v1.14)
 - `/guide` documents every feature, the point system and the engine steps. Update it whenever a feature or rule changes (the spend table reads `SPEND_BENCHMARKS` from `lib/icp.ts`).
 - **Research more** (left panel) → `app/api/discover` → `discoverCompanies()` in `lib/research/engine.ts`. It is paid and user-triggered with a confirmation: it adds companies as list "Claude discovery" and, optionally, runs a Quick research per company. `app/api/research` now sets ICP status from the researched revenue (same rule as recompute).

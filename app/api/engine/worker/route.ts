@@ -93,24 +93,28 @@ export async function POST(req: Request) {
   }
   if (b.action === "names") {
     // Existing company names and domains, so a session can skip them before searching (no contacts, nothing else)
-    const { data } = await db.from("companies").select("company_name,domain,country");
-    return NextResponse.json({ companies: (data || []).map((c) => ({ name: c.company_name, domain: c.domain || "", country: c.country || "" })) });
+    const { data } = await db.from("companies").select("company_name,domain,country,profile");
+    return NextResponse.json({ companies: (data || []).flatMap((c) => [{ name: c.company_name, domain: c.domain || "", country: c.country || "" },
+      ...aliases(c).map((a) => ({ ...a, country: c.country || "", merged_into: c.company_name }))]) });
   }
   if (b.action === "add_companies") {
-    const { data: have } = await db.from("companies").select("company_name,domain");
+    const { data: have } = await db.from("companies").select("company_name,domain,profile");
     const day = now.slice(0, 10);
     const added: { slug: string; company_name: string }[] = [], skipped: { name: string; matches: string }[] = [];
-    const pool = (have || []).map((c) => ({ name: c.company_name as string, domain: (c.domain as string) || "" }));
+    // merged duplicates count as the account they were merged into
+    const pool = (have || []).flatMap((c) => [{ name: c.company_name as string, domain: (c.domain as string) || "" },
+      ...aliases(c).map((a) => ({ name: c.company_name as string, domain: a.domain, alias: a.name }))])
+      .flatMap((x) => ("alias" in x ? [{ name: x.alias as string, domain: x.domain, as: x.name }] : [{ ...x, as: x.name }]));
     for (const c of b.companies) {
       const hit = pool.find((x) => sameCompany(c.name, c.website, x.name, x.domain));
-      if (hit) { skipped.push({ name: c.name, matches: hit.name }); continue; }
+      if (hit) { skipped.push({ name: c.name, matches: hit.as }); continue; }
       const row = {
         slug: "cd-" + c.name.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60), company_name: c.name, country: c.country,
         company_website: c.website || null, domain: dom(c.website) || null, hq_city: c.hq_city || null, industry: c.industry || null, research_channel: "Claude discovery",
         lists: ["Claude discovery"], icp_status: "Unknown", account_notes: `Found by a scheduled Claude session on ${day}: ${c.why_icp} Source: ${c.source_url}`,
         profile: { "Claude discovery": { why: c.why_icp, source_url: c.source_url, via: "scheduled session (no API cost)" } } };
       const { error } = await db.from("companies").upsert([row], { onConflict: "slug", ignoreDuplicates: true });
-      if (!error) { added.push({ slug: row.slug, company_name: row.company_name }); pool.push({ name: row.company_name, domain: row.domain || "" }); }
+      if (!error) { added.push({ slug: row.slug, company_name: row.company_name }); pool.push({ name: row.company_name, domain: row.domain || "", as: row.company_name }); }
     }
     invalidateAllData();
     return NextResponse.json({ added, skipped: skipped.length, skipped_detail: skipped });
@@ -123,6 +127,11 @@ export async function POST(req: Request) {
 }
 
 // ---- duplicate detection for discovered companies ----
+/** Names and domains of companies merged into this one (profile["Merged companies"]). */
+function aliases(c: Record<string, unknown>): { name: string; domain: string }[] {
+  const m = (c.profile as Record<string, unknown> | null)?.["Merged companies"];
+  return Array.isArray(m) ? m.map((x: { name?: string; domain?: string; website?: string }) => ({ name: String(x.name || ""), domain: String(x.domain || x.website || "") })).filter((x) => x.name) : [];
+}
 const dom = (w: string) => String(w || "").toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
 /** Domain label without TLD and generic suffixes: asgcgroup.com → asgc, alfaraagroup.com → alfaraa */
 const domRoot = (d: string) => dom(d).split(".")[0].replace(/(group|holding|holdings|intl|international|uae|me|global|co)$/g, "");
