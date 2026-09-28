@@ -1,11 +1,16 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.49";
+export const APP_VERSION = "1.50";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.50", date: "2026-09-28", notes: "Define ICP: region status offers only the moves that make sense — Active: 'Pause the daily run'; Paused: 'Make … Active' (and 'Mark as next phase' only with no accounts); Next phase: 'Make … Active' or 'Pause'.",
+    changes: [
+      { what: "Clearer status buttons: an Active region shows one button, 'Pause the daily run', with what happens; 'Next phase' is offered only for regions with no accounts yet", where: "Setup → Define ICP → 1 · Region & daily run", why: "'Change to Next phase' made no sense for a live market like UAE and caused confusion" },
+      { what: "Every status button says its outcome, and a note reminds you it takes effect when you click Save & apply", where: "Setup → Define ICP → 1 · Region & daily run", why: "So nobody wonders what a click will do" },
+    ] },
   { version: "1.49", date: "2026-09-28", notes: "Define ICP: settings 2–9 are open only for an Active region. Paused and Next-phase regions show them greyed out and locked, with 'Make … Active' or 'Edit rules without starting the daily run'.",
     changes: [
       { what: "Settings 2–9 (size, type, industries, never add, evidence, pipeline, personas, notes) can be edited only when the selected region is Active; for Paused and Next-phase regions they are greyed out and locked", where: "Setup → Define ICP", why: "Editing a region that isn't running was confusing" },

@@ -44,8 +44,17 @@ const STATUS_CHOICES: { key: Rules["status"]; title: string; what: string; outco
   { key: "next", title: "Next phase", what: "A planned market, not started.",
     outcome: "Nothing runs. Its settings are locked; make it Active to start, or unlock them to prepare the rules in advance." },
 ];
-function StatusChoice({ region, value, onChange }: { region: string; value: Rules["status"]; onChange: (v: Rules["status"]) => void }) {
+/** Only the moves that make sense from the current status: Active → pause; Paused → make Active (or Next phase if it has no accounts); Next phase → make Active or pause. */
+function StatusChoice({ region, value, accounts, onChange }: { region: string; value: Rules["status"]; accounts: number; onChange: (v: Rules["status"]) => void }) {
   const cur = STATUS_CHOICES.find((c) => c.key === value)!;
+  const moves: { to: Rules["status"]; label: string; outcome: string }[] =
+    value === "active" ? [{ to: "paused", label: "Pause the daily run", outcome: `No new ${region} companies or daily checks; the ${accounts.toLocaleString()} accounts here keep their status. Make it Active again any time.` }]
+    : value === "paused" ? [
+      { to: "active", label: `Make ${region} Active`, outcome: "Starts the daily 6am run with the numbers below and unlocks the settings." },
+      ...(accounts ? [] : [{ to: "next" as const, label: "Mark as next phase", outcome: "A planned market with no accounts yet; nothing runs." }]) ]
+    : [
+      { to: "active", label: `Make ${region} Active`, outcome: "Starts the daily 6am run with the numbers below and unlocks the settings." },
+      { to: "paused", label: "Pause", outcome: "Rules apply to any accounts added by hand; still no daily run." } ];
   return (
     <div className="icp-status">
       <div className={`icp-status-now r-${cur.key}`}>
@@ -54,12 +63,12 @@ function StatusChoice({ region, value, onChange }: { region: string; value: Rule
         <span className="o">{cur.outcome}</span>
       </div>
       <div className="icp-status-change">
-        <span className="lbl">Change to:</span>
-        {STATUS_CHOICES.filter((c) => c.key !== value).map((c) => (
-          <button type="button" key={c.key} className={`icp-status-btn r-${c.key}`} onClick={() => onChange(c.key)} title={c.outcome}>
-            <span className={`dot s-${c.key}`} />{c.title}<small>{c.what}</small>
+        {moves.map((m) => (
+          <button type="button" key={m.to} className={`icp-status-btn r-${m.to}`} onClick={() => onChange(m.to)}>
+            <span className={`dot s-${m.to}`} />{m.label}<small>{m.outcome}</small>
           </button>
         ))}
+        <span className="icp-hint">Takes effect when you click Save &amp; apply.</span>
       </div>
     </div>
   );
@@ -137,7 +146,7 @@ export default function IcpEditor({ initial, counts }: { initial: Definition; co
         <section className="panel icp-card">
           <h3>1 · Region & daily run <Uses items={["Daily run"]} /></h3>
           <p className="icp-explain">Controls only the daily 6am run for <b>{region}</b>. Its rules below apply whatever you choose.</p>
-          <StatusChoice region={region} value={r.status} onChange={(v) => set((x) => { x.status = v; if (v === "active" && !x.engine.discover_per_day && !x.engine.verify_per_day) x.engine = { discover_per_day: 5, verify_per_day: 25 }; })} />
+          <StatusChoice region={region} value={r.status} accounts={counts[region] || 0} onChange={(v) => set((x) => { x.status = v; if (v === "active" && !x.engine.discover_per_day && !x.engine.verify_per_day) x.engine = { discover_per_day: 5, verify_per_day: 25 }; })} />
           <div className={`icp-daily${r.status === "active" ? "" : " off"}`}>
             <div className="icp-row">
               <Num label="New companies to find per day" value={r.engine.discover_per_day} onChange={(v) => set((x) => { x.engine.discover_per_day = v || 0; })} help="Added to Accounts each morning (0–50)." />
