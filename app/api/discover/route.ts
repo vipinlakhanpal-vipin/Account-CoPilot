@@ -2,6 +2,7 @@ import { NextResponse, after } from "next/server";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { getAccess, canSeeRegion } from "@/lib/access";
+import { requirePaidApproval } from "@/lib/paidGuard";
 import { regionOf } from "@/lib/icpDefinition.mjs";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { invalidateAllData } from "@/lib/dataCache";
@@ -21,6 +22,7 @@ export async function POST(req: Request) {
   const parsed = Body.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) return NextResponse.json({ error: "Invalid discovery request." }, { status: 400 });
   const b = parsed.data;
+  const blocked = await requirePaidApproval(req, user); if (blocked) return blocked; // paid-actions PIN
   if (!canSeeRegion(await getAccess(user), regionOf(b.country))) return NextResponse.json({ error: "You can only research companies in your own region." }, { status: 403 });
   const db = supabaseAdmin();
   const { data: have } = await db.from("companies").select("company_name,domain");

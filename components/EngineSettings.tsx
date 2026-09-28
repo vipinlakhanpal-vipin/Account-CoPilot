@@ -1,12 +1,12 @@
 "use client";
-import { ask } from "@/components/Confirm";
+import { ask, paidFetch } from "@/components/Confirm";
 import { useEffect, useState } from "react";
 import CostNote from "@/components/CostNote";
 import { COUNTRIES } from "@/lib/countries";
 
 type Job = { id: string; region: string; count: number | "max"; mode: string; requested_by: string; requested_at: string; status: string; done_at?: string; result?: string };
 type Batch = { id: string; region: string; budget: number; available: number; planned_update: number; planned_new: number; spent: number; runs: number; running: number; at: string; requested_by: string; companies: string[] };
-type Summary = { token_info: { created_at?: string; by?: string; hint?: string } | null; token?: string | null; jobs: Job[]; batches: Batch[]; carry: number; spentAll: number; spentMonth: number; balance: { amount?: number; as_of?: string; by?: string };
+type Summary = { pin?: { set: boolean; ask_super: boolean; set_by: string; set_at: string }; token_info: { created_at?: string; by?: string; hint?: string } | null; token?: string | null; jobs: Job[]; batches: Batch[]; carry: number; spentAll: number; spentMonth: number; balance: { amount?: number; as_of?: string; by?: string };
   balanceLeft: number | null; est: { update: number; discovery: number; profile: number }; log?: { at: string; summary: string; verified: number; new_companies: string[] }[] };
 
 const MODE: Record<string, string> = { verify: "Verify existing companies", discover: "Find new companies", both: "Verify existing + find new" };
@@ -18,12 +18,18 @@ export default function EngineSettings() {
   const [msg, setMsg] = useState("");
   const [q, setQ] = useState({ region: "UAE", count: "50", mode: "verify" });
   const [r, setR] = useState({ region: "UAE", update: 10, fresh: 5, budget: 20 });
+  const [pinNew, setPinNew] = useState("");
+  const [askSuper, setAskSuper] = useState(false);
+  const pinAsk = (s as { pin?: { ask_super?: boolean } } | null)?.pin?.ask_super;
+  useEffect(() => { if (pinAsk !== undefined) setAskSuper(!!pinAsk); }, [pinAsk]);
   const [bal, setBal] = useState("");
   const [newToken, setNewToken] = useState("");
   const load = () => fetch("/api/engine").then((x) => (x.ok ? x.json() : null)).then((j) => j && setS(j)).catch(() => {});
   useEffect(() => { load(); const t = setInterval(load, 30000); return () => clearInterval(t); }, []);
   const post = async (body: unknown, ok: string) => {
-    const res = await fetch("/api/engine", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const init = { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
+    // A paid Refresh needs the paid-actions PIN (asked in the app when required).
+    const res = (body as { action?: string }).action === "refresh" ? await paidFetch("/api/engine", init, "A paid Refresh") : await fetch("/api/engine", init);
     const j = await res.json().catch(() => ({}));
     if (res.ok) { setS(j); setMsg(ok); if (j.token !== undefined) setNewToken(j.token || ""); } else setMsg(j.error || "Something went wrong.");
   };
@@ -76,6 +82,17 @@ export default function EngineSettings() {
         <div className="eng-card paid">
           <div className="eng-head"><h3>2 · Paid refresh — uses your Anthropic API credit</h3><CostNote cost="you set the budget below" /></div>
           <p className="note">One place for paid work: <b>A</b> shows how much API credit you have and have spent; <b>B</b> spends part of it on a refresh now. The daily 6am run and section 1 are free and don&apos;t touch this credit.</p>
+          <div className={`eng-sub pin${s?.pin?.set ? "" : " off"}`}><h4>🔒 Paid-actions PIN {s?.pin?.set ? <span className="tag fact">On</span> : <span className="tag unv">Not set — only Super Admins can run paid actions</span>}</h4>
+            <p className="note">Every action that costs money (Research more, Draft pitch plan, Research Queue, Research again, this Refresh) asks for this PIN in the app before anything is spent.
+              Standard users are always asked{s?.pin?.ask_super ? "; Super Admins are asked too" : "; Super Admins are not asked unless you tick the box"}. Share it only with people allowed to spend.
+              Use a new number, not your sign-in password.{s?.pin?.set_at && ` Last changed ${new Date(s.pin.set_at).toLocaleString()} by ${s.pin.set_by}.`}</p>
+            <div className="eng-form">
+              <label>{s?.pin?.set ? "New PIN (6–12 digits)" : "Set a PIN (6–12 digits)"}<input type="password" inputMode="numeric" autoComplete="new-password" value={pinNew} onChange={(e) => setPinNew(e.target.value.replace(/\D/g, "").slice(0, 12))} placeholder="••••••" /></label>
+              <label className="chk"><input type="checkbox" checked={askSuper} onChange={(e) => setAskSuper(e.target.checked)} /> Ask Super Admins too (protects against my own accidental clicks)</label>
+              <button type="button" className="btn primary" disabled={(pinNew.length > 0 && pinNew.length < 6) || (!pinNew && askSuper === !!s?.pin?.ask_super)}
+                onClick={() => { post({ action: "pin", pin: pinNew || null, ask_super: askSuper }, pinNew ? "Paid-actions PIN saved." : "Setting saved."); setPinNew(""); }}>{pinNew ? "Save PIN" : "Save setting"}</button>
+            </div>
+          </div>
           <div className="eng-sub"><h4>A · Your API credit — check it first</h4>
           <div className="eng-stats">
             <div><small>Spent this month (measured)</small><b>{s ? money(s.spentMonth) : "…"}</b></div>

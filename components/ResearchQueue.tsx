@@ -1,5 +1,6 @@
 "use client";
 import CostNote from "@/components/CostNote";
+import { paidFetch } from "@/components/Confirm";
 import { useEffect, useState } from "react";
 
 type Run = { id: string; query: string; depth: string; status: string; error?: string; stats?: Record<string, unknown>; started_at: string; finished_at?: string; requested_by?: string };
@@ -40,7 +41,7 @@ export default function ResearchQueue() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setMsg("Starting research…");
-    const r = await fetch("/api/research", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ company, country, depth, roles }) });
+    const r = await paidFetch("/api/research", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ company, country, depth, roles }) }, "Researching a company");
     const j = await r.json().catch(() => ({}));
     if (r.ok) { setMsg(`Research started for ${company}. It usually takes 2–5 minutes; the status below updates automatically.`); setCompany(""); load(); }
     else setMsg(j.error || "Could not start research.");

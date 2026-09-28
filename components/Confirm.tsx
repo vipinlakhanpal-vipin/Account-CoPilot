@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 
 // In-app confirmation window (replaces the browser's confirm pop-up). Usage: if (!(await ask({ title, points, confirm }))) return;
-export type AskOptions = { title: string; body?: string; points?: string[]; confirm?: string; cancel?: string; tone?: "primary" | "danger" | "cost"; cost?: string };
+export type AskOptions = { title: string; body?: string; points?: string[]; confirm?: string; cancel?: string; tone?: "primary" | "danger" | "cost"; cost?: string; pin?: boolean; error?: string };
 let opener: ((o: AskOptions) => Promise<boolean>) | null = null;
 export function ask(o: AskOptions): Promise<boolean> {
   return opener ? opener(o) : Promise.resolve(window.confirm([o.title, o.body, ...(o.points || [])].filter(Boolean).join("\n\n")));
@@ -12,10 +12,36 @@ export function ask(o: AskOptions): Promise<boolean> {
 let notifier: ((text: string, tone: "ok" | "error") => void) | null = null;
 export function notify(text: string, tone: "ok" | "error" = "ok") { notifier?.(text, tone); }
 
+/** Asks for the paid-actions PIN in an in-app window; null when cancelled. */
+let pinOpener: ((o: AskOptions) => Promise<string | null>) | null = null;
+export function askPin(o: Partial<AskOptions> = {}): Promise<string | null> {
+  return pinOpener ? pinOpener({ title: "Enter the paid-actions PIN", tone: "cost", confirm: "Continue", ...o, pin: true }) : Promise.resolve(null);
+}
+/** fetch() for actions that call the Anthropic API: if the server asks for the paid-actions PIN, ask for it in the app and retry. */
+export async function paidFetch(url: string, init: RequestInit, what = "This action"): Promise<Response> {
+  let pin = "", error = "";
+  for (;;) {
+    const res = await fetch(url, { ...init, headers: { ...(init.headers as Record<string, string>), ...(pin ? { "x-paid-pin": pin } : {}) } });
+    if (res.status !== 403 && res.status !== 429) return res;
+    const j = await res.clone().json().catch(() => ({}));
+    if (!j.needPin || res.status === 429) { notify(j.error || "Not allowed.", "error"); return res; }
+    const entered = await askPin({ body: `${what} uses the Anthropic API and costs money, so it needs the paid-actions PIN set by your Super Admin.`, error: pin ? j.error : error || undefined });
+    if (entered === null) return res;
+    pin = entered; error = j.error;
+  }
+}
+
 /** Mounted once in the root layout. */
 export default function ConfirmHost() {
   const [cur, setCur] = useState<(AskOptions & { resolve: (v: boolean) => void }) | null>(null);
   const okRef = useRef<HTMLButtonElement>(null);
+  const pinRef = useRef<HTMLInputElement>(null);
+  const [pinVal, setPinVal] = useState("");
+  const [pinCur, setPinCur] = useState<(AskOptions & { resolve: (v: string | null) => void }) | null>(null);
+  useEffect(() => {
+    pinOpener = (o) => new Promise<string | null>((resolve) => { setPinVal(""); setPinCur({ ...o, resolve }); });
+    return () => { pinOpener = null; };
+  }, []);
   const [toast, setToast] = useState<{ text: string; tone: "ok" | "error" } | null>(null);
   useEffect(() => {
     let t: ReturnType<typeof setTimeout> | undefined;
@@ -37,9 +63,29 @@ export default function ConfirmHost() {
   const toastEl = toast && (
     <div className={`app-toast ${toast.tone}`} role="status" aria-live="polite"><span>{toast.tone === "ok" ? "✓" : "!"}</span>{toast.text}
       <button type="button" aria-label="Close" onClick={() => setToast(null)}>×</button></div>);
-  if (!cur) return toastEl || null;
+  const pinEl = pinCur && (
+    <div className="wn-backdrop" onClick={() => { pinCur.resolve(null); setPinCur(null); }}>
+      <form className="wn ask ask-cost" role="dialog" aria-modal="true" aria-labelledby="pin-title" onClick={(e) => e.stopPropagation()}
+        onSubmit={(e) => { e.preventDefault(); if (pinVal.trim()) { pinCur.resolve(pinVal.trim()); setPinCur(null); } }}>
+        <div className="wn-head">
+          <div><p className="wn-kicker">Uses the Anthropic API</p><h2 id="pin-title">{pinCur.title}</h2></div>
+          <button type="button" className="wn-close" onClick={() => { pinCur.resolve(null); setPinCur(null); }} aria-label="Close">×</button>
+        </div>
+        <div className="wn-body ask-body">
+          {pinCur.body && <p>{pinCur.body}</p>}
+          <label className="pin-field">Paid-actions PIN
+            <input ref={pinRef} autoFocus type="password" inputMode="numeric" autoComplete="off" value={pinVal} onChange={(e) => setPinVal(e.target.value)} placeholder="••••••" /></label>
+          {pinCur.error && <p className="pin-error">{pinCur.error}</p>}
+          <p className="note">Nothing is spent unless the PIN is correct. Ask your Super Admin if you don&apos;t have it.</p>
+        </div>
+        <div className="wn-foot"><span /><span className="wn-actions">
+          <button type="button" className="btn" onClick={() => { pinCur.resolve(null); setPinCur(null); }}>Cancel</button>
+          <button type="submit" className="btn primary" disabled={!pinVal.trim()}>{pinCur.confirm || "Continue"}</button></span></div>
+      </form>
+    </div>);
+  if (!cur) return (toastEl || pinEl) ? <>{toastEl}{pinEl}</> : null;
   const tone = cur.tone || "primary";
-  return (<>{toastEl}
+  return (<>{toastEl}{pinEl}
     <div className="wn-backdrop" onClick={() => done(false)}>
       <div className={`wn ask ask-${tone}`} role="alertdialog" aria-modal="true" aria-labelledby="ask-title" onClick={(e) => e.stopPropagation()}>
         <div className="wn-head">

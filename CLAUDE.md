@@ -99,6 +99,13 @@ This writes `profile["HubSpot"]` = {in_hubspot, hubspot_id, hubspot_name, record
   - Aliases are stored in `profile["Merged companies"]`; the engine treats them as existing.
 - **Guide "Get to know me" intro** (`.intro-box` frames) must be updated in the same release whenever engine logic changes.
 
+## Paid-actions PIN (v1.58)
+Every Anthropic-API route (`/api/research`, `/api/discover`, `/api/pitch`, and `/api/engine` refresh) calls `requirePaidApproval()` in `lib/paidGuard.ts` first.
+- **Storage:** the PIN is a salted scrypt hash in `settings.paid_pin`, set by a Super Admin in Settings.
+- **Who is asked:** Standard users always; Super Admins only when `ask_super` is on. With no PIN set, only Super Admins can spend.
+- **Client:** uses `paidFetch()` from `components/Confirm.tsx`, which asks for the PIN in-app and retries with the `x-paid-pin` header. The engine refresh forwards that header to the research and discovery calls it starts.
+- **Any new paid action** must use both the guard and `paidFetch`.
+
 ## Guide & Research more (v1.14)
 - `/guide` documents every feature, the point system and the engine steps. Update it whenever a feature or rule changes (the spend table reads `SPEND_BENCHMARKS` from `lib/icp.ts`).
 - **Research more** (left panel) → `app/api/discover` → `discoverCompanies()` in `lib/research/engine.ts`. It is paid and user-triggered with a confirmation: it adds companies as list "Claude discovery" and, optionally, runs a Quick research per company. `app/api/research` now sets ICP status from the researched revenue (same rule as recompute).

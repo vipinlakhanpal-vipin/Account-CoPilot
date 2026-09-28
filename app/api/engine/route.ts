@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { getAccess, canSeeRegion } from "@/lib/access";
+import { requirePaidApproval, pinSetting, savePin } from "@/lib/paidGuard";
 import { regionOf } from "@/lib/icpDefinition.mjs";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { createHash, randomBytes } from "node:crypto";
@@ -41,7 +42,8 @@ async function summary(db: ReturnType<typeof supabaseAdmin>) {
   const carry = Math.max(0, +batches.reduce((t, b) => t + b.budget - b.spent, 0).toFixed(2));
   const spentSinceBalance = balance.as_of ? (runs || []).filter((r) => String(r.started_at) >= String(balance.as_of)).reduce((t, r) => t + cost(r), 0) : 0;
   return { token_info: tk.hash ? { created_at: tk.created_at, by: tk.by, hint: tk.hint } : null, jobs: jobs.jobs, batches, carry, spentAll: +spentAll.toFixed(2), spentMonth: +spentMonth.toFixed(2), balance,
-    balanceLeft: balance.amount !== undefined ? +(balance.amount - spentSinceBalance).toFixed(2) : null, est: EST };
+    balanceLeft: balance.amount !== undefined ? +(balance.amount - spentSinceBalance).toFixed(2) : null, est: EST,
+    pin: await pinSetting().then((p) => ({ set: !!p.hash, ask_super: !!p.ask_super, set_by: p.set_by || "", set_at: p.set_at || "" })) };
 }
 
 export async function GET(req: Request) {
@@ -59,6 +61,7 @@ const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("balance"), amount: z.number().min(0).max(100000) }),
   z.object({ action: z.literal("cancel"), id: z.string() }),
   z.object({ action: z.literal("token"), op: z.enum(["generate", "revoke"]) }),
+  z.object({ action: z.literal("pin"), pin: z.string().regex(/^\d{6,12}$/).nullable(), ask_super: z.boolean() }),
 ]);
 
 export async function POST(req: Request) {
@@ -67,6 +70,12 @@ export async function POST(req: Request) {
   const parsed = Body.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   const b = parsed.data, db = supabaseAdmin(), now = new Date().toISOString(), id = crypto.randomUUID().slice(0, 8);
+  if (b.action === "pin") { // Super Admin only (checked below): set / change the paid-actions PIN
+    if (!(await getAccess(user)).isSuper) return NextResponse.json({ error: "Only a Super Admin can set the paid-actions PIN." }, { status: 403 });
+    await savePin(b.pin, b.ask_super, user.email || "");
+    return NextResponse.json({ ...(await summary(db)), message: b.pin ? "Paid-actions PIN saved." : "Setting saved." });
+  }
+  if (b.action === "refresh") { const blocked = await requirePaidApproval(req, user); if (blocked) return blocked; } // paid-actions PIN
   // Super Admin: everything. Standard user: only queue jobs / refresh in their own region (no token, no balance).
   const access = await getAccess(user);
   if (!access.isSuper) {
@@ -103,7 +112,7 @@ export async function POST(req: Request) {
       requested_by: user.email || "", at: now, companies: (targets || []).map((t) => t.company_name) };
     const st = await getSetting<{ batches: Batch[] }>(db, "engine_refresh", { batches: [] });
     await setSetting(db, "engine_refresh", { batches: [batch, ...st.batches].slice(0, 100) });
-    const cookie = req.headers.get("cookie") || "", origin = new URL(req.url).origin, h = { "Content-Type": "application/json", cookie };
+    const cookie = req.headers.get("cookie") || "", origin = new URL(req.url).origin, h = { "Content-Type": "application/json", cookie, "x-paid-pin": req.headers.get("x-paid-pin") || "" };
     // Each research / discovery runs in its own function invocation (they return immediately and work in the background).
     await Promise.all([
       ...(targets || []).map((t) => fetch(`${origin}/api/research`, { method: "POST", headers: h, body: JSON.stringify({ company: t.company_name, country: t.country, depth: "quick", companyId: t.id, batchId: id }) }).catch(() => null)),

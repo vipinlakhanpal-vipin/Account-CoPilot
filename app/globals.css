@@ -693,3 +693,9 @@ td.logo-cell{width:40px;padding-top:0;padding-bottom:0;text-align:center}
 .eng-sub{margin:10px 0 14px;padding:12px 14px;border-radius:12px;border:1px solid color-mix(in srgb, #2ECC8F 35%, transparent);background:color-mix(in srgb, #2ECC8F 7%, var(--surface))}
 .eng-sub h4,.eng-sub-h{margin:0 0 8px;font:700 14.5px var(--body);color:var(--text-strong)}
 .eng-sub-h{margin-top:6px}
+.pin-field{display:flex;flex-direction:column;gap:6px;font:600 13px var(--body);margin:8px 0}
+.pin-field input{font:700 20px var(--mono, var(--body));letter-spacing:.3em;padding:10px 12px;border-radius:10px;border:1px solid rgba(var(--ink),.2);background:var(--bg);color:var(--text-strong)}
+.pin-error{color:#E06C75;font-weight:600;margin:4px 0}
+.eng-sub.pin{border-color:color-mix(in srgb, #5B4BC4 40%, transparent);background:color-mix(in srgb, #5B4BC4 8%, var(--surface))}
+.eng-sub.pin.off{border-color:color-mix(in srgb, #E0A21B 50%, transparent);background:color-mix(in srgb, #E0A21B 10%, var(--surface))}
+.eng-form label.chk{flex-direction:row;align-items:center;gap:8px;font-weight:500}

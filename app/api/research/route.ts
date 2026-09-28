@@ -4,6 +4,7 @@ import { NextResponse, after } from "next/server";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { getAccess, canSeeCountry } from "@/lib/access";
+import { requirePaidApproval } from "@/lib/paidGuard";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { invalidateAllData } from "@/lib/dataCache";
 import { researchNotes, extract, newMeter, meterCost, type Depth } from "@/lib/research/engine";
@@ -27,6 +28,7 @@ export async function POST(req: Request) {
   const parsed = Body.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) return NextResponse.json({ error: "Enter a company name." }, { status: 400 });
   const b = parsed.data;
+  const blocked = await requirePaidApproval(req, user); if (blocked) return blocked; // paid-actions PIN
   const db = supabaseAdmin();
   const access = await getAccess(user);
   const target = b.companyId ? (await db.from("companies").select("country").eq("id", b.companyId).maybeSingle()).data : null;

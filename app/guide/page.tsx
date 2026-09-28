@@ -312,6 +312,7 @@ export default async function GuidePage() {
               <p className="note">Scheduled sessions follow ENGINE.md in the repository and need GitHub connected to Claude plus the Supabase keys set in the routine's environment.</p></section>
 
             <section id="costs" className="panel"><h2>Costs</h2>
+              <p className="note"><b>Paid-actions PIN:</b> every action that costs money asks for a PIN in the app before anything is spent: Research more, Draft pitch plan, Research Queue, Research again and the paid Refresh. A Super Admin sets the PIN in Setup → Settings → 2 · Paid refresh. Standard users are always asked; Super Admins only if they choose. Without the right PIN the server refuses and nothing is charged.</p>
               <p>Browsing, filtering, scoring, Learn Me and Excel export are always free. Only actions marked with the amber <b>Cost impact</b> note use the Anthropic API. The daily 6am engine uses your Claude plan, not the API.</p>
               <T head={["Action", "Where", "Uses the API?", "Typical cost", "Example"]} rows={[
                 ["Browse, filter, scores, Pipeline, Guide", "Everywhere", "No", "$0", "Open the Pipeline, filter by Coupa, read a brief — free"],

@@ -1,11 +1,16 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.57";
+export const APP_VERSION = "1.58";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.58", date: "2026-09-28", notes: "Paid-actions PIN: anything that costs Anthropic API money asks for a PIN in the app first; set by a Super Admin, checked on the server.",
+    changes: [
+      { what: "Paid-actions PIN: Research more, Draft pitch plan, Research Queue, Research again and the paid Refresh ask for a PIN in an in-app window before anything is spent; a wrong PIN spends nothing, and 5 wrong tries lock it for 15 minutes", where: "Any paid button (amber Cost impact note)", why: "So colleagues can use the app without accidentally spending your API credit" },
+      { what: "Set or change the PIN, and choose whether Super Admins are asked too", where: "Setup → Settings → 2 · Paid refresh → Paid-actions PIN", why: "You decide who can spend; until a PIN is set, only Super Admins can run paid actions" },
+    ] },
   { version: "1.57", date: "2026-09-28", notes: "Define ICP now drives the scores: focus platforms, ERP of interest and buying triggers change Opportunity and Coupa Fit (and so the Pipeline); buyer personas rank Stakeholders, the Contact List and guide research. Settings: Refresh and API spend & balance merged into one Paid refresh section, credit first.",
     changes: [
       { what: "Buying triggers and ERP of interest add to the Opportunity score (up to 20 and 10 points) when an account shows them; focus platforms add to Coupa Fit (up to 20). Hover a score to see 'Your buying triggers', 'Your ERP of interest' or 'Your platform focus'", where: "Accounts → Pipeline (rank), account page scores", why: "What you choose in Define ICP should visibly change which accounts come first" },

@@ -1,5 +1,5 @@
 "use client";
-import { ask } from "@/components/Confirm";
+import { ask, paidFetch } from "@/components/Confirm";
 import { rulesFor, regionOf } from "@/lib/icpDefinition.mjs";
 import { personaFit } from "@/lib/icp";
 import CostNote from "@/components/CostNote";
@@ -224,7 +224,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
       k.erp.length && `ERP: ${k.erp.join(", ")}`, k.procurement.length && `Procurement platform: ${k.procurement.join(", ")}`,
       k.triggers.length && `Business triggers: ${k.triggers.join(", ")}`, k.hq && `HQ: ${k.hq}`].filter(Boolean).join("\n");
     setResearchMsg("Starting…");
-    const r = await fetch("/api/discover", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ country, limit, profile, criteria: summary }) });
+    const r = await paidFetch("/api/discover", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ country, limit, profile, criteria: summary }) });
     setResearchMsg(r.ok ? "Discovery started. Follow it in Research Queue; new companies appear under list \"Claude discovery\" (refresh the page when done)." : "Could not start discovery.");
   }
   // Criteria: text fields filter companies; everything else is scored so accounts are ranked, not hidden.
@@ -489,14 +489,14 @@ function Brief({ a, data, people, onClose, onContact, scores, criteria }: { a: R
       apps: apps.map((x) => `${x.name} (${x.category}, ${x.status})`), signals: sigs.map((s) => `${s.level}: ${s.signal} — ${s.evidence} (${s.date || ""})`),
       contacts: cs.map((p) => `${p.full_name} — ${p.title_verbatim} — ${p.role_family} ${p.contact_tier}`) };
     try {
-      const r = await fetch("/api/pitch", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(facts) });
+      const r = await paidFetch("/api/pitch", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(facts) }, "Drafting a pitch plan");
       const j = await r.json();
       setPitch(j.text || j.error || "Could not draft the pitch plan.");
     } catch { setPitch("Could not reach the server. Try again."); } finally { setBusy(false); }
   }
   async function refreshResearch() {
     setRefresh("Starting…");
-    const r = await fetch("/api/research", { method: "POST", headers: { "Content-Type": "application/json" },
+    const r = await paidFetch("/api/research", { method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ company: a.company_name, country: a.country || "UAE", depth: "standard", companyId: a.id }) });
     setRefresh(r.ok ? "Research started. Follow it in Research Queue; refresh this page when it finishes." : "Could not start research.");
   }
