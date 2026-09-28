@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { REGIONS, OPTIONS, DEFAULT_RULES, normalizeDefinition, validateRules, summarizeRules, type Definition, type Rules } from "@/lib/icpDefinition.mjs";
 
 type Impact = Record<string, { before: Record<string, number>; after: Record<string, number>; changes: { company: string; from: string; to: string; why: string }[] }>;
@@ -137,6 +137,13 @@ export default function IcpEditor({ initial, counts, isSuper, allowed, roleLabel
   }
 
   const w = r.pipeline.w_match + r.pipeline.w_opportunity + r.pipeline.w_fit;
+  // Warn before leaving the page with unsaved changes.
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
   return (
     <div className="icp-editor">
       <div className="icp-top panel">
@@ -333,6 +340,17 @@ export default function IcpEditor({ initial, counts, isSuper, allowed, roleLabel
                 <li key={i}><b>{c.company}</b>: {c.from} → <b>{c.to}</b><br /><small>{c.why}</small></li>))}</ul></details>
           )}
         </section>
+      )}
+
+      {dirty && (
+        <div className="icp-savebar" role="region" aria-label="Unsaved changes">
+          <span className="msg"><b>Not saved yet.</b> Your changes to {dirtyRegions.join(", ")} are a draft. {problems.length ? `Fix ${problems.length} item${problems.length === 1 ? "" : "s"} first (listed above).` : "Save to apply them — the agent keeps using the old rules until you do."}</span>
+          <span className="acts">
+            <button type="button" className="btn" disabled={!!busy} onClick={() => { setDef(clone(saved)); setResult(null); }}>Discard changes</button>
+            <button type="button" className="btn" disabled={!!busy || !!problems.length} onClick={() => call("preview")}>{busy === "preview" ? "Checking…" : "Preview impact"}</button>
+            <button type="button" className="btn primary" disabled={!!busy || !!problems.length} onClick={() => call("save")}>{busy === "save" ? "Saving…" : "Save & apply"}</button>
+          </span>
+        </div>
       )}
 
       <section className="panel icp-history">
