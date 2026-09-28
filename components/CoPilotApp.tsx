@@ -4,6 +4,7 @@ import { rulesFor, regionOf } from "@/lib/icpDefinition.mjs";
 import { personaFit } from "@/lib/icp";
 import CostNote from "@/components/CostNote";
 import CompanyLogo from "@/components/CompanyLogo";
+import { useCustomFilters, CustomFilterBar } from "@/components/CustomFilters";
 import InfoTip, { type Weights } from "@/components/InfoTip";
 import { useMemo, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
@@ -139,14 +140,15 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "
   const [q, setQ] = useState("");
   const [fv, setFv] = useState<string[]>(filters.map(() => ""));
   const options = useMemo(() => filters.map((f) => [...new Set(rows.map(f.get).filter(Boolean))].sort()), [rows, filters]);
-  const out = rows.filter((r) => (!q || search(r).toLowerCase().includes(q.toLowerCase())) && filters.every((f, i) => !fv[i] || f.get(r) === fv[i]));
+  const cf = useCustomFilters(rows, title);
+  const out = rows.filter((r) => (!q || search(r).toLowerCase().includes(q.toLowerCase())) && filters.every((f, i) => !fv[i] || f.get(r) === fv[i]) && cf.test(r));
   return (
     <>
       <h2 className="with-count">{title} <span className="count">{out.length.toLocaleString()} {unit}{out.length !== rows.length ? ` of ${rows.length.toLocaleString()}` : ""}</span></h2>
       {note && (typeof note === "string" ? <p className="note">{note}</p> : note)}
       <div className="filters">
         <input type="search" className={`flt-search${q ? " on" : ""}`} placeholder={`Search ${title.toLowerCase()}…`} aria-label="Search" value={q} onChange={(e) => setQ(e.target.value)} />
-        {(q || fv.some(Boolean)) && <button type="button" className="btn clear" onClick={() => { setQ(""); setFv(filters.map(() => "")); }}>Clear filters</button>}
+        {(q || fv.some(Boolean) || cf.list.length > 0) && <button type="button" className="btn clear" onClick={() => { setQ(""); setFv(filters.map(() => "")); cf.save([]); }}>Clear filters</button>}
         {filters.map((f, i) => (
           <select key={f.label} aria-label={f.label} value={fv[i]} className={`flt f${(i % 8) + 1}${fv[i] ? " on" : ""}`} onChange={(e) => setFv(fv.map((x, j) => (j === i ? e.target.value : x)))}>
             <option value="">{f.label}: all</option>
@@ -154,6 +156,7 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "
           </select>
         ))}
 
+        <CustomFilterBar rows={rows} cf={cf} />
       </div>
       <p className="filter-count">{out.length} of {rows.length} rows
           {rows.some((r) => r.company_id) && <> · {new Set(out.map((r) => r.company_id)).size} {new Set(out.map((r) => r.company_id)).size === 1 ? "company" : "companies"}</>}</p>

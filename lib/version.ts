@@ -1,11 +1,16 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.71";
+export const APP_VERSION = "1.72";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.72", date: "2026-09-28", notes: "Custom filters on every table and drill-down: pick any field, a condition and a value; stack several; remembered per table.",
+    changes: [
+      { what: "'+ Custom filter' on every table: choose any field that table holds (e.g. Email status, Location, Revenue, Last updated), a condition (contains, is, is not, starts with, is empty, is not empty, ≥, ≤) and a value — picked from a list when there are only a few; add several, shown as chips you can remove", where: "Accounts, Pipeline, Stakeholders, S2P Signals, ERP & Apps, Sources, Conflicts and every dashboard drill-down", why: "To see exactly the slice of data you want, beyond the fixed filters" },
+      { what: "Custom filters are remembered per table in your browser; 'Clear all' or 'Clear filters' removes them", where: "Same tables", why: "So your usual views are there next time" },
+    ] },
   { version: "1.71", date: "2026-09-28", notes: "Settings → Search companies: 'Add one specific company' (free — done by the next scheduled session), and smaller batches (1, 5, 10). Requested companies are re-checked weekly until an official figure is found.",
     changes: [
       { what: "'Add one specific company': enter a name (and website if you know it) and a region; the next scheduled session checks it isn't already in the app, researches it, adds it to that region and verifies its revenue — no API cost; the bell reports the result", where: "Setup → Settings → 1 · Search companies → What to do", why: "To add a particular company for free, without a paid instant research" },

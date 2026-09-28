@@ -153,6 +153,7 @@ export default async function GuidePage() {
 
             <section id="tabs" className="panel"><h2>Tabs</h2>
               <p>Five main tabs; selecting one shows its sub-tabs on the line beneath the top bar: <b>Dashboard</b> · <b>Accounts</b> (Pipeline, All accounts, S2P Signals, ERP & Apps) · <b>Stakeholders</b> · <b>Data</b> (Sources, Conflicts, Research Queue) · <b>Setup</b> (Define ICP, Settings, Learn Me).</p>
+              <p className="note"><b>Custom filters:</b> every table (and every dashboard drill-down) has a <b>+ Custom filter</b> button: choose any field in that table, a condition (contains, is, is not, starts with, is empty, is not empty, or ≥ / ≤ for numbers) and a value. Add as many as you like; all must match. They are remembered per table in your browser; <b>Clear all</b> removes them.</p>
               <T head={["Tab", "What it shows"]} rows={[
                 ["Dashboard", "KPI tiles (click any tile to see the records behind it), charts by S2P signal, platform, ERP, role family and ICP status, and priority accounts."],
                 ["Pipeline", "Accounts ranked by the Pipeline rank (see Scores). Answers: which accounts should we work first?"],
