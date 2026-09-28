@@ -1,11 +1,17 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.52";
+export const APP_VERSION = "1.53";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.53", date: "2026-09-28", notes: "Readability fixes: white text on count badges; the Refresh plan is labelled as a preview (nothing spent until you click); Console balance shown as a coloured dollar field with a filled Save balance button.",
+    changes: [
+      { what: "Count badges (e.g. '1 users') use white text on a darker green", where: "Every heading with a count, e.g. Setup → Settings → Team", why: "Black text on green was hard to read" },
+      { what: "The Refresh plan line is labelled 'Preview — nothing spent yet' and explains that $20 is only the starting value in the Budget box, with the per-item estimates it uses", where: "Setup → Settings → Discovery & refresh engine → 2 · Refresh", why: "It looked like a real balance of $20" },
+      { what: "Console balance is a green dollar field ($ prefix, bold amount) and Save balance is a filled button", where: "Setup → Settings → Anthropic API spend & balance", why: "Makes the money value and the action stand out" },
+    ] },
   { version: "1.52", date: "2026-09-28", notes: "Owner-only lock on Define ICP: once you make yourself the ICP owner, only owners can save changes; teammates can view and preview.",
     changes: [
       { what: "Owner-only lock: click 'Make me the ICP owner' once; after that only the owner(s) can change and save the ICP. Teammates see the page read-only and can still use Preview impact", where: "Setup → Define ICP → owner strip above the region tiles", why: "The ICP drives every search, verification and Pipeline rank, so one accountable owner prevents accidental changes" },

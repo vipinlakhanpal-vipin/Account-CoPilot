@@ -89,7 +89,8 @@ export default function EngineSettings() {
             <label>New companies to find<input type="number" min={0} max={10} value={r.fresh} onChange={(e) => setR({ ...r, fresh: Math.max(0, Math.min(10, Number(e.target.value) || 0)) })} /></label>
             <label>Budget (USD)<input type="number" min={0} max={500} step={1} value={r.budget} onChange={(e) => setR({ ...r, budget: Math.max(0, Math.min(500, Number(e.target.value) || 0)) })} /></label>
           </div>
-          <p className="eng-plan">Available: <b>{money(avail)}</b>{s && s.carry > 0 && <> (budget {money(r.budget)} + {money(s.carry)} carried over)</>} → plans <b>{pu}</b> update{pu === 1 ? "" : "s"} and <b>{pn}</b> new compan{pn === 1 ? "y" : "ies"} ≈ <b>{money(estCost)}</b>; ≈ {money(Math.max(0, avail - estCost))} carries over.</p>
+          <p className="eng-plan"><span className="eng-preview">Preview — nothing spent yet</span> Calculated from the numbers above (the $20 budget is only a starting value; change it to what you want to spend).
+            If you click Refresh: available <b>{money(avail)}</b>{s && s.carry > 0 ? <> (your budget {money(r.budget)} + {money(s.carry)} unspent from earlier Refreshes)</> : <> (your budget; nothing carried over yet)</>} → plans <b>{pu}</b> update{pu === 1 ? "" : "s"} and <b>{pn}</b> new compan{pn === 1 ? "y" : "ies"}, estimated <b>{money(estCost)}</b> (≈ $0.55 per update, plus ≈ $0.75 for the discovery search and ≈ $0.55 per new company profiled); about {money(Math.max(0, avail - estCost))} would carry over. Real spend is measured per run and shown in the spend table.</p>
           <button type="button" className="btn primary" disabled={!pu && !pn} onClick={() => {
             if (window.confirm(`Refresh ${r.region}: update ${pu} companies and find + profile ${pn} new ones.\n\nThis uses the Anthropic API: about ${money(estCost)} (budget ${money(avail)} available). Unused budget carries over.\n\nContinue?`))
               post({ action: "refresh", region: r.region, update_count: r.update, new_count: r.fresh, budget: r.budget }, "Refresh started. Follow it in Research Queue; spend updates here as each run finishes.");
@@ -110,8 +111,8 @@ export default function EngineSettings() {
           </div>
           <p className="note">The API key can't read your credit balance, so enter the balance shown at <a href="https://console.anthropic.com/settings/billing" target="_blank" rel="noopener noreferrer">console.anthropic.com → Billing</a>; the app subtracts what it spends from then on.{s?.balance.as_of && ` Last entered ${money(s.balance.amount || 0)} on ${new Date(s.balance.as_of).toLocaleString()}${s.balance.by ? ` by ${s.balance.by}` : ""}.`} Measured spend covers research, discovery and refresh runs; pitch-plan drafts (≈ $0.05–0.10 each) are not metered.</p>
           <div className="eng-form">
-            <label>Console balance (USD)<input type="number" min={0} step={0.01} value={bal} onChange={(e) => setBal(e.target.value)} placeholder="e.g. 50.00" /></label>
-            <button type="button" className="btn" disabled={!bal} onClick={() => { post({ action: "balance", amount: Number(bal) }, "Balance saved."); setBal(""); }}>Save balance</button>
+            <label>Console balance (USD)<span className="money-input"><span aria-hidden="true">$</span><input type="number" min={0} step={0.01} value={bal} onChange={(e) => setBal(e.target.value)} placeholder="50.00" /></span></label>
+            <button type="button" className="btn primary" disabled={!bal} onClick={() => { post({ action: "balance", amount: Number(bal) }, "Balance saved."); setBal(""); }}>Save balance</button>
           </div>
         </div>
       </div>
