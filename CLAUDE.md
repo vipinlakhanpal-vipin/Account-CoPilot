@@ -99,6 +99,9 @@ This writes `profile["HubSpot"]` = {in_hubspot, hubspot_id, hubspot_name, record
   - Aliases are stored in `profile["Merged companies"]`; the engine treats them as existing.
 - **Guide "Get to know me" intro** (`.intro-box` frames) must be updated in the same release whenever engine logic changes.
 
+## Moving to another Claude account
+Follow `MIGRATION.md`, which is written to stay valid. Step A reads the current routines into `data/verification/routines_backup.json` (git-ignored); step C recreates them in the new account.
+
 ## Paid-actions PIN (v1.58)
 Every Anthropic-API route (`/api/research`, `/api/discover`, `/api/pitch`, and `/api/engine` refresh) calls `requirePaidApproval()` in `lib/paidGuard.ts` first.
 - **Storage:** the PIN is a salted scrypt hash in `settings.paid_pin`, set by a Super Admin in Settings.
