@@ -111,9 +111,10 @@ export default function IcpEditor({ initial, counts }: { initial: Definition; co
         {REGIONS.map(({ key, name }) => {
           const st = def.regions[key].status;
           return (
-            <button type="button" key={key} className={`icp-region${region === key ? " on" : ""}`} onClick={() => setRegion(key)} title={name}>
-              <span className={`dot s-${st}`} />{key}{dirtyRegions.includes(key) && <b className="icp-star" title="Unsaved changes">•</b>}
-              <small>{st === "active" ? "Active" : st === "paused" ? "Paused" : "Next phase"}{counts[key] ? ` · ${counts[key]} accounts` : ""}</small>
+            <button type="button" key={key} className={`icp-region r-${st}${region === key ? " on" : ""}`} onClick={() => setRegion(key)} title={name} aria-pressed={region === key}>
+              <span className="icp-region-name"><span className={`dot s-${st}`} />{key}{dirtyRegions.includes(key) && <b className="icp-star" title="Unsaved changes">•</b>}</span>
+              <small>{st === "active" ? "Active" : st === "paused" ? "Paused" : "Next phase"}</small>
+              <small className="n">{counts[key] ? `${counts[key].toLocaleString()} account${counts[key] === 1 ? "" : "s"}` : "No accounts yet"}</small>
             </button>
           );
         })}

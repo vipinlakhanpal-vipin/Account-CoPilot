@@ -1,11 +1,17 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.46";
+export const APP_VERSION = "1.47";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.47", date: "2026-09-28", notes: "Define ICP region tiles: full text visible, light status colours, all nine regions in one row on wide screens.",
+    changes: [
+      { what: "Region tiles show everything: region name with its status dot, the status, and the number of accounts; tiles grow to fit instead of cutting text off", where: "Setup → Define ICP → region tiles", why: "The status and account count were cut off" },
+      { what: "Light colour per status: green for Active, amber for Paused, grey for Next phase; the selected region has a teal outline", where: "Setup → Define ICP → region tiles", why: "See at a glance which markets are running" },
+      { what: "All nine regions fit in one row on wide screens", where: "Setup → Define ICP", why: "USA dropped onto a second row on its own" },
+    ] },
   { version: "1.46", date: "2026-09-28", notes: "Define ICP: steady layout (nothing shifts when you select an option) and a clear explanation of Region & daily run — what each choice means and its outcome.",
     changes: [
       { what: "Region & daily run explained: three choice cards (Active, Paused, Next phase), each saying what it means and what will happen; the daily numbers show what they produce (e.g. about 150 new accounts a month) and grey out when the region isn't Active", where: "Setup → Define ICP → 1 · Region & daily run", why: "So you know exactly what to pick and what the agent will do after you save" },
