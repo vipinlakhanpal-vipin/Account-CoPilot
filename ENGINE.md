@@ -9,6 +9,16 @@ Read `CLAUDE.md` first: its data rules, ICP definition, revenue source ladder an
 No install is needed: `scripts/engine_client.mjs` uses only built-in Node (fetch, fs). If `APP_URL` or `ENGINE_TOKEN` is empty, stop and report
 "Engine token missing in the routine environment". (The cloud environment's setup script must be empty — it runs before the repo is cloned.)
 
+## 0b. Read the ICP definition (ALWAYS, before anything else)
+`node scripts/engine_client.mjs icp` writes `data/verification/icp_rules.json`: the user's ICP per region from Setup → Define ICP.
+**It overrides the ICP numbers in CLAUDE.md.** For each company, use the rules of its region:
+- `revenue.min_usd_m` / `max_usd_m` and `employees.min` / `max`: the ICP line. `icp_verdict` = "Verified ICP" only with an official figure at or above `min_usd_m`
+  from one of `evidence.verified_sources`; below it with an official figure = "Below minimum"; estimates at or above = "Likely ICP".
+- `revenue.basis_*`: which revenue measure to report (general / banks / insurers); convert local currency with `currency.per_usd`.
+- `listing`, `ownership_allowed`, `entity_level`, `industries_include` / `industries_exclude`, `exclude.*` and `notes`: what to search for and what never to add.
+- `focus` (platforms, ERP, triggers): signals to look for and mention in the reasoning.
+- `active` lists the regions to work on and their daily counts (`discover_per_day`, `verify_per_day`). Never discover in a region that is not active.
+
 ## 1. Claim a job
 `node scripts/engine_client.mjs claim` prints e.g. `{"id":"ab12cd34","region":"UAE","count":50,"mode":"verify"}` or `null`.
 If `null`, do step 4. `count: "max"` = as many as you can in this session (aim for 50).
@@ -31,15 +41,16 @@ If `null`, do step 4. `count: "max"` = as many as you can in this session (aim f
 — this is the notification under the bell in the app. Do not commit or push anything and do not change app code.
 
 ## 4. Default daily work (always, after any queued jobs)
-1. **Discover 5 new UAE companies** that meet the ICP (same rules as **discover** in step 2: group HQs only; no ministries/government bodies,
-   single hotels/hospitals/schools/attractions or local branches of foreign HQs; not already in the app).
+For **each region in `active`** of `icp_rules.json` (default: UAE, find 5, verify 25):
+1. **Discover `discover_per_day` new companies** in that region that meet its rules (entity level, size, listing, ownership, industries; never anything in
+   `exclude` or `notes`; not already in the app).
    **First run `node scripts/engine_client.mjs names`** and read `data/verification/existing_companies.json`. Do not propose any company on it,
    including the same company under another name, spelling or domain (e.g. "Al Fara'a Group" = "Al Faraa Construction and Industrial Group",
    "Al Shafar General Contracting (ASGC)" = "ASGC Construction LLC"), or the parent group of a company already in the app ("Khansaheb Group" when
    "Khansaheb Civil Engineering LLC" is in). Add them with `node scripts/engine_client.mjs add data/verification/new_companies.json`.
-   If it prints SKIPPED lines (the app found a duplicate), find replacements and add again until 5 are actually added.
-2. **Verify 25 companies**: first the 5 you just added (use the returned slugs), then 20 from `node scripts/engine_client.mjs queue UAE 20`.
-   Submit every ~10 with `node scripts/engine_client.mjs submit`.
-3. Notify (step 3b) with the new company names and the verification counts, in this form:
-   `"Added 5 new: A; B; C; D; E. Checked 25 (5 new + 20 from the queue): X Verified, Y Likely, Z Needs check, W Not ICP, U Unknown"`
-   (counts are the ICP status of those 25 after the check; mention any duplicates skipped).
+   If it prints SKIPPED lines (the app found a duplicate), find replacements and add again until the day's number is actually added.
+2. **Verify `verify_per_day` companies**: first the ones you just added (use the returned slugs), then the rest from
+   `node scripts/engine_client.mjs queue <region> <verify_per_day minus new>`. Submit every ~10 with `node scripts/engine_client.mjs submit`.
+3. Notify (step 3b) once for the whole run, in this form (one clause per active region):
+   `"UAE — Added 5 new: A; B; C; D; E. Checked 25 (5 new + 20 from the queue): X Verified, Y Likely, Z Needs check, W Not ICP, U Unknown"`
+   (counts are the ICP status of the checked companies after the check; mention any duplicates skipped).

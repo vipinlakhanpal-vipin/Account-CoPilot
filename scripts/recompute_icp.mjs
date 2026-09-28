@@ -17,11 +17,15 @@ const { data: cos, error } = await db.from("companies").select("*");
 if (error) throw error;
 
 import { statusPatch } from "../lib/icpStatus.mjs";
+import { rulesFor } from "../lib/icpDefinition.mjs";
+// Thresholds per region from Setup → Define ICP (settings.icp_definition).
+const { data: defRow } = await db.from("settings").select("value").eq("key", "icp_definition").maybeSingle();
+const def = defRow?.value || null;
 
 let changed = 0;
 const tally = {};
 for (const c of cos) {
-  const { status, patch } = statusPatch(c);
+  const { status, patch } = statusPatch(c, rulesFor(def, c.country));
   tally[status] = (tally[status] || 0) + 1;
   const { error: e } = await db.from("companies").update(patch).eq("id", c.id);
   if (e) throw e;

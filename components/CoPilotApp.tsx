@@ -1,4 +1,5 @@
 "use client";
+import { rulesFor } from "@/lib/icpDefinition.mjs";
 import CostNote from "@/components/CostNote";
 import { useMemo, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
@@ -185,11 +186,16 @@ export default function CoPilotApp({ data: all }: { data: AllData }) {
       conflicts: all.conflicts.filter(mine), apps: all.apps.filter(mine), history: all.history.filter(mine) };
   }, [all, country]);
   const [criteria, setCriteria] = useState<Criteria>(withDefaults());
+  // Pipeline rules for the selected country come from Setup → Define ICP.
+  const [icpDef, setIcpDef] = useState<unknown>(null);
+  const pipe = useMemo(() => rulesFor(icpDef, country === "All" ? "UAE" : country).pipeline, [icpDef, country]);
+  const inPipe = (a: Row, sc?: Scores) => !!sc && sc.m.total >= pipe.min_match && (!pipe.exclude_not_icp || a.icp_status !== "Not ICP");
   const [savedMeta, setSavedMeta] = useState<{ by?: string; at?: string } | null>(null);
   const [teamCriteria, setTeamCriteria] = useState<Criteria | null>(null);
   const [collapsed, setCollapsed] = useState(false);
   useEffect(() => {
     try { setCollapsed(localStorage.getItem("dp-collapsed") === "1"); } catch {}
+    supabaseBrowser().from("settings").select("value").eq("key", "icp_definition").maybeSingle().then(({ data: row }) => setIcpDef(row?.value || null));
     supabaseBrowser().from("settings").select("value").eq("key", "icp_criteria").maybeSingle()
       .then(({ data: row }) => { if (row?.value) { setCriteria(withDefaults(row.value as Criteria)); setTeamCriteria(withDefaults(row.value as Criteria)); setSavedMeta((row.value as { _meta?: { by?: string; at?: string } })._meta || null); } });
   }, []);
@@ -227,9 +233,9 @@ export default function CoPilotApp({ data: all }: { data: AllData }) {
     data.history.forEach((h) => { if (/change|promot|join|hire/i.test(str(h.determination))) hires[h.company_id] = (hires[h.company_id] || 0) + 1; });
     const m: Record<string, Scores> = {};
     A.forEach((a) => { const x = icpMatch(a, criteria), o = opportunity(a, hires[a.id] || 0), f = coupaFit(a);
-      m[a.id] = { m: x, o, f, rank: Math.round(x.total * 0.5 + o.total * 0.3 + f.total * 0.2) }; });
+      m[a.id] = { m: x, o, f, rank: Math.round((x.total * pipe.w_match + o.total * pipe.w_opportunity + f.total * pipe.w_fit) / 100) }; });
     return m;
-  }, [A, criteria, data.history]);
+  }, [A, criteria, data.history, pipe]);
   const [open, setOpen] = useState<string | null>(null);
   const [contact, setContact] = useState<string | null>(null);
   const [drill, setDrill] = useState<{ title: string; kind: Kind; rows: Row[] } | null>(null);
@@ -268,8 +274,8 @@ export default function CoPilotApp({ data: all }: { data: AllData }) {
         { h: "S2P status", cell: (a) => a.s2p_platform_status }, { h: "ERP", cell: (a) => a.erp }, { h: "Contacts", cell: (a) => <span className="mono">{(byCo[a.id] || []).length}</span> }]}
       onRow={openRow} />;
   } else if (tab === "pipeline") {
-    const ranked = A.filter((a) => scores[a.id] && scores[a.id].m.total >= 70 && a.icp_status !== "Not ICP").sort((a, b) => scores[b.id].rank - scores[a.id].rank);
-    view = <FilterTable unit="accounts" title="Ranked pipeline" note="Rank = 50% ICP Match + 30% Opportunity + 20% Coupa Fit. Accounts with ICP Match below 70 or Not ICP are left out. Hover a score for its breakdown; select a row for why it was selected and the recommended next steps."
+    const ranked = A.filter((a) => inPipe(a, scores[a.id])).sort((a, b) => scores[b.id].rank - scores[a.id].rank);
+    view = <FilterTable unit="accounts" title="Ranked pipeline" note={`Rank = ${pipe.w_match}% ICP Match + ${pipe.w_opportunity}% Opportunity + ${pipe.w_fit}% Coupa Fit (set in Setup → Define ICP). Accounts with ICP Match below ${pipe.min_match}${pipe.exclude_not_icp ? " or Not ICP" : ""} are left out. Hover a score for its breakdown; select a row for why it was selected and the recommended next steps.`}
       rows={ranked} search={(a) => [a.company_name, a.industry, a.erp, a.existing_s2p_product].join(" ")}
       filters={[{ label: "ICP status", get: (a) => a.icp_status }, { label: "S2P", get: (a) => a.existing_s2p_product }, { label: "Industry", get: (a) => a.industry }, { label: "Country", get: (a) => a.country }]}
       cols={[{ h: "Rank", cell: (a) => <b className="mono">{scores[a.id].rank}</b> }, { h: "Company", cell: (a) => <><b>{a.company_name}</b><div className="muted">{a.industry} · {a.country}</div></> },
@@ -429,7 +435,7 @@ export default function CoPilotApp({ data: all }: { data: AllData }) {
   return (
     <div className={`app-shell${collapsed ? " dp-closed" : ""}`}>
     <DiscoveryPanel criteria={criteria} onApply={setCriteria} onSave={saveCriteria} savedMeta={savedMeta} teamCriteria={teamCriteria} collapsed={collapsed} onToggle={toggle}
-      matches={{ accounts: A.filter((a) => scores[a.id] && scores[a.id].m.total >= 70 && a.icp_status !== "Not ICP").length, contacts: people.length }}
+      matches={{ accounts: A.filter((a) => inPipe(a, scores[a.id])).length, contacts: people.length }}
       country={country} onResearch={researchMore} researchMsg={researchMsg} />
     <div className="app-main">
       <Hero title={(HERO[tab] || HERO.dashboard)[0]} text={(HERO[tab] || HERO.dashboard)[1]} />

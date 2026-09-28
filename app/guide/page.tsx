@@ -6,6 +6,7 @@ import { SOURCES, indexSources } from "@/lib/sources";
 import { supabaseServer } from "@/lib/supabase/server";
 import { loadAllCached } from "@/lib/dataCache";
 import { statusPatch } from "@/lib/icpStatus.mjs";
+import { rulesFor } from "@/lib/icpDefinition.mjs";
 import { buildPeople } from "@/lib/people";
 import { withDefaults, icpMatch } from "@/lib/icp";
 
@@ -16,7 +17,9 @@ async function liveChecks() {
   const d = await loadAllCached();
   const A = d.accounts, ids = new Set(A.map((a) => a.id));
   const n = (x: number) => x.toLocaleString();
-  const mism = A.filter((c) => statusPatch(c).status !== c.icp_status).length;
+  const { data: defRow } = await sb.from("settings").select("value").eq("key", "icp_definition").maybeSingle();
+  const def = defRow?.value;
+  const mism = A.filter((c) => statusPatch(c, rulesFor(def, c.country)).status !== c.icp_status).length;
   const V = A.filter((c) => c.icp_status === "ICP — Verified");
   const vOk = V.filter((c) => (c.verified_revenue_status === "FACT" && Number(c.verified_revenue_usd_m) >= 250)
     || (((c.lists || []).includes("Claude research") || c.research_channel === "Claude") && Number(c.revenue_usd_m) >= 250)).length;
@@ -75,8 +78,8 @@ export default async function GuidePage() {
           <div className="guide-body">
 
             <section id="start" className="panel"><h2 className="attn">Get to know me — I&apos;m your Account CoPilot AI Agent (Autonomous)</h2>
-              <p className="intro-box"><b>Account CoPilot</b> is an AI Agent that runs on its own every morning at 6am Dubai time. First I <b>find</b> new companies that could fit your Ideal Customer Profile (ICP), using public web search, annual reports, stock-exchange filings, company websites and supplier portals, reputable business press, job posts and Seamless.ai. I look for group headquarters only, and skip ministries and government bodies, single hotels, hospitals and schools, and local branches of foreign groups.</p>
-              <p className="intro-box">Then I <b>verify</b> each company against your ICP: <b>revenue of $250M or more and at least 100 staff</b>, in the UAE first and then the wider Gulf. I trust official figures (annual reports, filings, company-quoted results) above estimates. Every fact is labelled FACT, LIKELY or UNVERIFIED and linked to its source, so you can always see why an account is Verified, Likely, Needs check or Not ICP.</p>
+              <p className="intro-box"><b>Account CoPilot</b> is an AI Agent that runs on its own every morning at 6am Dubai time. Everything I do follows the rules you set in <b>Setup → Define ICP</b>, a separate profile for each region: company size, type and industries, what counts as proof, what never to add, Pipeline priorities, buyer personas and how much to do each day. When you save a change, I apply it straight away and use it in the next morning&apos;s run. First I <b>find</b> new companies that could fit your Ideal Customer Profile (ICP) in each <b>active</b> region, using public web search, annual reports, stock-exchange filings, company websites and supplier portals, reputable business press, job posts and Seamless.ai. I look for group headquarters only, and skip ministries and government bodies, single hotels, hospitals and schools, and local branches of foreign groups.</p>
+              <p className="intro-box">Then I <b>verify</b> each company against your ICP for its region (today: <b>revenue of $250M or more and at least 100 staff</b>, UAE active; other Gulf markets, then Europe and USA, each with their own rules). I trust only the official sources you allow (annual reports, filings, company-quoted results) for Verified, above estimates. Every fact is labelled FACT, LIKELY or UNVERIFIED and linked to its source, so you can always see why an account is Verified, Likely, Needs check or Not ICP.</p>
               <p className="intro-box"><b>One record per company.</b> Before I add anything, I read the full list of accounts already in the app. The app then double-checks every new name and website against it, catching:
                 <ul>
                   <li>spelling variants (&quot;Al Fara&apos;a&quot; vs &quot;Al Faraa&quot;)</li>
@@ -166,6 +169,7 @@ export default async function GuidePage() {
               <p>All countries · UAE · Saudi Arabia · Qatar · Kuwait · Oman · Egypt. Each shows its account count ("soon" = none yet). Selecting one filters the dashboard, every tab and the source tiles to that market; the choice stays when you switch tabs. UAE is the default.</p></section>
 
             <section id="icp" className="panel"><h2>ICP status</h2>
+              <p className="note">The rules below are the defaults. <b>Setup → Define ICP</b> lets you set every threshold per region; whatever you save there is what the agent and this page follow.</p>
               <p><b>ICP = net revenue ≥ USD 250M and ≥ 100 employees.</b> A stock listing is not required (recorded separately). AED converts at 3.6725 per USD. Banks use total operating income; insurers use insurance revenue / GWP.</p>
               <T head={["Status", "Meaning"]} rows={[
                 ["✓ ICP — Verified", "Revenue ≥ $250M from an official source: annual report, results, exchange or regulator filing, bond prospectus, rating report, or reputable press quoting the company."],

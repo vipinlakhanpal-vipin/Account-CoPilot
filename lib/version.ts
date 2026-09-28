@@ -1,11 +1,20 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.43";
+export const APP_VERSION = "1.44";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.44", date: "2026-09-28", notes: "Define ICP: a full ICP editor per region (UAE, KSA, Qatar, Kuwait, Oman, Bahrain, Egypt; Europe and USA as next phase). Every rule the agent follows is set here and applied everywhere: ICP status, verification, the 6am run, in-app research, the Pipeline and the left panel. Preview impact before saving; change history.",
+    changes: [
+      { what: "Define ICP editor: set company size (revenue and staff range, revenue measure for banks and insurers), listing, ownership, entity level, industries, exclusions, evidence rules, re-check interval, Pipeline weights and entry threshold, focus platforms, ERP and triggers, buyer personas and the daily run — separately for each region", where: "Setup → Define ICP", why: "Your ICP is the foundation of every search and verification; now you control it directly, with no hidden rules" },
+      { what: "One source of truth: ICP status, the 6am run, in-app research, the Pipeline and the left panel all read Define ICP; saving recalculates every account's status at once", where: "Accounts, Pipeline, bell summaries after the next 6am run", why: "No misalignment between what you define and what the agent does" },
+      { what: "Preview impact before saving (how many accounts change status in each region, and why) and a change history showing who changed what and when", where: "Setup → Define ICP → Preview impact / Change history", why: "See the effect of a rule change before it happens, and keep an audit trail" },
+      { what: "Regions: UAE active; KSA, Qatar, Kuwait, Oman, Bahrain and Egypt ready (paused until you switch them on); Europe and USA listed as the next phase, each with its own rules and currency", where: "Setup → Define ICP → region tabs", why: "Each market has its own ICP and parameters" },
+      { what: "The 6am run now reads your ICP first and works only in active regions, with each region's daily numbers", where: "Bell summary after the next run", why: "Switching a region on, or changing the daily numbers, takes effect the next morning without any code change" },
+      { what: "Learn Me intro updated to explain that everything follows Define ICP", where: "Setup → Learn Me → Get to know me", why: "The introduction always describes how the agent actually works" },
+    ] },
   { version: "1.43", date: "2026-09-28", notes: "Master Book redesigned (Nunito 12, clear colour tags, dashboard cards with a sheet guide, HubSpot columns in Accounts); bigger tab fonts; Admin renamed Setup with Define ICP, Settings and Learn Me; the update banner now lists what changed, where and why.",
     changes: [
       { what: "Master Book redesigned: Nunito 12 throughout, navy-and-white layout, soft row banding, colour tags for ICP status, S2P signals and HubSpot actions; prints landscape on one page width", where: "Master Book button (top bar) → every sheet", why: "Easier to read, scan and present to your team" },

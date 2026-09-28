@@ -4,10 +4,11 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { invalidateAllData } from "@/lib/dataCache";
 import { statusPatch, applyRevenueResult } from "@/lib/icpStatus.mjs";
+import { normalizeDefinition, rulesFor, regionOf, summarizeRules } from "@/lib/icpDefinition.mjs";
 
 // Limited API for scheduled Claude sessions (no Supabase key needed in the cloud environment).
 // Auth: "Authorization: Bearer <ENGINE_TOKEN>"; only the SHA-256 hash is stored (settings.engine_token). Revoke/regenerate in Settings.
-// Allowed: claim/finish queued jobs, read the verification queue, submit revenue results, add discovered companies, post a notification.
+// Allowed: read the ICP definition, claim/finish queued jobs, read the verification queue, submit revenue results, add discovered companies, post a notification.
 // Not allowed: reading contacts, deleting anything, or any other table access.
 export const maxDuration = 60;
 type Db = ReturnType<typeof supabaseAdmin>;
@@ -29,7 +30,7 @@ const Result = z.object({ slug: z.string(), company_name: z.string(), checked_at
   ticker: z.string().optional().default(""), parent_company: z.string().optional().default(""), net_revenue_usd_m: z.number().nullable(), fiscal_year: z.string().optional().default(""),
   revenue_type: z.string(), revenue_local: z.string().optional().default(""), source_name: z.string().optional().default(""), source_url: z.string().optional().default(""),
   source_kind: z.string(), revenue_status: z.enum(["FACT", "LIKELY", "UNVERIFIED", "UNKNOWN"]), employees: z.string().optional().default(""),
-  employees_source_url: z.string().optional().default(""), icp_verdict: z.enum(["Verified ICP", "Likely ICP", "Below $250M", "Revenue not found"]), reasoning: z.string() });
+  employees_source_url: z.string().optional().default(""), icp_verdict: z.enum(["Verified ICP", "Likely ICP", "Below minimum", "Below $250M", "Revenue not found"]), reasoning: z.string() });
 const NewCo = z.object({ name: z.string().min(2), website: z.string().optional().default(""), country: z.string().default("UAE"), industry: z.string().optional().default(""),
   hq_city: z.string().optional().default(""), why_icp: z.string().optional().default(""), source_url: z.string().optional().default("") });
 const Body = z.discriminatedUnion("action", [
@@ -39,6 +40,7 @@ const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("submit"), results: z.array(Result).max(50) }),
   z.object({ action: z.literal("add_companies"), companies: z.array(NewCo).max(50) }),
   z.object({ action: z.literal("names") }),
+  z.object({ action: z.literal("icp") }),
   z.object({ action: z.literal("log"), summary: z.string().max(1000), verified: z.number().int().min(0).default(0), new_companies: z.array(z.string()).max(100).default([]) }),
 ]);
 type Job = { id: string; status: string; started_at?: string; done_at?: string; result?: string };
@@ -63,11 +65,18 @@ export async function POST(req: Request) {
     job.status = b.status; job.done_at = now; job.result = b.result; await put(db, "engine_jobs", st);
     return NextResponse.json({ ok: true });
   }
+  const icpDef = normalizeDefinition((await db.from("settings").select("value").eq("key", "icp_definition").maybeSingle()).data?.value);
+  if (b.action === "icp") {
+    // The ICP definition the session must follow (Setup → Define ICP): every region's rules, which regions are active and their daily run.
+    const active = Object.entries(icpDef.regions).filter(([, r]) => r.status === "active").map(([k, r]) => ({ region: k, discover_per_day: r.engine.discover_per_day, verify_per_day: r.engine.verify_per_day }));
+    return NextResponse.json({ updated_at: icpDef.updated_at, updated_by: icpDef.updated_by, active, summary: Object.entries(icpDef.regions).map(([k, r]) => summarizeRules(k, r)), regions: icpDef.regions });
+  }
   if (b.action === "queue") {
     const { data } = await db.from("companies").select("slug,company_name,company_website,domain,industry,country,icp_status,profile")
-      .eq("country", b.region).in("icp_status", ["ICP — Needs check", "Unknown", "ICP — Likely", "Not ICP"]);
-    // Re-check: any company that isn't Verified is checked again 180 days after its last revenue check (so growing companies move up).
-    const stale = (c: { profile?: Record<string, { at?: string }> }) => { const at = c.profile?.["Revenue check"]?.at; return !!at && Date.now() - new Date(at).getTime() > 180 * 864e5; };
+      .in("country", [b.region, ...(regionOf(b.region) === b.region ? [] : [regionOf(b.region)])]).in("icp_status", ["ICP — Needs check", "Unknown", "ICP — Likely", "Not ICP"]);
+    // Re-check: any company that isn't Verified is checked again N days after its last revenue check (N from Define ICP; default 180).
+    const days = rulesFor(icpDef, b.region).evidence.recheck_days; // re-check interval from Define ICP
+    const stale = (c: { profile?: Record<string, { at?: string }> }) => { const at = c.profile?.["Revenue check"]?.at; return !!at && Date.now() - new Date(at).getTime() > days * 864e5; };
     const rank: Record<string, number> = { "ICP — Needs check": 0, Unknown: 1, "ICP — Likely": 2 };
     const size = (c: { profile?: Record<string, { "Size (USD m)"?: number; revenue_range?: string; employee_count?: string }> }) =>
       Number(c.profile?.["Vipin-Profiling"]?.["Size (USD m)"]) || (c.profile?.["Seamless discovery"]?.revenue_range === "$1B+" ? 1000 : c.profile?.["Seamless discovery"] ? 500 : 0);
@@ -84,7 +93,7 @@ export async function POST(req: Request) {
       const { data: c } = await db.from("companies").select("*").eq("slug", r.slug).maybeSingle();
       if (!c) { out.push(`${r.slug}: not found`); continue; }
       const applied = await applyRevenueResult(db, c, r);
-      const { status, patch } = statusPatch(applied);
+      const { status, patch } = statusPatch(applied, rulesFor(icpDef, applied.country));
       await db.from("companies").update(patch).eq("id", c.id);
       out.push(`${r.company_name}: ${status}`);
     }

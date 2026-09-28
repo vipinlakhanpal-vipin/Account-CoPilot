@@ -19,7 +19,9 @@ Bump `APP_VERSION` in `lib/version.ts` (1.9 → 1.10 …), add a line to `RELEAS
 - Don't bypass paywalls or logins (D&B, ZoomInfo, Refinitiv, LinkedIn). Search-result snippets may be cited as snippets only.
 
 ## ICP definition (current)
-**Net revenue ≥ USD 250M and ≥ 100 employees. A stock listing is NOT required**; record it separately in `listing_status`. Convert AED at 3.6725 per USD.
+**Source of truth since v1.44: Setup → Define ICP** (`settings.icp_definition`, `lib/icpDefinition.mjs`), with one rule set per region (UAE, KSA, Qatar, Kuwait, Oman, Bahrain, Egypt, then Europe and USA as the next phase). `statusPatch(c, rulesFor(def, c.country))` in `lib/icpStatus.mjs`, `recompute_icp.mjs`, the engine worker (`icp` action / `engine_client.mjs icp`), in-app research, the Pipeline weights and the left-panel defaults all read it. Saving in the app re-applies statuses at once and records history. The defaults below equal the rules before v1.44; if the saved definition differs, the saved definition wins.
+
+**Default:** net revenue ≥ USD 250M and ≥ 100 employees. A stock listing is NOT required**; record it separately in `listing_status`. Convert AED at 3.6725 per USD.
 
 Status scale (`companies.icp_status`), recomputed by `scripts/recompute_icp.mjs`:
 - `ICP — Verified`: revenue ≥ 250 from an official source (annual report, results, regulator/exchange filing, bond prospectus, rating report, reputable press quoting the company)
@@ -46,9 +48,9 @@ The goal is to move accounts out of Likely / Needs check / Unknown by finding of
     "revenue_type":"Net revenue|Gross revenue|Total operating income|Estimate|Not found","revenue_local":"e.g. AED 12.3bn",
     "source_name":"","source_url":"","source_kind":"Company report/website|Parent or bond disclosure|Business press|Estimate/aggregator|None",
     "revenue_status":"FACT|LIKELY|UNVERIFIED|UNKNOWN","employees":"","employees_source_url":"",
-    "icp_verdict":"Verified ICP|Likely ICP|Below $250M|Revenue not found","reasoning":"what you found and why"}
+    "icp_verdict":"Verified ICP|Likely ICP|Below minimum|Revenue not found","reasoning":"what you found and why"}
    ```
-   `icp_verdict` is "Verified ICP" only with `revenue_status` FACT and revenue ≥ 250. For banks use total operating income; for insurers use insurance revenue or GWP, and say which.
+   `icp_verdict` is "Verified ICP" only with `revenue_status` FACT and revenue ≥ the region's minimum (default 250; "Below $250M" is still accepted). For banks use total operating income; for insurers use insurance revenue or GWP, and say which.
 4. After every ~10 companies, load the results and refresh the statuses:
    `npx -y -p node@22 node scripts/verify_revenue.mjs --apply && npx -y -p node@22 node scripts/recompute_icp.mjs`
 5. When the session's web-search allowance runs out, stop and report progress. The next session resumes from the queue, which skips companies already done.
