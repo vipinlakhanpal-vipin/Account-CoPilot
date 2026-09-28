@@ -770,5 +770,10 @@ th .infotip{margin-left:3px}.infotip-btn{width:15px;height:15px;font-size:10px}
   radial-gradient(farthest-side at 100% 50%,rgba(0,0,0,.18),transparent) right center/12px 100% no-repeat scroll,var(--surface)}
 .pipe-example{grid-column:1/-1;padding:10px 12px;border-radius:10px;font:400 13.5px/1.5 var(--body);color:var(--text);background:color-mix(in srgb, var(--teal) 10%, var(--surface));border:1px solid color-mix(in srgb, var(--teal) 40%, transparent)}
 .pipe-example b{color:var(--text-strong)}
-.co-logo.big{border-radius:9px}
-td.logo-cell{width:auto;min-width:44px}
+
+
+/* Pipeline: Rank definition with its live example beside it */
+.pipe-rank-row{display:grid;grid-template-columns:minmax(230px,1fr) minmax(0,2.2fr);gap:8px;margin:6px 0 0}
+@media (max-width:760px){.pipe-rank-row{grid-template-columns:1fr}}
+.pipe-rank-row>div:first-child{padding:9px 12px;border-radius:10px;background:var(--surface);border:1px solid rgba(var(--ink),.12);font:400 13px/1.45 var(--body);color:var(--text)}
+.pipe-rank-row .pipe-example{grid-column:auto}

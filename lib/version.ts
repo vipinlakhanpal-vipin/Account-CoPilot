@@ -1,11 +1,16 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.67";
+export const APP_VERSION = "1.68";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.68", date: "2026-09-28", notes: "Logos back to the earlier size; the Rank live example sits beside the Rank definition.",
+    changes: [
+      { what: "Company logos back to the earlier, smaller size in every row", where: "Pipeline, Accounts and other tables", why: "The larger logos in tall rows didn't look good" },
+      { what: "The live Rank example now sits beside the Rank definition (below it on narrow screens)", where: "Accounts → Pipeline", why: "Easier to read the formula and its worked example side by side" },
+    ] },
   { version: "1.67", date: "2026-09-28", notes: "Logos use the row's spare height: in tall rows they grow to 40px (wordmarks up to 80px wide) so they read clearly; in normal rows they stay small. Rows never get taller.",
     changes: [
       { what: "Adaptive logo size: when a row is already tall (e.g. a long company description), the logo grows to 40px — wide logos like Americana's up to 80px wide — and in normal rows it stays at 22px", where: "Pipeline, Accounts and other tables with logos", why: "Bigger logos are clearer when there is room, without making any row taller" },

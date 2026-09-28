@@ -284,12 +284,14 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
   } else if (tab === "pipeline") {
     const ranked = A.filter((a) => inPipe(a, scores[a.id])).sort((a, b) => scores[b.id].rank - scores[a.id].rank);
     view = <FilterTable unit="accounts" title="Ranked pipeline" tipW={pipe} note={<>
-        <div className="pipe-def">
+        <div className="pipe-rank-row">
           <div><b>Rank</b> — which account to work first: <b>{pipe.w_match}% × ICP Match + {pipe.w_opportunity}% × Opportunity + {pipe.w_fit}% × Coupa Fit</b>.</div>
           {ranked[0] && (() => { const t = ranked[0], sc = scores[t.id], p1 = sc.m.total * pipe.w_match / 100, p2 = sc.o.total * pipe.w_opportunity / 100, p3 = sc.f.total * pipe.w_fit / 100;
             const n = (x: number) => (Math.round(x * 10) / 10).toLocaleString();
             return <div className="pipe-example"><b>Live example — {t.company_name} (#1):</b> {pipe.w_match}% × {sc.m.total}% (ICP Match) + {pipe.w_opportunity}% × {sc.o.total}% (Opportunity) + {pipe.w_fit}% × {sc.f.total}% (Coupa Fit)
               = {n(p1)} + {n(p2)} + {n(p3)} = {n(p1 + p2 + p3)} → <b>Rank {sc.rank}%</b>. Every other account is ranked the same way.</div>; })()}
+        </div>
+        <div className="pipe-def">
           <div><b>ICP Match</b> — how well it fits your ICP (revenue, size, industry, ownership…). Needs {pipe.min_match}%+ to be listed.</div>
           <div><b>Opportunity</b> — how likely it is to buy soon (S2P signals, transformation, your buying triggers).</div>
           <div><b>Coupa Fit</b> — how well Coupa fits it (five value areas, its ERP and platform, your focus platforms).</div>
