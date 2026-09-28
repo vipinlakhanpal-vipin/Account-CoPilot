@@ -1,11 +1,17 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.79";
+export const APP_VERSION = "1.80";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.80", date: "2026-09-28", notes: "Scheduled session access: clearer token label and a Done button to close it; Contact tiers: matching light colour and centred alignment on both fields.",
+    changes: [
+      { what: "The active-token tag now reads 'Active · token ends in <4 chars>' with a hover tip explaining it's the last 4 characters of the current token (the app only stores its hash) — check it matches what you pasted into the cloud environment", where: "Setup → Settings → Scheduled session access", why: "The old '…ends …xxxx' wording read as a truncated value rather than an intentional fingerprint" },
+      { what: "A 'Done' button next to Copy closes the just-generated token box", where: "Setup → Settings → Scheduled session access", why: "There was no way to dismiss it after copying" },
+      { what: "Tier label and example-titles fields now share the same light gold fill and border, and sit centred with each other in the row", where: "Setup → Settings → Contact tiers", why: "A global input style was silently overriding the label field's colour, making it look unstyled next to the examples field" },
+    ] },
   { version: "1.79", date: "2026-09-28", notes: "One-company requests: 'Run now' (instant, ≈ $0.55) or 'Queue (free)'; clear statuses — Waiting (with the next run time), In progress, Completed with a 'View the account →' link, Failed.",
     changes: [
       { what: "For a specific company: 'Run now (≈ $0.55)' researches it instantly with the Anthropic API (PIN), or 'Queue (free)' leaves it for the next scheduled run", where: "Setup → Settings → 1 · Search companies", why: "Free research only happens in scheduled sessions; Run now is there when you can't wait" },

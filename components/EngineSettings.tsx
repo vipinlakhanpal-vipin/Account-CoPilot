@@ -107,7 +107,7 @@ export default function EngineSettings() {
               <td className="wrap">{e.new_companies.join(", ") || "—"}</td></tr>)}</tbody></table></div></div>}
 
         <div className="eng-card">
-          <div className="eng-head"><h3>Scheduled session access</h3><span className={`tag ${s?.token_info ? "fact" : "unv"}`}>{s?.token_info ? `Active · ends …${s.token_info.hint}` : "Not set up"}</span></div>
+          <div className="eng-head"><h3>Scheduled session access</h3><span className={`tag ${s?.token_info ? "fact" : "unv"}`} title={s?.token_info ? "Last 4 characters of the current token — the app only stores its hash, not the full value. Check this matches the ENGINE_TOKEN you pasted into the cloud environment." : undefined}>{s?.token_info ? `Active · token ends in ${s.token_info.hint}` : "Not set up"}</span></div>
           <p className="note">The daily 6am Claude session talks to the app with a limited engine token: it can read the job queue and the verification queue, submit revenue results, add discovered companies and post notifications — it cannot read contacts or delete anything. Put it in the cloud environment's variables as <code>ENGINE_TOKEN</code> (with <code>APP_URL=https://account-copilot.vercel.app</code>). It's shown only once; generating a new one revokes the old.</p>
           <div className="eng-form">
             <button type="button" className="btn" onClick={async () => { if (!s?.token_info || await ask({ title: "Generate a new engine token?", tone: "danger", confirm: "Generate new token", points: ["The current token stops working immediately.", "Update ENGINE_TOKEN in the routine environment with the new one."] })) post({ action: "token", op: "generate" }, "New engine token generated — copy it now."); }}>{s?.token_info ? "Regenerate token" : "Generate token"}</button>
@@ -115,7 +115,8 @@ export default function EngineSettings() {
           </div>
           {newToken && <div className="eng-token"><b>Copy these two lines into the cloud environment's Environment variables (shown once):</b>
             <pre>{`APP_URL=https://account-copilot.vercel.app\nENGINE_TOKEN=${newToken}`}</pre>
-            <button type="button" className="btn tiny" onClick={() => navigator.clipboard?.writeText(`APP_URL=https://account-copilot.vercel.app\nENGINE_TOKEN=${newToken}`)}>Copy</button></div>}
+            <button type="button" className="btn tiny" onClick={() => navigator.clipboard?.writeText(`APP_URL=https://account-copilot.vercel.app\nENGINE_TOKEN=${newToken}`)}>Copy</button>
+            <button type="button" className="btn tiny ghost" onClick={() => setNewToken("")}>Done</button></div>}
         </div>
 
         <div className="eng-card paid">

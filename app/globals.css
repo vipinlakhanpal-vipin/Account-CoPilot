@@ -196,6 +196,9 @@ textarea{min-height:64px;resize:vertical}
 .input-frame{background:color-mix(in srgb, var(--gold) 8%, var(--sunken));border:1.5px solid color-mix(in srgb, var(--gold) 55%, var(--line))}
 .error{color:var(--sig-c);font-size:13px}
 .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;align-items:end}
+.tier-row input.input-frame,.tier-row textarea.input-frame{background:color-mix(in srgb, var(--gold) 10%, var(--surface));border:1.5px solid color-mix(in srgb, var(--gold) 45%, var(--line))}
+.tier-row input.input-frame{min-height:42px}
+.tier-row textarea.input-frame{min-height:64px}
 .roles{display:flex;flex-wrap:wrap;gap:8px}
 .roles label{display:flex;gap:6px;align-items:center;font-weight:500;color:var(--text);background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:5px 12px;letter-spacing:0}
 .status{font:600 11px var(--body);letter-spacing:.05em;text-transform:uppercase;padding:2px 9px;border-radius:999px;background:var(--sig-n-bg);color:var(--sig-n)}
