@@ -3,6 +3,7 @@ import Hero from "@/components/Hero";
 import IcpEditor from "@/components/IcpEditor";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { normalizeDefinition, regionOf } from "@/lib/icpDefinition.mjs";
+import { getAccess, ROLE_LABEL } from "@/lib/access";
 
 export const dynamic = "force-dynamic";
 
@@ -11,14 +12,15 @@ export const dynamic = "force-dynamic";
 export default async function DefineIcpPage() {
   const user = await requirePageUser();
   const db = supabaseAdmin();
-  const [{ data: row }, { data: cos }, { data: own }] = await Promise.all([
+  const access = await getAccess(user);
+  const [{ data: row }, { data: cos }] = await Promise.all([
     db.from("settings").select("value").eq("key", "icp_definition").maybeSingle(),
     db.from("companies").select("country"),
-    db.from("settings").select("value").eq("key", "icp_owner").maybeSingle(),
   ]);
-  const owners = ((own?.value as { emails?: string[] } | null)?.emails || []).map((e) => e.toLowerCase());
   const counts: Record<string, number> = {};
-  for (const c of cos || []) { const k = regionOf(c.country); counts[k] = (counts[k] || 0) + 1; }
+  for (const c of cos || []) { const k = regionOf(c.country); if (access.regions.includes(k)) counts[k] = (counts[k] || 0) + 1; }
+  if (!access.regions.length) return (<div className="wrap"><Hero title="Define ICP" text="Your Ideal Customer Profile, region by region." />
+    <section className="panel"><p>No region is assigned to you yet. Ask your Super Admin to assign one in Setup → Settings → Team.</p></section></div>);
   return (
     <div className="wrap">
       <Hero title="Define ICP" text="Your Ideal Customer Profile, region by region. The agent follows exactly what you set here when it searches, verifies, scores and profiles companies." />
@@ -32,7 +34,7 @@ export default async function DefineIcpPage() {
         </ol>
         <p className="note">Each setting is tagged with what it drives (Status, Discovery, Verification, Pipeline, Contacts, Daily run). Use <b>Preview impact</b> to see how many accounts would change before you save. Every save is recorded in the change history.</p>
       </section>
-      <IcpEditor initial={normalizeDefinition(row?.value)} counts={counts} me={(user.email || "").toLowerCase()} initialOwners={owners} />
+      <IcpEditor initial={normalizeDefinition(row?.value)} counts={counts} isSuper={access.isSuper} allowed={access.regions} roleLabel={ROLE_LABEL[access.role]} />
     </div>
   );
 }

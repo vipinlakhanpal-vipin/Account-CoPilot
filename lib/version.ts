@@ -1,11 +1,19 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.53";
+export const APP_VERSION = "1.54";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.54", date: "2026-09-28", notes: "Roles and regions: Super Admin (all regions, consolidated view, team, engine, every ICP) and Standard User (one region: its data and its ICP only). Set in Setup → Settings → Team; enforced by the app and the database.",
+    changes: [
+      { what: "Roles: Super Admin sees every region together and one by one, and manages the team, engine and all ICPs; Standard User is assigned a region and the whole app (dashboard, accounts, Pipeline, research, daily run, Master Book) works only on that region by its ICP", where: "Setup → Settings → Team (Role and Region when inviting; 'Change' on each person)", why: "A Europe or USA colleague should control only their market, without access to other regions" },
+      { what: "Define ICP follows the role: a Standard User sees and edits only their region's rules; a Super Admin edits every region. This replaces the single-owner lock", where: "Setup → Define ICP", why: "Each region owns its ICP" },
+      { what: "Region tiles show only your regions (Super Admins also get 'All regions', the consolidated view); Europe, USA and Bahrain are now tiles too", where: "Country bar under the main tabs", why: "Standard users should only see their own market" },
+      { what: "Database protection: region rules are also enforced inside the database, and shared settings can be written only by Super Admins (one-time update to run in Supabase)", where: "Behind the scenes", why: "So nobody can go around the app to see or change another region" },
+      { what: "Learn Me explains roles and regions", where: "Setup → Learn Me → Get to know me", why: "Anyone reading it should know who can see and change what" },
+    ] },
   { version: "1.53", date: "2026-09-28", notes: "Readability fixes: white text on count badges; the Refresh plan is labelled as a preview (nothing spent until you click); Console balance shown as a coloured dollar field with a filled Save balance button.",
     changes: [
       { what: "Count badges (e.g. '1 users') use white text on a darker green", where: "Every heading with a count, e.g. Setup → Settings → Team", why: "Black text on green was hard to read" },

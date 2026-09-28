@@ -3,6 +3,7 @@ import { rulesFor } from "@/lib/icpDefinition.mjs";
 import { NextResponse, after } from "next/server";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
+import { getAccess, canSeeCountry } from "@/lib/access";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { invalidateAllData } from "@/lib/dataCache";
 import { researchNotes, extract, newMeter, meterCost, type Depth } from "@/lib/research/engine";
@@ -27,6 +28,9 @@ export async function POST(req: Request) {
   if (!parsed.success) return NextResponse.json({ error: "Enter a company name." }, { status: 400 });
   const b = parsed.data;
   const db = supabaseAdmin();
+  const access = await getAccess(user);
+  const target = b.companyId ? (await db.from("companies").select("country").eq("id", b.companyId).maybeSingle()).data : null;
+  if (!canSeeCountry(access, target ? target.country : b.country)) return NextResponse.json({ error: "You can only research companies in your own region." }, { status: 403 });
 
   let existing: string | undefined;
   if (b.companyId) {

@@ -655,3 +655,14 @@ td.logo-cell{width:40px;padding-top:0;padding-bottom:0;text-align:center}
 :root[data-theme="light"] .money-input input,:root[data-theme="light"] .money-input>span{color:#157A55}
 @media (prefers-color-scheme: light){:root:not([data-theme="dark"]) .money-input input,:root:not([data-theme="dark"]) .money-input>span{color:#157A55}}
 .money-input:focus-within{box-shadow:0 0 0 2px color-mix(in srgb, #2ECC8F 45%, transparent)}
+/* Team: roles & regions */
+.team-roles{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin:8px 0 10px}
+.team-roles>div{padding:10px 12px;border-radius:12px;border:1px solid rgba(var(--ink),.14);background:color-mix(in srgb, var(--teal) 7%, var(--surface));display:flex;flex-direction:column;gap:3px}
+.team-roles span{font:400 13px/1.45 var(--body);color:var(--muted)}
+.team-warn{margin:8px 0;padding:8px 12px;border-radius:10px;font:500 13px/1.45 var(--body);background:color-mix(in srgb, #E0A21B 14%, var(--surface));border:1px solid color-mix(in srgb, #E0A21B 40%, transparent)}
+.team-access{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.team-access label{display:flex;flex-direction:column;gap:6px;font:600 13px var(--body)}
+.team-all{align-self:center;font:600 13px var(--body);color:var(--muted);padding-bottom:8px}
+.team-edit{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
+.role-tag{font:700 11.5px var(--body);padding:3px 10px;border-radius:999px;white-space:nowrap}
+.role-tag.super_admin{background:#5B4BC4;color:#FFFFFF}.role-tag.standard{background:#0B7A66;color:#FFFFFF}

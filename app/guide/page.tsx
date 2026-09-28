@@ -5,6 +5,7 @@ import { SPEND_BENCHMARKS, DEFAULT_SPEND } from "@/lib/icp";
 import { SOURCES, indexSources } from "@/lib/sources";
 import { supabaseServer } from "@/lib/supabase/server";
 import { loadAllCached } from "@/lib/dataCache";
+import { getAccess, scopeData, type Access } from "@/lib/access";
 import { statusPatch } from "@/lib/icpStatus.mjs";
 import { rulesFor } from "@/lib/icpDefinition.mjs";
 import { buildPeople } from "@/lib/people";
@@ -12,9 +13,9 @@ import { withDefaults, icpMatch } from "@/lib/icp";
 
 type Check = { label: string; ok: boolean; result: string };
 /** Live logic checks against the app's data (same rules the app and daily engine use). */
-async function liveChecks() {
+async function liveChecks(access: Access) {
   const sb = await supabaseServer();
-  const d = await loadAllCached();
+  const d = scopeData(await loadAllCached(), access);
   const A = d.accounts, ids = new Set(A.map((a) => a.id));
   const n = (x: number) => x.toLocaleString();
   const { data: defRow } = await sb.from("settings").select("value").eq("key", "icp_definition").maybeSingle();
@@ -67,8 +68,8 @@ const T = ({ head, rows }: { head: string[]; rows: (string | number)[][] }) => (
 const pct = (x: number) => `${Math.round(x * 100)}%`;
 
 export default async function GuidePage() {
-  await requirePageUser();
-  const live = await liveChecks();
+  const user = await requirePageUser();
+  const live = await liveChecks(await getAccess(user));
   return (
     <>
       <div className="wrap guide">
@@ -94,6 +95,7 @@ export default async function GuidePage() {
                   <li>The stronger revenue evidence wins (FACT, then LIKELY, then UNVERIFIED).</li>
                   <li>The other name and website are kept as aliases, so the same company can never come back as &quot;new&quot;.</li>
                 </ul></p>
+              <p className="intro-box"><b>Each person works on their own region.</b> A <b>Super Admin</b> sees every region together (a consolidated view) and each region on its own, and manages the team, the engine and every region&apos;s ICP. A <b>Standard User</b> is assigned one region, for example Europe or USA. For them the whole app works only on that region, by that region&apos;s ICP: dashboard, accounts, Pipeline, research, the daily run and the Master Book. They can change only their own region&apos;s ICP and cannot see other regions. The database enforces the same rule, so it can&apos;t be bypassed.</p>
               <p className="intro-box">Next I <b>check SCP&apos;s HubSpot</b> (read-only) to see which companies and contacts are already there, with their stage, owner and any deals. That way your team never imports a duplicate, and knows straight away whether an account is new, being worked or already a customer. HubSpot information stays inside this app.</p>
               <p className="intro-box">Along the way I work smartly and keep costs down:
                 <ul>
@@ -162,7 +164,7 @@ export default async function GuidePage() {
                 ["Conflicts", "Where two sources disagree. Both values are kept; nothing is overwritten."],
                 ["Research Queue", "Start new company research (uses the paid API; see Costs)."],
                 ["Define ICP", "Your Ideal Customer Profile for each region: every rule the agent follows when it searches, verifies and scores companies."],
-                ["Settings", "Contact tiers, team invites, the discovery & refresh engine and the Costs & usage explainer."],
+                ["Settings", "Discovery & refresh engine, contact tiers, the team with each person's role (Super Admin / Standard User) and region, and the Costs & usage explainer. Standard users see their own access only."],
                 ["Learn Me", "This page."]]} /></section>
 
             <section id="countries" className="panel"><h2>Country tiles</h2>

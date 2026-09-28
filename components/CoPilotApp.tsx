@@ -1,5 +1,5 @@
 "use client";
-import { rulesFor } from "@/lib/icpDefinition.mjs";
+import { rulesFor, regionOf } from "@/lib/icpDefinition.mjs";
 import CostNote from "@/components/CostNote";
 import CompanyLogo from "@/components/CompanyLogo";
 import { useMemo, useState, useEffect } from "react";
@@ -173,14 +173,14 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "
   );
 }
 
-export default function CoPilotApp({ data: all }: { data: AllData }) {
+export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper = true }: { data: AllData; home?: string; isSuper?: boolean }) {
   const params = useSearchParams();
   const tab = params.get("tab") || "dashboard";
-  const country = params.get("country") || DEFAULT_COUNTRY;
+  const country = params.get("country") || home;
   // Everything below (dashboard, tabs, drill-downs) sees only the selected country's accounts and their linked rows.
   const data = useMemo<AllData>(() => {
     if (country === ALL) return all;
-    const accounts = all.accounts.filter((a) => countryCode(a.country) === country);
+    const accounts = all.accounts.filter((a) => regionOf(a.country) === country);
     const ids = new Set(accounts.map((a) => a.id));
     const mine = (r: Row) => ids.has(r.company_id);
     return { ...all, accounts, contacts: all.contacts.filter(mine), signals: all.signals.filter(mine), sources: all.sources.filter(mine),
@@ -202,6 +202,7 @@ export default function CoPilotApp({ data: all }: { data: AllData }) {
   }, []);
   const toggle = () => setCollapsed((c) => { try { localStorage.setItem("dp-collapsed", c ? "0" : "1"); } catch {} return !c; });
   async function saveCriteria(c: Criteria) {
+    if (!isSuper) return { ok: false, error: "Only a Super Admin can save the team's filters. Your changes still apply to your own view." };
     const sb = supabaseBrowser(), at = new Date().toISOString();
     const { data: u } = await sb.auth.getUser();
     const by = (u.user?.user_metadata?.name as string) || u.user?.email || "";
@@ -333,7 +334,7 @@ export default function CoPilotApp({ data: all }: { data: AllData }) {
   } else if (tab === "sources") {
     const region = country === ALL ? "All regions" : country;
     const idx = indexSources(A, data.sources.filter((s) => A.some((a) => a.id === s.company_id)), data.contacts);
-    const perCountry = (rows: Row[]) => country === ALL ? countBy(rows, (a) => countryCode(a.country)).map(([k, n]) => `${k} ${n}`).join(" · ") : "";
+    const perCountry = (rows: Row[]) => country === ALL ? countBy(rows, (a) => regionOf(a.country)).map(([k, n]) => `${k} ${n}`).join(" · ") : "";
     const tile = (key: string, name: string, color: string, rows: Row[], kind: Kind, sub: React.ReactNode, tip = "") => (
       <button type="button" key={key} className={`kpi src-tile${rows.length ? "" : " empty"}`} style={{ "--k": color } as React.CSSProperties} title={tip}
         onClick={() => rows.length && setDrill({ title: `${name} | ${region}`, kind, rows })}>

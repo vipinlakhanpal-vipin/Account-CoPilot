@@ -1,10 +1,11 @@
 "use client";
 import { useSearchParams } from "next/navigation";
-import { ALL, COUNTRIES, DEFAULT_COUNTRY } from "@/lib/countries";
+import { ALL, COUNTRIES, DEFAULT_COUNTRY as HOME } from "@/lib/countries";
 
 // Country tiles under the main nav. Selecting one filters the dashboard and every tab to that country (kept in ?country=).
-export default function CountryBar({ counts }: { counts: Record<string, number> }) {
+export default function CountryBar({ counts, allowed, showAll = true, home = HOME }: { counts: Record<string, number>; allowed?: string[]; showAll?: boolean; home?: string }) {
   const params = useSearchParams();
+  const DEFAULT_COUNTRY = home; // a Standard user's home region
   const current = params.get("country") || DEFAULT_COUNTRY;
   const total = Object.values(counts).reduce((a, b) => a + b, 0);
   const pick = (code: string) => {
@@ -13,7 +14,8 @@ export default function CountryBar({ counts }: { counts: Record<string, number> 
     const s = q.toString();
     window.history.pushState(null, "", s ? `/?${s}` : "/");
   };
-  const tiles = [{ code: ALL, name: "All countries", flag: "🌍" }, ...COUNTRIES];
+  // Super Admin: All + every market. Standard user: only their region(s).
+  const tiles = [...(showAll ? [{ code: ALL, name: "All regions", flag: "🌍" }] : []), ...COUNTRIES.filter((c) => !allowed || allowed.includes(c.code))];
   return (
     <div className="countrybar" role="tablist" aria-label="Country">
       {tiles.map((c) => {

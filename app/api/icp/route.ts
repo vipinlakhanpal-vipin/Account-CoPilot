@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
+import { getAccess, canSeeRegion } from "@/lib/access";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { invalidateAllData } from "@/lib/dataCache";
 import { statusPatch } from "@/lib/icpStatus.mjs";
@@ -19,18 +20,11 @@ async function load(db: ReturnType<typeof supabaseAdmin>): Promise<Definition> {
   return normalizeDefinition(data?.value);
 }
 
-/** Owner-only lock: settings.icp_owner = { emails: string[], set_at, set_by }. Empty = not claimed yet (anyone may claim it once). */
-type Owners = { emails: string[]; set_at?: string; set_by?: string };
-async function owners(db: ReturnType<typeof supabaseAdmin>): Promise<Owners> {
-  const { data } = await db.from("settings").select("value").eq("key", "icp_owner").maybeSingle();
-  const v = (data?.value as Partial<Owners> | null) || {};
-  return { ...v, emails: Array.isArray(v.emails) ? v.emails : [] };
-}
-const isOwner = (o: Owners, email?: string | null) => !o.emails.length || (!!email && o.emails.map((e) => e.toLowerCase()).includes(email.toLowerCase()));
-
 export async function GET() {
-  if (!(await requireUser())) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
-  return NextResponse.json(await load(supabaseAdmin()));
+  const user = await requireUser();
+  if (!user) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
+  const access = await getAccess(user), def = await load(supabaseAdmin());
+  return NextResponse.json({ ...def, regions: Object.fromEntries(Object.entries(def.regions).filter(([k]) => canSeeRegion(access, k))) });
 }
 
 /** What changed between two definitions, in plain words (for the history line). */
@@ -55,30 +49,16 @@ function diff(a: Definition, b: Definition) {
 export async function POST(req: Request) {
   const user = await requireUser();
   if (!user) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
-  const body = await req.json().catch(() => null) as { action?: string; definition?: Definition; emails?: string[] } | null;
+  const body = await req.json().catch(() => null) as { action?: string; definition?: Definition } | null;
   const db = supabaseAdmin();
-  const own = await owners(db);
-  // Owner management: claim (only when nobody owns it yet) or set the owner list (owners only; must keep yourself unless handing over).
-  if (body?.action === "claim") {
-    if (own.emails.length) return NextResponse.json({ error: "Define ICP already has an owner." }, { status: 409 });
-    const v = { emails: [String(user.email)], set_at: new Date().toISOString(), set_by: String(user.email) };
-    await db.from("settings").upsert({ key: "icp_owner", value: v, updated_at: v.set_at });
-    return NextResponse.json({ ok: true, owners: v });
-  }
-  if (body?.action === "owners") {
-    if (!own.emails.length || !isOwner(own, user.email)) return NextResponse.json({ error: "Only the ICP owner can change owners." }, { status: 403 });
-    const emails = [...new Set((body.emails || []).map((e) => String(e).trim().toLowerCase()).filter((e) => /^[^@\s]+@[^@\s]+\.[a-z]{2,}$/.test(e)))];
-    if (!emails.length) return NextResponse.json({ error: "Keep at least one owner." }, { status: 400 });
-    const v = { emails, set_at: new Date().toISOString(), set_by: String(user.email) };
-    await db.from("settings").upsert({ key: "icp_owner", value: v, updated_at: v.set_at });
-    return NextResponse.json({ ok: true, owners: v });
-  }
+  const access = await getAccess(user);
   if (!body?.definition?.regions || !["preview", "save"].includes(String(body.action))) return NextResponse.json({ error: "Bad request." }, { status: 400 });
-  if (body.action === "save" && !isOwner(own, user.email))
-    return NextResponse.json({ ok: false, error: `Only the ICP owner can save changes (${own.emails.join(", ")}). You can still preview.` }, { status: 403 });
+  if (!access.regions.length) return NextResponse.json({ ok: false, error: "No region is assigned to you." }, { status: 403 });
   const current = await load(db);
-  const next = normalizeDefinition({ ...current, regions: body.definition.regions });
-  const problems = REGIONS.flatMap(({ key }) => validateRules(key, next.regions[key] as Rules));
+  // A Standard user's save can only change their own region(s): every other region is taken from the saved definition.
+  const regions = Object.fromEntries(REGIONS.map(({ key }) => [key, canSeeRegion(access, key) && body.definition!.regions[key] ? body.definition!.regions[key] : current.regions[key]]));
+  const next = normalizeDefinition({ ...current, regions });
+  const problems = REGIONS.filter(({ key }) => canSeeRegion(access, key)).flatMap(({ key }) => validateRules(key, next.regions[key] as Rules));
 
   // Impact: status of every company under the new rules vs now.
   const { data: cos, error } = await db.from("companies").select("*");
@@ -87,6 +67,7 @@ export async function POST(req: Request) {
   const patches: { id: string; patch: Record<string, unknown> }[] = [];
   for (const c of cos || []) {
     const key = regionOf(c.country);
+    if (!canSeeRegion(access, key)) continue; // Standard users see and change only their region
     const r = (impact[key] ||= { before: Object.fromEntries(STATUSES.map((s) => [s, 0])), after: Object.fromEntries(STATUSES.map((s) => [s, 0])), changes: [] });
     const { status, patch } = statusPatch(c, rulesFor(next, c.country));
     r.before[c.icp_status] = (r.before[c.icp_status] || 0) + 1; r.after[status] = (r.after[status] || 0) + 1;
@@ -106,7 +87,8 @@ export async function POST(req: Request) {
   if (e1) return NextResponse.json({ error: e1.message }, { status: 500 });
   // Re-apply ICP status now, so the app matches the new definition immediately.
   for (const p of patches) await db.from("companies").update(p.patch).eq("id", p.id);
-  // Keep the left panel's default size filters in step with the UAE rules (other filters untouched).
+  // Keep the left panel's default size filters in step with the UAE rules (other filters untouched). Super Admin saves only.
+  if (access.isSuper) {
   const uae = saved.regions.UAE;
   const REV: [string, number, number][] = [["<$100M", 0, 100], ["$100M-$250M", 100, 250], ["$250M-$500M", 250, 500], ["$500M-$1B", 500, 1000], ["$1B-$5B", 1000, 5000], ["$5B+", 5000, Infinity]];
   const EMP: [string, number, number][] = [["100-250", 100, 250], ["250-500", 250, 500], ["500-1000", 500, 1000], ["1000-5000", 1000, 5000], ["5000+", 5000, Infinity]];
@@ -116,6 +98,7 @@ export async function POST(req: Request) {
   const cv = (crit?.value || {}) as { company?: Record<string, unknown> };
   await db.from("settings").upsert({ key: "icp_criteria", updated_at: at,
     value: { ...cv, company: { ...(cv.company || {}), revenue, employees }, _meta: { by: `${by} (via Define ICP)`, at } } });
+  }
   invalidateAllData();
   return NextResponse.json({ ok: true, saved: { version: saved.version, at, by }, changed, impact, changes, summary: Object.entries(saved.regions).map(([k, r]) => summarizeRules(k, r)) });
 }

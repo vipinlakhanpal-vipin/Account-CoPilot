@@ -102,23 +102,13 @@ function Toggle({ label, value, onChange, help }: { label: string; value: boolea
   return <label className="icp-toggle"><input type="checkbox" checked={value} onChange={(e) => onChange(e.target.checked)} /><span>{label}{help && <small>{help}</small>}</span></label>;
 }
 
-export default function IcpEditor({ initial, counts, me, initialOwners }: { initial: Definition; counts: Record<string, number>; me: string; initialOwners: string[] }) {
-  const [owners, setOwners] = useState<string[]>(initialOwners);
-  const readOnly = owners.length > 0 && !owners.includes(me); // owner-only lock
-  const [ownerEdit, setOwnerEdit] = useState<string | null>(null);
-  const [ownerMsg, setOwnerMsg] = useState("");
-  async function ownerCall(action: "claim" | "owners", emails?: string[]) {
-    if (action === "claim" && !window.confirm(`Make ${me} the owner of Define ICP?\n\nAfter this, only the owner(s) can save changes to the ICP. Everyone else can view and preview.`)) return;
-    if (action === "owners" && emails && !emails.includes(me) && !window.confirm("You are removing yourself as owner. You won't be able to change the ICP afterwards. Continue?")) return;
-    setOwnerMsg("");
-    const res = await fetch("/api/icp", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action, emails }) });
-    const j = await res.json();
-    if (j.ok) { setOwners(j.owners.emails); setOwnerEdit(null); setOwnerMsg(action === "claim" ? "You are now the ICP owner." : "Owners updated."); }
-    else setOwnerMsg(j.error || "Could not update owners.");
-  }
+export default function IcpEditor({ initial, counts, isSuper, allowed, roleLabel }: { initial: Definition; counts: Record<string, number>; isSuper: boolean; allowed: string[]; roleLabel: string }) {
+  // Roles: a Super Admin sees and changes every region; a Standard User sees and changes only their own region(s).
+  const visible = REGIONS.filter((x) => allowed.includes(x.key));
+  const readOnly = false;
   const [saved, setSaved] = useState<Definition>(normalizeDefinition(initial));
   const [def, setDef] = useState<Definition>(normalizeDefinition(initial));
-  const [region, setRegion] = useState("UAE");
+  const [region, setRegion] = useState(visible[0]?.key || "UAE");
   const [busy, setBusy] = useState<"" | "preview" | "save">("");
   const [result, setResult] = useState<Result | null>(null);
   const [copyFrom, setCopyFrom] = useState("");
@@ -126,8 +116,8 @@ export default function IcpEditor({ initial, counts, me, initialOwners }: { init
   const r = def.regions[region];
   const locked = readOnly || (r.status !== "active" && !unlocked[region]); // owner-only lock; only an active region (or one being prepared) can be edited
   const dirty = JSON.stringify(def.regions) !== JSON.stringify(saved.regions);
-  const dirtyRegions = REGIONS.filter(({ key }) => JSON.stringify(def.regions[key]) !== JSON.stringify(saved.regions[key])).map((x) => x.key);
-  const problems = useMemo(() => REGIONS.flatMap(({ key }) => validateRules(key, def.regions[key])), [def]);
+  const dirtyRegions = visible.filter(({ key }) => JSON.stringify(def.regions[key]) !== JSON.stringify(saved.regions[key])).map((x) => x.key);
+  const problems = useMemo(() => visible.flatMap(({ key }) => validateRules(key, def.regions[key])), [def, visible]);
   const set = (fn: (x: Rules) => void) => { setDef((d) => { const n = clone(d); fn(n.regions[region]); return n; }); setResult(null); };
 
   async function call(action: "preview" | "save") {
@@ -162,27 +152,16 @@ export default function IcpEditor({ initial, counts, me, initialOwners }: { init
         </div>
       </div>
 
-      <div className={`icp-owner${readOnly ? " ro" : ""}`}>
-        <span className="lock" aria-hidden="true">{owners.length ? "🔒" : "🔓"}</span>
-        {!owners.length ? (
-          <><span><b>No owner yet.</b> Anyone signed in can change the ICP. Make yourself the owner so only you can save changes.</span>
-            <button type="button" className="btn primary" onClick={() => ownerCall("claim")}>Make me the ICP owner</button></>
-        ) : readOnly ? (
-          <span><b>View only.</b> Only the ICP owner ({owners.join(", ")}) can change these rules. You can read everything and use Preview impact.</span>
-        ) : ownerEdit === null ? (
-          <><span><b>Owner-only lock is on.</b> Owner{owners.length > 1 ? "s" : ""}: {owners.join(", ")}. Only {owners.length > 1 ? "they" : "you"} can save changes; teammates can view and preview.</span>
-            <button type="button" className="btn" onClick={() => setOwnerEdit(owners.join(", "))}>Manage owners</button></>
-        ) : (
-          <><label className="icp-field grow"><span>Owners (sign-in emails, comma-separated)</span><input value={ownerEdit} onChange={(e) => setOwnerEdit(e.target.value)} /></label>
-            <button type="button" className="btn primary" onClick={() => ownerCall("owners", ownerEdit.split(/[,;\s]+/).map((x) => x.trim().toLowerCase()).filter(Boolean))}>Save owners</button>
-            <button type="button" className="btn" onClick={() => setOwnerEdit(null)}>Cancel</button></>
-        )}
-        {ownerMsg && <span className="icp-hint">{ownerMsg}</span>}
+      <div className="icp-owner">
+        <span className="lock" aria-hidden="true">{isSuper ? "🌍" : "📍"}</span>
+        <span><b>{roleLabel}.</b> {isSuper
+          ? "You can see and change the ICP of every region. Standard users can change only the region assigned to them in Setup → Settings → Team."
+          : `You control the ICP for ${visible.map((x) => x.name).join(", ")} only. Other regions are managed by your Super Admin.`}</span>
       </div>
 
       <p className="icp-step"><b>Step 1</b> · Choose a region</p>
       <nav className="icp-regions" aria-label="Regions">
-        {REGIONS.map(({ key, name }) => {
+        {visible.map(({ key, name }) => {
           const st = def.regions[key].status;
           return (
             <button type="button" key={key} className={`icp-region r-${st}${region === key ? " on" : ""}`} onClick={() => setRegion(key)} title={name} aria-pressed={region === key}>
@@ -329,7 +308,7 @@ export default function IcpEditor({ initial, counts, me, initialOwners }: { init
             onChange={(e) => set((x) => { x.notes = e.target.value; })} />
           <div className="icp-tools">
             <label>Copy all rules from <select value={copyFrom} onChange={(e) => setCopyFrom(e.target.value)}><option value="">choose a region…</option>
-              {REGIONS.filter((x) => x.key !== region).map((x) => <option key={x.key} value={x.key}>{x.key}</option>)}</select></label>
+              {visible.filter((x) => x.key !== region).map((x) => <option key={x.key} value={x.key}>{x.key}</option>)}</select></label>
             <button type="button" className="btn" disabled={!copyFrom} onClick={() => { const src = clone(def.regions[copyFrom]); set((x) => { Object.assign(x, src, { status: x.status, currency: x.currency, engine: x.engine }); }); setCopyFrom(""); }}>Copy</button>
             <button type="button" className="btn" onClick={() => { if (window.confirm(`Reset ${region} to the default rules?`)) set((x) => { Object.assign(x, clone(DEFAULT_RULES), { status: x.status, currency: x.currency, engine: x.engine }); }); }}>Reset {region} to defaults</button>
           </div>

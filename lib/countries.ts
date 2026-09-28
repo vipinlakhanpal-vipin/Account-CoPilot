@@ -1,7 +1,8 @@
 // Markets Account CoPilot covers. UAE first; the rest follow (see CLAUDE.md).
 export const COUNTRIES = [
   { code: "UAE", name: "UAE", flag: "🇦🇪" }, { code: "KSA", name: "Saudi Arabia", flag: "🇸🇦" }, { code: "Qatar", name: "Qatar", flag: "🇶🇦" },
-  { code: "Kuwait", name: "Kuwait", flag: "🇰🇼" }, { code: "Oman", name: "Oman", flag: "🇴🇲" }, { code: "Egypt", name: "Egypt", flag: "🇪🇬" },
+  { code: "Kuwait", name: "Kuwait", flag: "🇰🇼" }, { code: "Oman", name: "Oman", flag: "🇴🇲" }, { code: "Bahrain", name: "Bahrain", flag: "🇧🇭" },
+  { code: "Egypt", name: "Egypt", flag: "🇪🇬" }, { code: "Europe", name: "Europe", flag: "🇪🇺" }, { code: "USA", name: "USA", flag: "🇺🇸" },
 ] as const;
 export const ALL = "All";
 export const DEFAULT_COUNTRY = "UAE";

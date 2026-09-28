@@ -1,6 +1,8 @@
 import { NextResponse, after } from "next/server";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
+import { getAccess, canSeeRegion } from "@/lib/access";
+import { regionOf } from "@/lib/icpDefinition.mjs";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { invalidateAllData } from "@/lib/dataCache";
 import { discoverCompanies, newMeter, meterCost } from "@/lib/research/engine";
@@ -19,6 +21,7 @@ export async function POST(req: Request) {
   const parsed = Body.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) return NextResponse.json({ error: "Invalid discovery request." }, { status: 400 });
   const b = parsed.data;
+  if (!canSeeRegion(await getAccess(user), regionOf(b.country))) return NextResponse.json({ error: "You can only research companies in your own region." }, { status: 403 });
   const db = supabaseAdmin();
   const { data: have } = await db.from("companies").select("company_name,domain");
   const names = (have || []).map((c) => c.company_name as string);

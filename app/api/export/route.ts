@@ -3,13 +3,15 @@ import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase/server";
 import { loadAll } from "@/lib/data";
 import { buildWorkbook } from "@/lib/export/workbook";
+import { getAccess, scopeData } from "@/lib/access";
 
 export const maxDuration = 60;
 
 export async function GET() {
-  if (!(await requireUser())) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
+  const user = await requireUser();
+  if (!user) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
   const sb = await supabaseServer();
-  const data = await loadAll(sb);
+  const data = scopeData(await loadAll(sb), await getAccess(user)); // Standard users export only their region
   const buf = await buildWorkbook(data);
   const date = new Date().toISOString().slice(0, 10);
   return new NextResponse(new Uint8Array(buf), {

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
+import { getAccess, canSeeRegion } from "@/lib/access";
+import { regionOf } from "@/lib/icpDefinition.mjs";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { createHash, randomBytes } from "node:crypto";
 
@@ -65,6 +67,13 @@ export async function POST(req: Request) {
   const parsed = Body.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   const b = parsed.data, db = supabaseAdmin(), now = new Date().toISOString(), id = crypto.randomUUID().slice(0, 8);
+  // Super Admin: everything. Standard user: only queue jobs / refresh in their own region (no token, no balance).
+  const access = await getAccess(user);
+  if (!access.isSuper) {
+    const region = "region" in b ? regionOf(b.region) : "";
+    if (!["queue", "refresh"].includes(b.action) || !canSeeRegion(access, region))
+      return NextResponse.json({ error: "Only a Super Admin can change this. Standard users can queue work for their own region." }, { status: 403 });
+  }
 
   if (b.action === "token") {
     // Engine token for scheduled sessions: shown once, only its SHA-256 hash is stored. Generating a new one revokes the old.
