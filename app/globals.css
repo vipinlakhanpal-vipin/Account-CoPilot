@@ -636,3 +636,5 @@ td.logo-cell{width:40px;padding-top:0;padding-bottom:0;text-align:center}
 .btn.link{background:none;border:0;color:var(--teal);text-decoration:underline;padding:4px 2px;cursor:pointer;font:600 13px var(--body)}
 .icp-prep{margin:10px 0}
 .icp-first{margin:0 0 4px}.icp-first .icp-card{max-width:none}
+.icp-status-change .icp-hint{align-self:center}
+.icp-status-btn{max-width:420px}
