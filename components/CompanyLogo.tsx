@@ -11,7 +11,7 @@ export default function CompanyLogo({ a, size = 22 }: { a: Row; size?: number })
   const d = domainOf(a);
   const [failed, setFailed] = useState(!d);
   return (
-    <span className={`co-logo${failed ? " ini" : ""}`} style={{ width: size, height: size }} title={a.company_name}>
+    <span className={`co-logo${failed ? " ini" : ""}`} style={failed ? { width: size, height: size } : { height: size, minWidth: size, maxWidth: size * 2 }} title={a.company_name}>
       {failed ? <span className="co-logo-ini" style={{ fontSize: Math.round(size * 0.42) }}>{initials(String(a.company_name || ""))}</span>
         // eslint-disable-next-line @next/next/no-img-element
         : <img src={`/api/logo?d=${encodeURIComponent(d)}`} alt="" loading="lazy" width={size} height={size} onError={() => setFailed(true)} />}

@@ -1,11 +1,16 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.62";
+export const APP_VERSION = "1.63";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.63", date: "2026-09-28", notes: "More company logos found (about 400 of 439, up from 359): the app now also tries the www. address and the logo the company's homepage declares. Wide logos fit the row height.",
+    changes: [
+      { what: "Logo lookup in three steps: the website icon, the same for the www. address, then the icon or logo the company's homepage declares — e.g. Americana now shows its logo instead of 'AR'", where: "Accounts, Pipeline, account page, Master Book", why: "Some companies' icons were only found at www. or on their homepage" },
+      { what: "Wide logos (wordmarks) keep the row height and may use up to twice the width; square icons stay square", where: "All tables with the logo column", why: "Large logos should fit without making rows taller" },
+    ] },
   { version: "1.62", date: "2026-09-28", notes: "Scores shown as percentages: Rank, ICP Match, Opportunity, Coupa Fit and Persona fit (e.g. 91%).",
     changes: [
       { what: "Rank, ICP Match, Opportunity, Coupa Fit and Persona fit show a % sign (e.g. Rank 91%, ICP Match 100%); each score's parts read '12 of 20 pts'; hovering Rank shows how it is built", where: "Pipeline, Accounts, account page scores, Stakeholders, Define ICP (minimum ICP Match), Learn Me, Master Book (Persona Fit %)", why: "The scores are percentages of the maximum points, so the % makes them read correctly" },

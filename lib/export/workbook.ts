@@ -6,7 +6,7 @@ import { fetchLogos, logoDomain } from "@/lib/logo";
 import { personaFit } from "@/lib/icp";
 import { rulesFor } from "@/lib/icpDefinition.mjs";
 
-type Logos = { map: Map<string, { buf: Buffer; ext: "png" | "jpeg" }>; get: (r: Row) => string; ids: Map<string, number> };
+type Logos = { map: Map<string, { buf: Buffer; ext: "png" | "jpeg" | "gif" }>; get: (r: Row) => string; ids: Map<string, number> };
 
 // Design: Nunito 12 throughout (Excel falls back to a similar font if Nunito isn't installed), navy + white, soft banding,
 // hairline row dividers, no gridlines, status values shown as coloured tags.

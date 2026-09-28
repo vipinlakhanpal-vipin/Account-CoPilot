@@ -739,3 +739,7 @@ td.logo-cell{width:40px;padding-top:0;padding-bottom:0;text-align:center}
 .region-menu label:hover{background:color-mix(in srgb, #2ECC8F 12%, transparent)}
 .region-menu input{width:16px;height:16px;accent-color:#0B7A66}
 .team-form .f-region .input-frame{display:flex;align-items:center}
+/* Wide logos (e.g. a wordmark) fit the row height and may use up to twice the width; square icons stay square */
+.co-logo:not(.ini){width:auto;padding:0 3px}
+.co-logo:not(.ini) img{height:78%;width:auto;max-width:100%;object-fit:contain}
+td.logo-cell{width:52px}
