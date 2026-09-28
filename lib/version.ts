@@ -1,11 +1,16 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.47";
+export const APP_VERSION = "1.48";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.48", date: "2026-09-28", notes: "Define ICP is region first: Step 1 choose a region, Step 2 set its rules. Section 1 shows only that region's current status (e.g. UAE is Active) with a small 'Change to' option.",
+    changes: [
+      { what: "Clear order: 'Step 1 · Choose a region' above the region tiles and 'Step 2 · Set the rules for …' above the settings", where: "Setup → Define ICP", why: "It wasn't clear whether to pick a status or a region first" },
+      { what: "Region & daily run shows only the selected region's status (UAE is Active, KSA is Paused, Europe is Next phase) with what it means; the other statuses are small 'Change to' buttons", where: "Setup → Define ICP → 1 · Region & daily run", why: "Showing all three statuses at once looked like a choice to make before choosing a country" },
+    ] },
   { version: "1.47", date: "2026-09-28", notes: "Define ICP region tiles: full text visible, light status colours, all nine regions in one row on wide screens.",
     changes: [
       { what: "Region tiles show everything: region name with its status dot, the status, and the number of accounts; tiles grow to fit instead of cutting text off", where: "Setup → Define ICP → region tiles", why: "The status and account count were cut off" },

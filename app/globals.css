@@ -606,3 +606,21 @@ td.logo-cell{width:40px;padding-top:0;padding-bottom:0;text-align:center}
 .icp-region.r-paused{background:color-mix(in srgb, #E0A21B 11%, var(--surface));border-color:color-mix(in srgb, #E0A21B 40%, transparent)}
 .icp-region.r-next{background:color-mix(in srgb, #8792A3 12%, var(--surface));border-color:color-mix(in srgb, #8792A3 40%, transparent)}
 .icp-region.on{box-shadow:0 0 0 2px var(--teal);border-color:var(--teal)}
+/* Define ICP: region first, then its status */
+.icp-step{margin:16px 0 6px;font:500 14px var(--body);color:var(--muted)}.icp-step b{color:var(--teal);font-weight:700}
+.icp-status{display:block;margin:0 0 12px}
+.icp-status-now{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-radius:12px;border:1px solid rgba(var(--ink),.16)}
+.icp-status-now .t{font:600 15px var(--body);color:var(--text-strong);display:flex;align-items:center;gap:7px}
+.icp-status-now .t .dot,.icp-status-btn .dot{display:inline-block;width:9px;height:9px;border-radius:50%;flex:none}
+.icp-status-now .w{font:600 13px/1.4 var(--body);color:var(--text)}
+.icp-status-now .o{font:400 13px/1.45 var(--body);color:var(--muted)}
+.icp-status-now.r-active{background:color-mix(in srgb, #2ECC8F 13%, var(--surface));border-color:color-mix(in srgb, #2ECC8F 45%, transparent)}
+.icp-status-now.r-paused{background:color-mix(in srgb, #E0A21B 11%, var(--surface));border-color:color-mix(in srgb, #E0A21B 40%, transparent)}
+.icp-status-now.r-next{background:color-mix(in srgb, #8792A3 12%, var(--surface));border-color:color-mix(in srgb, #8792A3 40%, transparent)}
+.icp-status-change{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap;margin-top:8px}
+.icp-status-change .lbl{align-self:center;font:600 12.5px var(--body);color:var(--muted)}
+.icp-status-btn{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:6px 12px;border-radius:10px;cursor:pointer;background:var(--surface);
+  border:1px dashed rgba(var(--ink),.25);color:var(--text-strong);font:600 13px var(--body);text-align:left}
+.icp-status-btn:hover{border-style:solid;border-color:var(--teal)}
+.icp-status-btn small{font:400 11.5px var(--body);color:var(--muted)}
+.icp-status-btn{flex-direction:row;flex-wrap:wrap;align-items:center;column-gap:6px}.icp-status-btn small{flex-basis:100%}

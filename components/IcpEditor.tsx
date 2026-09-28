@@ -44,17 +44,23 @@ const STATUS_CHOICES: { key: Rules["status"]; title: string; what: string; outco
   { key: "next", title: "Next phase", what: "A planned market, not started.",
     outcome: "Nothing runs. Set up its rules now so it is ready; switch it to Active when you want to start." },
 ];
-function StatusChoice({ value, onChange }: { value: Rules["status"]; onChange: (v: Rules["status"]) => void }) {
+function StatusChoice({ region, value, onChange }: { region: string; value: Rules["status"]; onChange: (v: Rules["status"]) => void }) {
+  const cur = STATUS_CHOICES.find((c) => c.key === value)!;
   return (
-    <div className="icp-status" role="radiogroup" aria-label="Region status">
-      {STATUS_CHOICES.map((c) => (
-        <label key={c.key} className={`icp-status-opt${value === c.key ? " on" : ""}`}>
-          <input type="radio" name="region-status" checked={value === c.key} onChange={() => onChange(c.key)} />
-          <span className="t"><span className={`dot s-${c.key}`} />{c.title}</span>
-          <span className="w">{c.what}</span>
-          <span className="o"><b>Outcome:</b> {c.outcome}</span>
-        </label>
-      ))}
+    <div className="icp-status">
+      <div className={`icp-status-now r-${cur.key}`}>
+        <span className="t"><span className={`dot s-${cur.key}`} />{region} is <b>{cur.title}</b></span>
+        <span className="w">{cur.what}</span>
+        <span className="o">{cur.outcome}</span>
+      </div>
+      <div className="icp-status-change">
+        <span className="lbl">Change to:</span>
+        {STATUS_CHOICES.filter((c) => c.key !== value).map((c) => (
+          <button type="button" key={c.key} className={`icp-status-btn r-${c.key}`} onClick={() => onChange(c.key)} title={c.outcome}>
+            <span className={`dot s-${c.key}`} />{c.title}<small>{c.what}</small>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -107,6 +113,7 @@ export default function IcpEditor({ initial, counts }: { initial: Definition; co
         </div>
       </div>
 
+      <p className="icp-step"><b>Step 1</b> · Choose a region</p>
       <nav className="icp-regions" aria-label="Regions">
         {REGIONS.map(({ key, name }) => {
           const st = def.regions[key].status;
@@ -121,13 +128,14 @@ export default function IcpEditor({ initial, counts }: { initial: Definition; co
       </nav>
 
 
+      <p className="icp-step"><b>Step 2</b> · Set the rules for {REGIONS.find((x) => x.key === region)?.name || region}</p>
       <p className="icp-summary">{summarizeRules(region, r)}</p>
 
       <div className="icp-grid">
         <section className="panel icp-card">
           <h3>1 · Region & daily run <Uses items={["Daily run"]} /></h3>
-          <p className="icp-explain">Choose whether the agent should work on <b>{region}</b> each morning, and how much. Every region keeps its own rules either way; this only controls the daily 6am run.</p>
-          <StatusChoice value={r.status} onChange={(v) => set((x) => { x.status = v; if (v === "active" && !x.engine.discover_per_day && !x.engine.verify_per_day) x.engine = { discover_per_day: 5, verify_per_day: 25 }; })} />
+          <p className="icp-explain">Controls only the daily 6am run for <b>{region}</b>. Its rules below apply whatever you choose.</p>
+          <StatusChoice region={region} value={r.status} onChange={(v) => set((x) => { x.status = v; if (v === "active" && !x.engine.discover_per_day && !x.engine.verify_per_day) x.engine = { discover_per_day: 5, verify_per_day: 25 }; })} />
           <div className={`icp-daily${r.status === "active" ? "" : " off"}`}>
             <div className="icp-row">
               <Num label="New companies to find per day" value={r.engine.discover_per_day} onChange={(v) => set((x) => { x.engine.discover_per_day = v || 0; })} help="Added to Accounts each morning (0–50)." />
