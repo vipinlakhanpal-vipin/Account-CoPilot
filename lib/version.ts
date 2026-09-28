@@ -1,11 +1,17 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.59";
+export const APP_VERSION = "1.60";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.60", date: "2026-09-28", notes: "Paid-actions PIN: saving shows 'Saving…' and the result right under the field; eye button to show the PIN; tick box after 'Ask Super Admins too'. Eye button on the sign-in password too.",
+    changes: [
+      { what: "Saving the PIN shows 'Saving…', then the result right under the field and as a notice at the top centre; if it fails, the reason is shown and your typed PIN is kept", where: "Setup → Settings → 2 · Paid refresh → Paid-actions PIN", why: "Saving looked like it never finished — the result appeared far away at the top of the section" },
+      { what: "Eye button to show or hide what you type", where: "Paid-actions PIN field, the PIN window on paid actions, and the sign-in password", why: "So you can check what you're saving or entering" },
+      { what: "Layout: PIN field → 'Ask Super Admins too' with its tick box after the sentence → Save PIN", where: "Setup → Settings → Paid-actions PIN", why: "Reads in the order you decide" },
+    ] },
   { version: "1.59", date: "2026-09-28", notes: "Team invite form on one row — Work email · Name · Role · Region · How · Invite — with light-filled fields.",
     changes: [
       { what: "Invite form in one aligned row: Work email, Name, Role, Region, How, Invite (Role now sits before Region instead of above it)", where: "Setup → Settings → Team", why: "Role was stacked above Region, which looked out of order" },

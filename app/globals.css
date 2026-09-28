@@ -715,3 +715,15 @@ td.logo-cell{width:40px;padding-top:0;padding-bottom:0;text-align:center}
 .team-all{display:flex;align-items:center;padding:0 12px !important;color:var(--muted) !important}
 .team-edit .team-access{display:flex;gap:8px;align-items:flex-end}
 .team-edit .f-role,.team-edit .f-region{display:flex;flex-direction:column;gap:4px;font:600 12px var(--body)}
+/* Password / PIN field with show-hide eye */
+.secret{position:relative;display:flex;align-items:center;width:100%}
+.secret input{width:100%;padding-right:42px !important;box-sizing:border-box}
+.secret-eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:32px;height:32px;display:grid;place-items:center;border:0;border-radius:8px;background:transparent;color:var(--muted);cursor:pointer}
+.secret-eye:hover{background:rgba(var(--ink),.08);color:var(--text-strong)}
+.secret-eye svg{width:19px;height:19px}
+.pin-row{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap}
+.pin-row .pin-in{display:flex;flex-direction:column;gap:6px;font:600 13px var(--body);width:230px}
+.pin-row .pin-in input{font:700 16px var(--mono, var(--body));letter-spacing:.15em;padding:9px 12px;border-radius:10px;border:1px solid color-mix(in srgb, #5B4BC4 40%, transparent);background:var(--surface);color:var(--text-strong)}
+.pin-ask{display:flex;align-items:center;gap:10px;font:500 13.5px var(--body);cursor:pointer;padding:9px 12px;border-radius:10px;background:var(--surface);border:1px solid rgba(var(--ink),.14)}
+.pin-ask input{width:18px;height:18px;accent-color:#5B4BC4}
+.pin-msg{margin:8px 0 0;font:600 13px var(--body)}.pin-msg.ok{color:#1F9C6C}.pin-msg.err{color:#E06C75}

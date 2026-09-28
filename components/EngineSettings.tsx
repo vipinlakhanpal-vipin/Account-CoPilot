@@ -1,5 +1,6 @@
 "use client";
-import { ask, paidFetch } from "@/components/Confirm";
+import { ask, paidFetch, notify } from "@/components/Confirm";
+import SecretInput from "@/components/SecretInput";
 import { useEffect, useState } from "react";
 import CostNote from "@/components/CostNote";
 import { COUNTRIES } from "@/lib/countries";
@@ -20,6 +21,20 @@ export default function EngineSettings() {
   const [r, setR] = useState({ region: "UAE", update: 10, fresh: 5, budget: 20 });
   const [pinNew, setPinNew] = useState("");
   const [askSuper, setAskSuper] = useState(false);
+  const [pinBusy, setPinBusy] = useState(false);
+  const [pinRes, setPinRes] = useState<{ ok: boolean; text: string } | null>(null);
+  // Saves the PIN and shows the result right here (and as a notice at the top centre); keeps the typed PIN if saving fails.
+  async function savePinNow() {
+    setPinBusy(true); setPinRes(null);
+    try {
+      const res = await fetch("/api/engine", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "pin", pin: pinNew || null, ask_super: askSuper }) });
+      const j = await res.json().catch(() => ({}));
+      if (res.ok) { setS(j); const t = pinNew ? `PIN saved. Paid actions now ask for it${askSuper ? " — including Super Admins" : " (Standard users; Super Admins are not asked)"}.` : "Setting saved.";
+        setPinRes({ ok: true, text: t }); notify(t, "ok"); setPinNew(""); }
+      else { const t = j.error || `Could not save (error ${res.status}).`; setPinRes({ ok: false, text: t }); notify(t, "error"); }
+    } catch { setPinRes({ ok: false, text: "Could not reach the server. Check your connection and try again." }); }
+    setPinBusy(false);
+  }
   const pinAsk = (s as { pin?: { ask_super?: boolean } } | null)?.pin?.ask_super;
   useEffect(() => { if (pinAsk !== undefined) setAskSuper(!!pinAsk); }, [pinAsk]);
   const [bal, setBal] = useState("");
@@ -86,12 +101,16 @@ export default function EngineSettings() {
             <p className="note">Every action that costs money (Research more, Draft pitch plan, Research Queue, Research again, this Refresh) asks for this PIN in the app before anything is spent.
               Standard users are always asked{s?.pin?.ask_super ? "; Super Admins are asked too" : "; Super Admins are not asked unless you tick the box"}. Share it only with people allowed to spend.
               Use a new number, not your sign-in password.{s?.pin?.set_at && ` Last changed ${new Date(s.pin.set_at).toLocaleString()} by ${s.pin.set_by}.`}</p>
-            <div className="eng-form">
-              <label>{s?.pin?.set ? "New PIN (6–12 digits)" : "Set a PIN (6–12 digits)"}<input type="password" inputMode="numeric" autoComplete="new-password" value={pinNew} onChange={(e) => setPinNew(e.target.value.replace(/\D/g, "").slice(0, 12))} placeholder="••••••" /></label>
-              <label className="chk"><input type="checkbox" checked={askSuper} onChange={(e) => setAskSuper(e.target.checked)} /> Ask Super Admins too (protects against my own accidental clicks)</label>
-              <button type="button" className="btn primary" disabled={(pinNew.length > 0 && pinNew.length < 6) || (!pinNew && askSuper === !!s?.pin?.ask_super)}
-                onClick={() => { post({ action: "pin", pin: pinNew || null, ask_super: askSuper }, pinNew ? "Paid-actions PIN saved." : "Setting saved."); setPinNew(""); }}>{pinNew ? "Save PIN" : "Save setting"}</button>
+            <div className="pin-row">
+              <label className="pin-in">{s?.pin?.set ? "New PIN (6–12 digits)" : "Set a PIN (6–12 digits)"}
+                <SecretInput value={pinNew} onChange={(v) => { setPinNew(v.replace(/\D/g, "").slice(0, 12)); setPinRes(null); }} inputMode="numeric" autoComplete="new-password" placeholder="e.g. 482915" /></label>
+              <label className="pin-ask">Ask Super Admins too (protects against my own accidental clicks)
+                <input type="checkbox" checked={askSuper} onChange={(e) => { setAskSuper(e.target.checked); setPinRes(null); }} /></label>
+              <button type="button" className="btn primary" disabled={pinBusy || (pinNew.length > 0 && pinNew.length < 6) || (!pinNew && askSuper === !!s?.pin?.ask_super)} onClick={savePinNow}>
+                {pinBusy ? "Saving…" : pinNew || !s?.pin?.set ? "Save PIN" : "Save setting"}</button>
             </div>
+            {pinNew.length > 0 && pinNew.length < 6 && <p className="pin-msg err">Use at least 6 digits ({pinNew.length} so far).</p>}
+            {pinRes && <p className={`pin-msg ${pinRes.ok ? "ok" : "err"}`}>{pinRes.text}</p>}
           </div>
           <div className="eng-sub"><h4>A · Your API credit — check it first</h4>
           <div className="eng-stats">

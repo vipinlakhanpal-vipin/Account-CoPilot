@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import SecretInput from "@/components/SecretInput";
 
 // In-app confirmation window (replaces the browser's confirm pop-up). Usage: if (!(await ask({ title, points, confirm }))) return;
 export type AskOptions = { title: string; body?: string; points?: string[]; confirm?: string; cancel?: string; tone?: "primary" | "danger" | "cost"; cost?: string; pin?: boolean; error?: string };
@@ -74,7 +75,7 @@ export default function ConfirmHost() {
         <div className="wn-body ask-body">
           {pinCur.body && <p>{pinCur.body}</p>}
           <label className="pin-field">Paid-actions PIN
-            <input ref={pinRef} autoFocus type="password" inputMode="numeric" autoComplete="off" value={pinVal} onChange={(e) => setPinVal(e.target.value)} placeholder="••••••" /></label>
+            <SecretInput autoFocus inputMode="numeric" value={pinVal} onChange={setPinVal} placeholder="••••••" /></label>
           {pinCur.error && <p className="pin-error">{pinCur.error}</p>}
           <p className="note">Nothing is spent unless the PIN is correct. Ask your Super Admin if you don&apos;t have it.</p>
         </div>

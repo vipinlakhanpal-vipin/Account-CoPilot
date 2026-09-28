@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabaseBrowser } from "@/lib/supabase/browser";
+import SecretInput from "@/components/SecretInput";
 import { APP_VERSION } from "@/lib/version";
 import Logo from "@/components/Logo";
 
@@ -52,7 +53,7 @@ export default function Login() {
             <input id="email" type="email" required autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" />
             {mode === "password" && (<>
               <label htmlFor="password">Password</label>
-              <input id="password" type="password" required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)}
+              <SecretInput id="password" required autoComplete="current-password" value={password} onChange={setPassword}
                 style={{ font: "14px var(--body)", background: "var(--surface)", color: "var(--text)", border: "1px solid var(--line-2)", borderRadius: 6, padding: "9px 11px" }} />
             </>)}
             <button className="btn primary" disabled={state === "busy"}>
