@@ -19,7 +19,7 @@ export async function GET(req: Request) {
   const d = (new URL(req.url).searchParams.get("d") || "").toLowerCase();
   if (!(await knownDomains()).has(d)) return new NextResponse(null, { status: 404 });
   const logo = await fetchLogo(d);
-  if (!logo) return new NextResponse(null, { status: 404, headers: { "Cache-Control": "private, max-age=86400" } });
+  if (!logo) return new NextResponse(null, { status: 404, headers: { "Cache-Control": "private, max-age=3600" } });
   return new NextResponse(new Uint8Array(logo.buf), { headers: { "Content-Type": logo.type, "Cache-Control": "private, max-age=604800", "X-Content-Type-Options": "nosniff",
     ...(logo.ext === "svg" ? { "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox" } : {}) } });
 }

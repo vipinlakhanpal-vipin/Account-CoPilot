@@ -1,5 +1,6 @@
 "use client";
 import { ask, notify } from "@/components/Confirm";
+import InfoTip from "@/components/InfoTip";
 import { useEffect, useMemo, useState } from "react";
 import { REGIONS, OPTIONS, DEFAULT_RULES, normalizeDefinition, validateRules, summarizeRules, type Definition, type Rules } from "@/lib/icpDefinition.mjs";
 
@@ -267,7 +268,7 @@ export default function IcpEditor({ initial, counts, isSuper, allowed, roleLabel
         </section>
 
         <section className="panel icp-card">
-          <h3>6 · Evidence & verification <Uses items={["Status", "Verification"]} /></h3>
+          <h3>6 · Evidence & verification <InfoTip k="icpStatus" /> <Uses items={["Status", "Verification"]} /></h3>
           <p className="icp-label">Sources that can make a company <b>Verified</b></p>
           <Chips options={OPTIONS.verifiedSources} value={r.evidence.verified_sources} onChange={(v) => set((x) => { x.evidence.verified_sources = v; })} />
           <Toggle label="Estimates can make a company Likely" value={r.evidence.estimates_can_make_likely} onChange={(v) => set((x) => { x.evidence.estimates_can_make_likely = v; })}
@@ -283,7 +284,7 @@ export default function IcpEditor({ initial, counts, isSuper, allowed, roleLabel
         </section>
 
         <section className="panel icp-card">
-          <h3>7 · Pipeline & priorities <Uses items={["Pipeline"]} /></h3>
+          <h3>7 · Pipeline & priorities <InfoTip k="rank" w={r.pipeline} /> <Uses items={["Pipeline"]} /></h3>
           <div className="icp-row three">
             <Num label="ICP Match weight" suffix="%" value={r.pipeline.w_match} onChange={(v) => set((x) => { x.pipeline.w_match = v || 0; })} />
             <Num label="Opportunity weight" suffix="%" value={r.pipeline.w_opportunity} onChange={(v) => set((x) => { x.pipeline.w_opportunity = v || 0; })} />
@@ -303,7 +304,7 @@ export default function IcpEditor({ initial, counts, isSuper, allowed, roleLabel
         </section>
 
         <section className="panel icp-card">
-          <h3>8 · Buyer personas <Uses items={["Contacts"]} /></h3>
+          <h3>8 · Buyer personas <InfoTip k="personaFit" /> <Uses items={["Contacts"]} /></h3>
           <p className="icp-label">Departments</p>
           <Chips options={OPTIONS.departments} value={r.personas.departments} onChange={(v) => set((x) => { x.personas.departments = v; })} />
           <p className="icp-label">Seniority</p>

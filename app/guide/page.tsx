@@ -216,6 +216,15 @@ export default async function GuidePage() {
 
             <section id="scores" className="panel"><h2>Scores & point system</h2>
               <p>Every score is a percentage: points earned ÷ points available × 100, shown as e.g. 91%. Only criteria you have set count towards ICP Match; unset criteria are left out (neutral). Hover a score for its breakdown; the account brief lists every part. Colour: green ≥ 70%, amber 45–69%, red &lt; 45%. Scores are rule-based (no API cost).</p>
+              <h3>What Define ICP adds to the scores</h3>
+              <T head={["Setting in Define ICP", "Adds to", "Points", "How"]} rows={[
+                ["Buying triggers", "Opportunity", "up to 20", "12 points for one of your triggers found in the research, 20 for two or more; 'New leadership (CPO / CFO)' counts when a leadership move is recorded"],
+                ["ERP of interest", "Opportunity", "10", "The account runs one of the ERPs you chose"],
+                ["Focus platforms", "Coupa Fit", "up to 20", "20 if the account's S2P platform (or 'No S2P platform yet') is on your list; 8 if its platform is unknown; 0 otherwise"],
+                ["Buyer personas", "Persona fit (contacts)", "0–100%", "Department 35 + seniority 35 + priority role 30 points; only what you set counts. Ranks Stakeholders and the Master Book Contact List"],
+                ["Pipeline weights", "Rank", "0–100%", "Rank = ICP Match × weight + Opportunity × weight + Coupa Fit × weight (weights add up to 100%)"],
+              ]} />
+              <p className="note">Look for the <b>ⓘ</b> button next to a score anywhere in the app for a one-line explanation and a link back here.</p>
               <h3>ICP Match — how well the account fits your criteria</h3>
               <T head={["Part", "Points", "How it's earned"]} rows={[
                 ["Revenue", 30, "30 if an official revenue figure (annual report, filing, company-quoted press) is inside a selected band · 10 if only an estimate (your data, Seamless band, aggregator) is inside · 5 if no figure yet or sources disagree (Needs check) · 0 if outside"],

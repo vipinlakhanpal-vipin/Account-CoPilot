@@ -4,6 +4,7 @@ import { rulesFor, regionOf } from "@/lib/icpDefinition.mjs";
 import { personaFit } from "@/lib/icp";
 import CostNote from "@/components/CostNote";
 import CompanyLogo from "@/components/CompanyLogo";
+import InfoTip, { type Weights } from "@/components/InfoTip";
 import { useMemo, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Hero from "@/components/Hero";
@@ -129,11 +130,11 @@ function Bars({ entries, order, signal }: { entries: [string, number][]; order?:
   );
 }
 
-type ColDef = { h: string; cell: (r: Row) => React.ReactNode; wrap?: boolean; cls?: string };
+type ColDef = { h: string; cell: (r: Row) => React.ReactNode; wrap?: boolean; cls?: string; tip?: string };
 type FilterDef = { label: string; get: (r: Row) => string };
 
-function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "rows" }: {
-  title: string; note?: string; rows: Row[]; cols: ColDef[]; filters: FilterDef[]; search: (r: Row) => string; onRow?: (r: Row) => void; unit?: string;
+function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "rows", tipW }: {
+  title: string; note?: React.ReactNode; tipW?: Weights; rows: Row[]; cols: ColDef[]; filters: FilterDef[]; search: (r: Row) => string; onRow?: (r: Row) => void; unit?: string;
 }) {
   const [q, setQ] = useState("");
   const [fv, setFv] = useState<string[]>(filters.map(() => ""));
@@ -142,7 +143,7 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "
   return (
     <>
       <h2 className="with-count">{title} <span className="count">{out.length.toLocaleString()} {unit}{out.length !== rows.length ? ` of ${rows.length.toLocaleString()}` : ""}</span></h2>
-      {note && <p className="note">{note}</p>}
+      {note && (typeof note === "string" ? <p className="note">{note}</p> : note)}
       <div className="filters">
         <input type="search" className={`flt-search${q ? " on" : ""}`} placeholder={`Search ${title.toLowerCase()}…`} aria-label="Search" value={q} onChange={(e) => setQ(e.target.value)} />
         {(q || fv.some(Boolean)) && <button type="button" className="btn clear" onClick={() => { setQ(""); setFv(filters.map(() => "")); }}>Clear filters</button>}
@@ -158,7 +159,7 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "
           {rows.some((r) => r.company_id) && <> · {new Set(out.map((r) => r.company_id)).size} {new Set(out.map((r) => r.company_id)).size === 1 ? "company" : "companies"}</>}</p>
       <div className="tablewrap">
         <table>
-          <thead><tr><th className="num">#</th>{cols.map((c) => <th key={c.h} className={c.cls}>{c.h}</th>)}</tr></thead>
+          <thead><tr><th className="num">#</th>{cols.map((c) => <th key={c.h} className={c.cls}>{c.h}{c.tip && <InfoTip k={c.tip} w={tipW} />}</th>)}</tr></thead>
           <tbody>
             {out.slice(0, 800).map((r, i) => (
               <tr key={r.id || i} className={onRow ? "click" : undefined} tabIndex={onRow ? 0 : undefined}
@@ -272,22 +273,30 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
         { label: "Exchange", get: (a) => a.exchange }, { label: "Country", get: (a) => a.country }]}
       cols={[{ h: "", cls: "logo-cell", cell: (a) => <CompanyLogo a={a} /> }, { h: "Company", cell: (a) => <><b>{a.company_name}</b><div className="muted mono">{a.exchange} {a.ticker}</div></> },
         { h: "Industry", cell: (a) => a.industry }, { h: "Revenue", cell: (a) => { const r = bestRevenue(a); return r.v ? <><span className="mono">{usd(r.v)}</span>{r.src && <div className="rev-src">{r.src}</div>}</> : <span className="muted">—</span>; } },
-        { h: "ICP status", cell: (a) => <><IcpTag s={a.icp_status} why={a.icp_fit_reason} /><div className="muted mono rec-since">since {statusSince(a) || "—"}</div></> },
-        { h: "ICP match", cell: (a) => scores[a.id] && <ScoreChip s={scores[a.id].m} label="ICP Match" /> },
-        { h: "Opportunity", cell: (a) => scores[a.id] && <ScoreChip s={scores[a.id].o} label="Opportunity" /> },
-        { h: "Coupa fit", cell: (a) => scores[a.id] && <ScoreChip s={scores[a.id].f} label="Coupa Fit" /> },
+        { h: "ICP status", tip: "icpStatus", cell: (a) => <><IcpTag s={a.icp_status} why={a.icp_fit_reason} /><div className="muted mono rec-since">since {statusSince(a) || "—"}</div></> },
+        { h: "ICP match", tip: "icpMatch", cell: (a) => scores[a.id] && <ScoreChip s={scores[a.id].m} label="ICP Match" /> },
+        { h: "Opportunity", tip: "opportunity", cell: (a) => scores[a.id] && <ScoreChip s={scores[a.id].o} label="Opportunity" /> },
+        { h: "Coupa fit", tip: "coupaFit", cell: (a) => scores[a.id] && <ScoreChip s={scores[a.id].f} label="Coupa Fit" /> },
         { h: "Updated", cell: (a) => <Dates a={a} /> }, { h: "Lists", cell: (a) => <span className="muted">{(a.lists || []).join(", ")}</span> },
         { h: "Signal", cell: (a) => <Pill s={a.s2p_signal_level} /> }, { h: "Existing S2P", cell: (a) => a.existing_s2p_product },
         { h: "S2P status", cell: (a) => a.s2p_platform_status }, { h: "ERP", cell: (a) => a.erp }, { h: "Contacts", cell: (a) => <span className="mono">{(byCo[a.id] || []).length}</span> }]}
       onRow={openRow} />;
   } else if (tab === "pipeline") {
     const ranked = A.filter((a) => inPipe(a, scores[a.id])).sort((a, b) => scores[b.id].rank - scores[a.id].rank);
-    view = <FilterTable unit="accounts" title="Ranked pipeline" note={`Rank = ${pipe.w_match}% ICP Match + ${pipe.w_opportunity}% Opportunity + ${pipe.w_fit}% Coupa Fit (set in Setup → Define ICP). Scores are percentages of the maximum points. Accounts with ICP Match below ${pipe.min_match}%${pipe.exclude_not_icp ? " or Not ICP" : ""} are left out. Hover a score for its breakdown; select a row for why it was selected and the recommended next steps.`}
+    view = <FilterTable unit="accounts" title="Ranked pipeline" tipW={pipe} note={<>
+        <div className="pipe-def">
+          <div><b>Rank</b> — which account to work first: <b>{pipe.w_match}% × ICP Match + {pipe.w_opportunity}% × Opportunity + {pipe.w_fit}% × Coupa Fit</b>.</div>
+          <div><b>ICP Match</b> — how well it fits your ICP (revenue, size, industry, ownership…). Needs {pipe.min_match}%+ to be listed.</div>
+          <div><b>Opportunity</b> — how likely it is to buy soon (S2P signals, transformation, your buying triggers).</div>
+          <div><b>Coupa Fit</b> — how well Coupa fits it (five value areas, its ERP and platform, your focus platforms).</div>
+        </div>
+        <p className="note">Every % = points earned ÷ points available. {pipe.exclude_not_icp ? "Not ICP accounts are left out. " : ""}Weights are set per region in Setup → Define ICP. Hover a score for its breakdown, click <InfoTip k="percent" w={pipe} /> for more, or read <a href="/guide#pipeline">Setup → Learn Me → Pipeline</a>.</p>
+      </>}
       rows={ranked} search={(a) => [a.company_name, a.industry, a.erp, a.existing_s2p_product].join(" ")}
       filters={[{ label: "ICP status", get: (a) => a.icp_status }, { label: "S2P", get: (a) => a.existing_s2p_product }, { label: "Industry", get: (a) => a.industry }, { label: "Country", get: (a) => a.country }]}
-      cols={[{ h: "Rank", cell: (a) => <b className="mono" title={`Rank ${scores[a.id].rank}% = ${pipe.w_match}% of ICP Match + ${pipe.w_opportunity}% of Opportunity + ${pipe.w_fit}% of Coupa Fit`}>{scores[a.id].rank}%</b> }, { h: "", cls: "logo-cell", cell: (a) => <CompanyLogo a={a} /> }, { h: "Company", cell: (a) => <><b>{a.company_name}</b><div className="muted">{a.industry} · {a.country}</div></> },
-        { h: "ICP match", cell: (a) => <ScoreChip s={scores[a.id].m} label="ICP Match" /> }, { h: "Opportunity", cell: (a) => <ScoreChip s={scores[a.id].o} label="Opportunity" /> },
-        { h: "Coupa fit", cell: (a) => <ScoreChip s={scores[a.id].f} label="Coupa Fit" /> }, { h: "ICP status", cell: (a) => <IcpTag s={a.icp_status} why={a.icp_fit_reason} /> },
+      cols={[{ h: "Rank", tip: "rank", cell: (a) => <b className="mono" title={`Rank ${scores[a.id].rank}% = ${pipe.w_match}% of ICP Match + ${pipe.w_opportunity}% of Opportunity + ${pipe.w_fit}% of Coupa Fit`}>{scores[a.id].rank}%</b> }, { h: "", cls: "logo-cell", cell: (a) => <CompanyLogo a={a} /> }, { h: "Company", cell: (a) => <><b>{a.company_name}</b><div className="muted">{a.industry} · {a.country}</div></> },
+        { h: "ICP match", tip: "icpMatch", cell: (a) => <ScoreChip s={scores[a.id].m} label="ICP Match" /> }, { h: "Opportunity", tip: "opportunity", cell: (a) => <ScoreChip s={scores[a.id].o} label="Opportunity" /> },
+        { h: "Coupa fit", tip: "coupaFit", cell: (a) => <ScoreChip s={scores[a.id].f} label="Coupa Fit" /> }, { h: "ICP status", tip: "icpStatus", cell: (a) => <IcpTag s={a.icp_status} why={a.icp_fit_reason} /> },
         { h: "Revenue", cell: (a) => <span className="mono">{usd(bestRevenue(a).v)}</span> }, { h: "Existing S2P", cell: (a) => a.existing_s2p_product },
         { h: "Contacts", cell: (a) => <span className="mono">{(byCo[a.id] || []).length}</span> }]}
       onRow={openRow} />;
@@ -306,9 +315,9 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
       filters={[...(perPerson ? [{ label: "Trust", get: (p: Row) => p.trust }, { label: "Sources", get: (p: Row) => (p.sources || []).join(" + ") }] : [{ label: "Source", get: (p: Row) => contributorOf(p) }]),
         { label: "Persona fit", get: (p) => p.__pf?.label }, { label: "Tier", get: (p) => p.contact_tier }, { label: "Role family", get: (p) => famKey(p.role_family) }, { label: "Email status", get: (p) => p.email_status }]}
       cols={[{ h: "Company", cell: (p) => p.company }, { h: "Full name", cell: (p) => <b>{p.full_name}</b> }, { h: "Title (verbatim)", cell: (p) => p.title_verbatim, wrap: true },
-        { h: "Persona fit", cell: (p) => p.__pf?.label === "No personas set" ? <span className="muted">—</span>
+        { h: "Persona fit", tip: "personaFit", cell: (p) => p.__pf?.label === "No personas set" ? <span className="muted">—</span>
           : <span className={`pf ${p.__pf.score >= 99 ? "hi" : p.__pf.score >= 50 ? "mid" : "lo"}`} title={p.__pf.why}>{p.__pf.score}%<small>{p.__pf.label}</small></span> },
-        ...(perPerson ? [{ h: "Trust", cell: (p: Row) => <><TrustTag t={p.trust} why={p.trust_reason} /><div className="muted">{(p.sources || []).join(" + ")}</div></> }]
+        ...(perPerson ? [{ h: "Trust", tip: "trust", cell: (p: Row) => <><TrustTag t={p.trust} why={p.trust_reason} /><div className="muted">{(p.sources || []).join(" + ")}</div></> }]
           : [{ h: "Source", cell: (p: Row) => <>{contributorOf(p)}<div className="muted">{p.record_status}</div></> }]),
         { h: "Role family", cell: (p) => p.role_family }, { h: "Tier", cell: (p) => p.contact_tier },
         { h: "Email", cell: (p) => <span className="mono">{p.email}</span> }, { h: "Email status", cell: (p) => p.email_status },
@@ -533,7 +542,7 @@ function Brief({ a, data, people, onClose, onContact, scores, criteria }: { a: R
           {scores && rec && <div className="block ai-block"><h4>AI intelligence</h4>
             <div className="score-cards">
               {([["ICP Match", scores.m], ["Opportunity", scores.o], ["Coupa Fit", scores.f]] as [string, Score][]).map(([l, sc]) => (
-                <div key={l} className="score-card"><small>{l}</small><b className={sc.total >= 70 ? "hi" : sc.total >= 45 ? "mid" : "lo"}>{sc.total}%</b>
+                <div key={l} className="score-card"><small>{l}<InfoTip k={l === "ICP Match" ? "icpMatch" : l === "Opportunity" ? "opportunity" : "coupaFit"} /></small><b className={sc.total >= 70 ? "hi" : sc.total >= 45 ? "mid" : "lo"}>{sc.total}%</b>
                   <ul>{sc.parts.map((x) => <li key={x.label}><span>{x.label}</span><span className="mono" title="points earned of the points available">{x.score} of {x.max} pts</span><em>{x.why}</em></li>)}</ul></div>))}
             </div>
             <h5>Why this account was selected</h5><ul className="plain">{why.map((w) => <li key={w}>{w}</li>)}</ul>
