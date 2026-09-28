@@ -15,7 +15,7 @@ const GROUPS: { label: string; items: [string, string][] }[] = [
   { label: "Accounts", items: [["/?tab=pipeline", "Pipeline"], ["/?tab=accounts", "Accounts"], ["/?tab=signals", "S2P Signals"], ["/?tab=erp", "ERP & Apps"]] },
   { label: "Stakeholders", items: [["/?tab=stakeholders", "Stakeholders"]] },
   { label: "Data", items: [["/?tab=sources", "Sources"], ["/?tab=conflicts", "Conflicts"], ["/research", "Research Queue"]] },
-  { label: "Setup", items: [["/icp", "Define ICP"], ["/settings", "Settings"], ["/guide", "Learn Me"]] },
+  { label: "Setup", items: [["/icp", "Define ICP"], ["/settings", "Settings"], ["/guide", "Learn Me"], ["/team", "Team"]] },
 ];
 const SUB_LABEL: Record<string, string> = { Accounts: "All accounts" };
 
@@ -26,7 +26,7 @@ const Spin = () => (
 const TAB_LABEL: Record<string, string> = { pipeline: "Pipeline", accounts: "Accounts", stakeholders: "Stakeholders", signals: "S2P Signals", erp: "ERP & Apps",
   conflicts: "Conflicts", sources: "Sources" };
 
-const PAGE_LABEL: Record<string, string> = { "/research": "Research Queue", "/settings": "Settings", "/guide": "Learn Me", "/icp": "Define ICP" };
+const PAGE_LABEL: Record<string, string> = { "/research": "Research Queue", "/settings": "Settings", "/guide": "Learn Me", "/icp": "Define ICP", "/team": "Team" };
 
 // Rendered once in the root layout, so it stays put across page changes (no rebuild, no jump).
 export default function Header({ subtitle }: { subtitle: string }) {

@@ -19,7 +19,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
   data.accounts.forEach((a) => { const c = regionOf(a.country); counts[c] = (counts[c] || 0) + 1; });
   const home = access.isSuper ? "UAE" : access.regions[0] || "UAE";
   if (!access.isSuper && !access.regions.length) return (<div className="wrap"><section className="view"><div className="panel"><h2>No region assigned yet</h2>
-    <p>Your Super Admin needs to assign you a region in Setup → Settings → Team before you can see accounts.</p></div></section></div>);
+    <p>Your Super Admin needs to assign you a region in Setup → Team before you can see accounts.</p></div></section></div>);
   return (
     <>
       <CountryBar counts={counts} allowed={access.isSuper ? undefined : access.regions} showAll={access.isSuper} home={home} />

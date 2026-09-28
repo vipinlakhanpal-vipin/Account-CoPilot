@@ -152,7 +152,7 @@ export default async function GuidePage() {
               <p>Yes, two layers: the <b>fixed ICP rule</b> (revenue ≥ $250M and ≥ 100 employees, which sets the ICP status) and your <b>Discovery criteria</b> in the left panel (industries, regions, ownership, systems, triggers, contact roles), which rank accounts and steer Research more. Save the panel as the team ICP so everyone ranks, and discovers, the same way.</p></section>
 
             <section id="tabs" className="panel"><h2>Tabs</h2>
-              <p>Five main tabs; selecting one shows its sub-tabs on the line beneath the top bar: <b>Dashboard</b> · <b>Accounts</b> (Pipeline, All accounts, S2P Signals, ERP & Apps) · <b>Stakeholders</b> · <b>Data</b> (Sources, Conflicts, Research Queue) · <b>Setup</b> (Define ICP, Settings, Learn Me).</p>
+              <p>Five main tabs; selecting one shows its sub-tabs on the line beneath the top bar: <b>Dashboard</b> · <b>Accounts</b> (Pipeline, All accounts, S2P Signals, ERP & Apps) · <b>Stakeholders</b> · <b>Data</b> (Sources, Conflicts, Research Queue) · <b>Setup</b> (Define ICP, Settings, Learn Me, Team).</p>
               <p className="note"><b>Custom filters:</b> every table (and every dashboard drill-down) has a <b>+ Custom filter</b> button: choose any field in that table, a condition (contains, is, is not, starts with, is empty, is not empty, or ≥ / ≤ for numbers) and a value. Add as many as you like; all must match. They are remembered per table in your browser; <b>Clear all</b> removes them.</p>
               <T head={["Tab", "What it shows"]} rows={[
                 ["Dashboard", "KPI tiles (click any tile to see the records behind it), charts by S2P signal, platform, ERP, role family and ICP status, and priority accounts."],
@@ -165,8 +165,9 @@ export default async function GuidePage() {
                 ["Conflicts", "Where two sources disagree. Both values are kept; nothing is overwritten."],
                 ["Research Queue", "Start new company research (uses the paid API; see Costs)."],
                 ["Define ICP", "Your Ideal Customer Profile for each region: every rule the agent follows when it searches, verifies and scores companies."],
-                ["Settings", "Discovery & refresh engine, contact tiers, the team with each person's role (Super Admin / Standard User) and region, and the Costs & usage explainer. Standard users see their own access only."],
-                ["Learn Me", "This page."]]} /></section>
+                ["Settings", "Discovery & refresh engine, API credit and paid-actions PIN, contact tiers, and the Costs & usage explainer."],
+                ["Learn Me", "This page."],
+                ["Team", "People, their role (Super Admin / Standard User) and region(s); invite colleagues and change access. Super Admins only; Standard users see their own access."]]} /></section>
 
             <section id="countries" className="panel"><h2>Country tiles</h2>
               <p>All countries · UAE · Saudi Arabia · Qatar · Kuwait · Oman · Egypt. Each shows its account count ("soon" = none yet). Selecting one filters the dashboard, every tab and the source tiles to that market; the choice stays when you switch tabs. UAE is the default.</p></section>

@@ -167,7 +167,7 @@ export default function IcpEditor({ initial, counts, isSuper, allowed, roleLabel
       <div className="icp-owner">
         <span className="lock" aria-hidden="true">{isSuper ? "🌍" : "📍"}</span>
         <span><b>{roleLabel}.</b> {isSuper
-          ? "You can see and change the ICP of every region. Standard users can change only the region assigned to them in Setup → Settings → Team."
+          ? "You can see and change the ICP of every region. Standard users can change only the region assigned to them in Setup → Team."
           : `You control the ICP for ${visible.map((x) => x.name).join(", ")} only. Other regions are managed by your Super Admin.`}</span>
       </div>
 

@@ -20,7 +20,7 @@ export default async function DefineIcpPage() {
   const counts: Record<string, number> = {};
   for (const c of cos || []) { const k = regionOf(c.country); if (access.regions.includes(k)) counts[k] = (counts[k] || 0) + 1; }
   if (!access.regions.length) return (<div className="wrap"><Hero title="Define ICP" text="Your Ideal Customer Profile, region by region." />
-    <section className="panel"><p>No region is assigned to you yet. Ask your Super Admin to assign one in Setup → Settings → Team.</p></section></div>);
+    <section className="panel"><p>No region is assigned to you yet. Ask your Super Admin to assign one in Setup → Team.</p></section></div>);
   return (
     <div className="wrap">
       <Hero title="Define ICP" text="Your Ideal Customer Profile, region by region. The agent follows exactly what you set here when it searches, verifies, scores and profiles companies." />

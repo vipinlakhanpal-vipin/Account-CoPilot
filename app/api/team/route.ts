@@ -62,7 +62,7 @@ export async function POST(req: Request) {
   }
   const { error: e3 } = await db.from("user_access").upsert({ user_id: userId, email: email.toLowerCase(), ...acc, updated_at: new Date().toISOString(), updated_by: g.me.email });
   const what = acc.role === "super_admin" ? "Super Admin (all regions)" : `Standard User for ${acc.regions.join(", ")}`;
-  const warn = e3 ? " Note: roles are not active yet — run the region-access database update first (see Settings → Team)." : "";
+  const warn = e3 ? " Note: roles are not active yet — run the region-access database update first (see Setup → Team)." : "";
   return NextResponse.json({ ok: true, tempPassword: temp || undefined, message: mode === "email" ? `Invitation email sent to ${email} as ${what}.${warn}` : `Account created for ${email} as ${what}.${warn}` });
 }
 
