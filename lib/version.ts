@@ -1,11 +1,15 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.73";
+export const APP_VERSION = "1.74";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.74", date: "2026-09-28", notes: "Search companies: 'Find new companies' has an optional Company name box for a specific search.",
+    changes: [
+      { what: "Optional 'Company name' box next to 'Find new companies': fill it to search for that one company (added and verified by the next session, then watched weekly until an official figure is found); leave it blank for a general search", where: "Setup → Settings → 1 · Search companies", why: "A quicker way to ask for a specific company without switching to 'Add one specific company'" },
+    ] },
   { version: "1.73", date: "2026-09-28", notes: "Dashboard: Priority accounts shows its total next to the heading.",
     changes: [
       { what: "Total number of priority accounts shown in a badge next to the 'Priority accounts' heading (follows the country tile you select)", where: "Dashboard → Priority accounts", why: "See at a glance how many accounts have strong or very strong S2P signals" },

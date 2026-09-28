@@ -71,11 +71,12 @@ export default function EngineSettings() {
             {q.mode === "company" ? <>
               <label>Company name<input value={q.company} onChange={(e) => setQ({ ...q, company: e.target.value })} placeholder="e.g. Almarai" /></label>
               <label>Website (optional)<input value={q.website} onChange={(e) => setQ({ ...q, website: e.target.value })} placeholder="e.g. almarai.com" /></label>
-            </> : <label>How many<select value={q.count} onChange={(e) => setQ({ ...q, count: e.target.value })}>{["1", "5", "10", "30", "50", "max"].map((n) => <option key={n} value={n}>{n === "max" ? "Max (as many as a session can)" : n}</option>)}</select></label>}
+            </> : <>{q.mode === "discover" && <label>Company name (optional)<input value={q.company} onChange={(e) => setQ({ ...q, company: e.target.value })} placeholder="Leave blank for a general search" /></label>}
+              {!(q.mode === "discover" && q.company.trim()) && <label>How many<select value={q.count} onChange={(e) => setQ({ ...q, count: e.target.value })}>{["1", "5", "10", "30", "50", "max"].map((n) => <option key={n} value={n}>{n === "max" ? "Max (as many as a session can)" : n}</option>)}</select></label>}</>}
             <button type="button" className="btn primary" disabled={q.mode === "company" && q.company.trim().length < 2}
-              onClick={() => post(q.mode === "company" ? { action: "queue", region: q.region, count: 1, mode: "company", company_name: q.company.trim(), website: q.website.trim() }
+              onClick={() => { const specific = q.mode === "company" || (q.mode === "discover" && q.company.trim().length >= 2); post(specific ? { action: "queue", region: q.region, count: 1, mode: "company", company_name: q.company.trim(), website: q.website.trim() }
                 : { action: "queue", region: q.region, count: q.count === "max" ? "max" : Number(q.count), mode: q.mode },
-                q.mode === "company" ? `Queued: ${q.company.trim()} (${q.region}). The next scheduled session researches it, adds it if it's new and verifies it; the bell tells you when it's done.` : "Job queued. It starts in the next scheduled session.")}>Start</button>
+                specific ? `Queued: ${q.company.trim()} (${q.region}). The next scheduled session researches it, adds it if it's new and verifies it; the bell tells you when it's done.` : "Job queued. It starts in the next scheduled session."); }}>Start</button>
           </div>
           {s && s.jobs.length > 0 && <div className="tablewrap"><table><thead><tr><th>Job</th><th>Region</th><th>How many</th><th>Status</th><th>Requested</th><th>Result</th><th></th></tr></thead>
             <tbody>{s.jobs.slice(0, 10).map((j) => <tr key={j.id}><td>{MODE[j.mode] || j.mode}{j.company_name && <div className="muted">{j.company_name}{j.website ? ` · ${j.website}` : ""}</div>}</td><td>{j.region}</td><td>{j.count}</td><td><span className={`tag ${j.status === "done" ? "fact" : j.status === "error" ? "unv" : "likely"}`}>{j.status}</span></td>
