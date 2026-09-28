@@ -19,11 +19,11 @@ export function askPin(o: Partial<AskOptions> = {}): Promise<string | null> {
   return pinOpener ? pinOpener({ title: "Enter the paid-actions PIN", tone: "cost", confirm: "Continue", ...o, pin: true }) : Promise.resolve(null);
 }
 /** fetch() for actions that call the Anthropic API: if the server asks for the paid-actions PIN, ask for it in the app and retry. */
-export async function paidFetch(url: string, init: RequestInit, what = "This action"): Promise<Response> {
-  let pin = "", error = "";
+export async function paidFetch(url: string, init: RequestInit, what = "This action", memo?: { pin?: string }): Promise<Response> {
+  let pin = memo?.pin || "", error = ""; // memo: reuse one PIN across several calls (e.g. one search per country)
   for (;;) {
     const res = await fetch(url, { ...init, headers: { ...(init.headers as Record<string, string>), ...(pin ? { "x-paid-pin": pin } : {}) } });
-    if (res.status !== 403 && res.status !== 429) return res;
+    if (res.status !== 403 && res.status !== 429) { if (memo && pin) memo.pin = pin; return res; }
     const j = await res.clone().json().catch(() => ({}));
     if (!j.needPin || res.status === 429) { notify(j.error || "Not allowed.", "error"); return res; }
     const entered = await askPin({ body: `${what} uses the Anthropic API and costs money, so it needs the paid-actions PIN set by your Super Admin.`, error: pin ? j.error : error || undefined });

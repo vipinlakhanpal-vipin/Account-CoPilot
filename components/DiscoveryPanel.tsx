@@ -33,9 +33,9 @@ function Section({ title, children, open = false }: { title: string; children: R
 // Left-side "Account Discovery Criteria" panel. Criteria filter and rank every view; Save stores them for the whole team.
 export type SaveResult = { ok: boolean; error?: string; by?: string; at?: string };
 // Criteria edits are a draft until Refresh (apply) or Save (apply + store for the team). Reset asks first.
-export default function DiscoveryPanel({ criteria: applied, onApply, onSave, savedMeta, teamCriteria, collapsed, onToggle, matches, country, onResearch, researchMsg }: {
+export default function DiscoveryPanel({ criteria: applied, onApply, onSave, savedMeta, teamCriteria, collapsed, onToggle, matches, country, researchTargets = [], onResearch, researchMsg }: {
   criteria: Criteria; onApply: (c: Criteria) => void; onSave: (c: Criteria) => Promise<SaveResult>; savedMeta: { by?: string; at?: string } | null; teamCriteria: Criteria | null;
-  collapsed: boolean; onToggle: () => void; matches: { accounts: number; contacts: number }; country: string;
+  collapsed: boolean; onToggle: () => void; matches: { accounts: number; contacts: number }; country: string; researchTargets?: string[];
   onResearch: (limit: number, profile: boolean) => void; researchMsg: string;
 }) {
   // Changes apply instantly; "Save for team" shares them, "Discard changes" goes back to the saved team ICP.
@@ -135,14 +135,14 @@ export default function DiscoveryPanel({ criteria: applied, onApply, onSave, sav
       )}
 
       <div className="dp-research" id="dp-research">
-        <b>Research more in {country === "All" ? "a country (pick one above)" : country}</b>
-        <p className="dp-note">Searches the web for new companies in this country that match the criteria above (same ICP rules: group HQs only; no government bodies, single sites or foreign branches), and adds them as "Claude discovery".</p>
+        <b>Research more in {researchTargets.length > 1 ? `${researchTargets.slice(0, -1).join(", ")} and ${researchTargets[researchTargets.length - 1]}` : researchTargets[0] || "a country (tick one above)"}</b>
+        <p className="dp-note">{researchTargets.length > 1 ? `One search per country (${researchTargets.length}). ` : ""}Follows the countries ticked in Country above{country !== "All" && !applied.company.countries.length ? ` (none ticked, so the ${country} tile you are viewing)` : ""}. Searches the web for new companies that match the criteria above (same ICP rules: group HQs only; no government bodies, single sites or foreign branches), and adds them as "Claude discovery".</p>
         <div className="dp-rrow">
           <label>Find up to <select value={limit} onChange={(e) => setLimit(Number(e.target.value))}>{[3, 5, 10].map((n) => <option key={n}>{n}</option>)}</select></label>
           <label><input type="checkbox" checked={profile} onChange={(e) => setProfile(e.target.checked)} /> and profile each</label>
         </div>
-        <button type="button" className="btn" disabled={country === "All"} onClick={() => onResearch(limit, profile)}>Research more</button>
-        <CostNote cost={profile ? `≈ $0.50–1.00 + $0.55 per company profiled (up to ≈ $${(1 + limit * 0.55).toFixed(2)})` : "≈ $0.50–1.00 per search"} />
+        <button type="button" className="btn" disabled={!researchTargets.length} onClick={() => onResearch(limit, profile)}>Research more{researchTargets.length > 1 ? ` (${researchTargets.length} countries)` : ""}</button>
+        <CostNote cost={`${profile ? "≈ $0.50–1.00 + $0.55 per company profiled" : "≈ $0.50–1.00 per search"}${researchTargets.length > 1 ? `, × ${researchTargets.length} countries` : ""}`} />
         {researchMsg && <p className="dp-saved">{researchMsg}</p>}
       </div>
       <div className="dp-foot">

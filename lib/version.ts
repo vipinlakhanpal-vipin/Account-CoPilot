@@ -1,11 +1,16 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.69";
+export const APP_VERSION = "1.70";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.70", date: "2026-09-28", notes: "Research more follows the countries ticked in the panel (e.g. 'Research more in KSA and Qatar'), one search per country, with the cost shown per country and one PIN for the batch.",
+    changes: [
+      { what: "Research more uses the countries ticked in the panel's Country list — one or several (e.g. 'Research more in KSA and Qatar'); with none ticked it uses the country tile you're viewing", where: "Left panel → Research more", why: "It always showed the top tile's country, even when you had ticked others" },
+      { what: "One discovery search per country; the cost note and confirmation multiply by the number of countries, and the PIN is asked once for the whole batch", where: "Left panel → Research more", why: "So the cost of researching several countries is clear before you start" },
+    ] },
   { version: "1.69", date: "2026-09-28", notes: "Geography in ICP Match follows the country tile you select; when a search finds nothing, a button offers to research that company in the selected country.",
     changes: [
       { what: "ICP Match's geography now follows the selected country tile (e.g. KSA), instead of the left panel's default UAE — KSA accounts went from 30–43% to 51–64%", where: "Pipeline and Accounts when a country other than UAE is selected", why: "Saudi accounts were marked down for not being in the UAE" },

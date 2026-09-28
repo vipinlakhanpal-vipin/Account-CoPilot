@@ -216,18 +216,28 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
     return error ? { ok: false, error: error.message } : { ok: true, by, at };
   }
   const [researchMsg, setResearchMsg] = useState("");
+  // Research more targets the countries ticked in the panel's Country list; with none ticked, the country tile you are viewing.
+  const researchTargets = useMemo(() => { const picked = criteria.company.countries.filter((c) => COUNTRIES.some((x) => x.code === c));
+    return picked.length ? picked : country === ALL ? [] : [country]; }, [criteria.company.countries, country]);
   async function researchMore(limit: number, profile: boolean) {
-    const k = criteria.company;
-    const est = profile ? `≈ $0.50–1.00 for the search plus ≈ $0.55 per company profiled (up to ≈ $${(1 + limit * 0.55).toFixed(2)})` : "≈ $0.50–1.00";
-    if (!(await ask({ title: `Research more in ${country}?`, tone: "cost", confirm: "Start research",
-      points: [`Finds up to ${limit} new companies matching your criteria${profile ? " and profiles each one" : ""}.`, "New companies appear under the list \"Claude discovery\"; follow progress in Research Queue."], cost: est }))) return;
+    const k = criteria.company, n = researchTargets.length, where = n > 1 ? `${researchTargets.slice(0, -1).join(", ")} and ${researchTargets[n - 1]}` : researchTargets[0];
+    if (!n) return;
+    const one = profile ? 1 + limit * 0.55 : 1;
+    const est = `${profile ? `≈ $0.50–1.00 for the search plus ≈ $0.55 per company profiled` : "≈ $0.50–1.00 per search"}${n > 1 ? ` × ${n} countries (up to ≈ $${(one * n).toFixed(2)})` : profile ? ` (up to ≈ $${one.toFixed(2)})` : ""}`;
+    if (!(await ask({ title: `Research more in ${where}?`, tone: "cost", confirm: "Start research",
+      points: [`Finds up to ${limit} new companies${n > 1 ? " in each country" : ""} matching your criteria${profile ? " and profiles each one" : ""}.`, "New companies appear under the list \"Claude discovery\"; follow progress in Research Queue."], cost: est }))) return;
     const summary = [`Revenue bands: ${k.revenue.join(", ") || "any (ICP minimum $250M)"}`, `Employees: ${k.employees.join(", ") || "100+"}`,
       k.industries.length && `Industries: ${k.industries.join(", ")}`, k.ownership.length && `Ownership: ${k.ownership.join(", ")}`,
       k.erp.length && `ERP: ${k.erp.join(", ")}`, k.procurement.length && `Procurement platform: ${k.procurement.join(", ")}`,
       k.triggers.length && `Business triggers: ${k.triggers.join(", ")}`, k.hq && `HQ: ${k.hq}`].filter(Boolean).join("\n");
     setResearchMsg("Starting…");
-    const r = await paidFetch("/api/discover", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ country, limit, profile, criteria: summary }) });
-    setResearchMsg(r.ok ? "Discovery started. Follow it in Research Queue; new companies appear under list \"Claude discovery\" (refresh the page when done)." : "Could not start discovery.");
+    const memo: { pin?: string } = {}, done: string[] = [], failed: string[] = [];
+    for (const c of researchTargets) {
+      const r = await paidFetch("/api/discover", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ country: c, limit, profile, criteria: summary }) }, `Research more in ${where}`, memo);
+      (r.ok ? done : failed).push(c);
+      if (!r.ok && !memo.pin) break; // cancelled or no PIN: stop
+    }
+    setResearchMsg(done.length ? `Discovery started for ${done.join(", ")}. Follow it in Research Queue; new companies appear under list "Claude discovery" (refresh the page when done).${failed.length ? ` Not started: ${failed.join(", ")}.` : ""}` : "Could not start discovery.");
   }
   // Criteria: text fields filter companies; everything else is scored so accounts are ranked, not hidden.
   const contactSet = Object.entries(criteria.contact).some(([, v]) => (Array.isArray(v) ? v.length : v));
@@ -476,7 +486,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
     <div className={`app-shell${collapsed ? " dp-closed" : ""}`}>
     <DiscoveryPanel criteria={criteria} onApply={setCriteria} onSave={saveCriteria} savedMeta={savedMeta} teamCriteria={teamCriteria} collapsed={collapsed} onToggle={toggle}
       matches={{ accounts: A.filter((a) => inPipe(a, scores[a.id])).length, contacts: people.length }}
-      country={country} onResearch={researchMore} researchMsg={researchMsg} />
+      country={country} researchTargets={researchTargets} onResearch={researchMore} researchMsg={researchMsg} />
     <div className="app-main">
       <Hero title={(HERO[tab] || HERO.dashboard)[0]} text={(HERO[tab] || HERO.dashboard)[1]} />
       <section className="view">{A.length === 0
