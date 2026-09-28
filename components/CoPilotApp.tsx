@@ -470,7 +470,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
           <div className="panel"><h2>Accounts by ICP status</h2><Bars entries={countBy(A, (a) => a.icp_status || "Unknown")} order={(k) => icpRank(k)} /></div>
         </div>
         <div className="panel" style={{ marginTop: 16 }}>
-          <h2>Priority accounts</h2>
+          <h2 className="with-count">Priority accounts <span className="count">{top.length} {top.length === 1 ? "account" : "accounts"}</span></h2>
           <p className="note">Accounts with strong or very strong S2P signals. Select a row to open the account brief.</p>
           <div className="tablewrap"><table>
             <thead><tr><th className="num">#</th><th className="logo-cell"></th><th>Company</th><th>Signal</th><th>Existing S2P</th><th>Status</th><th>ERP</th><th>Why</th></tr></thead>
