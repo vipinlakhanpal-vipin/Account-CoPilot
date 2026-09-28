@@ -22,7 +22,8 @@ export async function savePin(pin: string | null, askSuper: boolean, by: string)
   const salt = randomBytes(16).toString("hex");
   const value: PinSetting = pin ? { hash: hashPin(pin, salt), salt, ask_super: askSuper, set_by: by, set_at: new Date().toISOString() }
     : { ...cur, ask_super: askSuper, set_by: by, set_at: new Date().toISOString() };
-  await supabaseAdmin().from("settings").upsert({ key: "paid_pin", value, updated_at: new Date().toISOString() });
+  const { error } = await supabaseAdmin().from("settings").upsert({ key: "paid_pin", value, updated_at: new Date().toISOString() });
+  return error ? error.message : ""; // "" = saved
 }
 
 /** null = allowed; otherwise the response to return (403 with needPin so the app can ask for the PIN). */

@@ -40,7 +40,7 @@ export default function CostInfo() {
       <ul className="plain">
         <li><b>Seamless.ai:</b> searching companies and contacts is free. <b>Researching a contact</b> (email, phone, job history) uses 1 Seamless credit per new contact; re-checking an already-researched contact is usually free. Seamless runs through Claude sessions, not through this app.</li>
         <li><b>Claude Code sessions</b> (where the data was researched and the app is built) run on your Claude plan, not this API key.</li>
-        <li><b>Vercel and Supabase</b> free tiers cover this app's current size. Deep research may need Vercel Pro (longer function time).</li>
+        <li><b>Vercel Pro</b> (your plan) and <b>Supabase</b> cover this app's current size. Pro allows the longer function time that Deep research needs, so no upgrade is required.</li>
         <li>Figures in the table are estimates from typical runs; the Anthropic Console (console.anthropic.com → Usage) shows actual spend.</li>
       </ul>
     </div>

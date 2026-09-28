@@ -67,13 +67,24 @@ const Body = z.discriminatedUnion("action", [
 export async function POST(req: Request) {
   const user = await requireUser();
   if (!user) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
-  const parsed = Body.safeParse(await req.json().catch(() => ({})));
-  if (!parsed.success) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+  const raw = await req.json().catch(() => ({}));
+  const parsed = Body.safeParse(raw);
+  if (!parsed.success) {
+    const why = parsed.error.issues.map((i) => `${i.path.join(".") || "request"}: ${i.message}`).join("; ");
+    console.error("engine POST rejected", (raw as { action?: string })?.action, why);
+    return NextResponse.json({ error: (raw as { action?: string })?.action === "pin" ? `PIN not saved — ${why}. Use 6–12 digits only.` : `Invalid request (${why}).` }, { status: 400 });
+  }
   const b = parsed.data, db = supabaseAdmin(), now = new Date().toISOString(), id = crypto.randomUUID().slice(0, 8);
   if (b.action === "pin") { // Super Admin only (checked below): set / change the paid-actions PIN
     if (!(await getAccess(user)).isSuper) return NextResponse.json({ error: "Only a Super Admin can set the paid-actions PIN." }, { status: 403 });
-    await savePin(b.pin, b.ask_super, user.email || "");
-    return NextResponse.json({ ...(await summary(db)), message: b.pin ? "Paid-actions PIN saved." : "Setting saved." });
+    try {
+      const saved = await savePin(b.pin, b.ask_super, user.email || "");
+      if (saved) return NextResponse.json({ error: `PIN not saved — database said: ${saved}` }, { status: 500 });
+      return NextResponse.json({ ...(await summary(db)), message: b.pin ? "Paid-actions PIN saved." : "Setting saved." });
+    } catch (e) {
+      console.error("PIN save failed", e);
+      return NextResponse.json({ error: `PIN not saved — ${e instanceof Error ? e.message : String(e)}` }, { status: 500 });
+    }
   }
   if (b.action === "refresh") { const blocked = await requirePaidApproval(req, user); if (blocked) return blocked; } // paid-actions PIN
   // Super Admin: everything. Standard user: only queue jobs / refresh in their own region (no token, no balance).

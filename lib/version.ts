@@ -1,11 +1,17 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.60";
+export const APP_VERSION = "1.61";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.61", date: "2026-09-28", notes: "Team: a Standard User can be given several regions (tick boxes). PIN saving reports the exact reason if it fails. Costs note: Vercel Pro covers Deep research.",
+    changes: [
+      { what: "Region(s) is a tick-box list: one Standard User can cover several regions (e.g. KSA and Qatar); only Super Admins can set it", where: "Setup → Settings → Team (invite and Change access)", why: "Some colleagues handle more than one market" },
+      { what: "If the paid-actions PIN can't be saved, the message under the field now gives the exact reason from the server or database", where: "Setup → Settings → Paid-actions PIN", why: "Saving the PIN was failing without a clear reason" },
+      { what: "Costs note corrected: your Vercel Pro plan already allows the longer function time Deep research needs", where: "Setup → Settings → Costs & usage", why: "It wrongly suggested the free tier and a possible upgrade" },
+    ] },
   { version: "1.60", date: "2026-09-28", notes: "Paid-actions PIN: saving shows 'Saving…' and the result right under the field; eye button to show the PIN; tick box after 'Ask Super Admins too'. Eye button on the sign-in password too.",
     changes: [
       { what: "Saving the PIN shows 'Saving…', then the result right under the field and as a notice at the top centre; if it fails, the reason is shown and your typed PIN is kept", where: "Setup → Settings → 2 · Paid refresh → Paid-actions PIN", why: "Saving looked like it never finished — the result appeared far away at the top of the section" },

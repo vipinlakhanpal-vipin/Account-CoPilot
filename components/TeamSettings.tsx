@@ -7,7 +7,7 @@ type U = { id: string; email: string; name: string; invited_by: string; joined_f
 const ROLE: Record<Role, string> = { super_admin: "Super Admin", standard: "Standard User" };
 const ROLE_HELP: Record<Role, string> = {
   super_admin: "Sees every region with a consolidated view, manages the team, the engine and every region's ICP.",
-  standard: "Sees only their region's accounts, contacts and Master Book, and controls only that region's ICP.",
+  standard: "Sees only their region(s)' accounts, contacts and Master Book, and controls only those regions' ICP. One person can be given several regions.",
 };
 
 function AccessPicker({ role, regions, onChange }: { role: Role; regions: string[]; onChange: (role: Role, regions: string[]) => void }) {
@@ -18,11 +18,18 @@ function AccessPicker({ role, regions, onChange }: { role: Role; regions: string
           <option value="standard">Standard User</option><option value="super_admin">Super Admin</option>
         </select></label>
       {role === "standard" ? (
-        <label className="f-region">Region
-          <select className="input-frame" value={regions[0] || ""} onChange={(e) => onChange(role, e.target.value ? [e.target.value] : [])}>
-            <option value="">Choose a region…</option>
-            {REGIONS.map((r) => <option key={r.key} value={r.key}>{r.name}</option>)}
-          </select></label>
+        // Several regions can be ticked: one colleague may cover more than one market. (Only Super Admins can open this page.)
+        <div className="f-region"><span className="lbl">Region(s)</span>
+          <details className="region-multi">
+            <summary className="input-frame">{regions.length ? regions.join(", ") : "Choose region(s)…"}</summary>
+            <div className="region-menu">
+              {REGIONS.map((r) => (
+                <label key={r.key}><input type="checkbox" checked={regions.includes(r.key)}
+                  onChange={(e) => onChange(role, e.target.checked ? [...regions, r.key] : regions.filter((x) => x !== r.key))} />{r.name}</label>
+              ))}
+            </div>
+          </details>
+        </div>
       ) : <label className="f-region">Region<span className="input-frame team-all">All regions</span></label>}
     </div>
   );
@@ -47,7 +54,7 @@ export default function TeamSettings() {
   useEffect(() => { load(); }, []);
   async function invite(e: React.FormEvent) {
     e.preventDefault();
-    if (role === "standard" && !regions.length) { setMsg("Choose the region this Standard User will work on."); return; }
+    if (role === "standard" && !regions.length) { setMsg("Choose at least one region for this Standard User."); return; }
     setMsg("Working…"); setTemp("");
     const r = await fetch("/api/team", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, name, mode, role, regions }) });
     const j = await r.json();
@@ -86,7 +93,7 @@ export default function TeamSettings() {
       {msg && <p className="note" style={{ marginTop: 8 }}>{msg}</p>}
       {temp && <p className="temp-pass">Temporary password: <code>{temp}</code>. Copy it now and share it privately; it will not be shown again.</p>}
       <div className="tablewrap" style={{ marginTop: 12 }}><table>
-        <thead><tr><th className="num">#</th><th>Name</th><th>Email</th><th>Role</th><th>Region</th><th>Change access</th><th>Invited by</th><th>Joined</th><th>Last sign-in</th></tr></thead>
+        <thead><tr><th className="num">#</th><th>Name</th><th>Email</th><th>Role</th><th>Region(s)</th><th>Change access</th><th>Invited by</th><th>Joined</th><th>Last sign-in</th></tr></thead>
         <tbody>{users.map((u, i) => {
           const x = edit[u.id];
           return (
