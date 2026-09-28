@@ -757,3 +757,14 @@ th .infotip-pop{font-weight:400}
 .pipe-def{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px;margin:6px 0 10px}
 .pipe-def>div{padding:9px 12px;border-radius:10px;background:var(--surface);border:1px solid rgba(var(--ink),.12);font:400 13px/1.45 var(--body);color:var(--text)}
 .pipe-def b{color:var(--text-strong)}
+/* Tables fit the screen: tighter cells, company column capped, long descriptions clamped to two lines */
+th{padding:10px 9px}td{padding:9px 9px}
+td.logo-cell,th.logo-cell{width:44px;padding-left:4px;padding-right:4px}
+td.co-cell{min-width:200px;max-width:280px}
+.clamp2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+th .infotip{margin-left:3px}.infotip-btn{width:15px;height:15px;font-size:10px}
+/* Hint when a table is wider than the screen: a soft shadow on the right edge */
+.tablewrap{background:linear-gradient(to right,var(--surface) 30%,transparent) left center/40px 100% no-repeat local,
+  linear-gradient(to left,var(--surface) 30%,transparent) right center/40px 100% no-repeat local,
+  radial-gradient(farthest-side at 0 50%,rgba(0,0,0,.18),transparent) left center/12px 100% no-repeat scroll,
+  radial-gradient(farthest-side at 100% 50%,rgba(0,0,0,.18),transparent) right center/12px 100% no-repeat scroll,var(--surface)}

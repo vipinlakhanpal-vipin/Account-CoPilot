@@ -1,11 +1,16 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.64";
+export const APP_VERSION = "1.65";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.65", date: "2026-09-28", notes: "Tables fit the screen again: Contacts is back in view in the Pipeline; long company descriptions are shortened to two lines (hover for the full text).",
+    changes: [
+      { what: "Tighter table layout: slimmer cells and logo column, company column capped and its description limited to two lines (hover to see it all), so the last column (Contacts) is visible again", where: "Pipeline, Accounts and other tables", why: "The ⓘ buttons and logos made the table wider than the screen, pushing Contacts out of view" },
+      { what: "A soft shadow on the right edge shows when a table has more columns to scroll to", where: "All tables", why: "So hidden columns are never missed" },
+    ] },
   { version: "1.64", date: "2026-09-28", notes: "ⓘ help buttons explain Rank, ICP Match, Opportunity, Coupa Fit, ICP status, Persona fit and Trust, each linking to Learn Me; the Pipeline shows short definitions. Company logos no longer show a broken-image symbol.",
     changes: [
       { what: "ⓘ buttons next to Rank, ICP Match, Opportunity, Coupa Fit, ICP status, Persona fit and Trust: a short explanation of what the number means and how it's calculated, with 'Read more in Setup → Learn Me →' going straight to the right section", where: "Pipeline, Accounts, Stakeholders, account page scores, Define ICP", why: "So anyone can understand a score without leaving the page" },
