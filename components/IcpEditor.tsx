@@ -33,6 +33,31 @@ function Num({ label, value, onChange, suffix, allowBlank, step = 1, help }: { l
     </label>
   );
 }
+/** USD millions → "$250M" / "$3.5B" (billions from $1,000M). */
+export const usdM = (m: number | null) => m == null ? "" : m >= 1000 ? `$${(m / 1000).toFixed(2).replace(/\.?0+$/, "")}B` : `$${Math.round(m * 100) / 100}M`;
+/** "250", "250M", "$250m", "3.5B", "3,500" (millions) → USD millions; null when blank or unreadable. */
+function parseUsd(t: string): number | null {
+  const v = t.replace(/[$,\s]/g, "").toUpperCase();
+  if (!v) return null;
+  const m = v.match(/^(\d+(?:\.\d+)?)(B|BN|M|MN)?$/);
+  if (!m) return NaN;
+  return m[2]?.startsWith("B") ? Number(m[1]) * 1000 : Number(m[1]);
+}
+/** Money field in USD: shows $250M / $3.5B, accepts 250, 250M or 3.5B. */
+function Money({ label, value, onChange, allowBlank, help }: { label: string; value: number | null; onChange: (v: number | null) => void; allowBlank?: boolean; help?: string }) {
+  const [text, setText] = useState<string | null>(null); // null = not editing, show formatted
+  const parsed = text === null ? value : parseUsd(text);
+  const bad = text !== null && (Number.isNaN(parsed) || (!allowBlank && parsed === null));
+  return (
+    <label className="icp-field"><span>{label}</span>
+      <input inputMode="decimal" className={bad ? "bad" : undefined} value={text ?? usdM(value)} placeholder={allowBlank ? "No limit" : "$250M"}
+        onFocus={() => setText(value == null ? "" : value >= 1000 ? `${value / 1000}B` : `${value}M`)}
+        onChange={(e) => { setText(e.target.value); const p = parseUsd(e.target.value); if (!Number.isNaN(p) && (allowBlank || p !== null)) onChange(p); }}
+        onBlur={() => setText(null)} />
+      <small>{bad ? "Type an amount like 250M or 3.5B" : help}{!bad && text !== null && parsed != null ? ` · = ${usdM(parsed)}` : ""}</small>
+    </label>
+  );
+}
 function Radio({ options, value, onChange }: { options: [string, string][]; value: string; onChange: (v: string) => void }) {
   return <div className="icp-radio">{options.map(([k, l]) => <label key={k} className={value === k ? "on" : ""}><input type="radio" checked={value === k} onChange={() => onChange(k)} />{l}</label>)}</div>;
 }
@@ -157,8 +182,8 @@ export default function IcpEditor({ initial, counts }: { initial: Definition; co
               : "Only used when this region is Active. Kept here so it is ready when you switch it on."}</p>
           </div>
           <div className="icp-row">
-            <label className="icp-field"><span>Local currency</span><input value={r.currency.code} onChange={(e) => set((x) => { x.currency.code = e.target.value.toUpperCase().slice(0, 4); })} /></label>
-            <Num label={`${r.currency.code} per 1 USD`} value={r.currency.per_usd} step={0.0001} onChange={(v) => set((x) => { x.currency.per_usd = v || 0; })} help="Converts local revenue to USD for the ICP line." />
+            <label className="icp-field"><span>Local currency (for conversion only)</span><input value={r.currency.code} onChange={(e) => set((x) => { x.currency.code = e.target.value.toUpperCase().slice(0, 4); })} /></label>
+            <Num label={`${r.currency.code} per 1 USD`} value={r.currency.per_usd} step={0.0001} onChange={(v) => set((x) => { x.currency.per_usd = v || 0; })} help={`Local figures are converted to USD; all amounts are shown in USD. E.g. ${r.currency.code} ${(r.currency.per_usd * 1000).toLocaleString("en-US", { maximumFractionDigits: 0 })}M = $1B.`} />
           </div>
         </section>
 
@@ -179,8 +204,8 @@ export default function IcpEditor({ initial, counts }: { initial: Definition; co
         <section className="panel icp-card">
           <h3>2 · Company size <Uses items={["Status", "Discovery", "Verification"]} /></h3>
           <div className="icp-row">
-            <Num label="Minimum revenue" suffix="USD M" value={r.revenue.min_usd_m} onChange={(v) => set((x) => { x.revenue.min_usd_m = v || 0; })} help="At or above this = ICP (Verified when official)." />
-            <Num label="Maximum revenue" suffix="USD M" allowBlank value={r.revenue.max_usd_m} onChange={(v) => set((x) => { x.revenue.max_usd_m = v; })} help="Leave blank for no ceiling." />
+            <Money label="Minimum revenue (USD)" value={r.revenue.min_usd_m} onChange={(v) => set((x) => { x.revenue.min_usd_m = v || 0; })} help="At or above this = ICP (Verified when official). Type 250M or 3.5B." />
+            <Money label="Maximum revenue (USD)" allowBlank value={r.revenue.max_usd_m} onChange={(v) => set((x) => { x.revenue.max_usd_m = v; })} help="Leave blank for no ceiling." />
           </div>
           <div className="icp-row">
             <Num label="Minimum employees" value={r.employees.min} onChange={(v) => set((x) => { x.employees.min = v || 0; })} help="Known headcount below this = Not ICP." />
@@ -227,7 +252,7 @@ export default function IcpEditor({ initial, counts }: { initial: Definition; co
           <Toggle label="Estimates can make a company Likely" value={r.evidence.estimates_can_make_likely} onChange={(v) => set((x) => { x.evidence.estimates_can_make_likely = v; })}
             help="Off = anything without an official figure stays Needs check." />
           <div className="icp-row">
-            <Num label="Not ICP (estimate) below" suffix="USD M" value={r.evidence.not_icp_estimate_below_usd_m} onChange={(v) => set((x) => { x.evidence.not_icp_estimate_below_usd_m = v || 0; })} />
+            <Money label="Not ICP (estimate) below (USD)" value={r.evidence.not_icp_estimate_below_usd_m} onChange={(v) => set((x) => { x.evidence.not_icp_estimate_below_usd_m = v || 0; })} />
             <Num label="…and staff at most" value={r.evidence.not_icp_estimate_max_staff} onChange={(v) => set((x) => { x.evidence.not_icp_estimate_max_staff = v || 0; })} help="Reopened if an official figure appears." />
           </div>
           <div className="icp-row">
