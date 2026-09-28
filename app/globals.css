@@ -573,3 +573,24 @@ td.logo-cell{width:40px;padding-top:0;padding-bottom:0;text-align:center}
 .co-logo.ini{background:color-mix(in srgb, var(--teal) 10%, var(--surface))}
 .icp-editor{display:block}
 .icp-row>*{min-width:0}.icp-field select,.icp-field input{width:100%;box-sizing:border-box}
+/* Define ICP: stable layout (no width changes on selection) */
+.icp-radio label.on,.icp-chip.on{font-weight:inherit}
+.icp-radio label{font-weight:500}.icp-chip{font-weight:500}
+.icp-regions{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.icp-region{min-width:0;height:58px;justify-content:center}.icp-region small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.icp-dirty{display:inline-block;min-width:210px;text-align:right}
+.icp-summary{min-height:1.5em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.icp-explain{margin:-4px 0 10px;font:400 13.5px/1.5 var(--body);color:var(--muted)}
+.icp-status{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 12px}
+@media (max-width:640px){.icp-status{grid-template-columns:1fr}}
+.icp-status-opt{position:relative;display:flex;flex-direction:column;gap:4px;padding:10px 12px;border-radius:12px;cursor:pointer;
+  border:1px solid rgba(var(--ink),.16);background:var(--surface);min-height:150px}
+.icp-status-opt input{position:absolute;opacity:0;pointer-events:none}
+.icp-status-opt.on{border-color:var(--teal);box-shadow:inset 0 0 0 1px var(--teal);background:color-mix(in srgb, var(--teal) 9%, var(--surface))}
+.icp-status-opt:focus-within{outline:2px solid var(--teal);outline-offset:2px}
+.icp-status-opt .t{font:700 14.5px var(--body);color:var(--text-strong);display:flex;align-items:center;gap:6px}
+.icp-status-opt .t .dot{display:inline-block;width:9px;height:9px;border-radius:50%}
+.icp-status-opt .w{font:600 12.5px/1.4 var(--body);color:var(--text)}
+.icp-status-opt .o{font:400 12.5px/1.45 var(--body);color:var(--muted)}.icp-status-opt .o b{color:var(--text)}
+.icp-daily{transition:opacity .15s}.icp-daily.off{opacity:.55}
+.icp-daily .icp-hint{display:block;min-height:3.2em;margin:-2px 0 10px}

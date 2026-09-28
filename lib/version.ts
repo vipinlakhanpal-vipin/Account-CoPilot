@@ -1,11 +1,17 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.45";
+export const APP_VERSION = "1.46";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.46", date: "2026-09-28", notes: "Define ICP: steady layout (nothing shifts when you select an option) and a clear explanation of Region & daily run — what each choice means and its outcome.",
+    changes: [
+      { what: "Region & daily run explained: three choice cards (Active, Paused, Next phase), each saying what it means and what will happen; the daily numbers show what they produce (e.g. about 150 new accounts a month) and grey out when the region isn't Active", where: "Setup → Define ICP → 1 · Region & daily run", why: "So you know exactly what to pick and what the agent will do after you save" },
+      { what: "Steady layout: selecting an option no longer changes text weight or widths, region tabs have a fixed size, and messages (unsaved changes, things to fix) no longer push the page around", where: "Setup → Define ICP", why: "The menu jumped when you selected an option" },
+      { what: "Switching a region to Active pre-fills a starting daily run (find 5, verify 25) that you can change", where: "Setup → Define ICP → 1 · Region & daily run", why: "An active region with no daily numbers would do nothing" },
+    ] },
   { version: "1.45", date: "2026-09-28", notes: "Company logos in the app's tables, the account page and the Master Book (Accounts, Contact List), sized to the row; Define ICP layout fixed.",
     changes: [
       { what: "Company logo column: each company's website icon in a small square beside its name; neutral initials when a company has no icon. Row heights are unchanged", where: "Accounts, Pipeline, dashboard priority list, drill-down lists and the account page", why: "Recognise companies at a glance and make the lists easier to scan" },

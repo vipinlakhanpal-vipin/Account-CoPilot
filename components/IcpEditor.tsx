@@ -36,6 +36,28 @@ function Num({ label, value, onChange, suffix, allowBlank, step = 1, help }: { l
 function Radio({ options, value, onChange }: { options: [string, string][]; value: string; onChange: (v: string) => void }) {
   return <div className="icp-radio">{options.map(([k, l]) => <label key={k} className={value === k ? "on" : ""}><input type="radio" checked={value === k} onChange={() => onChange(k)} />{l}</label>)}</div>;
 }
+const STATUS_CHOICES: { key: Rules["status"]; title: string; what: string; outcome: string }[] = [
+  { key: "active", title: "Active", what: "The agent works on this region every morning at 6am.",
+    outcome: "New companies are added and accounts are verified daily, using the numbers below. The bell reports what changed." },
+  { key: "paused", title: "Paused", what: "Rules apply, but no daily work.",
+    outcome: "Nothing new is added. Accounts already here keep their status by these rules. You can still queue a one-off job in Settings." },
+  { key: "next", title: "Next phase", what: "A planned market, not started.",
+    outcome: "Nothing runs. Set up its rules now so it is ready; switch it to Active when you want to start." },
+];
+function StatusChoice({ value, onChange }: { value: Rules["status"]; onChange: (v: Rules["status"]) => void }) {
+  return (
+    <div className="icp-status" role="radiogroup" aria-label="Region status">
+      {STATUS_CHOICES.map((c) => (
+        <label key={c.key} className={`icp-status-opt${value === c.key ? " on" : ""}`}>
+          <input type="radio" name="region-status" checked={value === c.key} onChange={() => onChange(c.key)} />
+          <span className="t"><span className={`dot s-${c.key}`} />{c.title}</span>
+          <span className="w">{c.what}</span>
+          <span className="o"><b>Outcome:</b> {c.outcome}</span>
+        </label>
+      ))}
+    </div>
+  );
+}
 function Toggle({ label, value, onChange, help }: { label: string; value: boolean; onChange: (v: boolean) => void; help?: string }) {
   return <label className="icp-toggle"><input type="checkbox" checked={value} onChange={(e) => onChange(e.target.checked)} /><span>{label}{help && <small>{help}</small>}</span></label>;
 }
@@ -78,7 +100,7 @@ export default function IcpEditor({ initial, counts }: { initial: Definition; co
           <p className="note">{saved.updated_at ? <>Last saved {when(saved.updated_at)} by <b>{saved.updated_by}</b>.</> : <>Using the default rules (never edited). Everything below is what the agent follows today.</>}</p>
         </div>
         <div className="icp-actions">
-          {dirty && <span className="icp-dirty">Unsaved changes: {dirtyRegions.join(", ")}</span>}
+          <span className="icp-dirty" aria-live="polite">{problems.length ? `${problems.length} to fix (see below)` : dirty ? `Unsaved: ${dirtyRegions.join(", ")}` : ""}</span>
           <button type="button" className="btn" disabled={!dirty || !!busy} onClick={() => { setDef(clone(saved)); setResult(null); }}>Discard changes</button>
           <button type="button" className="btn" disabled={!!busy || !!problems.length} onClick={() => call("preview")}>{busy === "preview" ? "Checking…" : "Preview impact"}</button>
           <button type="button" className="btn primary" disabled={!dirty || !!busy || !!problems.length} onClick={() => call("save")}>{busy === "save" ? "Saving…" : "Save & apply"}</button>
@@ -97,21 +119,26 @@ export default function IcpEditor({ initial, counts }: { initial: Definition; co
         })}
       </nav>
 
-      {problems.length > 0 && <div className="icp-problems panel"><b>Fix before saving:</b><ul>{problems.map((p) => <li key={p}>{p}</li>)}</ul></div>}
 
       <p className="icp-summary">{summarizeRules(region, r)}</p>
 
       <div className="icp-grid">
         <section className="panel icp-card">
           <h3>1 · Region & daily run <Uses items={["Daily run"]} /></h3>
-          <Radio options={OPTIONS.status} value={r.status} onChange={(v) => set((x) => { x.status = v as Rules["status"]; })} />
-          <div className="icp-row">
-            <Num label="New companies to find per day" value={r.engine.discover_per_day} onChange={(v) => set((x) => { x.engine.discover_per_day = v || 0; })} help="0–50. Only for active regions." />
-            <Num label="Companies to verify per day" value={r.engine.verify_per_day} onChange={(v) => set((x) => { x.engine.verify_per_day = v || 0; })} help="0–60. The new ones first, then the queue." />
+          <p className="icp-explain">Choose whether the agent should work on <b>{region}</b> each morning, and how much. Every region keeps its own rules either way; this only controls the daily 6am run.</p>
+          <StatusChoice value={r.status} onChange={(v) => set((x) => { x.status = v; if (v === "active" && !x.engine.discover_per_day && !x.engine.verify_per_day) x.engine = { discover_per_day: 5, verify_per_day: 25 }; })} />
+          <div className={`icp-daily${r.status === "active" ? "" : " off"}`}>
+            <div className="icp-row">
+              <Num label="New companies to find per day" value={r.engine.discover_per_day} onChange={(v) => set((x) => { x.engine.discover_per_day = v || 0; })} help="Added to Accounts each morning (0–50)." />
+              <Num label="Companies to verify per day" value={r.engine.verify_per_day} onChange={(v) => set((x) => { x.engine.verify_per_day = v || 0; })} help="Revenue checks: the new ones first, then the queue (0–60)." />
+            </div>
+            <p className="icp-hint">{r.status === "active"
+              ? `Each morning: about ${r.engine.discover_per_day} new ${region} companies, and ${r.engine.verify_per_day} revenue checks (≈ ${r.engine.discover_per_day * 30} new accounts a month). Runs on your Claude plan — no API cost. Keep the total across active regions to about 30 checks a day so one morning run can finish.`
+              : "Only used when this region is Active. Kept here so it is ready when you switch it on."}</p>
           </div>
           <div className="icp-row">
             <label className="icp-field"><span>Local currency</span><input value={r.currency.code} onChange={(e) => set((x) => { x.currency.code = e.target.value.toUpperCase().slice(0, 4); })} /></label>
-            <Num label={`${r.currency.code} per 1 USD`} value={r.currency.per_usd} step={0.0001} onChange={(v) => set((x) => { x.currency.per_usd = v || 0; })} help="Used to convert local revenue to USD." />
+            <Num label={`${r.currency.code} per 1 USD`} value={r.currency.per_usd} step={0.0001} onChange={(v) => set((x) => { x.currency.per_usd = v || 0; })} help="Converts local revenue to USD for the ICP line." />
           </div>
         </section>
 
@@ -219,6 +246,7 @@ export default function IcpEditor({ initial, counts }: { initial: Definition; co
         </section>
       </div>
 
+      {problems.length > 0 && <div className="icp-problems panel"><b>Fix before saving:</b><ul>{problems.map((p) => <li key={p}>{p}</li>)}</ul></div>}
       {result && (
         <section className={`panel icp-result${result.ok ? "" : " bad"}`}>
           {result.error && <p>{result.error}</p>}
