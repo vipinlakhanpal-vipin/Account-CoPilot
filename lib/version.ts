@@ -1,11 +1,15 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.76";
+export const APP_VERSION = "1.77";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.77", date: "2026-09-28", notes: "Search companies: the optional Company name box shows a short example and explains itself in full below the field.",
+    changes: [
+      { what: "The optional Company name box shows 'e.g. Almarai', with a line underneath: 'Leave blank to find new companies in general' (or 'Searches for this one company' once you type)", where: "Setup → Settings → 1 · Search companies", why: "The grey hint text was cut off and hard to read" },
+    ] },
   { version: "1.76", date: "2026-09-28", notes: "Simpler left panel in three steps: 1 Search the app, 2 Filter your view (Undo my changes / Share as team default), 3 Find new companies on the web (amber 'Find up to' box, clear button and cost).",
     changes: [
       { what: "Step 1 · Search the app: a search box at the top of the panel for companies already in the app (free, instant, filters every tab)", where: "Left panel", why: "Searching what you already have was hidden among the criteria" },

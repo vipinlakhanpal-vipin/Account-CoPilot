@@ -71,7 +71,8 @@ export default function EngineSettings() {
             {q.mode === "company" ? <>
               <label>Company name<input value={q.company} onChange={(e) => setQ({ ...q, company: e.target.value })} placeholder="e.g. Almarai" /></label>
               <label>Website (optional)<input value={q.website} onChange={(e) => setQ({ ...q, website: e.target.value })} placeholder="e.g. almarai.com" /></label>
-            </> : <>{q.mode === "discover" && <label>Company name (optional)<input value={q.company} onChange={(e) => setQ({ ...q, company: e.target.value })} placeholder="Leave blank for a general search" /></label>}
+            </> : <>{q.mode === "discover" && <label className="eng-co">Company name (optional)<input value={q.company} onChange={(e) => setQ({ ...q, company: e.target.value })} placeholder="e.g. Almarai" />
+                <small>{q.company.trim() ? "Searches for this one company." : "Leave blank to find new companies in general."}</small></label>}
               {!(q.mode === "discover" && q.company.trim()) && <label>How many<select value={q.count} onChange={(e) => setQ({ ...q, count: e.target.value })}>{["1", "5", "10", "30", "50", "max"].map((n) => <option key={n} value={n}>{n === "max" ? "Max (as many as a session can)" : n}</option>)}</select></label>}</>}
             <button type="button" className="btn primary" disabled={q.mode === "company" && q.company.trim().length < 2}
               onClick={() => { const specific = q.mode === "company" || (q.mode === "discover" && q.company.trim().length >= 2); post(specific ? { action: "queue", region: q.region, count: 1, mode: "company", company_name: q.company.trim(), website: q.website.trim() }
