@@ -1,11 +1,15 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.61";
+export const APP_VERSION = "1.62";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.62", date: "2026-09-28", notes: "Scores shown as percentages: Rank, ICP Match, Opportunity, Coupa Fit and Persona fit (e.g. 91%).",
+    changes: [
+      { what: "Rank, ICP Match, Opportunity, Coupa Fit and Persona fit show a % sign (e.g. Rank 91%, ICP Match 100%); each score's parts read '12 of 20 pts'; hovering Rank shows how it is built", where: "Pipeline, Accounts, account page scores, Stakeholders, Define ICP (minimum ICP Match), Learn Me, Master Book (Persona Fit %)", why: "The scores are percentages of the maximum points, so the % makes them read correctly" },
+    ] },
   { version: "1.61", date: "2026-09-28", notes: "Team: a Standard User can be given several regions (tick boxes). PIN saving reports the exact reason if it fails. Costs note: Vercel Pro covers Deep research.",
     changes: [
       { what: "Region(s) is a tick-box list: one Standard User can cover several regions (e.g. KSA and Qatar); only Super Admins can set it", where: "Setup → Settings → Team (invite and Change access)", why: "Some colleagues handle more than one market" },

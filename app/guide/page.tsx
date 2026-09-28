@@ -142,7 +142,7 @@ export default async function GuidePage() {
                 ["3. Verify revenue", "Search ladder: (1) annual report / results / exchange filing → (2) parent segment, bond prospectus, rating report → (3) reputable press quoting the company → (4) estimates (Wikipedia, aggregators). Levels 1–3 = FACT; level 4 can only give LIKELY. Banks use operating income; AED 3.6725 = $1.", "Claude web search in a working session", "Free in Claude Code sessions"],
                 ["4. ICP status", "Revenue ≥ $250M from FACT → Verified; below → Not ICP; estimates → Likely or Needs check; a Seamless band counts only if headcount agrees; nothing → Unknown.", "Rules", "Free"],
                 ["5. Enrich", "Research engine, two AI passes: a Researcher reads the web (5 / 10 / 20 searches for Quick / Standard / Deep) and writes cited notes; an Extractor turns the notes into a structured record (revenue, ERP, S2P platform, signals, contacts). Reconcile then merges it without overwriting your data, keeps disagreements as Conflicts and logs every source.", "AI + rules", "≈ $0.55–3.50 per company (API) or free in a session"],
-                ["6. Score & rank", "ICP Match (fit to your criteria), Opportunity (buying signals) and Coupa Fit (five Coupa value areas), each 0–100 with its parts shown. Pipeline rank = 50 / 30 / 20.", "Rules", "Free"],
+                ["6. Score & rank", "ICP Match (fit to your criteria), Opportunity (buying signals) and Coupa Fit (five Coupa value areas), each shown as a percentage (0–100%) with its parts. Pipeline rank = 50 / 30 / 20.", "Rules", "Free"],
                 ["7. Recommend", "Why the account was selected, who to connect with, messaging, discovery questions, pain points, Coupa use cases and next steps. Draft pitch plan writes a tailored plan.", "Rules (Draft pitch plan = AI)", "Free (pitch plan ≈ $0.05–0.10)"],
                 ["8. Discover more", "Research more (left panel): web search for new companies in the selected country that meet your criteria and the same exclusion rules, dedupe against the app, add as 'Claude discovery', optionally profile each (step 5) and set ICP status (step 4).", "AI", "≈ $0.50–1.00 per search + ≈ $0.55 per profile"],
                 ["9. Audit", "Sources tab (where each company and fact came from), Conflicts (both values kept), record dates (added, updated, status since).", "Rules", "Free"],
@@ -215,7 +215,7 @@ export default async function GuidePage() {
                 ["Engagement signals", "Recently promoted, New hire, Changed company come from employment checks. LinkedIn activity, procurement posts and event attendance are unavailable (greyed out)."]]} /></section>
 
             <section id="scores" className="panel"><h2>Scores & point system</h2>
-              <p>Every score is 0–100 = points earned ÷ points available × 100. Only criteria you have set count towards ICP Match; unset criteria are left out (neutral). Hover a score for its breakdown; the account brief lists every part. Colour: green ≥ 70, amber 45–69, red &lt; 45. Scores are rule-based (no API cost).</p>
+              <p>Every score is a percentage: points earned ÷ points available × 100, shown as e.g. 91%. Only criteria you have set count towards ICP Match; unset criteria are left out (neutral). Hover a score for its breakdown; the account brief lists every part. Colour: green ≥ 70%, amber 45–69%, red &lt; 45%. Scores are rule-based (no API cost).</p>
               <h3>ICP Match — how well the account fits your criteria</h3>
               <T head={["Part", "Points", "How it's earned"]} rows={[
                 ["Revenue", 30, "30 if an official revenue figure (annual report, filing, company-quoted press) is inside a selected band · 10 if only an estimate (your data, Seamless band, aggregator) is inside · 5 if no figure yet or sources disagree (Needs check) · 0 if outside"],
@@ -247,7 +247,7 @@ export default async function GuidePage() {
               <p className="note">Areas scoring 15+ become the account's suggested Coupa use cases.</p></section>
 
             <section id="pipeline" className="panel"><h2>Pipeline</h2>
-              <p>The Pipeline answers <b>&quot;which accounts should we work first?&quot;</b> It lists accounts that pass the ICP and ranks them by one number — the <b>Pipeline rank</b> (0–100).</p>
+              <p>The Pipeline answers <b>&quot;which accounts should we work first?&quot;</b> It lists accounts that pass the ICP and ranks them by one number — the <b>Pipeline rank</b> (0–100%).</p>
               <h3>How the rank is built</h3>
               <T head={["Part", "Weight", "What it measures", "Why this weight"]} rows={[
                 ["ICP Match", "50%", "How well the account fits your ICP — official revenue in range, employees, industry, geography, ownership, technology, triggers, procurement maturity", "Fit matters most: a great signal at a company that doesn't fit is not worth chasing"],
@@ -256,7 +256,7 @@ export default async function GuidePage() {
               ]} />
               <h3>Who gets into the Pipeline</h3>
               <T head={["Rule", "Meaning"]} rows={[
-                ["ICP Match ≥ 70", "Only strong fits. Because full revenue points need an official figure, in practice this means ICP Verified accounts"],
+                ["ICP Match ≥ 70%", "Only strong fits. Because full revenue points need an official figure, in practice this means ICP Verified accounts"],
                 ["Not \"Not ICP\"", "Accounts below the revenue line are never shown, whatever their score"],
                 ["Everyone else", "Stays in Accounts (Likely, Needs check, Unknown, Not ICP) and moves in automatically once verified"],
               ]} />

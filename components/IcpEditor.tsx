@@ -291,7 +291,7 @@ export default function IcpEditor({ initial, counts, isSuper, allowed, roleLabel
           </div>
           <p className={`icp-hint${w !== 100 ? " bad" : ""}`}>Weights add up to {w}%{w !== 100 ? " — must be 100%" : ""}.</p>
           <div className="icp-row">
-            <Num label="Minimum ICP Match to enter Pipeline" value={r.pipeline.min_match} onChange={(v) => set((x) => { x.pipeline.min_match = v || 0; })} help="0–100." />
+            <Num label="Minimum ICP Match to enter Pipeline" suffix="%" value={r.pipeline.min_match} onChange={(v) => set((x) => { x.pipeline.min_match = v || 0; })} help="0–100%. ICP Match = share of your criteria an account meets." />
             <Toggle label="Keep Not ICP accounts out of the Pipeline" value={r.pipeline.exclude_not_icp} onChange={(v) => set((x) => { x.pipeline.exclude_not_icp = v; })} />
           </div>
           <p className="icp-label">Focus platforms (signals the agent looks for)</p>
