@@ -40,9 +40,9 @@ const STATUS_CHOICES: { key: Rules["status"]; title: string; what: string; outco
   { key: "active", title: "Active", what: "The agent works on this region every morning at 6am.",
     outcome: "New companies are added and accounts are verified daily, using the numbers below. The bell reports what changed." },
   { key: "paused", title: "Paused", what: "Rules apply, but no daily work.",
-    outcome: "Nothing new is added. Accounts already here keep their status by these rules. You can still queue a one-off job in Settings." },
+    outcome: "Nothing new is added. Accounts already here keep their status by these rules. Its settings are locked until you make it Active (or choose to prepare them)." },
   { key: "next", title: "Next phase", what: "A planned market, not started.",
-    outcome: "Nothing runs. Set up its rules now so it is ready; switch it to Active when you want to start." },
+    outcome: "Nothing runs. Its settings are locked; make it Active to start, or unlock them to prepare the rules in advance." },
 ];
 function StatusChoice({ region, value, onChange }: { region: string; value: Rules["status"]; onChange: (v: Rules["status"]) => void }) {
   const cur = STATUS_CHOICES.find((c) => c.key === value)!;
@@ -75,7 +75,9 @@ export default function IcpEditor({ initial, counts }: { initial: Definition; co
   const [busy, setBusy] = useState<"" | "preview" | "save">("");
   const [result, setResult] = useState<Result | null>(null);
   const [copyFrom, setCopyFrom] = useState("");
+  const [unlocked, setUnlocked] = useState<Record<string, boolean>>({});
   const r = def.regions[region];
+  const locked = r.status !== "active" && !unlocked[region]; // only an active region (or one being prepared) can be edited
   const dirty = JSON.stringify(def.regions) !== JSON.stringify(saved.regions);
   const dirtyRegions = REGIONS.filter(({ key }) => JSON.stringify(def.regions[key]) !== JSON.stringify(saved.regions[key])).map((x) => x.key);
   const problems = useMemo(() => REGIONS.flatMap(({ key }) => validateRules(key, def.regions[key])), [def]);
@@ -131,7 +133,7 @@ export default function IcpEditor({ initial, counts }: { initial: Definition; co
       <p className="icp-step"><b>Step 2</b> · Set the rules for {REGIONS.find((x) => x.key === region)?.name || region}</p>
       <p className="icp-summary">{summarizeRules(region, r)}</p>
 
-      <div className="icp-grid">
+      <div className="icp-first">
         <section className="panel icp-card">
           <h3>1 · Region & daily run <Uses items={["Daily run"]} /></h3>
           <p className="icp-explain">Controls only the daily 6am run for <b>{region}</b>. Its rules below apply whatever you choose.</p>
@@ -151,6 +153,20 @@ export default function IcpEditor({ initial, counts }: { initial: Definition; co
           </div>
         </section>
 
+      </div>
+
+      {locked && (
+        <div className={`icp-lock r-${r.status}`} role="note">
+          <div><b>{region} is {r.status === "paused" ? "Paused" : "Next phase"} — its rules are locked.</b>
+            <span>{r.status === "paused" ? ` They still decide the ICP status of the ${counts[region] || 0} ${region} account${counts[region] === 1 ? "" : "s"} already here, but nothing new is searched.` : " Nothing runs for this market yet."} Make it Active to edit and start the daily run, or prepare the rules first.</span></div>
+          <div className="icp-lock-actions">
+            <button type="button" className="btn primary" onClick={() => set((x) => { x.status = "active"; if (!x.engine.discover_per_day && !x.engine.verify_per_day) x.engine = { discover_per_day: 5, verify_per_day: 25 }; })}>Make {region} Active</button>
+            <button type="button" className="btn link" onClick={() => setUnlocked((u) => ({ ...u, [region]: true }))}>Edit rules without starting the daily run</button>
+          </div>
+        </div>
+      )}
+      {!locked && r.status !== "active" && <p className="icp-hint icp-prep">Preparing {region}&apos;s rules — the daily run stays off until you make it Active. <button type="button" className="btn link" onClick={() => setUnlocked((u) => ({ ...u, [region]: false }))}>Lock again</button></p>}
+      <fieldset className={`icp-grid icp-fields${locked ? " locked" : ""}`} disabled={locked} aria-disabled={locked}>
         <section className="panel icp-card">
           <h3>2 · Company size <Uses items={["Status", "Discovery", "Verification"]} /></h3>
           <div className="icp-row">
@@ -253,7 +269,7 @@ export default function IcpEditor({ initial, counts }: { initial: Definition; co
             <button type="button" className="btn" onClick={() => { if (window.confirm(`Reset ${region} to the default rules?`)) set((x) => { Object.assign(x, clone(DEFAULT_RULES), { status: x.status, currency: x.currency, engine: x.engine }); }); }}>Reset {region} to defaults</button>
           </div>
         </section>
-      </div>
+      </fieldset>
 
       {problems.length > 0 && <div className="icp-problems panel"><b>Fix before saving:</b><ul>{problems.map((p) => <li key={p}>{p}</li>)}</ul></div>}
       {result && (

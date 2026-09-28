@@ -1,11 +1,17 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.48";
+export const APP_VERSION = "1.49";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.49", date: "2026-09-28", notes: "Define ICP: settings 2–9 are open only for an Active region. Paused and Next-phase regions show them greyed out and locked, with 'Make … Active' or 'Edit rules without starting the daily run'.",
+    changes: [
+      { what: "Settings 2–9 (size, type, industries, never add, evidence, pipeline, personas, notes) can be edited only when the selected region is Active; for Paused and Next-phase regions they are greyed out and locked", where: "Setup → Define ICP", why: "Editing a region that isn't running was confusing" },
+      { what: "A banner on locked regions explains why and offers two choices: 'Make … Active' (unlocks and starts the daily run) or 'Edit rules without starting the daily run' (to prepare Europe or USA in advance; 'Lock again' to undo)", where: "Setup → Define ICP → Paused or Next-phase region", why: "Keeps the safe default while still letting you prepare a new market before it goes live" },
+      { what: "Region & daily run spans the full width at the top of the page", where: "Setup → Define ICP → 1 · Region & daily run", why: "It now comes first, before the settings it unlocks" },
+    ] },
   { version: "1.48", date: "2026-09-28", notes: "Define ICP is region first: Step 1 choose a region, Step 2 set its rules. Section 1 shows only that region's current status (e.g. UAE is Active) with a small 'Change to' option.",
     changes: [
       { what: "Clear order: 'Step 1 · Choose a region' above the region tiles and 'Step 2 · Set the rules for …' above the settings", where: "Setup → Define ICP", why: "It wasn't clear whether to pick a status or a region first" },
