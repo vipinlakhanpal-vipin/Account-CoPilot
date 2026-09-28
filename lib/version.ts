@@ -1,11 +1,15 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.66";
+export const APP_VERSION = "1.67";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.67", date: "2026-09-28", notes: "Logos use the row's spare height: in tall rows they grow to 40px (wordmarks up to 80px wide) so they read clearly; in normal rows they stay small. Rows never get taller.",
+    changes: [
+      { what: "Adaptive logo size: when a row is already tall (e.g. a long company description), the logo grows to 40px — wide logos like Americana's up to 80px wide — and in normal rows it stays at 22px", where: "Pipeline, Accounts and other tables with logos", why: "Bigger logos are clearer when there is room, without making any row taller" },
+    ] },
   { version: "1.66", date: "2026-09-28", notes: "The Pipeline shows a live worked example of the Rank using the #1 account (e.g. Americana: 50 + 22.5 + 18 = 90.5 → 91%).",
     changes: [
       { what: "Live worked example of the Rank calculation for the account at #1, with its real scores and your weights (e.g. Americana: 50% × 100% + 30% × 75% + 20% × 90% = 50 + 22.5 + 18 = 90.5 → 91%); it updates when the top account or the weights change", where: "Accounts → Pipeline (definitions above the table)", why: "Seeing the numbers worked through makes the Rank easy to understand" },
