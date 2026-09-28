@@ -1,11 +1,15 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.65";
+export const APP_VERSION = "1.66";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.66", date: "2026-09-28", notes: "The Pipeline shows a live worked example of the Rank using the #1 account (e.g. Americana: 50 + 22.5 + 18 = 90.5 → 91%).",
+    changes: [
+      { what: "Live worked example of the Rank calculation for the account at #1, with its real scores and your weights (e.g. Americana: 50% × 100% + 30% × 75% + 20% × 90% = 50 + 22.5 + 18 = 90.5 → 91%); it updates when the top account or the weights change", where: "Accounts → Pipeline (definitions above the table)", why: "Seeing the numbers worked through makes the Rank easy to understand" },
+    ] },
   { version: "1.65", date: "2026-09-28", notes: "Tables fit the screen again: Contacts is back in view in the Pipeline; long company descriptions are shortened to two lines (hover for the full text).",
     changes: [
       { what: "Tighter table layout: slimmer cells and logo column, company column capped and its description limited to two lines (hover to see it all), so the last column (Contacts) is visible again", where: "Pipeline, Accounts and other tables", why: "The ⓘ buttons and logos made the table wider than the screen, pushing Contacts out of view" },

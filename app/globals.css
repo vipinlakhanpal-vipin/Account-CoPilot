@@ -768,3 +768,5 @@ th .infotip{margin-left:3px}.infotip-btn{width:15px;height:15px;font-size:10px}
   linear-gradient(to left,var(--surface) 30%,transparent) right center/40px 100% no-repeat local,
   radial-gradient(farthest-side at 0 50%,rgba(0,0,0,.18),transparent) left center/12px 100% no-repeat scroll,
   radial-gradient(farthest-side at 100% 50%,rgba(0,0,0,.18),transparent) right center/12px 100% no-repeat scroll,var(--surface)}
+.pipe-example{grid-column:1/-1;padding:10px 12px;border-radius:10px;font:400 13.5px/1.5 var(--body);color:var(--text);background:color-mix(in srgb, var(--teal) 10%, var(--surface));border:1px solid color-mix(in srgb, var(--teal) 40%, transparent)}
+.pipe-example b{color:var(--text-strong)}
