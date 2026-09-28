@@ -1,11 +1,17 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.44";
+export const APP_VERSION = "1.45";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.45", date: "2026-09-28", notes: "Company logos in the app's tables, the account page and the Master Book (Accounts, Contact List), sized to the row; Define ICP layout fixed.",
+    changes: [
+      { what: "Company logo column: each company's website icon in a small square beside its name; neutral initials when a company has no icon. Row heights are unchanged", where: "Accounts, Pipeline, dashboard priority list, drill-down lists and the account page", why: "Recognise companies at a glance and make the lists easier to scan" },
+      { what: "Logos in the Master Book: a 16px logo inside each row of Accounts and Contact List (rows stay the same height; formulas and the dashboard adjusted for the new column)", where: "Master Book → Accounts, Contact List", why: "The same at-a-glance recognition in the file you share" },
+      { what: "Define ICP page layout fixed: the settings cards now fill the page width instead of being pushed to the right, and dropdowns stay inside their cards", where: "Setup → Define ICP", why: "An old style name clashed with the new page and squeezed it to one side" },
+    ] },
   { version: "1.44", date: "2026-09-28", notes: "Define ICP: a full ICP editor per region (UAE, KSA, Qatar, Kuwait, Oman, Bahrain, Egypt; Europe and USA as next phase). Every rule the agent follows is set here and applied everywhere: ICP status, verification, the 6am run, in-app research, the Pipeline and the left panel. Preview impact before saving; change history.",
     changes: [
       { what: "Define ICP editor: set company size (revenue and staff range, revenue measure for banks and insurers), listing, ownership, entity level, industries, exclusions, evidence rules, re-check interval, Pipeline weights and entry threshold, focus platforms, ERP and triggers, buyer personas and the daily run — separately for each region", where: "Setup → Define ICP", why: "Your ICP is the foundation of every search and verification; now you control it directly, with no hidden rules" },

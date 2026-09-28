@@ -562,3 +562,14 @@ td.chk-bad > span{background:color-mix(in srgb, #FF4D6A 16%, var(--surface));bor
 .icp-result em.up{color:#1F9C6C;font-style:normal}.icp-result em.down{color:#E06C75;font-style:normal}
 .icp-changes{max-height:340px;overflow:auto;margin:6px 0 0;padding-left:18px}.icp-changes li{margin:0 0 6px}
 .icp-history{margin-top:14px}.icp-history ul{margin:0;padding-left:18px}.icp-history li{margin:0 0 8px}
+
+/* Company logo: fits inside the row, never makes it taller */
+.co-logo{display:inline-flex;align-items:center;justify-content:center;flex:none;border-radius:6px;overflow:hidden;vertical-align:middle;
+  background:#FFFFFF;border:1px solid rgba(var(--ink),.12)}
+.co-logo img{width:78%;height:78%;object-fit:contain;display:block}
+.co-logo-ini{font-weight:700;color:var(--muted);letter-spacing:.02em;line-height:1}
+td.logo-cell{width:40px;padding-top:0;padding-bottom:0;text-align:center}
+.drawer-title-logo{display:flex;align-items:center;gap:10px}
+.co-logo.ini{background:color-mix(in srgb, var(--teal) 10%, var(--surface))}
+.icp-editor{display:block}
+.icp-row>*{min-width:0}.icp-field select,.icp-field input{width:100%;box-sizing:border-box}

@@ -71,7 +71,7 @@ export default function IcpEditor({ initial, counts }: { initial: Definition; co
 
   const w = r.pipeline.w_match + r.pipeline.w_opportunity + r.pipeline.w_fit;
   return (
-    <div className="icp">
+    <div className="icp-editor">
       <div className="icp-top panel">
         <div>
           <p className="icp-kicker">ICP definition v{saved.version || 1}</p>

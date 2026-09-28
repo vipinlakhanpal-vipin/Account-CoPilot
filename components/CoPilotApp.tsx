@@ -1,6 +1,7 @@
 "use client";
 import { rulesFor } from "@/lib/icpDefinition.mjs";
 import CostNote from "@/components/CostNote";
+import CompanyLogo from "@/components/CompanyLogo";
 import { useMemo, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Hero from "@/components/Hero";
@@ -126,7 +127,7 @@ function Bars({ entries, order, signal }: { entries: [string, number][]; order?:
   );
 }
 
-type ColDef = { h: string; cell: (r: Row) => React.ReactNode; wrap?: boolean };
+type ColDef = { h: string; cell: (r: Row) => React.ReactNode; wrap?: boolean; cls?: string };
 type FilterDef = { label: string; get: (r: Row) => string };
 
 function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "rows" }: {
@@ -155,14 +156,14 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "
           {rows.some((r) => r.company_id) && <> · {new Set(out.map((r) => r.company_id)).size} {new Set(out.map((r) => r.company_id)).size === 1 ? "company" : "companies"}</>}</p>
       <div className="tablewrap">
         <table>
-          <thead><tr><th className="num">#</th>{cols.map((c) => <th key={c.h}>{c.h}</th>)}</tr></thead>
+          <thead><tr><th className="num">#</th>{cols.map((c) => <th key={c.h} className={c.cls}>{c.h}</th>)}</tr></thead>
           <tbody>
             {out.slice(0, 800).map((r, i) => (
               <tr key={r.id || i} className={onRow ? "click" : undefined} tabIndex={onRow ? 0 : undefined}
                 onClick={(e) => { if (onRow && !(e.target as HTMLElement).closest("a")) onRow(r); }}
                 onKeyDown={(e) => { if (onRow && e.key === "Enter") onRow(r); }}>
                 <td className="num mono">{i + 1}</td>
-                {cols.map((c) => <td key={c.h} className={c.wrap ? "wrap" : undefined}>{c.cell(r)}</td>)}
+                {cols.map((c) => <td key={c.h} className={[c.wrap ? "wrap" : "", c.cls || ""].join(" ").trim() || undefined}>{c.cell(r)}</td>)}
               </tr>
             ))}
           </tbody>
@@ -263,7 +264,7 @@ export default function CoPilotApp({ data: all }: { data: AllData }) {
       filters={[{ label: "ICP status", get: (a) => a.icp_status }, { label: "List", get: (a) => (a.lists || []).join(" + ") },
         { label: "Signal", get: (a) => a.s2p_signal_level }, { label: "S2P", get: (a) => a.existing_s2p_product }, { label: "Industry", get: (a) => a.industry },
         { label: "Exchange", get: (a) => a.exchange }, { label: "Country", get: (a) => a.country }]}
-      cols={[{ h: "Company", cell: (a) => <><b>{a.company_name}</b><div className="muted mono">{a.exchange} {a.ticker}</div></> },
+      cols={[{ h: "", cls: "logo-cell", cell: (a) => <CompanyLogo a={a} /> }, { h: "Company", cell: (a) => <><b>{a.company_name}</b><div className="muted mono">{a.exchange} {a.ticker}</div></> },
         { h: "Industry", cell: (a) => a.industry }, { h: "Revenue", cell: (a) => { const r = bestRevenue(a); return r.v ? <><span className="mono">{usd(r.v)}</span>{r.src && <div className="rev-src">{r.src}</div>}</> : <span className="muted">—</span>; } },
         { h: "ICP status", cell: (a) => <><IcpTag s={a.icp_status} why={a.icp_fit_reason} /><div className="muted mono rec-since">since {statusSince(a) || "—"}</div></> },
         { h: "ICP match", cell: (a) => scores[a.id] && <ScoreChip s={scores[a.id].m} label="ICP Match" /> },
@@ -278,7 +279,7 @@ export default function CoPilotApp({ data: all }: { data: AllData }) {
     view = <FilterTable unit="accounts" title="Ranked pipeline" note={`Rank = ${pipe.w_match}% ICP Match + ${pipe.w_opportunity}% Opportunity + ${pipe.w_fit}% Coupa Fit (set in Setup → Define ICP). Accounts with ICP Match below ${pipe.min_match}${pipe.exclude_not_icp ? " or Not ICP" : ""} are left out. Hover a score for its breakdown; select a row for why it was selected and the recommended next steps.`}
       rows={ranked} search={(a) => [a.company_name, a.industry, a.erp, a.existing_s2p_product].join(" ")}
       filters={[{ label: "ICP status", get: (a) => a.icp_status }, { label: "S2P", get: (a) => a.existing_s2p_product }, { label: "Industry", get: (a) => a.industry }, { label: "Country", get: (a) => a.country }]}
-      cols={[{ h: "Rank", cell: (a) => <b className="mono">{scores[a.id].rank}</b> }, { h: "Company", cell: (a) => <><b>{a.company_name}</b><div className="muted">{a.industry} · {a.country}</div></> },
+      cols={[{ h: "Rank", cell: (a) => <b className="mono">{scores[a.id].rank}</b> }, { h: "", cls: "logo-cell", cell: (a) => <CompanyLogo a={a} /> }, { h: "Company", cell: (a) => <><b>{a.company_name}</b><div className="muted">{a.industry} · {a.country}</div></> },
         { h: "ICP match", cell: (a) => <ScoreChip s={scores[a.id].m} label="ICP Match" /> }, { h: "Opportunity", cell: (a) => <ScoreChip s={scores[a.id].o} label="Opportunity" /> },
         { h: "Coupa fit", cell: (a) => <ScoreChip s={scores[a.id].f} label="Coupa Fit" /> }, { h: "ICP status", cell: (a) => <IcpTag s={a.icp_status} why={a.icp_fit_reason} /> },
         { h: "Revenue", cell: (a) => <span className="mono">{usd(bestRevenue(a).v)}</span> }, { h: "Existing S2P", cell: (a) => a.existing_s2p_product },
@@ -420,10 +421,10 @@ export default function CoPilotApp({ data: all }: { data: AllData }) {
           <h2>Priority accounts</h2>
           <p className="note">Accounts with strong or very strong S2P signals. Select a row to open the account brief.</p>
           <div className="tablewrap"><table>
-            <thead><tr><th className="num">#</th><th>Company</th><th>Signal</th><th>Existing S2P</th><th>Status</th><th>ERP</th><th>Why</th></tr></thead>
+            <thead><tr><th className="num">#</th><th className="logo-cell"></th><th>Company</th><th>Signal</th><th>Existing S2P</th><th>Status</th><th>ERP</th><th>Why</th></tr></thead>
             <tbody>{top.map((a, i) => (
               <tr key={a.id} className="click" tabIndex={0} onClick={() => setOpen(a.id)} onKeyDown={(e) => e.key === "Enter" && setOpen(a.id)}>
-                <td className="num mono">{i + 1}</td><td><b>{a.company_name}</b></td><td><Pill s={a.s2p_signal_level} /></td><td>{a.existing_s2p_product}</td><td>{a.s2p_platform_status}</td>
+                <td className="num mono">{i + 1}</td><td className="logo-cell"><CompanyLogo a={a} /></td><td><b>{a.company_name}</b></td><td><Pill s={a.s2p_signal_level} /></td><td>{a.existing_s2p_product}</td><td>{a.s2p_platform_status}</td>
                 <td>{a.erp}</td><td className="wrap">{str(a.s2p_strong_signals).slice(0, 260)}</td>
               </tr>))}
             </tbody></table></div>
@@ -499,7 +500,7 @@ function Brief({ a, data, people, onClose, onContact, scores, criteria }: { a: R
         <div className="brief-head">
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="muted mono">{a.exchange} {a.ticker} · {a.industry}</div>
-            <h3>{a.company_name}</h3>
+            <h3 className="drawer-title-logo"><CompanyLogo a={a} size={30} />{a.company_name}</h3>
             <div style={{ marginTop: 6 }}><Pill s={a.s2p_signal_level} /> <span className="tag">{a.existing_s2p_product || "Unknown"}</span> <span className="tag">{a.s2p_platform_status || "Unknown"}</span></div>
           </div>
           <span className="cost-wrap"><button className="btn ghost" type="button" onClick={refreshResearch}>Refresh research</button><CostNote cost="≈ $1.20–1.50" /></span>
@@ -633,7 +634,7 @@ function DrillDown({ d, byCo, onClose, onAccount, onContact }: { d: { title: str
     table = <FilterTable unit="companies" title={d.title} rows={[...d.rows].sort((a, b) => icpRank(a.icp_status) - icpRank(b.icp_status) || (bestRevenue(b).v || 0) - (bestRevenue(a).v || 0))}
       search={(a) => [a.company_name, a.industry, a.erp, a.existing_s2p_product].join(" ")}
       filters={[{ label: "ICP status", get: (a) => a.icp_status }, { label: "Signal", get: (a) => a.s2p_signal_level }, { label: "Industry", get: (a) => a.industry }]}
-      cols={[{ h: "Company", cell: (a) => <b>{a.company_name}</b> }, { h: "Revenue", cell: (a) => <span className="mono">{usd(bestRevenue(a).v)}</span> },
+      cols={[{ h: "", cls: "logo-cell", cell: (a) => <CompanyLogo a={a} /> }, { h: "Company", cell: (a) => <b>{a.company_name}</b> }, { h: "Revenue", cell: (a) => <span className="mono">{usd(bestRevenue(a).v)}</span> },
         { h: "ICP status", cell: (a) => <IcpTag s={a.icp_status} why={a.icp_fit_reason} /> }, { h: "Updated", cell: (a) => <Dates a={a} /> }, { h: "Signal", cell: (a) => <Pill s={a.s2p_signal_level} /> },
         { h: "S2P", cell: (a) => a.existing_s2p_product }, { h: "ERP", cell: (a) => a.erp }, { h: "Contacts", cell: (a) => <span className="mono">{(byCo[a.id] || []).length}</span> }]}
       onRow={(a) => onAccount(a.id)} />;

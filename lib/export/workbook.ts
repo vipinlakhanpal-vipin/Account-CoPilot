@@ -2,6 +2,9 @@ import "server-only";
 import ExcelJS from "exceljs";
 import type { AllData, Row } from "@/lib/data";
 import { buildPeople } from "@/lib/people";
+import { fetchLogos, logoDomain } from "@/lib/logo";
+
+type Logos = { map: Map<string, { buf: Buffer; ext: "png" | "jpeg" }>; get: (r: Row) => string; ids: Map<string, number> };
 
 // Design: Nunito 12 throughout (Excel falls back to a similar font if Nunito isn't installed), navy + white, soft banding,
 // hairline row dividers, no gridlines, status values shown as coloured tags.
@@ -53,11 +56,11 @@ function banner(ws: ExcelJS.Worksheet, title: string, subtitle: string, n: numbe
   ws.getRow(1).height = 38; ws.getRow(2).height = 24;
 }
 
-function table(wb: ExcelJS.Workbook, name: string, title: string, subtitle: string, colsIn: Col[], rowsIn: Row[], tab: number, inputs: string[] = []) {
-  const cols: Col[] = [["#", "__n", 6, "num"], ...colsIn];
+function table(wb: ExcelJS.Workbook, name: string, title: string, subtitle: string, colsIn: Col[], rowsIn: Row[], tab: number, inputs: string[] = [], logos?: Logos) {
+  const cols: Col[] = [["#", "__n", 6, "num"], ...(logos ? [["", "__logo", 4] as Col] : []), ...colsIn];
   const rows: Row[] = rowsIn.map((r, i) => ({ ...r, __n: i + 1 }));
   const ws = wb.addWorksheet(name, { properties: { tabColor: { argb: TABS[tab % TABS.length] } },
-    views: [{ state: "frozen", xSplit: 2, ySplit: 3, zoomScale: 90, showGridLines: false }] });
+    views: [{ state: "frozen", xSplit: logos ? 3 : 2, ySplit: 3, zoomScale: 90, showGridLines: false }] });
   banner(ws, title, subtitle, cols.length);
   cols.forEach(([h, key, w], i) => {
     const cell = ws.getCell(3, i + 1);
@@ -66,7 +69,7 @@ function table(wb: ExcelJS.Workbook, name: string, title: string, subtitle: stri
     cell.font = f({ bold: true, color: { argb: "FFFFFFFF" } });
     cell.alignment = { wrapText: true, vertical: "middle", horizontal: key === "__n" ? "center" : "left", indent: key === "__n" ? 0 : 1 };
     cell.border = { bottom: { style: "medium", color: { argb: NAVY } } };
-    ws.getColumn(i + 1).width = key === "__n" ? 7 : W(w);
+    ws.getColumn(i + 1).width = key === "__n" ? 7 : key === "__logo" ? 4.5 : W(w);
   });
   ws.getRow(3).height = 42;
   rows.forEach((r, ri) => {
@@ -96,6 +99,14 @@ function table(wb: ExcelJS.Workbook, name: string, title: string, subtitle: stri
       if (tag) { cell.fill = fill(tag[0]); cell.font = f({ bold: true, color: { argb: tag[1] } }); }
     });
   });
+  // Company logos: a 16px image inside the row (placed over the cell, so row heights don't change); one embedded copy per company.
+  if (logos) rows.forEach((r, ri) => {
+    const d = logos.get(r), l = d ? logos.map.get(d) : undefined;
+    if (!l) return;
+    let id = logos.ids.get(d);
+    if (id === undefined) { id = wb.addImage({ buffer: l.buf as unknown as ExcelJS.Buffer, extension: l.ext }); logos.ids.set(d, id); }
+    ws.addImage(id, { tl: { col: 1.2, row: FIRST - 1 + ri + 0.14 } as ExcelJS.Anchor, ext: { width: 16, height: 16 }, editAs: "oneCell" });
+  });
   ws.autoFilter = { from: { row: 3, column: 1 }, to: { row: 3, column: cols.length } };
   ws.pageSetup = { orientation: "landscape", fitToPage: true, fitToWidth: 1, fitToHeight: 0, printTitlesRow: "3:3",
     margins: { left: 0.4, right: 0.4, top: 0.5, bottom: 0.5, header: 0.2, footer: 0.2 } };
@@ -108,6 +119,9 @@ export async function buildWorkbook(d: AllData): Promise<Buffer> {
   wb.creator = "Account CoPilot";
   wb.calcProperties.fullCalcOnLoad = true;
   const today = new Date().toISOString().slice(0, 10);
+  const logoMap = await fetchLogos(d.accounts.map(logoDomain));
+  const accLogos: Logos = { map: logoMap, get: (r) => logoDomain(r), ids: new Map() };
+  const conLogos: Logos = { map: logoMap, get: (r) => String(r.__domain || ""), ids: accLogos.ids };
   const dash = wb.addWorksheet("Executive Dashboard", { properties: { tabColor: { argb: TABS[0] } }, views: [{ showGridLines: false }] });
 
   // Contact List — clean, outreach-ready: one row per person (all sources merged), only the nine agreed fields.
@@ -122,7 +136,7 @@ export async function buildWorkbook(d: AllData): Promise<Buffer> {
     const phones = [...new Set(p.rows.map((r) => String(r.phone || "").trim()).filter(Boolean))];
     const email = cleanEmail(p.email) || p.rows.map((r) => cleanEmail(r.email)).find(Boolean) || "";
     const hs = co.profile?.["HubSpot"];
-    return { company: p.company || co.company_name || "", website: co.company_website || (co.domain ? `https://${co.domain}` : ""),
+    return { __domain: logoDomain(co), company: p.company || co.company_name || "", website: co.company_website || (co.domain ? `https://${co.domain}` : ""),
       full_name: p.full_name, title: p.title_verbatim, phone: phones.join(" / "), email,
       location: p.location || [co.hq_city, co.country].filter(Boolean).join(", "), linkedin: p.linkedin_url || "",
       ...hubspotCols(hs, email) };
@@ -135,7 +149,7 @@ export async function buildWorkbook(d: AllData): Promise<Buffer> {
       ["HubSpot Import Action", "hs_action", 30, "wrap"]];
   table(wb, "Contact List", "CONTACT LIST — Outreach-ready contacts",
     `Exported ${today} · one row per person (all sources merged) · official emails only, never guessed · teal columns come from SCP's HubSpot (read-only)`,
-    listCols, contactRows, 1);
+    listCols, contactRows, 1, [], conLogos);
 
   // HubSpot deals linked to profiled companies (read-only copy; stays inside this app and its export)
   const dealRows = d.accounts.flatMap((a) => (a.profile?.["HubSpot"]?.deals || []).map((x: Row) => ({ company: a.company_name, hs_name: a.profile["HubSpot"].hubspot_name,
@@ -168,7 +182,7 @@ export async function buildWorkbook(d: AllData): Promise<Buffer> {
     hs_in: a.profile?.["HubSpot"] ? (a.profile["HubSpot"].in_hubspot ? "Yes" : "No") : "", hs_stage: a.profile?.["HubSpot"]?.stage || "", hs_owner: a.profile?.["HubSpot"]?.owner || "",
     status_since: day(a.profile?.["Status changed"]?.at || a.last_verified || a.created_at) }))
     .sort((a, b) => icpRank(a.icp_status) - icpRank(b.icp_status) || rank(a.s2p_signal_level) - rank(b.s2p_signal_level) || String(a.company_name).localeCompare(b.company_name));
-  table(wb, "Accounts", "ACCOUNTS — ICP & Target Lists", `Exported ${today} · sorted by ICP status, then S2P signal · gold columns are for your input · teal columns from HubSpot`, accCols, accounts, 3, ["account_owner", "account_priority", "pitch_next_step"]);
+  table(wb, "Accounts", "ACCOUNTS — ICP & Target Lists", `Exported ${today} · sorted by ICP status, then S2P signal · gold columns are for your input · teal columns from HubSpot`, accCols, accounts, 3, ["account_owner", "account_priority", "pitch_next_step"], accLogos);
 
   const conCols: Col[] = [
     ["Company", "company", 26], ["Full Name", "full_name", 22], ["Nationality", "nationality", 14], ["Title (Verbatim)", "title_verbatim", 32, "wrap"],
@@ -235,8 +249,9 @@ export async function buildWorkbook(d: AllData): Promise<Buffer> {
   const pv = wb.addWorksheet("Pivot Analysis", { properties: { tabColor: { argb: TABS[10] } }, views: [{ showGridLines: false }] });
   banner(pv, "PIVOT ANALYSIS — Live summary tables", "Counts are formulas over the Accounts / Contacts tabs", 10);
   const letter = (n: number) => { let s = ""; for (n += 1; n > 0; n = Math.floor((n - 1) / 26)) s = String.fromCharCode(65 + ((n - 1) % 26)) + s; return s; };
-  const colOf = (cols: Col[], key: string) => letter(cols.findIndex((c) => c[1] === key) + 1); // +1 for the leading # column
-  const rng = (sheet: string, cols: Col[], key: string) => `'${sheet}'!$${colOf(cols, key)}$${FIRST}:$${colOf(cols, key)}$${MAX}`;
+  const LOGO_SHEETS = new Set(["Accounts", "Contact List"]); // these have a logo column after #
+  const colOf = (cols: Col[], key: string, sheet = "") => letter(cols.findIndex((c) => c[1] === key) + 1 + (LOGO_SHEETS.has(sheet) ? 1 : 0)); // +1 for the leading # column
+  const rng = (sheet: string, cols: Col[], key: string) => `'${sheet}'!$${colOf(cols, key, sheet)}$${FIRST}:$${colOf(cols, key, sheet)}$${MAX}`;
   const uniq = (rows: Row[], key: string) => [...new Set(rows.map((r) => r[key] || "Unknown"))].sort();
   let r0 = 4;
   const pivot = (col: number, title: string, labels: string[], range: string) => {
