@@ -4,7 +4,10 @@ import { useEffect, useState } from "react";
 
 type Run = { id: string; query: string; depth: string; status: string; error?: string; stats?: Record<string, unknown>; started_at: string; finished_at?: string; requested_by?: string };
 const ROLES = ["Procurement", "Finance", "IT", "Transformation", "Supply Chain"];
-const COUNTRIES = ["UAE", "Saudi Arabia", "Qatar", "Kuwait", "Oman", "Egypt"];
+const COUNTRIES = ["UAE", "Saudi Arabia", "Qatar", "Kuwait", "Oman", "Bahrain", "Egypt", "Europe", "USA"];
+// Define ICP buyer-persona departments → the research roles offered here.
+const DEPT_TO_ROLE: Record<string, string> = { Procurement: "Procurement", Finance: "Finance", IT: "IT", "Transformation / PMO": "Transformation", "Supply chain": "Supply Chain" };
+const REGION_OF: Record<string, string> = { "Saudi Arabia": "KSA" };
 
 export default function ResearchQueue() {
   const [company, setCompany] = useState("");
@@ -18,6 +21,16 @@ export default function ResearchQueue() {
     const r = await fetch("/api/runs");
     if (r.ok) setRuns((await r.json()).runs || []);
   }
+  // Pre-select the roles from the buyer personas in Setup → Define ICP for the chosen country.
+  const [personaNote, setPersonaNote] = useState("");
+  useEffect(() => {
+    fetch("/api/icp").then((r) => (r.ok ? r.json() : null)).then((d) => {
+      const rules = d?.regions?.[REGION_OF[country] || country];
+      const picked = (rules?.personas?.departments || []).map((x: string) => DEPT_TO_ROLE[x]).filter(Boolean);
+      if (picked.length) { setRoles(picked); setPersonaNote(`Pre-selected from your ${REGION_OF[country] || country} buyer personas (Setup → Define ICP)${rules.personas.roles?.length ? `; priority roles: ${rules.personas.roles.join(", ")}` : ""}.`); }
+      else setPersonaNote("");
+    }).catch(() => {});
+  }, [country]);
   useEffect(() => {
     load();
     const t = setInterval(load, 8000);
@@ -54,6 +67,7 @@ export default function ResearchQueue() {
                 <option value="quick">Quick (3–5 sources)</option><option value="standard">Standard (5–10 sources)</option><option value="deep">Deep (10+ sources)</option>
               </select>
             </div>
+            {personaNote && <p className="note" style={{ margin: "4px 0 0" }}>{personaNote}</p>}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <label>Contact roles</label>

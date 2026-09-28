@@ -3,6 +3,8 @@ import ExcelJS from "exceljs";
 import type { AllData, Row } from "@/lib/data";
 import { buildPeople } from "@/lib/people";
 import { fetchLogos, logoDomain } from "@/lib/logo";
+import { personaFit } from "@/lib/icp";
+import { rulesFor } from "@/lib/icpDefinition.mjs";
 
 type Logos = { map: Map<string, { buf: Buffer; ext: "png" | "jpeg" }>; get: (r: Row) => string; ids: Map<string, number> };
 
@@ -27,6 +29,7 @@ const TAGS: Record<string, [string, string]> = {
   "Not ICP": ["FFF1F3F6", "FF6B7280"], "Unknown": ["FFF1F3F6", "FF6B7280"],
   "Skip — contact already in HubSpot": ["FFFDE7E7", "FF9B1C1C"], "Add contact to existing HubSpot company": ["FFFFF1D6", "FF8A5A00"],
   "New company + contact": ["FFD5F0E4", "FF0B6B45"],
+  "Matches your personas": ["FFD5F0E4", "FF0B6B45"], "Partly matches": ["FFFFF1D6", "FF8A5A00"], "Outside your personas": ["FFF1F3F6", "FF6B7280"],
 };
 const YES_NO: Record<string, [string, string]> = { Yes: ["FFE1ECFB", "FF1D4F91"], No: ["FFF1F3F6", "FF6B7280"] };
 const YES_NO_KEYS = new Set(["scp_customer", "hs_contact", "hs_in"]);
@@ -114,7 +117,7 @@ function table(wb: ExcelJS.Workbook, name: string, title: string, subtitle: stri
   return ws;
 }
 
-export async function buildWorkbook(d: AllData): Promise<Buffer> {
+export async function buildWorkbook(d: AllData, icpDef?: unknown): Promise<Buffer> {
   const wb = new ExcelJS.Workbook();
   wb.creator = "Account CoPilot";
   wb.calcProperties.fullCalcOnLoad = true;
@@ -136,19 +139,21 @@ export async function buildWorkbook(d: AllData): Promise<Buffer> {
     const phones = [...new Set(p.rows.map((r) => String(r.phone || "").trim()).filter(Boolean))];
     const email = cleanEmail(p.email) || p.rows.map((r) => cleanEmail(r.email)).find(Boolean) || "";
     const hs = co.profile?.["HubSpot"];
-    return { __domain: logoDomain(co), company: p.company || co.company_name || "", website: co.company_website || (co.domain ? `https://${co.domain}` : ""),
+    const pf = personaFit(p, rulesFor(icpDef, co.country).personas); // buyer personas from Define ICP
+    return { __domain: logoDomain(co), persona_score: pf.label === "No personas set" ? "" : pf.score, persona_label: pf.label === "No personas set" ? "" : pf.label, persona_why: pf.why,
+      company: p.company || co.company_name || "", website: co.company_website || (co.domain ? `https://${co.domain}` : ""),
       full_name: p.full_name, title: p.title_verbatim, phone: phones.join(" / "), email,
       location: p.location || [co.hq_city, co.country].filter(Boolean).join(", "), linkedin: p.linkedin_url || "",
       ...hubspotCols(hs, email) };
   }).filter((r) => r.email || r.phone || r.linkedin)
-    .sort((a, b) => String(a.company).localeCompare(String(b.company)) || String(a.full_name).localeCompare(String(b.full_name)));
-  const listCols: Col[] = [["Company Name", "company", 30], ["Company Website", "website", 26, "url"], ["Contact Person (Full Name)", "full_name", 26], ["Job Title", "title", 34, "wrap"],
+    .sort((a, b) => String(a.company).localeCompare(String(b.company)) || (Number(b.persona_score) || 0) - (Number(a.persona_score) || 0) || String(a.full_name).localeCompare(String(b.full_name)));
+  const listCols: Col[] = [["Company Name", "company", 30], ["Company Website", "website", 26, "url"], ["Contact Person (Full Name)", "full_name", 26], ["Job Title", "title", 34, "wrap"], ["Persona Fit", "persona_score", 10, "num"], ["Persona Match", "persona_label", 20],
       ["Phone (Tel / Mobile)", "phone", 22], ["Official Email", "email", 30], ["Location", "location", 20], ["LinkedIn Profile", "linkedin", 32, "url"],
       ["Company in HubSpot", "scp_customer", 14], ["Company Stage (HubSpot)", "hs_stage", 20], ["Company Owner (HubSpot)", "hs_owner", 22],
       ["Deals (HubSpot)", "hs_deals", 26, "wrap"], ["Latest Deal (HubSpot)", "hs_latest", 44, "wrap"], ["Contact in HubSpot", "hs_contact", 14],
       ["HubSpot Import Action", "hs_action", 30, "wrap"]];
   table(wb, "Contact List", "CONTACT LIST — Outreach-ready contacts",
-    `Exported ${today} · one row per person (all sources merged) · official emails only, never guessed · teal columns come from SCP's HubSpot (read-only)`,
+    `Exported ${today} · one row per person, best buyer-persona fit first within each company (Define ICP) · official emails only, never guessed · teal columns from SCP's HubSpot`,
     listCols, contactRows, 1, [], conLogos);
 
   // HubSpot deals linked to profiled companies (read-only copy; stays inside this app and its export)

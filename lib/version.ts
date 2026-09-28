@@ -1,11 +1,19 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.56";
+export const APP_VERSION = "1.57";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.57", date: "2026-09-28", notes: "Define ICP now drives the scores: focus platforms, ERP of interest and buying triggers change Opportunity and Coupa Fit (and so the Pipeline); buyer personas rank Stakeholders, the Contact List and guide research. Settings: Refresh and API spend & balance merged into one Paid refresh section, credit first.",
+    changes: [
+      { what: "Buying triggers and ERP of interest add to the Opportunity score (up to 20 and 10 points) when an account shows them; focus platforms add to Coupa Fit (up to 20). Hover a score to see 'Your buying triggers', 'Your ERP of interest' or 'Your platform focus'", where: "Accounts → Pipeline (rank), account page scores", why: "What you choose in Define ICP should visibly change which accounts come first" },
+      { what: "Persona fit (0–100) for every contact — department, seniority and priority role against your buyer personas; Stakeholders are ranked by it, with a Persona fit filter", where: "Stakeholders tab", why: "Your buyer personas now decide who appears first" },
+      { what: "Master Book Contact List adds Persona Fit and Persona Match; within each company the best-fitting people come first", where: "Master Book → Contact List", why: "The outreach list follows your personas" },
+      { what: "Research Queue pre-selects contact roles from your personas, and every paid research brief includes your priority roles, seniority, contact limit, focus platforms, ERP and triggers", where: "Data → Research Queue", why: "Research looks for the people and signals you defined" },
+      { what: "Refresh and Anthropic API spend & balance are one section, '2 · Paid refresh': A · Your API credit (balance, spend, carry-over) first, then B · Plan a refresh", where: "Setup → Settings", why: "They are two halves of the same thing — see your credit, then decide what to spend" },
+    ] },
   { version: "1.56", date: "2026-09-28", notes: "In-app confirmation windows replace the browser pop-ups (save ICP, reset, research, refresh, engine token), and a notice at the top centre confirms each save.",
     changes: [
       { what: "In-app confirmation window in the centre of the screen, in the app's colours, listing what will happen, with clear buttons (e.g. 'Save & apply', 'Start refresh'); paid actions show the cost in an amber box; risky ones are red", where: "Define ICP save and reset, Research more, Refresh, engine token", why: "The browser's grey pop-up was easy to miss and didn't look part of the app" },

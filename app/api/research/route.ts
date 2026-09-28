@@ -31,6 +31,15 @@ export async function POST(req: Request) {
   const access = await getAccess(user);
   const target = b.companyId ? (await db.from("companies").select("country").eq("id", b.companyId).maybeSingle()).data : null;
   if (!canSeeCountry(access, target ? target.country : b.country)) return NextResponse.json({ error: "You can only research companies in your own region." }, { status: 403 });
+  // Buyer personas and focus from Define ICP go into the research brief.
+  {
+    const { data: defRow } = await db.from("settings").select("value").eq("key", "icp_definition").maybeSingle();
+    const R = rulesFor(defRow?.value, target ? target.country : b.country);
+    const extra = [R.personas.roles.length && `priority roles ${R.personas.roles.join(", ")}`, R.personas.seniority.length && `seniority ${R.personas.seniority.join(", ")}`,
+      R.personas.max_per_account && `up to ${R.personas.max_per_account} contacts`, R.focus.platforms.length && `look for S2P platform signals: ${R.focus.platforms.join(", ")}`,
+      R.focus.erp.length && `ERP of interest: ${R.focus.erp.join(", ")}`, R.focus.triggers.length && `buying triggers: ${R.focus.triggers.join(", ")}`].filter(Boolean) as string[];
+    if (extra.length) b.roles = [...(b.roles.length ? b.roles : R.personas.departments), ...extra];
+  }
 
   let existing: string | undefined;
   if (b.companyId) {

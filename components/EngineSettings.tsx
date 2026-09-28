@@ -74,7 +74,22 @@ export default function EngineSettings() {
         </div>
 
         <div className="eng-card paid">
-          <div className="eng-head"><h3>2 · Refresh — uses the Anthropic API</h3><CostNote cost="you set the budget below" /></div>
+          <div className="eng-head"><h3>2 · Paid refresh — uses your Anthropic API credit</h3><CostNote cost="you set the budget below" /></div>
+          <p className="note">One place for paid work: <b>A</b> shows how much API credit you have and have spent; <b>B</b> spends part of it on a refresh now. The daily 6am run and section 1 are free and don&apos;t touch this credit.</p>
+          <div className="eng-sub"><h4>A · Your API credit — check it first</h4>
+          <div className="eng-stats">
+            <div><small>Spent this month (measured)</small><b>{s ? money(s.spentMonth) : "…"}</b></div>
+            <div><small>Spent all time (measured)</small><b>{s ? money(s.spentAll) : "…"}</b></div>
+            <div><small>Carry-over for next Refresh</small><b>{s ? money(s.carry) : "…"}</b></div>
+            <div><small>Estimated balance left</small><b>{s?.balanceLeft !== null && s?.balanceLeft !== undefined ? money(s.balanceLeft) : "Not set"}</b></div>
+          </div>
+          <p className="note">The API key can't read your credit balance, so enter the balance shown at <a href="https://console.anthropic.com/settings/billing" target="_blank" rel="noopener noreferrer">console.anthropic.com → Billing</a>; the app subtracts what it spends from then on.{s?.balance.as_of && ` Last entered ${money(s.balance.amount || 0)} on ${new Date(s.balance.as_of).toLocaleString()}${s.balance.by ? ` by ${s.balance.by}` : ""}.`} Measured spend covers research, discovery and refresh runs; pitch-plan drafts (≈ $0.05–0.10 each) are not metered.</p>
+          <div className="eng-form">
+            <label>Console balance (USD)<span className="money-input"><span aria-hidden="true">$</span><input type="number" min={0} step={0.01} value={bal} onChange={(e) => setBal(e.target.value)} placeholder="50.00" /></span></label>
+            <button type="button" className="btn primary" disabled={!bal} onClick={() => { post({ action: "balance", amount: Number(bal) }, "Balance saved."); setBal(""); }}>Save balance</button>
+          </div>
+          </div>
+          <h4 className="eng-sub-h">B · Plan a refresh</h4>
           <div className="eng-explain">
             <b>What Refresh does when you click it</b>
             <ol>
@@ -102,20 +117,7 @@ export default function EngineSettings() {
               <td className="mono">{money(Math.max(0, b.budget - b.spent))}</td><td>{b.runs}{b.running ? ` (${b.running} running)` : ""}</td></tr>)}</tbody></table></div>}
         </div>
 
-        <div className="eng-card">
-          <div className="eng-head"><h3>3 · Anthropic API spend &amp; balance</h3></div>
-          <div className="eng-stats">
-            <div><small>Spent this month (measured)</small><b>{s ? money(s.spentMonth) : "…"}</b></div>
-            <div><small>Spent all time (measured)</small><b>{s ? money(s.spentAll) : "…"}</b></div>
-            <div><small>Carry-over for next Refresh</small><b>{s ? money(s.carry) : "…"}</b></div>
-            <div><small>Estimated balance left</small><b>{s?.balanceLeft !== null && s?.balanceLeft !== undefined ? money(s.balanceLeft) : "Not set"}</b></div>
-          </div>
-          <p className="note">The API key can't read your credit balance, so enter the balance shown at <a href="https://console.anthropic.com/settings/billing" target="_blank" rel="noopener noreferrer">console.anthropic.com → Billing</a>; the app subtracts what it spends from then on.{s?.balance.as_of && ` Last entered ${money(s.balance.amount || 0)} on ${new Date(s.balance.as_of).toLocaleString()}${s.balance.by ? ` by ${s.balance.by}` : ""}.`} Measured spend covers research, discovery and refresh runs; pitch-plan drafts (≈ $0.05–0.10 each) are not metered.</p>
-          <div className="eng-form">
-            <label>Console balance (USD)<span className="money-input"><span aria-hidden="true">$</span><input type="number" min={0} step={0.01} value={bal} onChange={(e) => setBal(e.target.value)} placeholder="50.00" /></span></label>
-            <button type="button" className="btn primary" disabled={!bal} onClick={() => { post({ action: "balance", amount: Number(bal) }, "Balance saved."); setBal(""); }}>Save balance</button>
-          </div>
-        </div>
+
       </div>
     </section>
   );

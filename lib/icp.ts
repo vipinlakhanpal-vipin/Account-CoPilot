@@ -207,10 +207,35 @@ export function icpMatch(a: Row, c: Criteria): Score {
   return pack(parts);
 }
 
+// ---------- Define ICP focus & personas (Setup → Define ICP drives these scores) ----------
+export type Focus = { platforms: string[]; erp: string[]; triggers: string[] };
+export type Personas = { departments: string[]; seniority: string[]; roles: string[] };
+const TRIG_MAP: Record<string, string> = { "ERP transformation": "ERP Transformation", "Procurement transformation": "Procurement Transformation",
+  "Shared services set-up": "Shared Services Initiative", "Digital transformation": "Digital Transformation", "Cost optimisation": "Cost Optimization Program",
+  "Supplier consolidation": "Supplier Consolidation", "M&A activity": "Merger & Acquisition Activity", "IPO preparation": "IPO Preparation",
+  "ESG / sustainability programme": "ESG Program", "Supply-chain modernisation": "Supply Chain Modernization" };
+const ERP_RE: Record<string, RegExp> = { "SAP S/4HANA": /s\/?4|s4 ?hana/i, "SAP ECC": /\becc\b|r\/3|sap erp/i, "Oracle Fusion": /fusion|oracle cloud erp/i,
+  "Oracle EBS": /\bebs\b|e-business suite/i, "Microsoft Dynamics": /dynamics|microsoft/i, Infor: /infor/i, IFS: /\bifs\b/i, Workday: /workday/i };
+/** The account's ERP, in Define ICP's terms ("Other / unknown" when not identified). */
+export const erpOptionsOf = (a: Row) => { const v = s(a.erp); const hit = Object.entries(ERP_RE).filter(([, re]) => re.test(v)).map(([k]) => k);
+  return hit.length && erpFamily(a) ? hit : ["Other / unknown"]; };
+/** The account's S2P platform(s), in Define ICP's terms ("No S2P platform yet" when none is evidenced). */
+export const platformOptionsOf = (a: Row) => { const p = procurementPlatforms(a); return p.length ? p : /no evidence|none/i.test(s(a.existing_s2p_product)) ? ["No S2P platform yet"] : []; };
+
 const SIG_PTS: Record<string, number> = { "VERY STRONG SIGNAL": 40, "STRONG SIGNAL": 30, "MODERATE SIGNAL": 18, "WEAK SIGNAL": 8, "CONFLICTING SIGNAL": 10 };
 /** Opportunity: how likely the account is to buy soon (signals, transformation, hiring, growth). */
-export function opportunity(a: Row, hires = 0): Score {
+export function opportunity(a: Row, hires = 0, focus?: Focus): Score {
   const t = text(a), trig = triggersOf(a);
+  // Define ICP: your buying triggers and ERP of interest add points when the account shows them.
+  const extra: Part[] = [];
+  if (focus?.triggers.length) {
+    const hit = focus.triggers.filter((x) => (TRIG_MAP[x] && trig.includes(TRIG_MAP[x])) || (x === "New leadership (CPO / CFO)" && hires > 0));
+    extra.push({ label: "Your buying triggers", max: 20, score: hit.length >= 2 ? 20 : hit.length ? 12 : 0, why: hit.length ? `Shows ${hit.join(", ")}` : "None of your triggers found" });
+  }
+  if (focus?.erp.length) {
+    const have = erpOptionsOf(a), hit = have.filter((x) => focus.erp.includes(x));
+    extra.push({ label: "Your ERP of interest", max: 10, score: hit.length ? 10 : 0, why: hit.length ? `Runs ${hit.join(", ")}` : `ERP: ${have.join(", ")}` });
+  }
   const active = ["Evaluation", "RFP / Tender", "Currently Implementing", "Replacement / Transformation", "Recently signed (implementation)"].includes(s(a.s2p_platform_status));
   return pack([
     { label: "S2P signal strength", max: 40, score: SIG_PTS[s(a.s2p_signal_level)] || 0, why: s(a.s2p_signal_level) || "No signal" },
@@ -220,11 +245,12 @@ export function opportunity(a: Row, hires = 0): Score {
     { label: "Cost reduction", max: 5, score: trig.includes("Cost Optimization Program") ? 5 : 0, why: trig.includes("Cost Optimization Program") ? "Programme evidenced" : "None found" },
     { label: "Executive hiring", max: 10, score: Math.min(10, hires * 5), why: hires ? `${hires} leadership move(s) recorded` : "No recorded moves" },
     { label: "Recent growth", max: 5, score: /record (revenue|profit|growth)|revenue (rose|grew|up)|\+\d+%/i.test(t) ? 5 : 0, why: /record|grew|rose/i.test(t) ? "Growth reported" : "Not evidenced" },
+    ...extra,
   ]);
 }
 
 /** Coupa Fit: estimated fit across the five Coupa value areas, with the reason for each. */
-export function coupaFit(a: Row): Score & { useCases: string[] } {
+export function coupaFit(a: Row, focus?: Focus): Score & { useCases: string[] } {
   const p = s(a.existing_s2p_product), rev = revenueOf(a) || 0, ind = s(a.industry), erp = erpFamily(a);
   const coupa = /coupa/i.test(p), ariba = /ariba/i.test(p), none = /unknown|no evidence|other s2p/i.test(p) || !p;
   const size = rev >= 1000 ? 1 : rev >= 250 ? 0.8 : rev > 0 ? 0.5 : 0.6;
@@ -241,8 +267,14 @@ export function coupaFit(a: Row): Score & { useCases: string[] } {
     { label: "Spend analytics", max: 20, score: f(base * size * (rev >= 1000 ? 1.1 : 0.95)), why: rev >= 1000 ? "Large, complex spend base" : "Mid-size spend base" },
     { label: "Invoice automation", max: 20, score: f(base * erpOk * (servicesHeavy || rev >= 500 ? 1.05 : 0.9)), why: `${erp || "Unknown"} ERP${servicesHeavy ? "; high indirect invoice volumes" : ""}` },
   ];
+  // Define ICP: your focus platforms. An account on (or without) a platform you chose scores fully; unknown gets partial credit.
+  if (focus?.platforms.length) {
+    const have = platformOptionsOf(a), hit = have.filter((x) => focus.platforms.includes(x));
+    parts.push({ label: "Your platform focus", max: 20, score: hit.length ? 20 : have.length ? 0 : 8,
+      why: hit.length ? `On your focus list: ${hit.join(", ")}` : have.length ? `${have.join(", ")} is not on your focus list` : "Platform not known yet (partial credit)" });
+  }
   const sc = pack(parts);
-  const useCases = parts.filter((x) => x.score >= 15).map((x) => ({
+  const useCases = parts.filter((x) => x.score >= 15 && x.label !== "Your platform focus").map((x) => ({
     "Source-to-Pay": "Unified source-to-pay on one platform", "Supplier management": "Supplier onboarding, risk and compliance (Coupa Supplier Management)",
     "Contract management": "Contract lifecycle management (Coupa CLM)", "Spend analytics": "Spend visibility and savings tracking (Coupa Spend Analysis)",
     "Invoice automation": "Touchless invoicing and e-invoicing compliance (Coupa Pay / AP automation)" }[x.label]!));
@@ -304,6 +336,46 @@ export function companyPasses(a: Row, c: Criteria): boolean {
   if (k.website && !`${s(a.company_website)} ${s(a.domain)}`.toLowerCase().includes(k.website.toLowerCase())) return false;
   if (k.hq && !`${s(a.hq_city)} ${s(a.country)}`.toLowerCase().includes(k.hq.toLowerCase())) return false;
   return true;
+}
+
+/** Department of a contact from its role family (never a data source). */
+export const departmentOf = (f: unknown) => {
+  const v = s(f).toUpperCase();
+  if (!v || v.length > 40) return "OTHER";
+  if (/PROCURE|SOURCING|PURCHAS|CONTRACT/.test(v)) return "PROCUREMENT";
+  if (/SUPPLY|LOGISTIC/.test(v)) return "SUPPLY CHAIN";
+  if (/FINANC|CFO|ACCOUNT|TREASUR/.test(v)) return "FINANCE";
+  if (/TRANSFORM/.test(v)) return "TRANSFORMATION";
+  if (/^IT\b|IT\/|ERP|TECH|DIGITAL|DATA|INFORMATION/.test(v)) return "IT";
+  if (/EXEC|CEO|CHAIR|BOARD|MANAGING DIRECTOR/.test(v)) return "EXECUTIVE";
+  return "OTHER";
+};
+const DEPT_MAP: Record<string, (p: Row) => boolean> = {
+  Procurement: (p) => departmentOf(p.role_family) === "PROCUREMENT", "Supply chain": (p) => departmentOf(p.role_family) === "SUPPLY CHAIN",
+  Finance: (p) => departmentOf(p.role_family) === "FINANCE", IT: (p) => departmentOf(p.role_family) === "IT",
+  "Transformation / PMO": (p) => departmentOf(p.role_family) === "TRANSFORMATION" || /\bpmo\b|transformation/i.test(s(p.title_verbatim)),
+  Executive: (p) => departmentOf(p.role_family) === "EXECUTIVE" || /\bceo\b|managing director|chairman|president/i.test(s(p.title_verbatim)),
+  "Shared services": (p) => /shared service|\bgbs\b/i.test(`${s(p.title_verbatim)} ${s(p.role_family)}`),
+};
+const PERSONA_ROLE: Record<string, (t: string) => boolean> = {
+  CPO: (t) => rolesOf(t).includes("CPO"), "VP / Head of Procurement": (t) => rolesOf(t).some((r) => r === "VP Procurement" || r === "Head of Procurement"),
+  "Procurement Director": (t) => rolesOf(t).includes("Director Procurement"), "Procurement Manager": (t) => rolesOf(t).includes("Procurement Manager"),
+  CFO: (t) => rolesOf(t).includes("CFO"), "Finance Director": (t) => rolesOf(t).includes("Finance Director"), "CIO / CTO": (t) => rolesOf(t).some((r) => r === "CIO" || r === "CTO"),
+  "Head of Shared Services": (t) => rolesOf(t).includes("Head of Shared Services"), "Supply Chain Director": (t) => rolesOf(t).includes("Supply Chain Director"),
+  "Transformation Director": (t) => /transformation/i.test(t) && /director|head|chief|vp/i.test(t),
+};
+export type PersonaFit = { score: number; label: "Matches your personas" | "Partly matches" | "Outside your personas" | "No personas set"; why: string };
+/** How well a contact matches the buyer personas in Define ICP (departments 35, seniority 35, priority roles 30; only what you set counts). */
+export function personaFit(p: Row, k?: Personas): PersonaFit {
+  if (!k || (!k.departments.length && !k.seniority.length && !k.roles.length)) return { score: 0, label: "No personas set", why: "" };
+  const t = s(p.title_verbatim), parts: [boolean, number, string][] = [];
+  if (k.departments.length) { const d = k.departments.filter((x) => DEPT_MAP[x]?.(p)); parts.push([d.length > 0, 35, d.length ? d.join(", ") : `department ${departmentOf(p.role_family).toLowerCase()}`]); }
+  if (k.seniority.length) { const sen = seniorityOf(t); parts.push([k.seniority.includes(sen), 35, sen]); }
+  if (k.roles.length) { const r = k.roles.filter((x) => PERSONA_ROLE[x]?.(t)); parts.push([r.length > 0, 30, r.length ? r.join(", ") : "not a priority role"]); }
+  const max = parts.reduce((a, x) => a + x[1], 0), got = parts.reduce((a, x) => a + (x[0] ? x[1] : 0), 0);
+  const score = Math.round((got / max) * 100);
+  return { score, label: score >= 99 ? "Matches your personas" : score >= 50 ? "Partly matches" : "Outside your personas",
+    why: parts.map((x) => `${x[0] ? "✓" : "✗"} ${x[2]}`).join(" · ") };
 }
 
 // ---------- recommendations ----------

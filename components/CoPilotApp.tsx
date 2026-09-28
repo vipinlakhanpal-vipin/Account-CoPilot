@@ -1,6 +1,7 @@
 "use client";
 import { ask } from "@/components/Confirm";
 import { rulesFor, regionOf } from "@/lib/icpDefinition.mjs";
+import { personaFit } from "@/lib/icp";
 import CostNote from "@/components/CostNote";
 import CompanyLogo from "@/components/CompanyLogo";
 import { useMemo, useState, useEffect } from "react";
@@ -190,7 +191,8 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
   const [criteria, setCriteria] = useState<Criteria>(withDefaults());
   // Pipeline rules for the selected country come from Setup → Define ICP.
   const [icpDef, setIcpDef] = useState<unknown>(null);
-  const pipe = useMemo(() => rulesFor(icpDef, country === "All" ? "UAE" : country).pipeline, [icpDef, country]);
+  const regionRules = useMemo(() => rulesFor(icpDef, country === "All" ? "UAE" : country), [icpDef, country]);
+  const pipe = regionRules.pipeline, focus = regionRules.focus, personas = regionRules.personas;
   const inPipe = (a: Row, sc?: Scores) => !!sc && sc.m.total >= pipe.min_match && (!pipe.exclude_not_icp || a.icp_status !== "Not ICP");
   const [savedMeta, setSavedMeta] = useState<{ by?: string; at?: string } | null>(null);
   const [teamCriteria, setTeamCriteria] = useState<Criteria | null>(null);
@@ -236,10 +238,11 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
     const hires: Record<string, number> = {};
     data.history.forEach((h) => { if (/change|promot|join|hire/i.test(str(h.determination))) hires[h.company_id] = (hires[h.company_id] || 0) + 1; });
     const m: Record<string, Scores> = {};
-    A.forEach((a) => { const x = icpMatch(a, criteria), o = opportunity(a, hires[a.id] || 0), f = coupaFit(a);
+    // Focus (platforms, ERP, triggers) comes from each account's region in Define ICP.
+    A.forEach((a) => { const fz = rulesFor(icpDef, a.country).focus, x = icpMatch(a, criteria), o = opportunity(a, hires[a.id] || 0, fz), f = coupaFit(a, fz);
       m[a.id] = { m: x, o, f, rank: Math.round((x.total * pipe.w_match + o.total * pipe.w_opportunity + f.total * pipe.w_fit) / 100) }; });
     return m;
-  }, [A, criteria, data.history, pipe]);
+  }, [A, criteria, data.history, pipe, icpDef]);
   const [open, setOpen] = useState<string | null>(null);
   const [contact, setContact] = useState<string | null>(null);
   const [drill, setDrill] = useState<{ title: string; kind: Kind; rows: Row[] } | null>(null);
@@ -296,13 +299,15 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
         <button type="button" aria-pressed={!perPerson} onClick={() => setPerPerson(false)}>All source rows ({P.length})</button>
       </div>
       <FilterTable unit={perPerson ? "people" : "rows"} title="Stakeholders" note={perPerson
-        ? "One row per person, merged from every source (your sheet's CoPilot, Claude in Copilot and Claude-Seamless rows, plus Claude checks). Trust shows how many independent sources agree; select a person to see what each source says. Emails are never guessed."
+        ? "Ranked by Persona fit (your buyer personas in Setup → Define ICP), then trust. One row per person, merged from every source (your sheet's CoPilot, Claude in Copilot and Claude-Seamless rows, plus Claude checks). Trust shows how many independent sources agree; select a person to see what each source says. Emails are never guessed."
         : "Every source row as imported or added by a Claude check. Nothing is deleted when rows are merged into one person."}
-      rows={[...rows].sort((a, b) => TRUST_ORDER.indexOf(a.trust) - TRUST_ORDER.indexOf(b.trust) || sigRank(a.account_s2p_signal) - sigRank(b.account_s2p_signal) || str(a.company).localeCompare(b.company))}
+      rows={[...rows].map((p): Row => ({ ...p, __pf: personaFit(p, personas) })).sort((a, b) => b.__pf.score - a.__pf.score || TRUST_ORDER.indexOf(a.trust) - TRUST_ORDER.indexOf(b.trust) || sigRank(a.account_s2p_signal) - sigRank(b.account_s2p_signal) || str(a.company).localeCompare(b.company))}
       search={(p) => [p.company, p.full_name, p.title_verbatim, p.email, p.notes_contact].join(" ")}
       filters={[...(perPerson ? [{ label: "Trust", get: (p: Row) => p.trust }, { label: "Sources", get: (p: Row) => (p.sources || []).join(" + ") }] : [{ label: "Source", get: (p: Row) => contributorOf(p) }]),
-        { label: "Tier", get: (p) => p.contact_tier }, { label: "Role family", get: (p) => famKey(p.role_family) }, { label: "Email status", get: (p) => p.email_status }]}
+        { label: "Persona fit", get: (p) => p.__pf?.label }, { label: "Tier", get: (p) => p.contact_tier }, { label: "Role family", get: (p) => famKey(p.role_family) }, { label: "Email status", get: (p) => p.email_status }]}
       cols={[{ h: "Company", cell: (p) => p.company }, { h: "Full name", cell: (p) => <b>{p.full_name}</b> }, { h: "Title (verbatim)", cell: (p) => p.title_verbatim, wrap: true },
+        { h: "Persona fit", cell: (p) => p.__pf?.label === "No personas set" ? <span className="muted">—</span>
+          : <span className={`pf ${p.__pf.score >= 99 ? "hi" : p.__pf.score >= 50 ? "mid" : "lo"}`} title={p.__pf.why}>{p.__pf.score}<small>{p.__pf.label}</small></span> },
         ...(perPerson ? [{ h: "Trust", cell: (p: Row) => <><TrustTag t={p.trust} why={p.trust_reason} /><div className="muted">{(p.sources || []).join(" + ")}</div></> }]
           : [{ h: "Source", cell: (p: Row) => <>{contributorOf(p)}<div className="muted">{p.record_status}</div></> }]),
         { h: "Role family", cell: (p) => p.role_family }, { h: "Tier", cell: (p) => p.contact_tier },

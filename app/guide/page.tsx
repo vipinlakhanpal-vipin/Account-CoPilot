@@ -307,8 +307,8 @@ export default async function GuidePage() {
             <section id="engineset" className="panel"><h2>Discovery & refresh engine (Setup → Settings)</h2>
               <T head={["Option", "What it does", "Cost"]} rows={[
                 ["1 · Search companies", "Pick a region, how many (30 / 50 / max) and what to do (verify existing, find new, or both). Start queues a job; the next scheduled Claude session does it with its own web search, exactly like a verification session, and writes results into the app. The job list shows queued / running / done with a result summary.", "No API cost (uses your Claude plan's usage)"],
-                ["2 · Refresh", "Updates the companies researched longest ago in the region (re-research + ICP status), finds new ICP companies with one discovery search and profiles each. It plans as many as your budget allows (updates first); unspent budget carries over to the next Refresh. What it will do and its estimated cost are shown before you confirm.", "≈ $0.55 per update, ≈ $0.75 per discovery search, ≈ $0.55 per new profile (measured per run)"],
-                ["3 · API spend & balance", "Measured spend this month and all time (from every research, discovery and refresh run), the carry-over, and an estimated balance: enter the balance shown in the Anthropic Console and the app subtracts its spend from then on (the API key can't read the balance).", "Free"]]} />
+                ["2B · Paid refresh — plan a refresh", "Updates the companies researched longest ago in the region (re-research + ICP status), finds new ICP companies with one discovery search and profiles each. It plans as many as your budget allows (updates first); unspent budget carries over to the next Refresh. What it will do and its estimated cost are shown before you confirm.", "≈ $0.55 per update, ≈ $0.75 per discovery search, ≈ $0.55 per new profile (measured per run)"],
+                ["2A · Paid refresh — your API credit", "Shown first, so you see what you have before spending. Measured spend this month and all time (from every research, discovery and refresh run), the carry-over, and an estimated balance: enter the balance shown in the Anthropic Console and the app subtracts its spend from then on (the API key can't read the balance).", "Free"]]} />
               <p className="note">Scheduled sessions follow ENGINE.md in the repository and need GitHub connected to Claude plus the Supabase keys set in the routine's environment.</p></section>
 
             <section id="costs" className="panel"><h2>Costs</h2>
@@ -331,7 +331,7 @@ export default async function GuidePage() {
                 ["Web searches", "$10 per 1,000 ($0.01 each)", "10 searches → $0.10"],
                 ["Total", "", "≈ $1.23"],
               ]} />
-              <p className="note">Every paid run records its real cost; see Setup → Settings → Anthropic API spend &amp; balance for this month, all time, carry-over and your estimated balance. Actual spend is also shown in the Anthropic Console.</p></section>
+              <p className="note">Every paid run records its real cost; see Setup → Settings → 2 · Paid refresh → A · Your API credit for this month, all time, carry-over and your estimated balance. Actual spend is also shown in the Anthropic Console.</p></section>
 
             <section id="excel" className="panel"><h2>Excel Master Book</h2>
               <p>The <b>Master Book</b> button (top bar) builds a fresh Excel file from the live database the moment you click — nothing is pre-made or stale. It contains everything in the app, arranged for reporting, campaigns and offline review. Gold column headers are for your team&apos;s own input.</p>
