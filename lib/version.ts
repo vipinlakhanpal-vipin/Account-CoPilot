@@ -1,11 +1,16 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.55";
+export const APP_VERSION = "1.56";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.56", date: "2026-09-28", notes: "In-app confirmation windows replace the browser pop-ups (save ICP, reset, research, refresh, engine token), and a notice at the top centre confirms each save.",
+    changes: [
+      { what: "In-app confirmation window in the centre of the screen, in the app's colours, listing what will happen, with clear buttons (e.g. 'Save & apply', 'Start refresh'); paid actions show the cost in an amber box; risky ones are red", where: "Define ICP save and reset, Research more, Refresh, engine token", why: "The browser's grey pop-up was easy to miss and didn't look part of the app" },
+      { what: "A notice at the top centre of the screen confirms the result (e.g. 'ICP saved as v2 and applied — 3 accounts changed status') or explains what to fix", where: "Setup → Define ICP (Save & apply, Preview impact)", why: "The result used to appear at the bottom of a long page" },
+    ] },
   { version: "1.55", date: "2026-09-28", notes: "Define ICP: a save bar appears at the bottom of the screen as soon as you change anything, and the page warns you before leaving with unsaved changes.",
     changes: [
       { what: "Save bar: as soon as you change a setting, a bar stays at the bottom of the screen — 'Not saved yet' — with Discard, Preview impact and Save & apply", where: "Setup → Define ICP (bottom of the screen)", why: "Selections are a draft until saved, and the only Save button was at the top of the page" },

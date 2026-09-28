@@ -1,4 +1,5 @@
 "use client";
+import { ask } from "@/components/Confirm";
 import { rulesFor, regionOf } from "@/lib/icpDefinition.mjs";
 import CostNote from "@/components/CostNote";
 import CompanyLogo from "@/components/CompanyLogo";
@@ -214,7 +215,8 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
   async function researchMore(limit: number, profile: boolean) {
     const k = criteria.company;
     const est = profile ? `≈ $0.50–1.00 for the search plus ≈ $0.55 per company profiled (up to ≈ $${(1 + limit * 0.55).toFixed(2)})` : "≈ $0.50–1.00";
-    if (!window.confirm(`Research more in ${country}: find up to ${limit} new companies matching your criteria${profile ? " and profile each one" : ""}.\n\nThis uses the Anthropic API: ${est}.\n\nContinue?`)) return;
+    if (!(await ask({ title: `Research more in ${country}?`, tone: "cost", confirm: "Start research",
+      points: [`Finds up to ${limit} new companies matching your criteria${profile ? " and profiles each one" : ""}.`, "New companies appear under the list \"Claude discovery\"; follow progress in Research Queue."], cost: est }))) return;
     const summary = [`Revenue bands: ${k.revenue.join(", ") || "any (ICP minimum $250M)"}`, `Employees: ${k.employees.join(", ") || "100+"}`,
       k.industries.length && `Industries: ${k.industries.join(", ")}`, k.ownership.length && `Ownership: ${k.ownership.join(", ")}`,
       k.erp.length && `ERP: ${k.erp.join(", ")}`, k.procurement.length && `Procurement platform: ${k.procurement.join(", ")}`,

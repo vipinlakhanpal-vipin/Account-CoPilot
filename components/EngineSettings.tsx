@@ -1,4 +1,5 @@
 "use client";
+import { ask } from "@/components/Confirm";
 import { useEffect, useState } from "react";
 import CostNote from "@/components/CostNote";
 import { COUNTRIES } from "@/lib/countries";
@@ -64,8 +65,8 @@ export default function EngineSettings() {
           <div className="eng-head"><h3>Scheduled session access</h3><span className={`tag ${s?.token_info ? "fact" : "unv"}`}>{s?.token_info ? `Active · ends …${s.token_info.hint}` : "Not set up"}</span></div>
           <p className="note">The daily 6am Claude session talks to the app with a limited engine token: it can read the job queue and the verification queue, submit revenue results, add discovered companies and post notifications — it cannot read contacts or delete anything. Put it in the cloud environment's variables as <code>ENGINE_TOKEN</code> (with <code>APP_URL=https://account-copilot.vercel.app</code>). It's shown only once; generating a new one revokes the old.</p>
           <div className="eng-form">
-            <button type="button" className="btn" onClick={() => { if (!s?.token_info || window.confirm("Generate a new engine token? The current one stops working immediately.")) post({ action: "token", op: "generate" }, "New engine token generated — copy it now."); }}>{s?.token_info ? "Regenerate token" : "Generate token"}</button>
-            {s?.token_info && <button type="button" className="btn ghost" onClick={() => { if (window.confirm("Revoke the engine token? Scheduled sessions will stop until a new one is set.")) post({ action: "token", op: "revoke" }, "Engine token revoked."); }}>Revoke</button>}
+            <button type="button" className="btn" onClick={async () => { if (!s?.token_info || await ask({ title: "Generate a new engine token?", tone: "danger", confirm: "Generate new token", points: ["The current token stops working immediately.", "Update ENGINE_TOKEN in the routine environment with the new one."] })) post({ action: "token", op: "generate" }, "New engine token generated — copy it now."); }}>{s?.token_info ? "Regenerate token" : "Generate token"}</button>
+            {s?.token_info && <button type="button" className="btn ghost" onClick={async () => { if (await ask({ title: "Revoke the engine token?", tone: "danger", confirm: "Revoke token", points: ["The daily 6am run stops until a new token is generated and set."] })) post({ action: "token", op: "revoke" }, "Engine token revoked."); }}>Revoke</button>}
           </div>
           {newToken && <div className="eng-token"><b>Copy these two lines into the cloud environment's Environment variables (shown once):</b>
             <pre>{`APP_URL=https://account-copilot.vercel.app\nENGINE_TOKEN=${newToken}`}</pre>
@@ -91,8 +92,8 @@ export default function EngineSettings() {
           </div>
           <p className="eng-plan"><span className="eng-preview">Preview — nothing spent yet</span> Calculated from the numbers above (the $20 budget is only a starting value; change it to what you want to spend).
             If you click Refresh: available <b>{money(avail)}</b>{s && s.carry > 0 ? <> (your budget {money(r.budget)} + {money(s.carry)} unspent from earlier Refreshes)</> : <> (your budget; nothing carried over yet)</>} → plans <b>{pu}</b> update{pu === 1 ? "" : "s"} and <b>{pn}</b> new compan{pn === 1 ? "y" : "ies"}, estimated <b>{money(estCost)}</b> (≈ $0.55 per update, plus ≈ $0.75 for the discovery search and ≈ $0.55 per new company profiled); about {money(Math.max(0, avail - estCost))} would carry over. Real spend is measured per run and shown in the spend table.</p>
-          <button type="button" className="btn primary" disabled={!pu && !pn} onClick={() => {
-            if (window.confirm(`Refresh ${r.region}: update ${pu} companies and find + profile ${pn} new ones.\n\nThis uses the Anthropic API: about ${money(estCost)} (budget ${money(avail)} available). Unused budget carries over.\n\nContinue?`))
+          <button type="button" className="btn primary" disabled={!pu && !pn} onClick={async () => {
+            if (await ask({ title: `Refresh ${r.region}?`, tone: "cost", confirm: "Start refresh", points: [`Updates ${pu} companies and finds + profiles ${pn} new ones.`, "Unused budget carries over to your next Refresh."], cost: `about ${money(estCost)} (budget ${money(avail)} available)` }))
               post({ action: "refresh", region: r.region, update_count: r.update, new_count: r.fresh, budget: r.budget }, "Refresh started. Follow it in Research Queue; spend updates here as each run finishes.");
           }}>Refresh</button>
           {s && s.batches.length > 0 && <div className="tablewrap" style={{ marginTop: 10 }}><table><thead><tr><th>When</th><th>Region</th><th>Planned</th><th>Budget</th><th>Spent</th><th>Left</th><th>Runs</th></tr></thead>

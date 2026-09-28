@@ -1,4 +1,5 @@
 "use client";
+import { ask, notify } from "@/components/Confirm";
 import { useEffect, useMemo, useState } from "react";
 import { REGIONS, OPTIONS, DEFAULT_RULES, normalizeDefinition, validateRules, summarizeRules, type Definition, type Rules } from "@/lib/icpDefinition.mjs";
 
@@ -121,12 +122,15 @@ export default function IcpEditor({ initial, counts, isSuper, allowed, roleLabel
   const set = (fn: (x: Rules) => void) => { setDef((d) => { const n = clone(d); fn(n.regions[region]); return n; }); setResult(null); };
 
   async function call(action: "preview" | "save") {
-    if (action === "save" && !window.confirm(`Save the ICP definition and apply it now?\n\nChanged: ${dirtyRegions.join(", ") || "nothing"}.\nEvery company's ICP status is recalculated straight away, the Pipeline follows the new weights, and the next 6am run uses these rules.`)) return;
+    if (action === "save" && !(await ask({ title: "Save and apply the ICP now?", confirm: "Save & apply", body: `Changed: ${dirtyRegions.join(", ") || "nothing"}.`,
+      points: ["Every company's ICP status is recalculated straight away.", "The Pipeline follows the new weights.", "The next 6am run uses these rules."] }))) return;
     setBusy(action); setResult(null);
     try {
       const res = await fetch("/api/icp", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action, definition: def }) });
       const j: Result = await res.json();
       setResult(j);
+      if (action === "save") notify(j.ok && j.saved ? `ICP saved as v${j.saved.version} and applied — ${j.changed} account${j.changed === 1 ? "" : "s"} changed status.` : (j.error || j.problems?.[0] || "Not saved."), j.ok ? "ok" : "error");
+      if (action === "preview") notify(j.ok ? `Preview: ${j.changed} account${j.changed === 1 ? "" : "s"} would change status (details below the settings). Nothing saved.` : (j.problems?.[0] || j.error || "Check the settings."), j.ok ? "ok" : "error");
       if (action === "save" && j.ok && j.saved) {
         const n: Definition = { ...def, version: j.saved.version, updated_at: j.saved.at, updated_by: j.saved.by,
           history: [{ at: j.saved.at, by: j.saved.by, summary: (j.changes || []).join(" | ") || "Saved with no changes" }, ...(def.history || [])] };
@@ -317,7 +321,7 @@ export default function IcpEditor({ initial, counts, isSuper, allowed, roleLabel
             <label>Copy all rules from <select value={copyFrom} onChange={(e) => setCopyFrom(e.target.value)}><option value="">choose a region…</option>
               {visible.filter((x) => x.key !== region).map((x) => <option key={x.key} value={x.key}>{x.key}</option>)}</select></label>
             <button type="button" className="btn" disabled={!copyFrom} onClick={() => { const src = clone(def.regions[copyFrom]); set((x) => { Object.assign(x, src, { status: x.status, currency: x.currency, engine: x.engine }); }); setCopyFrom(""); }}>Copy</button>
-            <button type="button" className="btn" onClick={() => { if (window.confirm(`Reset ${region} to the default rules?`)) set((x) => { Object.assign(x, clone(DEFAULT_RULES), { status: x.status, currency: x.currency, engine: x.engine }); }); }}>Reset {region} to defaults</button>
+            <button type="button" className="btn" onClick={async () => { if (await ask({ title: `Reset ${region} to the default rules?`, tone: "danger", confirm: "Reset to defaults", points: ["Only changes the draft; nothing is saved until you click Save & apply."] })) set((x) => { Object.assign(x, clone(DEFAULT_RULES), { status: x.status, currency: x.currency, engine: x.engine }); }); }}>Reset {region} to defaults</button>
           </div>
         </section>
       </fieldset>
