@@ -282,6 +282,9 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
     return m;
   }, [P]);
   const openRow = (r: Row) => setOpen(r.company_id);
+  // Deep link: ?open=<slug or id> opens that account's page (used by "View in Accounts" links).
+  const openParam = params.get("open");
+  useEffect(() => { if (!openParam) return; const a = all.accounts.find((x) => x.slug === openParam || x.id === openParam); if (a) setOpen(a.id); }, [openParam, all.accounts]);
   useEffect(() => {
     // Escape closes the top-most panel first: contact card, then account brief, then drill-down
     const k = (e: KeyboardEvent) => {

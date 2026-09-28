@@ -59,6 +59,6 @@ else if (cmd === "queue") {
   fs.mkdirSync("data/verification", { recursive: true });
   fs.writeFileSync("data/verification/existing_companies.json", JSON.stringify(companies, null, 1));
   console.log(`${companies.length} existing companies written to data/verification/existing_companies.json — do not propose any of these (or their group/subsidiary under another name)`);
-} else if (cmd === "finish") console.log(JSON.stringify(await call({ action: "finish", id: a, status: b === "error" ? "error" : "done", result: c || "" })));
+} else if (cmd === "finish") console.log(JSON.stringify(await call({ action: "finish", id: a, status: b === "error" ? "error" : "done", result: c || "", ...(process.argv[6] ? { slug: process.argv[6] } : {}) })));
 else if (cmd === "log") console.log(JSON.stringify(await call({ action: "log", summary: a || "", verified: Number(b) || 0, new_companies: String(c || "").split(";").map((x) => x.trim()).filter(Boolean) })));
 else console.log("usage: claim | icp | names | watch [slug] | queue <region> <limit> | submit [dir] | add <file> | finish <id> done|error <result> | log <summary> <verified> <names;…>");

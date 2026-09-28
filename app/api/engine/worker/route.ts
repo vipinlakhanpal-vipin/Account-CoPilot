@@ -35,7 +35,7 @@ const NewCo = z.object({ name: z.string().min(2), website: z.string().optional()
   hq_city: z.string().optional().default(""), why_icp: z.string().optional().default(""), source_url: z.string().optional().default("") });
 const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("claim") }),
-  z.object({ action: z.literal("finish"), id: z.string(), status: z.enum(["done", "error"]), result: z.string().max(2000) }),
+  z.object({ action: z.literal("finish"), id: z.string(), status: z.enum(["done", "error"]), result: z.string().max(2000), slug: z.string().max(120).optional() }),
   z.object({ action: z.literal("queue"), region: z.string().default("UAE"), limit: z.number().int().min(1).max(200).default(50) }),
   z.object({ action: z.literal("submit"), results: z.array(Result).max(50) }),
   z.object({ action: z.literal("add_companies"), companies: z.array(NewCo).max(50) }),
@@ -63,7 +63,7 @@ export async function POST(req: Request) {
     }
     const job = st.jobs.find((j) => j.id === b.id);
     if (!job) return NextResponse.json({ error: "Job not found." }, { status: 404 });
-    job.status = b.status; job.done_at = now; job.result = b.result; await put(db, "engine_jobs", st);
+    job.status = b.status; job.done_at = now; job.result = b.result; if (b.slug) (job as Job & { slug?: string }).slug = b.slug; await put(db, "engine_jobs", st);
     return NextResponse.json({ ok: true });
   }
   const icpDef = normalizeDefinition((await db.from("settings").select("value").eq("key", "icp_definition").maybeSingle()).data?.value);

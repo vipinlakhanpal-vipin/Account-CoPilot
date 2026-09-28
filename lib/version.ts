@@ -1,11 +1,18 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.78";
+export const APP_VERSION = "1.79";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.79", date: "2026-09-28", notes: "One-company requests: 'Run now' (instant, ≈ $0.55) or 'Queue (free)'; clear statuses — Waiting (with the next run time), In progress, Completed with a 'View the account →' link, Failed.",
+    changes: [
+      { what: "For a specific company: 'Run now (≈ $0.55)' researches it instantly with the Anthropic API (PIN), or 'Queue (free)' leaves it for the next scheduled run", where: "Setup → Settings → 1 · Search companies", why: "Free research only happens in scheduled sessions; Run now is there when you can't wait" },
+      { what: "Job statuses in plain words: Waiting (shows the next run time, e.g. Tue 06:00 Dubai), In progress, Completed, Failed; completed jobs link straight to the account ('View the account →') or the region's accounts", where: "Setup → Settings → jobs table", why: "So you know when it will run and where to see the result" },
+      { what: "Research Queue shows the same statuses, and each finished research has 'View the account →'", where: "Data → Research Queue", why: "One click from the result to the account page" },
+      { what: "Links like /?open=<company> open that account's page directly", where: "Everywhere a 'View the account' link appears", why: "Takes you straight to the details" },
+    ] },
   { version: "1.78", date: "2026-09-28", notes: "Search companies: the Company name box sits level with the other fields; an ⓘ button explains it.",
     changes: [
       { what: "Company name (optional) sits in line with Region, What to do and How many; click its ⓘ for what it does (blank = general search; a name = that one company, added, verified and watched weekly)", where: "Setup → Settings → 1 · Search companies", why: "The line of help text pushed the box out of line" },

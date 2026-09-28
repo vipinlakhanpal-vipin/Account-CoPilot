@@ -37,7 +37,7 @@ If `null`, do step 4. `count: "max"` = as many as you can in this session (aim f
   whether it is already in the app (any spelling, acronym or domain). **If it is**: verify its revenue now (as in **verify**) and add it to the watch list with
   `node scripts/engine_client.mjs watch <slug>`. **If not**: research it, write `data/verification/new_companies.json` with ONE entry and `"watch": true`
   (country = the job's region), run `node scripts/engine_client.mjs add data/verification/new_companies.json`, then verify it using the returned slug.
-  Finish with `finish <id> done "<Company>: added|already in the app — <ICP status>, <revenue or 'no official figure yet'>"`. Add it even if it looks
+  Finish with `finish <id> done "<Company>: added|already in the app — <ICP status>, <revenue or 'no official figure yet'>" <slug>` (the slug makes a "View" link in the app). Add it even if it looks
   below the ICP (the user asked for it); its status will say so.
 
 ## 3. Finish and notify

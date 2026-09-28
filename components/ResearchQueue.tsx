@@ -3,7 +3,7 @@ import CostNote from "@/components/CostNote";
 import { paidFetch } from "@/components/Confirm";
 import { useEffect, useState } from "react";
 
-type Run = { id: string; query: string; depth: string; status: string; error?: string; stats?: Record<string, unknown>; started_at: string; finished_at?: string; requested_by?: string };
+type Run = { id: string; query: string; depth: string; status: string; company_id?: string; country?: string; error?: string; stats?: Record<string, unknown>; started_at: string; finished_at?: string; requested_by?: string };
 const ROLES = ["Procurement", "Finance", "IT", "Transformation", "Supply Chain"];
 const COUNTRIES = ["UAE", "Saudi Arabia", "Qatar", "Kuwait", "Oman", "Bahrain", "Egypt", "Europe", "USA"];
 // Define ICP buyer-persona departments → the research roles offered here.
@@ -94,8 +94,10 @@ export default function ResearchQueue() {
             <tr key={r.id}>
               <td className="num mono">{i + 1}</td>
               <td className="mono">{new Date(r.started_at).toLocaleString()}</td><td><b>{r.query}</b></td><td>{r.depth}</td>
-              <td><span className={`status ${r.status}`}>{r.status}</span></td>
-              <td className="wrap">{r.status === "error" ? r.error : r.stats ? `${r.stats.company} · ${r.stats.newContacts} new contacts · ${r.stats.updatedContacts} updated · ${r.stats.signals} signals · ${r.stats.conflicts} conflicts` : ""}</td>
+              <td><span className={`job-st ${r.status === "done" ? "done" : r.status === "error" ? "error" : "running"}`}>{r.status === "done" ? "Completed" : r.status === "error" ? "Failed" : "In progress"}</span>
+                {!["done", "error"].includes(r.status) && <div className="muted">{r.status}…</div>}</td>
+              <td className="wrap">{r.status === "error" ? r.error : r.stats ? `${r.stats.company} · ${r.stats.newContacts} new contacts · ${r.stats.updatedContacts} updated · ${r.stats.signals} signals · ${r.stats.conflicts} conflicts` : ""}
+                {r.status === "done" && r.company_id && <div><a className="job-link" href={`/?open=${r.company_id}${r.country ? `&country=${encodeURIComponent(r.country === "Saudi Arabia" ? "KSA" : r.country)}` : ""}`}>View the account →</a></div>}</td>
               <td className="muted">{r.requested_by}</td>
             </tr>))}
             {!runs.length && <tr><td colSpan={7} className="muted">No research runs yet.</td></tr>}

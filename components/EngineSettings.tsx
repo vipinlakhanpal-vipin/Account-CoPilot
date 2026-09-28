@@ -6,11 +6,14 @@ import { useEffect, useState } from "react";
 import CostNote from "@/components/CostNote";
 import { COUNTRIES } from "@/lib/countries";
 
-type Job = { id: string; region: string; count: number | "max"; mode: string; company_name?: string; website?: string; requested_by: string; requested_at: string; status: string; done_at?: string; result?: string };
+type Job = { id: string; region: string; count: number | "max"; mode: string; company_name?: string; website?: string; slug?: string; requested_by: string; requested_at: string; status: string; done_at?: string; result?: string };
 type Batch = { id: string; region: string; budget: number; available: number; planned_update: number; planned_new: number; spent: number; runs: number; running: number; at: string; requested_by: string; companies: string[] };
 type Summary = { pin?: { set: boolean; ask_super: boolean; set_by: string; set_at: string }; token_info: { created_at?: string; by?: string; hint?: string } | null; token?: string | null; jobs: Job[]; batches: Batch[]; carry: number; spentAll: number; spentMonth: number; balance: { amount?: number; as_of?: string; by?: string };
   balanceLeft: number | null; est: { update: number; discovery: number; profile: number }; log?: { at: string; summary: string; verified: number; new_companies: string[] }[] };
 
+/** Next daily run: 02:00 UTC = 6:00am Dubai. */
+const nextRun = () => { const n = new Date(), t = new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate(), 2, 0, 0)); if (t <= n) t.setUTCDate(t.getUTCDate() + 1);
+  return t.toLocaleString("en-GB", { timeZone: "Asia/Dubai", weekday: "short", hour: "2-digit", minute: "2-digit" }) + " Dubai"; };
 const MODE: Record<string, string> = { company: "Add one specific company", verify: "Verify existing companies", discover: "Find new companies", both: "Verify existing + find new" };
 const money = (n: number) => `$${n.toFixed(2)}`;
 
@@ -35,6 +38,15 @@ export default function EngineSettings() {
       else { const t = j.error || `Could not save (error ${res.status}).`; setPinRes({ ok: false, text: t }); notify(t, "error"); }
     } catch { setPinRes({ ok: false, text: "Could not reach the server. Check your connection and try again." }); }
     setPinBusy(false);
+  }
+  // Instant route for one company: paid Quick research (Anthropic API, PIN). Appears in Research Queue and then in Accounts.
+  const [nowMsg, setNowMsg] = useState<{ ok: boolean; text: string; company?: string } | null>(null);
+  async function runNow() {
+    const name = q.company.trim(); if (name.length < 2) return;
+    if (!(await ask({ title: `Research ${name} now?`, tone: "cost", confirm: "Run now", points: [`Researches ${name} straight away (about 1–2 minutes) and adds it to ${q.region}.`, "Free alternative: Queue (free) — done in the next scheduled run."], cost: "≈ $0.55 (Quick research)" }))) return;
+    setNowMsg({ ok: true, text: "Starting…" });
+    const r = await paidFetch("/api/research", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ company: q.website.trim() ? `${name} (${q.website.trim()})` : name, country: q.region, depth: "quick" }) }, `Researching ${name}`);
+    setNowMsg(r.ok ? { ok: true, text: `In progress: researching ${name} (about 1–2 minutes).`, company: name } : { ok: false, text: "Could not start the research." });
   }
   const pinAsk = (s as { pin?: { ask_super?: boolean } } | null)?.pin?.ask_super;
   useEffect(() => { if (pinAsk !== undefined) setAskSuper(!!pinAsk); }, [pinAsk]);
@@ -77,11 +89,15 @@ export default function EngineSettings() {
             <button type="button" className="btn primary" disabled={q.mode === "company" && q.company.trim().length < 2}
               onClick={() => { const specific = q.mode === "company" || (q.mode === "discover" && q.company.trim().length >= 2); post(specific ? { action: "queue", region: q.region, count: 1, mode: "company", company_name: q.company.trim(), website: q.website.trim() }
                 : { action: "queue", region: q.region, count: q.count === "max" ? "max" : Number(q.count), mode: q.mode },
-                specific ? `Queued: ${q.company.trim()} (${q.region}). The next scheduled session researches it, adds it if it's new and verifies it; the bell tells you when it's done.` : "Job queued. It starts in the next scheduled session."); }}>Start</button>
+                specific ? `Queued: ${q.company.trim()} (${q.region}) for the next run (${nextRun()}), free. The job below shows Waiting → In progress → Completed, with a link to the account.` : `Job queued for the next run (${nextRun()}).`); }}>{(q.mode === "company" || (q.mode === "discover" && q.company.trim())) ? "Queue (free)" : "Start"}</button>
+            {(q.mode === "company" || (q.mode === "discover" && q.company.trim().length >= 2)) && (
+              <button type="button" className="btn" onClick={runNow} title="Researches it now with the Anthropic API (≈ $0.55, asks for your PIN)">Run now (≈ $0.55)</button>)}
           </div>
+          {nowMsg && <p className={`now-msg ${nowMsg.ok ? "ok" : "err"}`}>{nowMsg.text}{nowMsg.company && <> <a href="/research">Follow it in Data → Research Queue →</a> When it finishes it appears in <a href={`/?tab=accounts&country=${encodeURIComponent(q.region)}`}>{q.region} accounts →</a></>}</p>}
           {s && s.jobs.length > 0 && <div className="tablewrap"><table><thead><tr><th>Job</th><th>Region</th><th>How many</th><th>Status</th><th>Requested</th><th>Result</th><th></th></tr></thead>
-            <tbody>{s.jobs.slice(0, 10).map((j) => <tr key={j.id}><td>{MODE[j.mode] || j.mode}{j.company_name && <div className="muted">{j.company_name}{j.website ? ` · ${j.website}` : ""}</div>}</td><td>{j.region}</td><td>{j.count}</td><td><span className={`tag ${j.status === "done" ? "fact" : j.status === "error" ? "unv" : "likely"}`}>{j.status}</span></td>
-              <td className="muted">{new Date(j.requested_at).toLocaleString()}<div>{j.requested_by}</div></td><td className="wrap">{j.result}</td>
+            <tbody>{s.jobs.slice(0, 10).map((j) => <tr key={j.id}><td>{MODE[j.mode] || j.mode}{j.company_name && <div className="muted">{j.company_name}{j.website ? ` · ${j.website}` : ""}</div>}</td><td>{j.region}</td><td>{j.count}</td><td><span className={`job-st ${j.status}`}>{j.status === "queued" ? "Waiting" : j.status === "running" ? "In progress" : j.status === "done" ? "Completed" : j.status === "error" ? "Failed" : j.status === "cancelled" ? "Cancelled" : j.status}</span>
+                {j.status === "queued" && <div className="muted">next run {nextRun()}</div>}{j.status === "running" && <div className="muted">started by the scheduled session</div>}</td>
+              <td className="muted">{new Date(j.requested_at).toLocaleString()}<div>{j.requested_by}</div></td><td className="wrap">{j.result}{j.status === "done" && <div><a className="job-link" href={j.slug ? `/?open=${encodeURIComponent(j.slug)}&country=${encodeURIComponent(j.region)}` : `/?tab=accounts&country=${encodeURIComponent(j.region)}`}>{j.slug ? "View the account →" : `View ${j.region} accounts →`}</a></div>}</td>
               <td>{j.status === "queued" && <button type="button" className="btn tiny ghost" onClick={() => post({ action: "cancel", id: j.id }, "Job cancelled.")}>Cancel</button>}</td></tr>)}</tbody></table></div>}
         </div>
 
