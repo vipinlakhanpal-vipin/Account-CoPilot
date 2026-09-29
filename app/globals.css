@@ -435,7 +435,7 @@ aside.brief.contact{width:min(760px,100%);z-index:70}
 .hw-step[aria-current="true"] .hw-step-num{background:var(--surface);color:var(--step-color,var(--teal))}
 .hw-step[aria-current="true"] .ico{color:var(--accent-ink)}
 .hw-step--region{--step-color:var(--teal)} .hw-step--people{--step-color:var(--gold)} .hw-step--data{--step-color:var(--sky)} .hw-step--review{--step-color:var(--muted)}
-.hw-content{flex:1;padding:22px 26px 28px;min-width:0}
+.hw-content{flex:1;padding:22px 26px 28px;min-width:0;min-height:520px}
 .hw-h{font-family:var(--display);font-size:17px;font-weight:600;margin:0 0 6px;color:var(--text);text-transform:none;letter-spacing:0}
 .hw-tint{border-radius:10px;padding:16px 18px;margin-bottom:16px}
 .hw-tint--region{background:var(--accent-soft)} .hw-tint--people{background:color-mix(in srgb, var(--gold) 16%, transparent)}

@@ -237,7 +237,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
               <div>
                 <div className="hw-tint hw-tint--region">
                   <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--teal)")}><Ico name="pin" /></span><h3>Which regions are you setting up?</h3></div>
-                  <p className="hw-lead">Tick every region you want this wizard to configure right now. The steps ahead — company size, targeting, data
+                  <p className="hw-lead hw-lead-wide">Tick every region you want this wizard to configure right now. The steps ahead — company size, targeting, data
                     sources and daily plan — are set once and applied to each region checked below. You can always come back and run the wizard again
                     for just one region. Regions marked <b>not started yet</b> haven&apos;t been set up at all — ticking one starts it: it moves to
                     Active or Paused (your choice in step 6) once you save.</p>
@@ -268,7 +268,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
               <div>
                 <div className="hw-tint hw-tint--region">
                   <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--teal)")}><Ico name="folder" /></span><h3>Do you already have a validated list?</h3></div>
-                  <p className="hw-lead">This decides how the Agent gets started for the region(s) you checked in step 1. Answer for whichever region
+                  <p className="hw-lead hw-lead-wide">This decides how the Agent gets started for the region(s) you checked in step 1. Answer for whichever region
                     you have the most data for — you can give a different answer next time you run the wizard for another region.</p>
                 </div>
                 <div className="hw-pillrow">
@@ -292,7 +292,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
               <div>
                 <div className="hw-tint hw-tint--region">
                   <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--teal)")}><Ico name="building" /></span><h3>Company size — a company must meet both to count</h3></div>
-                  <p className="hw-lead">These numbers are the actual pass/fail rule, not just a filter on this page — the daily engine, in-app
+                  <p className="hw-lead hw-lead-wide">These numbers are the actual pass/fail rule, not just a filter on this page — the daily engine, in-app
                     research and the Pipeline ranking all read them straight from here. Get them right once and everything downstream follows
                     automatically.</p>
                 </div>
@@ -321,7 +321,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
               <div>
                 <div className="hw-tint hw-tint--people">
                   <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--gold)")}><Ico name="crosshair" /></span><h3>Which domains do you want to target?</h3></div>
-                  <p className="hw-lead">This decides which people at each company the Agent treats as decision-makers — who gets surfaced first on
+                  <p className="hw-lead hw-lead-wide">This decides which people at each company the Agent treats as decision-makers — who gets surfaced first on
                     Stakeholders, and whose seniority counts toward Pipeline rank. Pick as many as apply.</p>
                 </div>
                 <div>
@@ -345,7 +345,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
               <div>
                 <div className="hw-tint hw-tint--data">
                   <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--sky)")}><Ico name="database" /></span><h3>Which data sources do you have?</h3></div>
-                  <p className="hw-lead">Seamless.ai is the one source genuinely connected and in use today, for contact enrichment. Everything else
+                  <p className="hw-lead hw-lead-wide">Seamless.ai is the one source genuinely connected and in use today, for contact enrichment. Everything else
                     below is just your own inventory — tick what you have a subscription to, so I know what to ask for exports from; nothing here
                     connects automatically.</p>
                 </div>
@@ -370,7 +370,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
               <div>
                 <div className="hw-tint hw-tint--data">
                   <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--sky)")}><Ico name="calendar" /></span><h3>Daily plan</h3></div>
-                  <p className="hw-lead">Sets how much unattended work the daily run does, on your Claude plan at no extra cost. A good
+                  <p className="hw-lead hw-lead-wide">Sets how much unattended work the daily run does, on your Claude plan at no extra cost. A good
                     starting point for extending an existing list: find 5 a day, verify 25.</p>
                 </div>
                 <label className="hw-field">New companies to find per day
@@ -386,7 +386,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
 
                 <div className="hw-tint hw-tint--data" style={{ marginTop: 18 }}>
                   <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--sky)")}><Ico name="coin" /></span><h3>Free daily pace, or paid profiling?</h3></div>
-                  <p className="hw-lead">The plan above is entirely free — your Claude plan, not the Anthropic API key. Paid profiling is a
+                  <p className="hw-lead hw-lead-wide">The plan above is entirely free — your Claude plan, not the Anthropic API key. Paid profiling is a
                     different, separate action for when you want Claude to go deeper on companies than the free daily pace allows. This button
                     doesn&apos;t start anything or spend anything — it just decides whether to show you what that would cost.</p>
                 </div>
@@ -410,8 +410,9 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                       </tbody>
                     </table>
                     <p className="hint" style={{ marginTop: 8 }}>These rates are for reference only — nothing here is selectable or charged. To
-                      actually run one, go to <b>Data → Research Queue</b> and pick Quick, Standard or Deep there (or use <b>Research more</b> on
-                      the left panel), where you approve the cost before anything runs, and a Super Admin can require a PIN.</p>
+                      actually run one, go to <b>Data → Research Queue</b> and pick Quick, Standard or Deep there (or use <b>Research more</b>,
+                      in the Discovery panel on the left side of the <b>Dashboard</b> page). Either way you approve the cost before anything runs,
+                      and a Super Admin can require a PIN.</p>
                   </div>
                 )}
               </div>
@@ -421,7 +422,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
               <div>
                 <div className="hw-tint hw-tint--review">
                   <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--muted)")}><Ico name="clipboard" /></span><h3>Review</h3></div>
-                  <p className="hw-lead">Here&apos;s what this sets up, in plain terms. Nothing is saved until you press Save &amp; apply below.</p>
+                  <p className="hw-lead hw-lead-wide">Here&apos;s what this sets up, in plain terms. Nothing is saved until you press Save &amp; apply below.</p>
                 </div>
                 <p className="hw-lead hw-lead-wide" style={{ marginBottom: 16 }}>
                   You&apos;re setting up <b>{regionNames.length || 0} region{regionNames.length === 1 ? "" : "s"}</b>
@@ -429,7 +430,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                   <b>{draft.employees}+ employees</b>. {activateNow ? "Once you save, the daily run switches on for these regions" : "These rules save now, but the daily run stays paused for these regions until you activate them"} —
                   every day it looks for <b>{draft.discoverPerDay} new</b> matching companies and re-checks <b>{draft.verifyPerDay} existing</b> ones,
                   weighted toward {domains.length ? domains.map((k) => OPTIONS.domains.find((x) => x.key === k)?.label).join(", ") : "your current targeting"}.
-                  All of this runs on your Claude plan, at no extra cost.{wantsProfiling === "paid" ? " Whenever you want it to go deeper than that free pace, Research Queue or Research more (Data tab) will do it, at the rates shown in the previous step." : ""}
+                  All of this runs on your Claude plan, at no extra cost.{wantsProfiling === "paid" ? " Whenever you want it to go deeper than that free pace, Research Queue (Data tab) or Research more (the left panel on Dashboard) will do it, at the rates shown in the previous step." : ""}
                 </p>
                 <p className="hw-lead hw-lead-wide" style={{ marginBottom: 16 }}>
                   <b>When to expect something worth looking at:</b> the first new and re-checked companies land within a day or two of the run

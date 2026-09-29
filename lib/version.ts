@@ -1,11 +1,17 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.16";
+export const APP_VERSION = "2.17";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.17", date: "2026-09-30", notes: "Fixed the page jumping when switching between Setup Wizard steps — the content pane now holds a steady minimum height instead of collapsing and expanding as each step's content changes length. Also clarified exactly where 'Research more' lives (the left panel on the Dashboard page).",
+    changes: [
+      { what: "The wizard's content pane now has a set minimum height, so switching between a short step (e.g. Existing data) and a tall one (e.g. Company size) no longer collapses or expands the pane and shifts the page around it", where: "Home → Setup Wizard, every step", why: "Reported as the tabs 'jumping' when clicked — caused by the pane reflowing to fit each step's very different content length" },
+      { what: "'Research more' is now named with where it actually is — 'the Discovery panel on the left side of the Dashboard page' — instead of just 'the left panel', which doesn't mean anything to someone who hasn't seen it yet", where: "Home → Setup Wizard → Daily plan (paid profiling note), and → Review", why: "A first-time user reading this in the wizard has no way to know what 'the left panel' refers to without a page reference" },
+      { what: "The remaining intro paragraphs inside each step's coloured tint box (all 7 steps) now span the full pane width instead of wrapping at a narrow column, leaving the rest of the box empty", where: "Home → Setup Wizard, every step's intro text", why: "Same fix already applied to the About panel and the Review/Selected summaries, extended to the last paragraphs still narrow" },
+    ] },
   { version: "2.16", date: "2026-09-30", notes: "The activate-daily-run checkbox now bolds 'ON' so the action reads clearly even when the region list after it runs long.",
     changes: [
       { what: "Checkbox label now reads 'Turn the daily run ON now for …' with ON bolded, instead of a lowercase 'on' that got lost in a long region list", where: "Home → Setup Wizard → Daily plan", why: "With several regions selected, the sentence ran long enough that the actual action (turning it on) stopped standing out" },
