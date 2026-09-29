@@ -150,7 +150,10 @@ export default function HomeWorkspace({ access }: { access: Access }) {
       target.focus.triggers = [...new Set([...target.focus.triggers, ...extraTriggers])];
       target.engine.discover_per_day = draft.discoverPerDay;
       target.engine.verify_per_day = draft.verifyPerDay;
+      // Configuring a region here is what starts it: a region still marked "next phase" always leaves that state,
+      // landing on Active or Paused depending on the checkbox in step 6 — never left stuck as "not started".
       if (activateNow) target.status = "active";
+      else if (target.status === "next") target.status = "paused";
     }
     try {
       const res = await fetch("/api/icp", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "save", definition: n }) });
@@ -162,6 +165,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
   }
 
   const regionNames = regions.map((k) => REGIONS.find((r) => r.key === k)?.name || k);
+  const startingRegions = regions.filter((k) => def?.regions[k]?.status === "next").map((k) => REGIONS.find((r) => r.key === k)?.name || k);
   // Shared by the "Setup Wizard" label and the chevron, so both always behave the same way: switching in from
   // elsewhere opens the step list, and clicking again once already there toggles it open or closed.
   const toggleWizard = () => {
@@ -225,21 +229,24 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                   <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--teal)")}><Ico name="pin" /></span><h3>Which regions are you setting up?</h3></div>
                   <p className="hw-lead">Tick every region you want this wizard to configure right now. The steps ahead — company size, targeting, data
                     sources and daily plan — are set once and applied to each region checked below. You can always come back and run the wizard again
-                    for just one region.</p>
+                    for just one region. Regions marked <b>not started yet</b> haven&apos;t been set up at all — ticking one starts it: it moves to
+                    Active or Paused (your choice in step 6) once you save.</p>
                 </div>
                 <div className="hw-pillrow">
                   {visibleRegions.map((r) => {
                     const nextPhase = def.regions[r.key]?.status === "next";
                     return (
-                      <CheckPill key={r.key} on={regions.includes(r.key)} disabled={nextPhase} onClick={() => toggleRegion(r.key)}>
-                        {r.name}{nextPhase ? " (next phase)" : ""}
+                      <CheckPill key={r.key} on={regions.includes(r.key)} onClick={() => toggleRegion(r.key)}>
+                        {r.name}{nextPhase ? " (not started yet)" : ""}
                       </CheckPill>
                     );
                   })}
                 </div>
                 <p className="hw-lead" style={{ marginTop: 12 }}>
                   {regions.length
-                    ? <><b>Selected: {regionNames.join(", ")}.</b> Company size, targeting, data sources and daily plan will apply to all of these.</>
+                    ? <><b>Selected: {regionNames.join(", ")}.</b> Company size, targeting, data sources and daily plan will apply to all of these.
+                      {startingRegions.length > 0 && <> <b>{startingRegions.join(", ")}</b> {startingRegions.length === 1 ? "isn't" : "aren't"} started yet
+                        — saving this wizard starts {startingRegions.length === 1 ? "it" : "them"}.</>}</>
                     : "Pick at least one region to continue."}
                 </p>
                 {!visibleRegions.length && <p className="note">No region is assigned to your account yet — ask a Super Admin to add one in Setup → Team.</p>}
@@ -421,7 +428,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                 <div className="hw-review-grid">
                   <div className="hw-review-row hw-review-row--region">
                     <span className="k">Regions</span>
-                    <span className="v">{regionNames.length ? regionNames.join(", ") : "none checked"}{activateNow ? " — will be Active" : ""}</span>
+                    <span className="v">{regionNames.length ? regionNames.join(", ") : "none checked"}{activateNow ? " — will be Active" : startingRegions.length ? ` — ${startingRegions.join(", ")} will move to Paused` : ""}</span>
                   </div>
                   <div className="hw-review-row hw-review-row--region">
                     <span className="k">Company size</span>

@@ -1,11 +1,16 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.07";
+export const APP_VERSION = "2.08";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.08", date: "2026-09-29", notes: "Setup Wizard step 1 can now select Europe and United States directly, instead of them being locked out until you first unlocked them in Define ICP. Ticking a 'not started yet' region and saving starts it — Active if you check 'activate now' in step 6, otherwise Paused.",
+    changes: [
+      { what: "Regions still in 'Next phase' (Europe, United States by default) are no longer disabled in the region picker — they're tickable like any other region, labelled 'not started yet' instead of 'next phase'. Saving the wizard for one of these regions moves it out of Next phase: to Active if step 6's 'activate now' is checked, otherwise to Paused", where: "Home → Setup Wizard → Region, and → Daily plan", why: "Previously the only way to start a Next-phase region was a separate trip to Setup → Define ICP first; the wizard can now do the whole thing in one pass" },
+      { what: "Step 1's summary line and the Review step's Regions row now call out when a selected region is starting for the first time (e.g. '… will move to Paused') instead of staying silent about the status change", where: "Home → Setup Wizard → Region, → Review", why: "A first-time region silently changing from Next phase to Paused/Active needed to be visible, not assumed" },
+    ] },
   { version: "2.07", date: "2026-09-29", notes: "The 'Setup Wizard' label and its chevron now share one behaviour: clicking either one opens the step list when it's not already showing, and clicking either one again toggles it open or closed — no more inconsistency between which control 'worked'.",
     changes: [
       { what: "The 'Setup Wizard' label and the chevron next to it now call the same handler: from another tab, either one switches in and opens the step list; once already on Setup Wizard, either one toggles the list open or closed", where: "Home → left rail → Setup Wizard", why: "Previously the label always forced the list open (never closed it) while the chevron toggled it — so depending on which one you clicked, it looked like only one of them 'worked'" },
