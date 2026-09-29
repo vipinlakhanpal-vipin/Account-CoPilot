@@ -6,8 +6,9 @@
 //   node scripts/engine_client.mjs add <file.json>                      → adds discovered companies (format: see scripts/add_companies.mjs)
 //   node scripts/engine_client.mjs hold <file.json>                     → queues a company whose real country's region isn't Active yet (same format as add); shown as a banner until a Super Admin activates that region
 //   node scripts/engine_client.mjs finish <id> done|error "<result>"
-//   node scripts/engine_client.mjs log "<summary>" <verified_count> "<new names;…>"           → also sends data/verification/run_details.json if present:
-//                                                                                                [{"name","status","revenue"}] (one row per company checked this run), for the bell's table
+//   node scripts/engine_client.mjs log "<summary>" <verified_count> "<new names;…>" <daily|instant>  → source is which routine you are (required — see ENGINE.md step 3); also
+//                                                                                                sends data/verification/run_details.json if present: [{"name","status","revenue"}]
+//                                                                                                (one row per company checked this run), for the bell's table
 import fs from "node:fs";
 import path from "node:path";
 
@@ -19,7 +20,7 @@ const call = async (body) => {
   if (!r.ok) { console.error(`HTTP ${r.status}: ${JSON.stringify(j)}`); process.exit(1); }
   return j;
 };
-const [cmd, a, b, c] = process.argv.slice(2);
+const [cmd, a, b, c, d] = process.argv.slice(2);
 if (cmd === "claim") console.log(JSON.stringify((await call({ action: "claim" })).job));
 else if (cmd === "queue") {
   const { queue } = await call({ action: "queue", region: a || "UAE", limit: Number(b) || 50 });
@@ -71,6 +72,6 @@ else if (cmd === "queue") {
 else if (cmd === "log") {
   const detailsFile = "data/verification/run_details.json";
   const details = fs.existsSync(detailsFile) ? JSON.parse(fs.readFileSync(detailsFile, "utf8")) : [];
-  console.log(JSON.stringify(await call({ action: "log", summary: a || "", verified: Number(b) || 0, new_companies: String(c || "").split(";").map((x) => x.trim()).filter(Boolean), details })));
+  console.log(JSON.stringify(await call({ action: "log", summary: a || "", verified: Number(b) || 0, new_companies: String(c || "").split(";").map((x) => x.trim()).filter(Boolean), details, source: d === "instant" ? "instant" : "daily" })));
 }
 else console.log("usage: claim | icp | names | watch [slug] | queue <region> <limit> | submit [dir] | add <file> | hold <file> | finish <id> done|error <result> | log <summary> <verified> <names;…>");

@@ -1,11 +1,25 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.86";
+export const APP_VERSION = "1.88";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.88", date: "2026-09-29", notes: "6am is now shown in each viewer's own local time and zone, not a fixed 'UAE time' label. New Company name column shows the correct researched name and region, regardless of what was typed or searched from. Fixed: the Region column and account links now show the real region, not the search box's.",
+    changes: [
+      { what: "The daily run's time (Guide, bell, Settings) now shows in the viewer's own local time zone — e.g. someone in South Africa sees their own local equivalent, not UAE's — instead of a fixed '(UAE time)' label. The schedule itself hasn't changed (still a fixed 02:00 UTC), only how it's displayed", where: "Setup → Learn Me intro; top bar bell; Setup → Settings → Scheduled run history", why: "A fixed 'UAE time' label meant every viewer, wherever they are, had to do the timezone math themselves" },
+      { what: "New 'Company name' column (before Job) in the job status table shows the correctly researched company name and its real region — e.g. typing 'baja.com.sa' now shows 'Baja Food Industries Company (KSA)', not the raw text you typed", where: "Setup → Settings → job status table", why: "The typed input and the researched company are often not the same string, and there was no single place showing what was actually found" },
+      { what: "Fixed: the Region column, and every account link, now show the company's real researched region — not the region selected in the search box. A search for 'Egypt Refinery Company' from the UAE region box now correctly shows Egypt everywhere, including 'View <Company> (Egypt) Account →' once it's added", where: "Setup → Settings → job status table", why: "The region column and 'View account' links still said UAE for an Egypt company after everything else was fixed to use the real region" },
+      { what: "Clicking 'Add now' on a held company shows 'View <Company name> (<region>) Account →', naming the actual company and region, not a generic region-only link", where: "Setup → Settings → Pending — waiting for region activation", why: "The confirmation didn't say which company or where it had just been added" },
+      { what: "Corrected the stored job history text for Baja Food Industries Company (now shows KSA) and Egyptian Refining Company (ERC) (now shows Egypt cleanly), so both display correctly under the new format", where: "Behind the scenes (one-off data fix)", why: "Both were recorded before this format existed and would otherwise still show the wrong or unparseable region" },
+    ] },
+  { version: "1.87", date: "2026-09-29", notes: "Scheduled run history now shows Run status per row (Daily Run vs Instant Search Run); 6am is now labelled 'UAE time' everywhere instead of 'Dubai'; adding a held company now links straight to its new account.",
+    changes: [
+      { what: "New 'Run status' column in Scheduled run history: 'Daily Run 6am (UAE time)' or 'Instant Search Run', so you can tell at a glance what you asked for versus what the nightly run found on its own", where: "Setup → Settings → Scheduled run history", why: "There was no way to tell an instant one-company lookup apart from the daily batch in the run list" },
+      { what: "'6am (Dubai)' is now '6am (UAE time)' everywhere — the bell, Scheduled run history, and the Guide", where: "Top bar bell; Setup → Settings; Setup → Learn Me", why: "The app already calls this region 'UAE' everywhere else; naming the city instead of the region read as inconsistent, and this is a fixed reference clock for whichever regions are Active, not only UAE's own data" },
+      { what: "Clicking 'Add now' on a held (pending-region) company now shows 'View <region> accounts →' right in the confirmation, once it's actually been added", where: "Setup → Settings → Pending — waiting for region activation", why: "There was no way to jump straight to the account you just released from pending" },
+    ] },
   { version: "1.86", date: "2026-09-29", notes: "A held (pending-region) result no longer shows a misleading 'View <wrong region> accounts' link — it links straight to the Pending card instead, both in the bell and Scheduled run history; the Pending card's action column now has a label.",
     changes: [
       { what: "A completed job that was held pending region activation now shows 'Pending — waiting for <real region> activation →' linking straight to Settings' Pending card, instead of a 'View <the search box's region> accounts' link that named the wrong region and led to an account that doesn't exist yet", where: "Setup → Settings → job status table", why: "A search for 'Egypt Refinery Company' queued from the UAE region box showed 'View UAE accounts', which was both the wrong region and pointed at nothing" },

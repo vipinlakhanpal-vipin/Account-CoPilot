@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import DailyRunLocalTime from "@/components/DailyRunLocalTime";
 
 type Detail = { name: string; status: string; revenue?: string };
 type Entry = { at: string; summary: string; verified: number; new_companies: string[]; details?: Detail[] };
@@ -39,7 +40,7 @@ export default function EngineBell() {
       {open && (
         <div className="bell-pop" role="dialog" aria-label="Engine notifications">
           <b>Scheduled runs</b>
-          {entries.length === 0 ? <p className="note">No runs yet. The engine runs every day at 6am (Dubai) and posts a summary here.</p>
+          {entries.length === 0 ? <p className="note">No runs yet. The engine runs every day at <DailyRunLocalTime /> and posts a summary here.</p>
             : entries.slice(0, 8).map((e) => (
               <div key={e.at} className={`bell-item${e.at > seen ? " new" : ""}`}>
                 <small>{new Date(e.at).toLocaleString()}</small>

@@ -3,6 +3,7 @@ import { ask, paidFetch, notify } from "@/components/Confirm";
 import SecretInput from "@/components/SecretInput";
 import InfoTip from "@/components/InfoTip";
 import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import CostNote from "@/components/CostNote";
 import { COUNTRIES } from "@/lib/countries";
 
@@ -11,19 +12,23 @@ type Batch = { id: string; region: string; budget: number; available: number; pl
 type Pending = { id: string; name: string; website?: string; country: string; region: string; region_status: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; requested_at: string };
 type Summary = { pin?: { set: boolean; ask_super: boolean; set_by: string; set_at: string }; token_info: { created_at?: string; by?: string; hint?: string } | null; token?: string | null; jobs: Job[]; batches: Batch[]; carry: number; spentAll: number; spentMonth: number; balance: { amount?: number; as_of?: string; by?: string };
   balanceLeft: number | null; est: { update: number; discovery: number; profile: number };
-  log?: { at: string; summary: string; verified: number; new_companies: string[]; details?: { name: string; status: string; revenue?: string }[] }[]; pending?: Pending[] };
+  log?: { at: string; summary: string; verified: number; new_companies: string[]; details?: { name: string; status: string; revenue?: string }[]; source?: "daily" | "instant" }[]; pending?: Pending[] };
 const statusTag = (s: string) => (/verified/i.test(s) ? "fact" : /likely/i.test(s) ? "likely" : /not icp/i.test(s) ? "conflict" : "unv");
 
-/** Next daily run: 02:00 UTC = 6:00am Dubai. */
+/** Next daily run (fixed at 02:00 UTC), shown in the viewer's own local time and zone — not a fixed "UAE time" label,
+ * so someone in South Africa sees their own local equivalent (e.g. "4:00 AM South Africa Standard Time"), not UAE's. */
 const nextRun = () => { const n = new Date(), t = new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate(), 2, 0, 0)); if (t <= n) t.setUTCDate(t.getUTCDate() + 1);
-  return t.toLocaleString("en-US", { timeZone: "Asia/Dubai", weekday: "short", hour: "2-digit", minute: "2-digit", hour12: true }) + " Dubai"; };
+  return t.toLocaleString("en-US", { weekday: "short", hour: "2-digit", minute: "2-digit", hour12: true, timeZoneName: "long" }); };
+/** Same run, without the "next" weekday — just "what local time is 02:00 UTC for me", for static badges/labels. */
+const dailyRunLocal = () => { const d = new Date(), t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 2, 0, 0));
+  return t.toLocaleString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true, timeZoneName: "long" }); };
 const MODE: Record<string, string> = { company: "Add one specific company", verify: "Verify existing companies", discover: "Find new companies", both: "Verify existing + find new" };
 const money = (n: number) => `$${n.toFixed(2)}`;
 
 // Settings → Discovery & refresh engine.
 export default function EngineSettings() {
   const [s, setS] = useState<Summary | null>(null);
-  const [msg, setMsg] = useState("");
+  const [msg, setMsg] = useState<ReactNode>("");
   const [q, setQ] = useState({ region: "UAE", count: "50", mode: "verify", company: "", website: "" });
   const [r, setR] = useState({ region: "UAE", update: 10, fresh: 5, budget: 20 });
   const [pinNew, setPinNew] = useState("");
@@ -58,7 +63,7 @@ export default function EngineSettings() {
   const [newToken, setNewToken] = useState("");
   const load = () => fetch("/api/engine").then((x) => (x.ok ? x.json() : null)).then((j) => j && setS(j)).catch(() => {});
   useEffect(() => { load(); const t = setInterval(load, 30000); return () => clearInterval(t); }, []);
-  const post = async (body: unknown, ok: string) => {
+  const post = async (body: unknown, ok: ReactNode) => {
     const init = { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
     // A paid Refresh needs the paid-actions PIN (asked in the app when required).
     const res = (body as { action?: string }).action === "refresh" ? await paidFetch("/api/engine", init, "A paid Refresh") : await fetch("/api/engine", init);
@@ -101,18 +106,26 @@ export default function EngineSettings() {
               <button type="button" className="btn" onClick={runNow} title="Researches it now with the Anthropic API (≈ $0.55, asks for your PIN)">Run now (≈ $0.55)</button>)}
           </div>
           {nowMsg && <p className={`now-msg ${nowMsg.ok ? "ok" : "err"}`}>{nowMsg.text}{nowMsg.company && <> <a href="/research">Follow it in Data → Research Queue →</a> When it finishes it appears in <a href={`/?tab=accounts&country=${encodeURIComponent(q.region)}`}>{q.region} accounts →</a></>}</p>}
-          {s && s.jobs.length > 0 && <div className="tablewrap"><table><thead><tr><th>Job</th><th>Region</th><th>How many</th><th>Status</th><th>Requested</th><th>Result</th><th></th></tr></thead>
-            <tbody>{s.jobs.slice(0, 10).map((j) => <tr key={j.id}><td>{MODE[j.mode] || j.mode}{j.company_name && <div className="muted">{j.company_name}{j.website ? ` · ${j.website}` : ""}</div>}</td><td>{j.region}</td><td>{j.count}</td><td><span className={`job-st ${j.status}`}>{j.status === "queued" ? "Waiting" : j.status === "running" ? "In progress" : j.status === "done" ? "Completed" : j.status === "error" ? "Failed" : j.status === "cancelled" ? "Cancelled" : j.status}</span>
+          {s && s.jobs.length > 0 && <div className="tablewrap"><table><thead><tr><th>Company name</th><th>Job</th><th>Region</th><th>How many</th><th>Status</th><th>Requested</th><th>Result</th><th></th></tr></thead>
+            <tbody>{s.jobs.slice(0, 10).map((j) => {
+              // The routine's finish message names the company's real, correct name and region: "<Company> (<region>): <outcome>".
+              const parsed = String(j.result || "").match(/^(.+)\(([A-Za-z ]+)\):\s*(.+)$/);
+              const legacyHeld = parsed ? null : String(j.result || "").match(/held pending ([A-Za-z ]+?) activation/i);
+              const realRegion = parsed ? parsed[2].trim() : j.region;
+              const held = parsed ? /held pending activation/i.test(parsed[3]) : !!legacyHeld;
+              return <tr key={j.id}>
+              <td>{j.mode === "company" ? (parsed ? `${parsed[1].trim()} (${realRegion})` : j.company_name) : "—"}{j.website && <div className="muted">{j.website}</div>}</td>
+              <td>{MODE[j.mode] || j.mode}</td><td>{realRegion}{realRegion !== j.region && <div className="muted">searched from {j.region}</div>}</td><td>{j.count}</td><td><span className={`job-st ${j.status}`}>{j.status === "queued" ? "Waiting" : j.status === "running" ? "In progress" : j.status === "done" ? "Completed" : j.status === "error" ? "Failed" : j.status === "cancelled" ? "Cancelled" : j.status}</span>
                 {j.status === "queued" && <div className="muted">usually a minute or two — falls back to {nextRun()} if that doesn't fire</div>}{j.status === "running" && <div className="muted">started by the scheduled session</div>}</td>
               <td className="muted">{new Date(j.requested_at).toLocaleString()}<div>{j.requested_by}</div></td><td className="wrap">{j.result}
-                {j.status === "done" && (() => { const held = String(j.result || "").match(/held pending ([A-Za-z ]+?) activation/i);
-                  return held ? <div><a className="job-link" href="/settings#engine-pending">Pending — waiting for {held[1]} activation →</a></div>
-                    : <div><a className="job-link" href={j.slug ? `/?open=${encodeURIComponent(j.slug)}&country=${encodeURIComponent(j.region)}` : `/?tab=accounts&country=${encodeURIComponent(j.region)}`}>{j.slug ? "View the account →" : `View ${j.region} accounts →`}</a></div>; })()}</td>
-              <td>{j.status === "queued" && <button type="button" className="btn tiny ghost" onClick={() => post({ action: "cancel", id: j.id }, "Job cancelled.")}>Cancel</button>}</td></tr>)}</tbody></table></div>}
+                {j.status === "done" && (held
+                  ? <div><a className="job-link" href="/settings#engine-pending">Pending — waiting for {parsed ? realRegion : legacyHeld?.[1]} activation →</a></div>
+                  : <div><a className="job-link" href={j.slug ? `/?open=${encodeURIComponent(j.slug)}&country=${encodeURIComponent(realRegion)}` : `/?tab=accounts&country=${encodeURIComponent(realRegion)}`}>{j.slug ? `View ${parsed ? parsed[1].trim() : j.company_name || "the"} (${realRegion}) Account →` : `View ${realRegion} accounts →`}</a></div>)}</td>
+              <td>{j.status === "queued" && <button type="button" className="btn tiny ghost" onClick={() => post({ action: "cancel", id: j.id }, "Job cancelled.")}>Cancel</button>}</td></tr>; })}</tbody></table></div>}
         </div>
 
-        {s?.log && s.log.length > 0 && <div className="eng-card"><div className="eng-head"><h3>Scheduled run history</h3><span className="tag fact">Daily 6am (Dubai)</span></div>
-          <div className="tablewrap"><table><thead><tr><th>When</th><th>Summary</th><th>Verified</th><th>New companies</th></tr></thead>
+        {s?.log && s.log.length > 0 && <div className="eng-card"><div className="eng-head"><h3>Scheduled run history</h3><span className="tag fact">Daily Run — {dailyRunLocal()}</span></div>
+          <div className="tablewrap"><table><thead><tr><th>When</th><th>Summary</th><th>Verified</th><th>New companies</th><th>Run status</th></tr></thead>
             <tbody>{s.log.slice(0, 10).map((e) => <tr key={e.at}><td className="muted">{new Date(e.at).toLocaleString()}</td>
               <td className="wrap">
                 {e.details && e.details.length > 0 ? (<>
@@ -123,7 +136,8 @@ export default function EngineSettings() {
                 ) : e.summary}
               </td>
               <td>{e.verified}</td>
-              <td className="wrap">{e.new_companies.join(", ") || "—"}</td></tr>)}</tbody></table></div></div>}
+              <td className="wrap">{e.new_companies.join(", ") || "—"}</td>
+              <td className="muted">{e.source === "instant" ? "Instant Search Run" : e.source === "daily" ? `Daily Run — ${dailyRunLocal()}` : "—"}</td></tr>)}</tbody></table></div></div>}
 
         {s?.pending && s.pending.length > 0 && <div className="eng-card" id="engine-pending">
           <div className="eng-head"><h3>Pending — waiting for region activation</h3><span className="tag unv">{s.pending.length}</span></div>
@@ -135,7 +149,7 @@ export default function EngineSettings() {
               <td className="wrap">{p.why_icp}</td>
               <td className="muted">{new Date(p.requested_at).toLocaleString()}</td>
               <td>{p.region_status === "active"
-                ? <button type="button" className="btn tiny" onClick={() => post({ action: "release_pending", id: p.id }, `${p.name} added.`)}>Add now</button>
+                ? <button type="button" className="btn tiny" onClick={() => post({ action: "release_pending", id: p.id }, <>{p.name} added. <a className="job-link" href={`/?tab=accounts&country=${encodeURIComponent(p.region)}`}>View {p.name} ({p.region}) Account →</a></>)}>Add now</button>
                 : <a className="job-link" href="/icp">Activate {p.region} →</a>}
                 {" "}<button type="button" className="btn tiny ghost" onClick={async () => { if (await ask({ title: `Dismiss ${p.name}?`, tone: "danger", confirm: "Dismiss", points: ["It will not be added — you'd have to find it again later."] })) post({ action: "dismiss_pending", id: p.id }, `${p.name} dismissed.`); }}>Dismiss</button></td>
             </tr>)}</tbody></table></div>

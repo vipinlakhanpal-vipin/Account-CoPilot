@@ -1,6 +1,8 @@
+import type { ReactNode } from "react";
 import { requirePageUser } from "@/lib/auth";
 import Hero from "@/components/Hero";
 import GuideNav from "@/components/GuideNav";
+import DailyRunLocalTime from "@/components/DailyRunLocalTime";
 import { SPEND_BENCHMARKS, DEFAULT_SPEND } from "@/lib/icp";
 import { SOURCES, indexSources } from "@/lib/sources";
 import { supabaseServer } from "@/lib/supabase/server";
@@ -62,7 +64,7 @@ const TOC: [string, string][] = [["start", "Get to know me"], ["engine", "How th
   ["spend", "Spend estimates"], ["sources", "Sources"], ["dates", "Record dates"], ["engineset", "Engine (Settings)"], ["costs", "Costs"], ["excel", "Excel Master Book"],
   ["rules", "Data rules"], ["limits", "What the app can't do"]];
 
-const T = ({ head, rows }: { head: string[]; rows: (string | number)[][] }) => (
+const T = ({ head, rows }: { head: string[]; rows: ReactNode[][] }) => (
   <div className="tablewrap"><table><thead><tr>{head.map((h) => <th key={h}>{h}</th>)}</tr></thead>
     <tbody>{rows.map((r, i) => <tr key={i}>{r.map((c, j) => <td key={j} className="wrap">{c}</td>)}</tr>)}</tbody></table></div>);
 const pct = (x: number) => `${Math.round(x * 100)}%`;
@@ -79,7 +81,7 @@ export default async function GuidePage() {
           <div className="guide-body">
 
             <section id="start" className="panel"><h2 className="attn">Get to know me — I&apos;m your Account CoPilot AI Agent (Autonomous)</h2>
-              <p className="intro-box"><b>Account CoPilot</b> is an AI Agent that runs on its own every morning at 6am Dubai time. Everything I do follows the rules you set in <b>Setup → Define ICP</b>, a separate profile for each region: company size, type and industries, what counts as proof, what never to add, Pipeline priorities, buyer personas and how much to do each day. When you save a change, I apply it straight away and use it in the next morning&apos;s run. First I <b>find</b> new companies that could fit your Ideal Customer Profile (ICP) in each <b>active</b> region, using public web search, annual reports, stock-exchange filings, company websites and supplier portals, reputable business press, job posts and Seamless.ai. I look for group headquarters only, and skip ministries and government bodies, single hotels, hospitals and schools, and local branches of foreign groups. You can also ask for <b>one specific company</b> (Setup → Settings → Search companies → Add one specific company): the region you pick is only where the request is queued from — the next session researches the company&apos;s <b>real</b> country (its domain&apos;s country code is a strong signal) and adds it there, verifying it at no API cost and re-checking it every week until an official revenue figure is found. If its real region isn&apos;t Active yet, I don&apos;t add it under the wrong region — it&apos;s held in a &quot;Pending&quot; list (Setup → Settings) until you activate that region, so nothing goes in as the wrong country.</p>
+              <p className="intro-box"><b>Account CoPilot</b> is an AI Agent that runs on its own every morning at <DailyRunLocalTime />. Everything I do follows the rules you set in <b>Setup → Define ICP</b>, a separate profile for each region: company size, type and industries, what counts as proof, what never to add, Pipeline priorities, buyer personas and how much to do each day. When you save a change, I apply it straight away and use it in the next morning&apos;s run. First I <b>find</b> new companies that could fit your Ideal Customer Profile (ICP) in each <b>active</b> region, using public web search, annual reports, stock-exchange filings, company websites and supplier portals, reputable business press, job posts and Seamless.ai. I look for group headquarters only, and skip ministries and government bodies, single hotels, hospitals and schools, and local branches of foreign groups. You can also ask for <b>one specific company</b> (Setup → Settings → Search companies → Add one specific company): the region you pick is only where the request is queued from — the next session researches the company&apos;s <b>real</b> country (its domain&apos;s country code is a strong signal) and adds it there, verifying it at no API cost and re-checking it every week until an official revenue figure is found. If its real region isn&apos;t Active yet, I don&apos;t add it under the wrong region — it&apos;s held in a &quot;Pending&quot; list (Setup → Settings) until you activate that region, so nothing goes in as the wrong country.</p>
               <p className="intro-box">Then I <b>verify</b> each company against your ICP for its region (today: <b>revenue of $250M or more and at least 100 staff</b>, UAE active; other Gulf markets, then Europe and USA, each with their own rules). I trust only the official sources you allow (annual reports, filings, company-quoted results) for Verified, above estimates. Every fact is labelled FACT, LIKELY or UNVERIFIED and linked to its source, so you can always see why an account is Verified, Likely, Needs check or Not ICP.</p>
               <p className="intro-box"><b>One record per company.</b> Before I add anything, I read the full list of accounts already in the app. The app then double-checks every new name and website against it, catching:
                 <ul>
@@ -109,7 +111,7 @@ export default async function GuidePage() {
 
               <h3>Daily 6AM Run Process</h3>
               <T head={["Step", "What happens"]} rows={[
-                ["When", "Every day at 6:00 am Dubai time, on its own"],
+                ["When", <>Every day at <DailyRunLocalTime />, on its own</>],
                 ["1 · Your queued jobs", "Anything you queued in Setup → Settings → Search companies runs first"],
                 ["2 · Find 5 new companies", "UAE companies that fit the ICP — group HQs only; no government bodies, single hotels / hospitals / schools or local branches of foreign groups; never one already in the app. Before adding, the app checks each name and website against every account (spelling variants, acronyms, group vs subsidiary) and skips duplicates; the agent then finds replacements"],
                 ["3 · Verify 25 companies", "The 5 new ones first, then 20 from the queue (largest first; re-checks every 180 days). Official sources first: annual report → parent / bond / rating → reputable press → estimates"],

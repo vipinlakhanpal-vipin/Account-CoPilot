@@ -44,7 +44,8 @@ const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("icp") }),
   z.object({ action: z.literal("watch"), slug: z.string().optional() }),
   z.object({ action: z.literal("log"), summary: z.string().max(1000), verified: z.number().int().min(0).default(0), new_companies: z.array(z.string()).max(100).default([]),
-    details: z.array(z.object({ name: z.string(), status: z.string(), revenue: z.string().optional().default("") })).max(60).optional().default([]) }),
+    details: z.array(z.object({ name: z.string(), status: z.string(), revenue: z.string().optional().default("") })).max(60).optional().default([]),
+    source: z.enum(["daily", "instant"]).optional() }),
 ]);
 type Job = { id: string; status: string; started_at?: string; done_at?: string; result?: string };
 type PendingCo = { id: string; name: string; website?: string; country: string; region: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; watch?: boolean; requested_at: string };
@@ -165,7 +166,7 @@ export async function POST(req: Request) {
   }
   // log → bell notification
   const l = await get<{ entries: unknown[] }>(db, "engine_log", { entries: [] });
-  l.entries.unshift({ at: now, summary: b.summary, verified: b.verified, new_companies: b.new_companies, details: b.details });
+  l.entries.unshift({ at: now, summary: b.summary, verified: b.verified, new_companies: b.new_companies, details: b.details, source: b.source });
   await put(db, "engine_log", { entries: l.entries.slice(0, 60) });
   return NextResponse.json({ ok: true });
 }

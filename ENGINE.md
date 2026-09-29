@@ -43,9 +43,11 @@ If `null`, do step 4. `count: "max"` = as many as you can in this session (aim f
   - **Region is Paused or Next phase** → do **not** add it yet. Run `node scripts/engine_client.mjs hold data/verification/new_companies.json` instead (same file format) —
     this queues it in the app (Settings → a "Pending — waiting for region activation" card) without creating a live account, until a Super Admin activates that region.
     Do not verify its revenue yet.
-  Finish with `finish <id> done "<Company>: added|held pending <region> activation|already in the app — <ICP status or 'queued until <region> is Active'>, <revenue or 'no official figure yet'>" <slug>`
-  (the slug makes a "View" link in the app; omit it for a held company — there is no account yet). Research and record it even if it looks below the ICP or its region is inactive
-  (the user asked for it); its status or hold note will say so.
+  Finish with `finish <id> done "<Company's correct legal/trading name> (<real region>): added|held pending activation|already in the app — <ICP status or 'queued until Active'>, <revenue or 'no official figure yet'>" <slug>`
+  — always name the **real** region right after the company's name in parentheses, in every case, even when it matches the job's original region (this is what the app's
+  Company Name column and job history parse to show the correct company and region, regardless of what was typed or which region box was used to search).
+  (The slug makes a "View" link in the app; omit it for a held company — there is no account yet.) Research and record it even if it looks below the ICP or its region
+  is inactive (the user asked for it); its status or hold note will say so.
 
 ## 3. Finish and notify
 `node scripts/engine_client.mjs finish <id> done "<N verified: X Verified, Y Likely, Z Needs check, W Not ICP; M new companies added>"`
@@ -53,8 +55,9 @@ If `null`, do step 4. `count: "max"` = as many as you can in this session (aim f
 1. Write `data/verification/run_details.json`: one row per company you checked or added this run (queued jobs and the daily batch together), in this exact shape:
    `[{"name":"<company>","status":"<ICP — Verified|ICP — Likely|ICP — Needs check|Not ICP|Unknown|Held (<region>)>","revenue":"<e.g. $51.8B, ~$625.6M (estimate), Below $250M, or '' if none found>"}]`
    This becomes the small table shown in the bell and in Settings → Scheduled run history — keep `revenue` short (one figure, no sentences).
-2. `node scripts/engine_client.mjs log "<one-line summary>" <verified_count> "<new company names separated by ;>"`
-   — this reads `run_details.json` automatically and posts both the summary and the table as the notification under the bell.
+2. `node scripts/engine_client.mjs log "<one-line summary>" <verified_count> "<new company names separated by ;>" <daily|instant>`
+   — the last argument is which routine you are (the daily 6am one, or the instant job runner — your own opening instructions say which); this reads `run_details.json`
+   automatically and posts the summary, the table and which kind of run it was as the notification under the bell.
 Do not commit or push anything and do not change app code.
 
 ## 4. Default daily work (always, after any queued jobs)
