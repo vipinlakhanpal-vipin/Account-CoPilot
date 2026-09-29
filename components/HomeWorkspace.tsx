@@ -167,10 +167,11 @@ export default function HomeWorkspace({ access }: { access: Access }) {
               <path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </button>
         </div>
-        {section === "wizard" && expanded && (
+        {expanded && (
           <ol className="hw-steps">
             {STEPS.map((s) => (
-              <li key={s.n}><button type="button" className={`hw-step ${s.cls}`} aria-current={step === s.n} onClick={() => setStep(s.n)}>
+              <li key={s.n}><button type="button" className={`hw-step ${s.cls}`} aria-current={step === s.n && section === "wizard"}
+                onClick={() => { setSection("wizard"); setStep(s.n); }}>
                 <span className="hw-step-num">{s.n}</span><Ico name={s.icon} />{s.label}</button></li>
             ))}
           </ol>
@@ -185,18 +186,18 @@ export default function HomeWorkspace({ access }: { access: Access }) {
               companies fitting your ICP, checks their numbers against official sources, and updates your database. Nothing here is invented: every
               figure carries a source and a confidence label.</p>
             <div className="hw-about-grid">
-              <div className="hw-about-card"><span className="hw-icon-badge"><Ico name="grid" /></span><h4>What each tab does</h4>
+              <div className="hw-about-card hw-about-card--teal"><span className="hw-icon-badge"><Ico name="grid" /></span><h4>What each tab does</h4>
                 <ul><li>Dashboard — the big picture, drill into any number</li><li>Accounts — every company, ICP status, Pipeline rank</li>
                   <li>Stakeholders — contacts, seniority, persona fit</li><li>Data — sources, conflicts, tech signals, research queue</li>
                   <li>Setup — Define ICP, engine settings, team access</li></ul></div>
-              <div className="hw-about-card"><span className="hw-icon-badge"><Ico name="coin" /></span><h4>Tokens &amp; cost</h4>
+              <div className="hw-about-card hw-about-card--gold"><span className="hw-icon-badge"><Ico name="coin" /></span><h4>Tokens &amp; cost</h4>
                 <p>Your <b>Claude plan</b> covers the daily run and anything you queue for free — no Anthropic key touched. The
                   <b> Anthropic API key</b> is only spent by Research Queue, Research more, Draft pitch and paid Refresh — each shows its cost
                   first, and a PIN can gate all of them.</p></div>
-              <div className="hw-about-card"><span className="hw-icon-badge"><Ico name="search" /></span><h4>How it verifies</h4>
+              <div className="hw-about-card hw-about-card--sky"><span className="hw-icon-badge"><Ico name="search" /></span><h4>How it verifies</h4>
                 <p><b>Find</b> candidates → <b>Check</b> official sources → <b>Verify</b> with a Fact / Likely / Unverified / Unknown label and a
                   source link → <b>Re-check</b> anything short of Verified on a schedule.</p></div>
-              <div className="hw-about-card"><span className="hw-icon-badge"><Ico name="target" /></span><h4>What &quot;ICP&quot; means</h4>
+              <div className="hw-about-card hw-about-card--green"><span className="hw-icon-badge"><Ico name="target" /></span><h4>What &quot;ICP&quot; means</h4>
                 <p>Net revenue ≥ $250M and ≥ 100 employees by default, no stock listing required — set per region in <b>Setup → Define ICP</b>, the
                   one rule set everything else reads.</p></div>
             </div>

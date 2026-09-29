@@ -1,11 +1,19 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.04";
+export const APP_VERSION = "2.05";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.05", date: "2026-09-29", notes: "Fixed the Setup Wizard chevron: clicking it alone did nothing when About was the active tab, so it only ever looked like it worked when clicked together with the 'Setup Wizard' label. Colour pass on everything still plain: the rail's About/Setup Wizard tabs, the top-of-page stat tiles, the About panel's 4 cards, and every one of the 7 step rows in the list, each now filled with its own light colour instead of a flat grey.",
+    changes: [
+      { what: "Fixed the expand/collapse chevron next to 'Setup Wizard' — the 7-step list's visibility was wrongly gated on the About/Setup Wizard tab also being active, so clicking the chevron alone while viewing About silently did nothing (only the arrow itself rotated). The list's visibility is now driven purely by the chevron's own expanded/collapsed state", where: "Home → left rail → Setup Wizard chevron", why: "Reported as 'the arrow just moves up and down, I have to click the literal word to make it work' — the arrow's rotation was misleading since nothing else responded to it" },
+      { what: "About Account CoPilot and Setup Wizard are now filled, rounded tabs (light teal, solid teal when active) instead of plain text rows with a bare icon", where: "Home → left rail", why: "Asked to look like proper cell-shaped tabs with colour, not plain rows" },
+      { what: "The two stat tiles at the top of Home (Companies tracked, Active regions) now have their own light fill (teal, green) instead of flat grey", where: "Home (top)", why: "Missed in an earlier colour pass" },
+      { what: "The 4 cards on the About panel (What each tab does, Tokens & cost, How it verifies, What ICP means) each now carry their own light colour instead of a uniform grey box", where: "Home → About Account CoPilot", why: "Same colour-everywhere pass extended to the last remaining plain surface in the About tab" },
+      { what: "Every one of the 7 steps in the Setup Wizard list now has a light fill in its category colour (not just the currently active one), with the active step filled solid", where: "Home → Setup Wizard, the step list", why: "Only the active step stood out before; the rest read as plain, inactive-looking text" },
+    ] },
   { version: "2.04", date: "2026-09-29", notes: "Data sources step no longer claims Lusha is connected (it wasn't — that was a mistake); it's now an honest, extendable inventory of what you actually subscribe to. 'Daily 6am run' wording replaced with plain 'daily run' throughout the app. Review step rewritten as a plain-English summary with a 'when will this be worth looking at' estimate. Daily plan step now asks whether you'll want paid profiling on top of the free daily pace, with real per-company / per-50 / per-100 cost examples.",
     changes: [
       { what: "Removed the false 'Lusha — connected' claim from Data sources — Lusha was never actually connected to this app, only Seamless.ai genuinely is (confirmed against lib/sources.ts and the verification scripts). The step is now framed as your own inventory: tick ZoomInfo, Crunchbase, Lusha, Dun & Bradstreet, Refinitiv or Thomson Reuters if you have them, each honestly labelled 'not connected to this app yet', plus a free-text field with an Add button so anything else you type becomes its own tickable item in the list, same as the rest", where: "Home → Setup Wizard → Data sources", why: "Showing something as connected when it isn't is actively misleading, not just an inaccuracy — caught after being asked to confirm what made it show that way" },
