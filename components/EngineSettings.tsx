@@ -129,10 +129,10 @@ export default function EngineSettings() {
             <tbody>{s.log.slice(0, 10).map((e) => <tr key={e.at}><td className="muted">{new Date(e.at).toLocaleString()}</td>
               <td className="wrap">
                 {e.details && e.details.length > 0 ? (<>
-                  <p className="note run-note">{e.summary}</p>
                   <table className="run-table"><thead><tr><th>Company</th><th>Status</th><th>Revenue</th><th>Activate region</th></tr></thead>
                     <tbody>{e.details.slice(0, 30).map((d, i) => <tr key={i}><td>{d.name}</td><td><span className={`tag ${statusTag(d.status)}`}>{d.status}</span></td><td className="muted">{d.revenue || "—"}</td>
-                      <td>{/^held/i.test(d.status) && <a className="job-link" href="/settings#engine-pending">Activate region →</a>}</td></tr>)}</tbody></table></>
+                      <td>{/^held/i.test(d.status) && <a className="job-link" href="/settings#engine-pending">Activate region →</a>}</td></tr>)}</tbody></table>
+                  <p className="note run-note">{e.summary}</p></>
                 ) : e.summary}
               </td>
               <td>{e.verified}</td>

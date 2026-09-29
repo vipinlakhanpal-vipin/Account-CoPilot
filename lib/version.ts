@@ -1,11 +1,16 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.88";
+export const APP_VERSION = "1.89";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.89", date: "2026-09-29", notes: "Run-details table now sits right below the timestamp, with the one-line summary as small print underneath it; the status pill is smaller so it fits the row cleanly.",
+    changes: [
+      { what: "The Company/Status/Revenue table now appears directly under the date and time, with the plain-language summary as smaller fine print below it — instead of the summary first and the table after", where: "Bell notifications; Setup → Settings → Scheduled run history", why: "The table is the structured, scannable part; the summary is just a caption for it, so it reads better underneath" },
+      { what: "The status pill (e.g. 'ICP — Verified') is smaller and fits cleanly within the row height", where: "Bell notifications; Setup → Settings → Scheduled run history", why: "It was taller than the row, standing out awkwardly" },
+    ] },
   { version: "1.88", date: "2026-09-29", notes: "6am is now shown in each viewer's own local time and zone, not a fixed 'UAE time' label. New Company name column shows the correct researched name and region, regardless of what was typed or searched from. Fixed: the Region column and account links now show the real region, not the search box's.",
     changes: [
       { what: "The daily run's time (Guide, bell, Settings) now shows in the viewer's own local time zone — e.g. someone in South Africa sees their own local equivalent, not UAE's — instead of a fixed '(UAE time)' label. The schedule itself hasn't changed (still a fixed 02:00 UTC), only how it's displayed", where: "Setup → Learn Me intro; top bar bell; Setup → Settings → Scheduled run history", why: "A fixed 'UAE time' label meant every viewer, wherever they are, had to do the timezone math themselves" },
