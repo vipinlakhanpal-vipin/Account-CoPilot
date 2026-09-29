@@ -411,13 +411,14 @@ aside.brief.contact{width:min(760px,100%);z-index:70}
 .bell-btn svg{width:17px;height:17px}.bell-dot{position:absolute;top:-4px;right:-4px;min-width:17px;height:17px;border-radius:999px;background:var(--red);color:var(--text-strong);font:700 10px var(--body);display:grid;place-items:center;padding:0 4px}
 .bell-pop{position:absolute;right:0;top:42px;width:340px;max-height:420px;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;z-index:40;box-shadow:0 12px 30px rgba(0,0,0,.4);display:flex;flex-direction:column;gap:8px}
 .bell-item{border-top:1px solid var(--line);padding-top:6px}.bell-item small{color:var(--muted);font-size:11px}.bell-item p{margin:3px 0;font-size:12.5px}.bell-item.new small{color:var(--ok-text)}
-.bell-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:4px}
-.bell-table th{text-align:left;color:var(--muted);font-weight:600;padding:2px 4px;border-bottom:1px solid var(--line)}
+.bell-note,.run-note{margin:2px 0 4px;font-size:11px}
+.bell-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:2px;border-radius:6px;overflow:hidden}
+.bell-table th{text-align:left;color:var(--text-strong);font-weight:700;padding:4px;background:rgba(var(--ink),.06);border-bottom:1px solid var(--line)}
 .bell-table td{padding:2px 4px;border-bottom:1px solid rgba(var(--ink),.06);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bell-table .tag{font-size:10px;padding:1px 6px}
-.run-table{width:100%;max-width:520px;border-collapse:collapse;font-size:12px;margin-top:6px}
-.run-table th{text-align:left;color:var(--muted);font-weight:600;padding:3px 6px;border-bottom:1px solid var(--line)}
-.run-table td{padding:3px 6px;border-bottom:1px solid rgba(var(--ink),.06)}
+.run-table{width:100%;max-width:520px;border-collapse:collapse;font-size:12px;margin-top:2px;border-radius:8px;overflow:hidden}
+.run-table th{text-align:left;color:var(--text-strong);font-weight:700;padding:4px 8px;background:rgba(var(--ink),.06);border-bottom:1px solid var(--line)}
+.run-table td{padding:4px 8px;border-bottom:1px solid rgba(var(--ink),.06)}
 .run-table .tag{font-size:11px}
 .eng-token{margin-top:8px;background:rgba(46,196,166,.1);border:1px solid rgba(46,196,166,.4);border-radius:10px;padding:10px}.eng-token pre{white-space:pre-wrap;word-break:break-all;font:12px var(--mono);margin:6px 0}
 .subtabs{padding:0}.subtabs-row{display:flex;gap:4px;width:max-content}
@@ -834,6 +835,11 @@ th .infotip{margin-left:3px}.infotip-btn{width:15px;height:15px;font-size:10px}
 .job-st.done{background:color-mix(in srgb, #2ECC8F 20%, transparent);color:#157A55}
 .job-st.error{background:color-mix(in srgb, #E06C75 20%, transparent);color:#B42318}
 .job-st.cancelled{background:rgba(var(--ink),.08);color:var(--muted)}
+.job-st.queued::before,.job-st.running::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:currentColor;margin-right:5px;animation:job-pulse 1.1s ease-in-out infinite}
+@keyframes job-pulse{0%,100%{opacity:1}50%{opacity:.2}}
+.btn-spin{display:inline-flex;align-items:center;gap:6px}
+.btn-spin::before{content:"";width:11px;height:11px;border-radius:50%;border:2px solid currentColor;border-top-color:transparent;animation:btn-spin-rotate .7s linear infinite}
+@keyframes btn-spin-rotate{to{transform:rotate(360deg)}}
 .job-link{font:600 12.5px var(--body);color:var(--teal)}
 .now-msg{margin:8px 0;padding:8px 12px;border-radius:10px;font:500 13px/1.5 var(--body)}
 .now-msg.ok{background:color-mix(in srgb, #3AA0FF 10%, var(--surface));border:1px solid color-mix(in srgb, #3AA0FF 35%, transparent)}

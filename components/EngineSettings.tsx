@@ -16,7 +16,7 @@ const statusTag = (s: string) => (/verified/i.test(s) ? "fact" : /likely/i.test(
 
 /** Next daily run: 02:00 UTC = 6:00am Dubai. */
 const nextRun = () => { const n = new Date(), t = new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate(), 2, 0, 0)); if (t <= n) t.setUTCDate(t.getUTCDate() + 1);
-  return t.toLocaleString("en-GB", { timeZone: "Asia/Dubai", weekday: "short", hour: "2-digit", minute: "2-digit" }) + " Dubai"; };
+  return t.toLocaleString("en-US", { timeZone: "Asia/Dubai", weekday: "short", hour: "2-digit", minute: "2-digit", hour12: true }) + " Dubai"; };
 const MODE: Record<string, string> = { company: "Add one specific company", verify: "Verify existing companies", discover: "Find new companies", both: "Verify existing + find new" };
 const money = (n: number) => `$${n.toFixed(2)}`;
 
@@ -53,6 +53,7 @@ export default function EngineSettings() {
   }
   const pinAsk = (s as { pin?: { ask_super?: boolean } } | null)?.pin?.ask_super;
   useEffect(() => { if (pinAsk !== undefined) setAskSuper(!!pinAsk); }, [pinAsk]);
+  const [queueBusy, setQueueBusy] = useState(false);
   const [bal, setBal] = useState("");
   const [newToken, setNewToken] = useState("");
   const load = () => fetch("/api/engine").then((x) => (x.ok ? x.json() : null)).then((j) => j && setS(j)).catch(() => {});
@@ -89,10 +90,12 @@ export default function EngineSettings() {
               <label>Website (optional)<input value={q.website} onChange={(e) => setQ({ ...q, website: e.target.value })} placeholder="e.g. almarai.com" /></label>
             </> : <>{q.mode === "discover" && <label className="eng-co"><span>Company name (optional)<InfoTip k="companyName" /></span><input value={q.company} onChange={(e) => setQ({ ...q, company: e.target.value })} placeholder="e.g. Almarai" /></label>}
               {!(q.mode === "discover" && q.company.trim()) && <label>How many<select value={q.count} onChange={(e) => setQ({ ...q, count: e.target.value })}>{["1", "5", "10", "30", "50", "max"].map((n) => <option key={n} value={n}>{n === "max" ? "Max (as many as a session can)" : n}</option>)}</select></label>}</>}
-            <button type="button" className="btn primary" disabled={q.mode === "company" && q.company.trim().length < 2}
-              onClick={() => { const specific = q.mode === "company" || (q.mode === "discover" && q.company.trim().length >= 2); post(specific ? { action: "queue", region: q.region, count: 1, mode: "company", company_name: q.company.trim(), website: q.website.trim() }
+            <button type="button" className="btn primary" disabled={queueBusy || (q.mode === "company" && q.company.trim().length < 2)}
+              onClick={async () => { const specific = q.mode === "company" || (q.mode === "discover" && q.company.trim().length >= 2); setQueueBusy(true);
+                await post(specific ? { action: "queue", region: q.region, count: 1, mode: "company", company_name: q.company.trim(), website: q.website.trim() }
                 : { action: "queue", region: q.region, count: q.count === "max" ? "max" : Number(q.count), mode: q.mode },
-                specific ? `Queued: ${q.company.trim()} (${q.region}) for the next run (${nextRun()}), free. The job below shows Waiting → In progress → Completed, with a link to the account.` : `Job queued for the next run (${nextRun()}).`); }}>{(q.mode === "company" || (q.mode === "discover" && q.company.trim())) ? "Queue (free)" : "Start"}</button>
+                specific ? `Queued: ${q.company.trim()} (${q.region}) for the next run (${nextRun()}), free. The job below shows Waiting → In progress → Completed, with a link to the account.` : `Job queued for the next run (${nextRun()}).`);
+                setQueueBusy(false); }}>{queueBusy ? <span className="btn-spin">Queuing…</span> : (q.mode === "company" || (q.mode === "discover" && q.company.trim())) ? "Queue (free)" : "Start"}</button>
             {(q.mode === "company" || (q.mode === "discover" && q.company.trim().length >= 2)) && (
               <button type="button" className="btn" onClick={runNow} title="Researches it now with the Anthropic API (≈ $0.55, asks for your PIN)">Run now (≈ $0.55)</button>)}
           </div>
@@ -108,9 +111,11 @@ export default function EngineSettings() {
           <div className="tablewrap"><table><thead><tr><th>When</th><th>Summary</th><th>Verified</th><th>New companies</th></tr></thead>
             <tbody>{s.log.slice(0, 10).map((e) => <tr key={e.at}><td className="muted">{new Date(e.at).toLocaleString()}</td>
               <td className="wrap">
-                {e.summary}
-                {e.details && e.details.length > 0 && <table className="run-table"><thead><tr><th>Company</th><th>Status</th><th>Revenue</th></tr></thead>
-                  <tbody>{e.details.slice(0, 30).map((d, i) => <tr key={i}><td>{d.name}</td><td><span className={`tag ${statusTag(d.status)}`}>{d.status}</span></td><td className="muted">{d.revenue || "—"}</td></tr>)}</tbody></table>}
+                {e.details && e.details.length > 0 ? (<>
+                  <p className="note run-note">{e.summary}</p>
+                  <table className="run-table"><thead><tr><th>Company</th><th>Status</th><th>Revenue</th></tr></thead>
+                    <tbody>{e.details.slice(0, 30).map((d, i) => <tr key={i}><td>{d.name}</td><td><span className={`tag ${statusTag(d.status)}`}>{d.status}</span></td><td className="muted">{d.revenue || "—"}</td></tr>)}</tbody></table></>
+                ) : e.summary}
               </td>
               <td>{e.verified}</td>
               <td className="wrap">{e.new_companies.join(", ") || "—"}</td></tr>)}</tbody></table></div></div>}

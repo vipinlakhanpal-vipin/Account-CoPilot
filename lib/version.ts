@@ -1,11 +1,17 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.82";
+export const APP_VERSION = "1.83";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.83", date: "2026-09-29", notes: "Clearer run-details table: the summary is now a small note above a proper table header; queuing a job shows a spinner and job status badges pulse while waiting or running; next-run time shows AM/PM.",
+    changes: [
+      { what: "The one-line summary above the run-details table is now a small caption, with the table's header row filled so it reads clearly as a table, not another line of text", where: "Bell notifications; Setup → Settings → Scheduled run history", why: "The summary and table looked like one run-on block of text" },
+      { what: "The Start/Queue button shows a spinner and 'Queuing…' while the request is in flight; Waiting and In progress status badges now pulse instead of sitting static", where: "Setup → Settings → 1 · Search companies", why: "There was no visual confirmation that clicking Start did anything, or that a job was still pending" },
+      { what: "'Next run' time now shows AM/PM (e.g. 'Wed 06:00 AM Dubai') instead of an ambiguous 24-hour-looking '6:00'", where: "Setup → Settings → job status", why: "'6:00' alone could be misread as evening" },
+    ] },
   { version: "1.82", date: "2026-09-29", notes: "Scheduled run notifications (bell and Scheduled run history) show a small table of companies checked with status and revenue, instead of one paragraph. Contact tiers: each tier row has its own light colour.",
     changes: [
       { what: "The bell and Scheduled run history now show a compact table per run — Company, Status (Verified / Likely / Needs check / Not ICP), Revenue — alongside the one-line summary", where: "Top bar bell; Setup → Settings → Scheduled run history", why: "A wall of text was hard to scan; a small table shows exactly what was checked and found at a glance" },
