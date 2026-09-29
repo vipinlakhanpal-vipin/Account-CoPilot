@@ -26,6 +26,24 @@ export async function savePin(pin: string | null, askSuper: boolean, by: string)
   return error ? error.message : ""; // "" = saved
 }
 
+/** Shared PIN check against settings.paid_pin. missingMsg/wrongMsg let callers phrase the reason (cost vs. a sensitive setting). */
+async function checkPin(req: Request, user: User, body: { pin?: unknown } | undefined, missingMsg: string, wrongMsg: string): Promise<NextResponse | null> {
+  const st = await pinSetting();
+  if (!st.hash || !st.salt) return null; // no PIN ever set — nothing to check against (page-level access control still applies)
+  const key = user.id, f = fails.get(key);
+  if (f && f.until > Date.now()) return NextResponse.json({ needPin: true, error: "Too many wrong PINs. Try again in 15 minutes." }, { status: 429 });
+  const pin = String(req.headers.get("x-paid-pin") || body?.pin || "").trim();
+  if (!pin) return NextResponse.json({ needPin: true, error: missingMsg }, { status: 403 });
+  const ok = timingSafeEqual(Buffer.from(hashPin(pin, st.salt), "hex"), Buffer.from(st.hash, "hex"));
+  if (!ok) {
+    const n = (f?.n || 0) + 1;
+    fails.set(key, { n, until: n >= 5 ? Date.now() + 15 * 60_000 : 0 });
+    return NextResponse.json({ needPin: true, error: n >= 5 ? "Too many wrong PINs. Try again in 15 minutes." : wrongMsg }, { status: 403 });
+  }
+  fails.delete(key);
+  return null;
+}
+
 /** null = allowed; otherwise the response to return (403 with needPin so the app can ask for the PIN). */
 export async function requirePaidApproval(req: Request, user: User, body?: { pin?: unknown }): Promise<NextResponse | null> {
   const access = await getAccess(user);
@@ -33,18 +51,14 @@ export async function requirePaidApproval(req: Request, user: User, body?: { pin
   const need = !access.isSuper || !!st.ask_super;
   if (!need) return null;
   if (!st.hash || !st.salt) return NextResponse.json({ needPin: false, error: "Paid actions are switched off: a Super Admin needs to set the paid-actions PIN in Setup → Settings first." }, { status: 403 });
-  const key = user.id, f = fails.get(key);
-  if (f && f.until > Date.now()) return NextResponse.json({ needPin: true, error: "Too many wrong PINs. Try again in 15 minutes." }, { status: 429 });
-  const pin = String(req.headers.get("x-paid-pin") || body?.pin || "").trim();
-  if (!pin) return NextResponse.json({ needPin: true, error: "This action uses the Anthropic API. Enter the paid-actions PIN to continue." }, { status: 403 });
-  const ok = timingSafeEqual(Buffer.from(hashPin(pin, st.salt), "hex"), Buffer.from(st.hash, "hex"));
-  if (!ok) {
-    const n = (f?.n || 0) + 1;
-    fails.set(key, { n, until: n >= 5 ? Date.now() + 15 * 60_000 : 0 });
-    return NextResponse.json({ needPin: true, error: n >= 5 ? "Too many wrong PINs. Try again in 15 minutes." : "Wrong PIN. Nothing was spent." }, { status: 403 });
-  }
-  fails.delete(key);
-  return null;
+  return checkPin(req, user, body, "This action uses the Anthropic API. Enter the paid-actions PIN to continue.", "Wrong PIN. Nothing was spent.");
+}
+
+/** For sensitive but free settings (e.g. Contact tiers, which now drives live research classification): always asks for the
+ * PIN if one is set, regardless of the "ask Super Admins too" toggle (that toggle is about API spend, not this). If no PIN
+ * has ever been set, this is a no-op — the page's own Super-Admin-only access is the only gate until one is configured. */
+export async function requirePin(req: Request, user: User, body?: { pin?: unknown }): Promise<NextResponse | null> {
+  return checkPin(req, user, body, "This changes what live research classifies contacts as. Enter the paid-actions PIN to continue.", "Wrong PIN. Nothing was saved.");
 }
 /** Fingerprint for logs (never the PIN itself). */
 export const pinHint = (pin: string) => createHash("sha256").update(pin).digest("hex").slice(0, 6);

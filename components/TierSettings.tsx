@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { supabaseBrowser } from "@/lib/supabase/browser";
+import { paidFetch, notify } from "@/components/Confirm";
 
 type Tier = { tier: string; label: string; examples: string };
 
@@ -9,8 +9,10 @@ export default function TierSettings({ initial }: { initial: Tier[] }) {
   const [msg, setMsg] = useState("");
   const set = (i: number, k: keyof Tier, v: string) => setTiers(tiers.map((t, j) => (j === i ? { ...t, [k]: v } : t)));
   async function save() {
-    const { error } = await supabaseBrowser().from("settings").upsert({ key: "contact_tiers", value: tiers, updated_at: new Date().toISOString() });
-    setMsg(error ? `Could not save: ${error.message}` : "Saved.");
+    const res = await paidFetch("/api/tiers", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tiers }) },
+      "Saving Contact tiers", undefined, "Contact tiers now drive live research classification. Enter the paid-actions PIN to save this change.");
+    const j = await res.json().catch(() => ({}));
+    if (res.ok) { setMsg("Saved."); notify("Contact tiers saved.", "ok"); } else { const t = j.error || "Could not save."; setMsg(t); notify(t, "error"); }
   }
   return (
     <section className="view">

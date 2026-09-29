@@ -1,11 +1,16 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.91";
+export const APP_VERSION = "1.92";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.92", date: "2026-09-29", notes: "Saving Contact tiers now asks for the paid-actions PIN, since a change here immediately changes how live research classifies every contact going forward.",
+    changes: [
+      { what: "Clicking 'Save tiers' now asks for the paid-actions PIN (if one is set) before saving — same PIN used everywhere else in the app, reused here for a sensitive setting rather than an API cost", where: "Setup → Settings → Contact tiers", why: "Since v1.91, editing tiers directly changes how the research engine classifies contacts on every run — this needed the same protection as other consequential actions" },
+      { what: "If no paid-actions PIN has ever been set, saving tiers works exactly as before (page access is already Super-Admin-only) — the PIN only applies once one exists", where: "Behind the scenes", why: "So this doesn't lock anyone out before a PIN has been configured" },
+    ] },
   { version: "1.91", date: "2026-09-29", notes: "Contact tiers now actually drive research: every research run (Research Queue, Research more, Refresh) reads your current tier titles and descriptions live, instead of a fixed internal copy.",
     changes: [
       { what: "The research extractor now reads Setup → Settings → Contact tiers directly from the database on every run and uses your current titles and example titles to classify each contact — before, it always used a fixed internal copy that ignored anything typed here", where: "Every paid research run: Research Queue, Research more, Refresh, and the account page's Research again", why: "Editing tiers had no effect anywhere; now it changes who gets classified into which tier on the very next research run" },
