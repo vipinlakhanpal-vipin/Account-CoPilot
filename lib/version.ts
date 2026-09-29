@@ -1,11 +1,18 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.96";
+export const APP_VERSION = "1.97";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.97", date: "2026-09-29", notes: "New Home tab: a plain-English orientation to Account CoPilot (what it is, every tab explained, tokens & API costs, the find/check/verify process, what ICP means) plus a Setup Wizard that configures your real Define ICP settings step by step.",
+    changes: [
+      { what: "New 'Home' tab, first in the main nav — explains Account CoPilot as an autonomous AI Agent, what every other tab does, the difference between your Claude plan (free) and the Anthropic API (paid actions), how it finds/checks/verifies companies, and what ICP means, all in plain English", where: "Home (new, first tab)", why: "There was no single starting point for a new user to understand what this Agent does before diving into a specific tab" },
+      { what: "Setup Wizard on the Home page: a 7-step guided flow (region, existing data or not, company size, who you're targeting, data sources, daily plan, review) that reads and writes the exact same Define ICP settings the advanced editor uses — no separate config to drift out of sync. Re-opening it always shows your current settings, so editing and re-running is just opening it again", where: "Home → Setup Wizard", why: "Define ICP's full editor is powerful but dense for a first-time setup; the wizard is a guided, plain-English path to the same real settings" },
+      { what: "Data-source step lists what's actually connected today (Seamless.ai, Lusha) and what's available pending your authorization (ZoomInfo, Crunchbase, as Claude connectors), plus a free-text field for anything else (e.g. Refinitiv, Dun & Bradstreet) — this step is informational only and isn't saved, since there's no live integration for those yet", where: "Home → Setup Wizard → Data sources", why: "Honest about what can actually be connected today versus what's just a stated preference" },
+      { what: "Buyer personas now include HR (department) and CHRO (role), and Logistics as its own department, alongside the existing Procurement/Finance/IT/Supply chain options", where: "Setup → Define ICP → Buyer personas; Home → Setup Wizard → Who you're after", why: "The wizard's domain-targeting question (Finance, Procurement/S2P, Supply chain, Logistics, HR, Technology, ERP-buying signals) needed HR and Logistics represented, which didn't exist before" },
+    ] },
   { version: "1.96", date: "2026-09-29", notes: "Scheduled run history now says plainly that Run status tags itself automatically from here on — older runs just show '—'. Also backfilled the two most recent instant-search runs (Egyptian Refining Company, Sukoon Insurance) with the correct badge.",
     changes: [
       { what: "A note under 'Scheduled run history': every run from here on tags itself automatically as Daily or Instant, no extra step; runs from before this existed show '—'", where: "Setup → Settings → Scheduled run history", why: "So it's clear this is automatic going forward, not something that needs to be set up or repeated" },

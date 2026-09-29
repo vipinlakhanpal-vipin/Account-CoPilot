@@ -11,6 +11,7 @@ import { APP_VERSION } from "@/lib/version";
 
 // Main tabs with sub-tabs underneath (Coupa-style). A main tab opens its first sub-tab.
 const GROUPS: { label: string; items: [string, string][] }[] = [
+  { label: "Home", items: [["/home", "Home"]] },
   { label: "Dashboard", items: [["/", "Dashboard"]] },
   { label: "Accounts", items: [["/?tab=pipeline", "Pipeline"], ["/?tab=accounts", "Accounts"], ["/?tab=signals", "S2P Signals"], ["/?tab=erp", "ERP & Apps"]] },
   { label: "Stakeholders", items: [["/?tab=stakeholders", "Stakeholders"]] },
@@ -26,7 +27,7 @@ const Spin = () => (
 const TAB_LABEL: Record<string, string> = { pipeline: "Pipeline", accounts: "Accounts", stakeholders: "Stakeholders", signals: "S2P Signals", erp: "ERP & Apps",
   conflicts: "Conflicts", sources: "Sources" };
 
-const PAGE_LABEL: Record<string, string> = { "/research": "Research Queue", "/settings": "Settings", "/guide": "Learn Me", "/icp": "Define ICP", "/team": "Team" };
+const PAGE_LABEL: Record<string, string> = { "/research": "Research Queue", "/settings": "Settings", "/guide": "Learn Me", "/icp": "Define ICP", "/team": "Team", "/home": "Home" };
 
 // Rendered once in the root layout, so it stays put across page changes (no rebuild, no jump).
 export default function Header({ subtitle }: { subtitle: string }) {

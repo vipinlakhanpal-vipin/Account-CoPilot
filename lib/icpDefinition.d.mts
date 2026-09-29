@@ -23,6 +23,7 @@ export const REGIONS: { key: string; name: string; countries: string[]; currency
 export const OPTIONS: {
   status: [string, string][]; listing: [string, string][]; entity: [string, string][]; ownership: string[]; industries: string[]; verifiedSources: string[];
   platforms: string[]; erp: string[]; triggers: string[]; departments: string[]; seniority: string[]; roles: string[];
+  domains: { key: string; label: string; department: string; extraTriggers?: string[] }[];
 };
 export const DEFAULT_RULES: Rules;
 export function defaultDefinition(): Definition;
