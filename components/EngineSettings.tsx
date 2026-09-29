@@ -130,8 +130,8 @@ export default function EngineSettings() {
               <td>{j.status === "queued" && <button type="button" className="btn tiny ghost" onClick={() => post({ action: "cancel", id: j.id }, "Job cancelled.")}>Cancel</button>}</td></tr>; })}</tbody></table></div>}
         </div>
 
-        {s?.log && s.log.length > 0 && <div className="eng-card"><div className="eng-head"><h3>Scheduled run history</h3><span className="tag fact">Daily Run — {dailyRunLocal()}</span></div>
-          <div className="tablewrap"><table><thead><tr><th>When</th><th>Summary</th><th>Verified</th><th>New companies</th><th>Activate Region</th><th>Run status</th></tr></thead>
+        {s?.log && s.log.length > 0 && <div className="eng-card"><div className="eng-head"><h3>Scheduled run history</h3></div>
+          <div className="tablewrap"><table><thead><tr><th>When</th><th>Summary</th><th>Activate Region</th><th>Verified</th><th>New companies</th><th>Run status</th></tr></thead>
             <tbody>{s.log.slice(0, 10).map((e) => { const held = e.details?.filter((d) => /^held/i.test(d.status)) || [];
               return <tr key={e.at}><td className="muted">{new Date(e.at).toLocaleString()}</td>
               <td className="wrap">
@@ -141,10 +141,10 @@ export default function EngineSettings() {
                   <p className="note run-note">{e.summary}</p></>
                 ) : e.summary}
               </td>
+              <td>{held.map((d, i) => <div key={i}><a className="job-link" href="/settings#engine-pending">Activate {d.status.replace(/^held \(|\)$/gi, "")} →</a></div>)}</td>
               <td>{e.verified}</td>
               <td className="wrap">{e.new_companies.join(", ") || "—"}</td>
-              <td>{held.map((d, i) => <div key={i}><a className="job-link" href="/settings#engine-pending">Activate {d.status.replace(/^held \(|\)$/gi, "")} →</a></div>)}</td>
-              <td className="muted">{e.source === "instant" ? "Instant Search Run" : e.source === "daily" ? `Daily Run — ${dailyRunLocal()}` : "—"}</td></tr>; })}</tbody></table></div></div>}
+              <td>{e.source === "instant" ? <span className="run-badge instant">Instant search run</span> : e.source === "daily" ? <span className="run-badge daily">Daily run — {dailyRunLocal()}</span> : <span className="muted">—</span>}</td></tr>; })}</tbody></table></div></div>}
 
         {s?.pending && s.pending.length > 0 && <div className="eng-card" id="engine-pending">
           <div className="eng-head"><h3>Waiting for region activation</h3><span className="tag unv">{s.pending.length}</span></div>
