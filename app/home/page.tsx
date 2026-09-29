@@ -43,14 +43,10 @@ export default async function HomePage() {
               <path d="M12 21s7-7.58 7-12a7 7 0 0 0-14 0c0 4.42 7 12 7 12z" /><circle cx="12" cy="9" r="2.4" /></svg>
             Active regions</div><div style={{ fontSize: 24, fontWeight: 500 }}>{activeCount} of {regionStats.length}</div></div>
         </div>
-        {needsSetup.length > 0 && <div style={{ marginTop: 10 }}>
-          <p className="note">
-            {needsSetup.length === regionStats.length ? "None of your regions are fully set up yet — use the Setup Wizard below to get started." : "Not fully set up yet (paused, or no companies tracked) — use the Setup Wizard below to get started:"}
-          </p>
-          {needsSetup.length !== regionStats.length && <div className="roles" style={{ marginTop: 6 }}>
-            {needsSetup.map((r) => <span key={r.key} className="tag likely">{r.name}</span>)}
-          </div>}
-        </div>}
+        {needsSetup.length > 0 && <p className="note" style={{ marginTop: 10 }}>
+          {needsSetup.length === regionStats.length ? "None of your regions are fully set up yet." : `${needsSetup.length} of ${regionStats.length} regions aren't fully set up yet (paused, or no companies tracked).`}{" "}
+          Open Setup Wizard below — step 1 shows exactly which ones.
+        </p>}
       </section>
 
       <HomeWorkspace access={access} />

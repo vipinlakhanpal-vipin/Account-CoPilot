@@ -1,11 +1,19 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.00";
+export const APP_VERSION = "2.01";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.01", date: "2026-09-29", notes: "Home workspace polish: the rail's icons were rendering oversized (a missing CSS size rule) — fixed, resized, and given nicer icons in colored badges. Setup Wizard step 1's region list is now a clickable colored pill row instead of a plain checkbox grid; Back and Next are now filled, colored buttons; and the Existing-data Yes/No explainer cards now carry their own light colors instead of a plain grey box.",
+    changes: [
+      { what: "Fixed oversized rail icons (About Account CoPilot / Setup Wizard) — they had no CSS size rule so the browser rendered them at default size; now a proper 16px default plus dedicated 32px colored icon badges, and the icons themselves replaced with a book (About) and a wand (Setup Wizard) instead of a generic info circle and sliders", where: "Home → left rail", why: "The icons were rendering many times larger than the text next to them, and the previous glyphs were generic and forgettable" },
+      { what: "Setup Wizard step 1's region list is now a row of clickable colored pills instead of a checkbox grid — selected regions fill solid teal, unselected stay light, next-phase regions (Europe, United States) are shown disabled; sits right above the Back/Next row", where: "Home → Setup Wizard → Region", why: "The checkbox grid looked plain and gave no strong visual read of what was selected; a filled pill makes the selection unmistakable at a glance" },
+      { what: "Back and Next are now filled, coloured buttons (Next in the primary teal) throughout the wizard, instead of a plain outline pair", where: "Home → Setup Wizard, every step", why: "The outline buttons read as inactive/disabled; filled buttons make it obvious they're the way to move through the wizard" },
+      { what: "The 'If Yes' / 'If No' explainer cards on step 2 now carry their own light colour fill (green for Yes, sky-blue for No) with a coloured outline on whichever is currently selected, instead of a plain grey box with a thin border on the side", where: "Home → Setup Wizard → Existing data", why: "The thin left-border was easy to miss; a full light fill makes each option and the current selection obvious immediately" },
+      { what: "Removed the row of chips listing not-yet-active regions from the top of Home (it duplicated, and looked worse than, the same information now shown live as pills in Setup Wizard step 1); replaced with one summary line", where: "Home (top)", why: "Two separate region lists on one page — a static one up top and a live one in the wizard — was redundant and the top one didn't look good" },
+    ] },
   { version: "2.00", date: "2026-09-29", notes: "Master Book's HubSpot Deals sheet now only lists deals from January 2025 onward, dropping stale deals from mid-2024 and earlier.",
     changes: [
       { what: "HubSpot Deals sheet filters out any deal whose close date is before 2025-01-01 (deals with no close date yet, e.g. open pipeline, are still kept); the sheet's caption now states the cutoff", where: "Master Book export → HubSpot Deals sheet", why: "The sheet was showing deals as old as June 2024, cluttering it with closed business no longer relevant to current outreach" },

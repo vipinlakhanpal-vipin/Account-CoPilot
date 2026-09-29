@@ -21,8 +21,8 @@ const ICON = {
   database: (<><ellipse cx="12" cy="5" rx="7" ry="2.6" /><path d="M5 5v6c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6V5" /><path d="M5 11v6c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6v-6" /></>),
   calendar: (<><rect x="3.5" y="5" width="17" height="16" rx="1.5" /><path d="M3.5 9.5h17M8 3v4M16 3v4" /></>),
   clipboard: (<><rect x="5.5" y="4" width="13" height="17" rx="1.5" /><path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1" /><path d="M9 12.5l2 2 4-4.5" /></>),
-  info: (<><circle cx="12" cy="12" r="9" /><path d="M12 11v6" /><circle cx="12" cy="7.6" r="1.1" fill="currentColor" stroke="none" /></>),
-  sliders: (<><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h13" /><circle cx="16" cy="6" r="2" /><circle cx="8" cy="12" r="2" /><circle cx="17" cy="18" r="2" /></>),
+  book: (<><path d="M12 6c-2.5-1.2-5.2-1.2-7 0v12c1.8-1.2 4.5-1.2 7 0z" /><path d="M12 6c2.5-1.2 5.2-1.2 7 0v12c-1.8-1.2-4.5-1.2-7 0z" /><path d="M12 6v12" /></>),
+  wand: (<><path d="M4.5 19.5L14 10" /><path d="M17.5 2.2 18.6 4.4 20.8 5.5 18.6 6.6 17.5 8.8 16.4 6.6 14.2 5.5 16.4 4.4Z" fill="currentColor" stroke="none" /><path d="M19 13.3 19.6 14.4 20.7 15 19.6 15.6 19 16.7 18.4 15.6 17.3 15 18.4 14.4Z" fill="currentColor" stroke="none" /><path d="M7 3 7.6 4 7 5 6.4 4Z" fill="currentColor" stroke="none" /></>),
   grid: (<><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1.2" /><rect x="13" y="3.5" width="7.5" height="7.5" rx="1.2" /><rect x="3.5" y="13" width="7.5" height="7.5" rx="1.2" /><rect x="13" y="13" width="7.5" height="7.5" rx="1.2" /></>),
   coin: (<><circle cx="12" cy="12" r="8.5" /><path d="M12 7.5v9M9.3 9.7c0-1.2 1.2-2 2.7-2s2.7.8 2.7 2c0 2.6-5.4 1.4-5.4 4 0 1.2 1.2 2 2.7 2s2.7-.8 2.7-2" /></>),
   search: (<><circle cx="10.5" cy="10.5" r="6.5" /><path d="M15.3 15.3L21 21" /><path d="M7.5 10.5l2 2 3.5-4" /></>),
@@ -133,10 +133,10 @@ export default function HomeWorkspace({ access }: { access: Access }) {
     <section className="panel hw">
       <nav className="hw-rail">
         <button type="button" className="hw-rail-item" aria-current={section === "about"} onClick={() => setSection("about")}>
-          <Ico name="info" />About Account CoPilot</button>
+          <span className="hw-rail-icon"><Ico name="book" /></span>About Account CoPilot</button>
         <div className="hw-rail-row">
           <button type="button" className="hw-rail-item" aria-current={section === "wizard"} onClick={() => { setSection("wizard"); setExpanded(true); }}>
-            <Ico name="sliders" />Setup Wizard</button>
+            <span className="hw-rail-icon"><Ico name="wand" /></span>Setup Wizard</button>
           <button type="button" className="hw-chevron" aria-expanded={expanded} aria-label={expanded ? "Collapse the 7 steps" : "Expand the 7 steps"}
             onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}>
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" style={{ transition: "transform .18s ease", transform: expanded ? "none" : "rotate(-90deg)" }}>
@@ -187,14 +187,16 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                     sources and daily plan — are set once and applied to each region checked below. You can always come back and run the wizard again
                     for just one region.</p>
                 </div>
-                <div className="hw-region-grid">
+                <p className="note" style={{ marginBottom: 8 }}>Selected regions are highlighted below — click any region to add or remove it.</p>
+                <div className="hw-pillrow">
                   {visibleRegions.map((r) => {
                     const nextPhase = def.regions[r.key]?.status === "next";
+                    const on = regions.includes(r.key);
                     return (
-                      <label key={r.key} className={`hw-region-check ${nextPhase ? "dim" : ""}`}>
-                        <input type="checkbox" checked={regions.includes(r.key)} onChange={() => toggleRegion(r.key)} />
+                      <button key={r.key} type="button" className={`hw-pill hw-region-pill ${on ? "on" : ""}`} disabled={nextPhase}
+                        aria-pressed={on} onClick={() => toggleRegion(r.key)}>
                         {r.name}{nextPhase ? " (next phase)" : ""}
-                      </label>
+                      </button>
                     );
                   })}
                 </div>
@@ -214,11 +216,11 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                   <button type="button" className={`hw-pill ${hasList === "no" ? "on" : ""}`} onClick={() => setHasList("no")}>No — help me build one from scratch</button>
                 </div>
                 <div className="hw-about-grid" style={{ marginTop: 14 }}>
-                  <div className="hw-about-card" style={{ borderLeft: hasList === "yes" ? "3px solid var(--sig-vs)" : undefined }}>
+                  <div className={`hw-about-card hw-yesno-yes ${hasList === "yes" ? "selected" : ""}`}>
                     <h4>If Yes {hasList === "yes" && <span className="note">— selected</span>}</h4>
                     <p>Send it over and it&apos;s imported exactly as-is, the same way the UAE workbook was. Nothing in it is overwritten — the daily
                       engine only adds new rows or fills in its own fields (revenue checks, ICP status), and explains any difference it finds.</p></div>
-                  <div className="hw-about-card" style={{ borderLeft: hasList === "no" ? "3px solid var(--sig-vs)" : undefined }}>
+                  <div className={`hw-about-card hw-yesno-no ${hasList === "no" ? "selected" : ""}`}>
                     <h4>If No {hasList === "no" && <span className="note">— selected</span>}</h4>
                     <p>No problem — the free daily engine can build your list from nothing, using its own web search. It just starts at a slower pace
                       until it has found and verified enough companies to feel complete; you&apos;ll set that pace in step 6.</p></div>
@@ -333,8 +335,8 @@ export default function HomeWorkspace({ access }: { access: Access }) {
             )}
 
             <div className="row-actions" style={{ marginTop: 18 }}>
-              {step > 1 && <button type="button" className="btn ghost" onClick={() => setStep((s) => s - 1)}>Back</button>}
-              {step < 7 && <button type="button" className="btn" onClick={() => setStep((s) => s + 1)}>Next</button>}
+              {step > 1 && <button type="button" className="btn" onClick={() => setStep((s) => s - 1)}>Back</button>}
+              {step < 7 && <button type="button" className="btn primary" onClick={() => setStep((s) => s + 1)}>Next</button>}
             </div>
           </div>
         )}
