@@ -5,7 +5,7 @@ import Header from "@/components/Header";
 import ConfirmHost from "@/components/Confirm";
 import { supabaseServer } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Account CoPilot", description: "B2B procurement intelligence" };
+export const metadata: Metadata = { title: "Account CoPilot", description: "AI Autonomous Agent for Account Intelligence" };
 
 /** Light header subtitle: account count and last update (cheap queries; blank if not signed in). */
 async function subtitle() {
@@ -13,9 +13,9 @@ async function subtitle() {
     const sb = await supabaseServer();
     const { count } = await sb.from("companies").select("id", { count: "exact", head: true });
     const { data } = await sb.from("companies").select("updated_at").order("updated_at", { ascending: false }).limit(1);
-    if (!count) return "B2B procurement intelligence";
-    return `B2B procurement intelligence · ${count} accounts · data updated ${String(data?.[0]?.updated_at || "").slice(0, 10)}`;
-  } catch { return "B2B procurement intelligence"; }
+    if (!count) return "AI Autonomous Agent for Account Intelligence";
+    return `AI Autonomous Agent for Account Intelligence · ${count} accounts · data updated ${String(data?.[0]?.updated_at || "").slice(0, 10)}`;
+  } catch { return "AI Autonomous Agent for Account Intelligence"; }
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

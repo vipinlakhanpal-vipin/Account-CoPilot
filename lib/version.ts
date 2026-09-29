@@ -1,11 +1,15 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.17";
+export const APP_VERSION = "2.18";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.18", date: "2026-09-30", notes: "Header tagline changed from 'B2B procurement intelligence' to 'AI Autonomous Agent for Account Intelligence' — leads with what actually makes the engine different (it runs itself) instead of the generic category name.",
+    changes: [
+      { what: "The line under the logo (and the page's own description metadata) now reads 'AI Autonomous Agent for Account Intelligence' instead of 'B2B procurement intelligence'", where: "Every page, top-left under the Account CoPilot logo", why: "The old line described a category anyone in this space could claim; the new one names the actual differentiator" },
+    ] },
   { version: "2.17", date: "2026-09-30", notes: "Fixed the page jumping when switching between Setup Wizard steps — the content pane now holds a steady minimum height instead of collapsing and expanding as each step's content changes length. Also clarified exactly where 'Research more' lives (the left panel on the Dashboard page).",
     changes: [
       { what: "The wizard's content pane now has a set minimum height, so switching between a short step (e.g. Existing data) and a tall one (e.g. Company size) no longer collapses or expands the pane and shifts the page around it", where: "Home → Setup Wizard, every step", why: "Reported as the tabs 'jumping' when clicked — caused by the pane reflowing to fit each step's very different content length" },
