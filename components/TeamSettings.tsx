@@ -101,8 +101,10 @@ export default function TeamSettings() {
               <td><span className={`role-tag ${u.role}`}>{ROLE[u.role]}</span></td>
               <td>{u.role === "super_admin" ? "All regions" : u.regions.join(", ") || "Not set"}</td>
               <td>{x ? <div className="team-edit"><AccessPicker role={x.role} regions={x.regions} onChange={(r, g) => setEdit((m) => ({ ...m, [u.id]: { role: r, regions: g } }))} />
-                  <button type="button" className="btn primary" onClick={() => saveAccess(u)}>Save</button>
-                  <button type="button" className="btn" onClick={() => setEdit((m) => { const n = { ...m }; delete n[u.id]; return n; })}>Cancel</button></div>
+                  <div className="team-edit-actions">
+                    <button type="button" className="btn primary" onClick={() => saveAccess(u)}>Save</button>
+                    <button type="button" className="btn" onClick={() => setEdit((m) => { const n = { ...m }; delete n[u.id]; return n; })}>Cancel</button>
+                  </div></div>
                 : <button type="button" className="btn" onClick={() => setEdit((m) => ({ ...m, [u.id]: { role: u.role, regions: u.regions } }))}>Change</button>}</td>
               <td className="muted">{u.invited_by || "—"}</td><td className="mono">{new Date(u.created_at).toLocaleDateString()}</td>
               <td className="mono">{u.last_sign_in ? new Date(u.last_sign_in).toLocaleDateString() : "Not yet"}</td></tr>);

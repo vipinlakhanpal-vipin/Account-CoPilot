@@ -1,11 +1,15 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.11";
+export const APP_VERSION = "2.12";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.12", date: "2026-09-30", notes: "Simplified Team's 'Change access' row: Role, Region and the Save/Cancel buttons now stack vertically instead of being crammed side by side in a narrow table cell.",
+    changes: [
+      { what: "Clicking 'Change' next to a team member now shows Role, then Region, then Save/Cancel stacked one below the other, instead of all four squeezed into one horizontal row inside the table cell", where: "Setup → Team → Change access", why: "Four controls crammed sideways in a narrow cell read as cluttered and hard to follow; a vertical order is much clearer" },
+    ] },
   { version: "2.11", date: "2026-09-30", notes: "Fixed the region checklist in Setup → Team → Invite a colleague — a CSS rule meant for a different label elsewhere on the page was leaking into it, stacking each checkbox above its region name (both centred) instead of side by side.",
     changes: [
       { what: "Fixed a CSS specificity collision: '.team-access label' (meant for the Role/Region field labels) was also matching the checkbox rows inside the region picker dropdown, since they're nested inside the same .team-access wrapper — forcing them into a column layout instead of the checkbox-then-name row they were built as", where: "Setup → Team → Invite a colleague → Region(s) dropdown", why: "The dropdown's own CSS already specified a left-to-right row; an unrelated, equally-specific rule elsewhere on the page was silently overriding just the flex-direction property" },
