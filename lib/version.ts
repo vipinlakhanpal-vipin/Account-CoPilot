@@ -1,11 +1,16 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.01";
+export const APP_VERSION = "2.02";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.02", date: "2026-09-29", notes: "Setup Wizard's input and select fields now have a light colour fill instead of plain white boxes, and the minimum-revenue field shows a live $250M / $2.50B-style preview next to it as you type.",
+    changes: [
+      { what: "Every field in the Setup Wizard (revenue, employees, listing, entity, daily-plan numbers, other-subscription text) now has a light teal fill instead of a plain white box, with a teal focus ring", where: "Home → Setup Wizard, every step with inputs", why: "The plain white boxes looked flat against the rest of the wizard's colour-coded design" },
+      { what: "Minimum net revenue now shows a live formatted preview next to the input — $250M under a billion, $2.50B at or above 1000 (matching the same format already used in Setup → Define ICP's history log); the Review step's summary uses the same format", where: "Home → Setup Wizard → Company size, and → Review", why: "A raw number like '2500' doesn't read as a dollar figure at a glance; the same $M / $B convention already exists elsewhere in the app (summarizeRules), so this keeps it consistent rather than inventing a new format" },
+    ] },
   { version: "2.01", date: "2026-09-29", notes: "Home workspace polish: the rail's icons were rendering oversized (a missing CSS size rule) — fixed, resized, and given nicer icons in colored badges. Setup Wizard step 1's region list is now a clickable colored pill row instead of a plain checkbox grid; Back and Next are now filled, colored buttons; and the Existing-data Yes/No explainer cards now carry their own light colors instead of a plain grey box.",
     changes: [
       { what: "Fixed oversized rail icons (About Account CoPilot / Setup Wizard) — they had no CSS size rule so the browser rendered them at default size; now a proper 16px default plus dedicated 32px colored icon badges, and the icons themselves replaced with a book (About) and a wand (Setup Wizard) instead of a generic info circle and sliders", where: "Home → left rail", why: "The icons were rendering many times larger than the text next to them, and the previous glyphs were generic and forgettable" },

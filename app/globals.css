@@ -450,7 +450,11 @@ aside.brief.contact{width:min(760px,100%);z-index:70}
 .hw-about-card ul{margin:0;padding-left:16px;font-size:12.5px;color:var(--muted);line-height:1.65}
 .hw-field{display:flex;flex-direction:column;gap:5px;font-size:12.5px;font-weight:600;color:var(--text);margin-bottom:12px}
 .hw-field .hint{font-weight:400;color:var(--muted);font-size:11.5px}
-.hw-field select,.hw-field input[type="text"],.hw-field input[type="number"]{font:500 13px var(--body);background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:8px 11px;color:var(--text);width:100%;max-width:280px}
+.hw-field select,.hw-field input[type="text"],.hw-field input[type="number"]{font:500 13px var(--body);background:var(--accent-soft);border:1px solid transparent;border-radius:7px;padding:8px 11px;color:var(--text);width:100%;max-width:280px}
+.hw-field select:focus,.hw-field input:focus{outline:2px solid var(--teal);outline-offset:1px}
+.hw-field-row{display:flex;align-items:center;gap:10px}
+.hw-field-row input{max-width:180px}
+.hw-value-chip{font:700 13px var(--mono);color:var(--teal);background:var(--surface-2);border-radius:999px;padding:6px 13px;white-space:nowrap;font-variant-numeric:tabular-nums}
 .hw-pillrow{display:flex;flex-wrap:wrap;gap:8px;max-width:520px;margin-bottom:4px}
 .hw-pill{font:600 12px var(--body);padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface-2);color:var(--muted);cursor:pointer}
 .hw-pill:hover:not(:disabled){border-color:var(--teal);color:var(--text)}

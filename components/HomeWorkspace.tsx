@@ -33,6 +33,7 @@ function Ico({ name }: { name: keyof typeof ICON }) {
   return <svg className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{ICON[name]}</svg>;
 }
 const stepColor = (v: string): CSSProperties => ({ "--step-color": v } as CSSProperties);
+const usdM = (n: number) => (n >= 1000 ? `$${(n / 1000).toFixed(2).replace(/\.?0+$/, "")}B` : `$${n}M`);
 
 const STEPS: { n: number; label: string; icon: keyof typeof ICON; cls: string }[] = [
   { n: 1, label: "Region", icon: "pin", cls: "hw-step--region" },
@@ -237,7 +238,10 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                     automatically.</p>
                 </div>
                 <label className="hw-field">Minimum net revenue (USD millions)
-                  <input type="number" min={0} value={draft.revenue} onChange={(e) => setDraft((d) => ({ ...d, revenue: Number(e.target.value) || 0 }))} />
+                  <div className="hw-field-row">
+                    <input type="number" min={0} value={draft.revenue} onChange={(e) => setDraft((d) => ({ ...d, revenue: Number(e.target.value) || 0 }))} />
+                    <span className="hw-value-chip">{usdM(draft.revenue)}</span>
+                  </div>
                   <span className="hint">Most recent annual net revenue, converted to USD. $250M is a solid default for enterprise procurement deals
                     — raise it to focus only on the very largest accounts, lower it to widen the net.</span></label>
                 <label className="hw-field">Minimum employees
@@ -326,7 +330,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                 </div>
                 <ul className="hw-review-list">
                   <li>Regions <b>{regionNames.length ? regionNames.join(", ") : "none checked"}{activateNow ? " — will be Active" : ""}</b></li>
-                  <li>Company size <b>revenue ≥ ${draft.revenue}M, employees ≥ {draft.employees}</b></li>
+                  <li>Company size <b>revenue ≥ {usdM(draft.revenue)}, employees ≥ {draft.employees}</b></li>
                   <li>Targeting <b>{domains.length ? domains.map((k) => OPTIONS.domains.find((x) => x.key === k)?.label).join(", ") : "no change to current targeting"}</b></li>
                   <li>Daily plan <b>find {draft.discoverPerDay}, verify {draft.verifyPerDay} per day</b></li>
                 </ul>
