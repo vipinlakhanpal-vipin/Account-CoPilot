@@ -7,6 +7,7 @@ import ProfileMenu from "@/components/ProfileMenu";
 import EngineBell from "@/components/EngineBell";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useNewVersionInfo } from "@/components/useVersion";
+import { notify } from "@/components/Confirm";
 import { APP_VERSION } from "@/lib/version";
 
 // Main tabs with sub-tabs underneath (Coupa-style). A main tab opens its first sub-tab.
@@ -62,6 +63,23 @@ export default function Header({ subtitle }: { subtitle: string }) {
     setUpgrading(true);
     try { sessionStorage.setItem("upgradedTo", latest); } catch {}
     setTimeout(() => window.location.reload(), 900);
+  };
+  // The export builds the workbook fresh (not cached) and can take a few seconds — show progress so the click doesn't look dead.
+  const [downloading, setDownloading] = useState(false);
+  const downloadMasterBook = async () => {
+    if (downloading) return;
+    setDownloading(true);
+    try {
+      const res = await fetch("/api/export");
+      if (!res.ok) throw new Error(String(res.status));
+      const blob = await res.blob();
+      const name = /filename="?([^";]+)"?/.exec(res.headers.get("content-disposition") || "")?.[1] || "Account_CoPilot_Master_Book.xlsx";
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    } catch { notify("Could not download the Master Book. Try again.", "error"); }
+    setDownloading(false);
   };
   const path = usePathname();
   const params = useSearchParams();
@@ -162,9 +180,11 @@ export default function Header({ subtitle }: { subtitle: string }) {
             ))}
           </nav>
           <div className="nav-actions">
-            <a className="btn primary dl" href="/api/export" title="Download Master Book (.xlsx)">
-              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m0 0-3-3m3 3 3-3M3 13h10" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
-              <span>Master Book</span></a>
+            <button type="button" className="btn primary dl" onClick={downloadMasterBook} disabled={downloading} title="Download Master Book (.xlsx)">
+              {downloading ? <span className="btn-spin">Preparing…</span> : <>
+                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m0 0-3-3m3 3 3-3M3 13h10" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                <span>Master Book</span></>}
+            </button>
             <ThemeToggle />
             <ProfileMenu />
           </div>

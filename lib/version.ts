@@ -1,11 +1,18 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.98";
+export const APP_VERSION = "1.99";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.99", date: "2026-09-29", notes: "Home tab redesigned: About and Setup Wizard now live side by side in one workspace with a left rail, icon-led navigation, and a collapsible list of the wizard's 7 steps — each step explains what it does and why before you fill it in. The wizard can now set up several regions at once. Also: the Master Book download button now shows progress instead of appearing to do nothing.",
+    changes: [
+      { what: "Home tab rebuilt as one workspace (new HomeWorkspace component): a left rail switches between 'About Account CoPilot' and 'Setup Wizard', each filling the full content pane — replaces the old stack of separate About sections and a gated wizard", where: "Home", why: "The five separate About panels and a hidden-behind-a-button wizard read as disconnected pieces; one workspace with two clear destinations is easier to navigate and to return to" },
+      { what: "Setup Wizard's 7 steps now sit in a collapsible list under 'Setup Wizard' — click the row to expand or collapse it — each with its own icon and colour (teal for region/size, gold for targeting, sky for sources/pace, neutral for review), and every step opens with a plain-English explanation of what it configures and why before showing the fields", where: "Home → Setup Wizard", why: "Steps 4 onward previously showed only a bare heading with no explanation; every step now gets the same clear, colour-coded treatment as the first three" },
+      { what: "Step 1 is now a multi-select checklist — tick several regions at once and the company size, targeting, data sources and daily plan you set apply to all of them in one save, instead of one region per pass", where: "Home → Setup Wizard → Region", why: "Configuring near-identical rules for multiple Gulf regions one at a time was repetitive; most regions start from the same defaults" },
+      { what: "Master Book download button now shows a 'Preparing…' spinner while the workbook is being built (it fetches the file itself and triggers the save, instead of a plain link) instead of appearing to do nothing for a few seconds", where: "Header → Master Book", why: "The export rebuilds the workbook fresh on every click and can take a few seconds; the button gave no feedback while that happened" },
+    ] },
   { version: "1.98", date: "2026-09-29", notes: "Home page and Setup Wizard improvements: live company/region stats and a setup-progress nudge at the top of Home, the Wizard's step pills are now clickable to jump to any step, and your Data sources answers are now saved and reloaded instead of forgotten on close.",
     changes: [
       { what: "Home page now opens with two live stats (companies tracked, active regions out of total) plus a note naming which regions still aren't fully set up (paused, or no companies tracked yet), pointing at the Setup Wizard below", where: "Home (top of page)", why: "Gives a returning user an at-a-glance read on where things stand, and nudges anyone with incomplete setup toward the wizard without them having to go looking" },
