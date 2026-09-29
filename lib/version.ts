@@ -1,11 +1,15 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.02";
+export const APP_VERSION = "2.03";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.03", date: "2026-09-29", notes: "Setup Wizard step 1 (Region) now shows a 'Selected: …' summary line under the region pills, matching step 4's (Who you're after) layout for symmetry.",
+    changes: [
+      { what: "Step 1 now shows 'Selected: <region names>' below the region pill row, the same pattern step 4 already uses for domains, instead of a generic instructional line", where: "Home → Setup Wizard → Region", why: "Step 4 already confirmed your picks this way; step 1 lacked the same confirmation, so the two steps read inconsistently" },
+    ] },
   { version: "2.02", date: "2026-09-29", notes: "Setup Wizard's input and select fields now have a light colour fill instead of plain white boxes, and the minimum-revenue field shows a live $250M / $2.50B-style preview next to it as you type.",
     changes: [
       { what: "Every field in the Setup Wizard (revenue, employees, listing, entity, daily-plan numbers, other-subscription text) now has a light teal fill instead of a plain white box, with a teal focus ring", where: "Home → Setup Wizard, every step with inputs", why: "The plain white boxes looked flat against the rest of the wizard's colour-coded design" },

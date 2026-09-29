@@ -188,7 +188,6 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                     sources and daily plan — are set once and applied to each region checked below. You can always come back and run the wizard again
                     for just one region.</p>
                 </div>
-                <p className="note" style={{ marginBottom: 8 }}>Selected regions are highlighted below — click any region to add or remove it.</p>
                 <div className="hw-pillrow">
                   {visibleRegions.map((r) => {
                     const nextPhase = def.regions[r.key]?.status === "next";
@@ -201,6 +200,11 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                     );
                   })}
                 </div>
+                <p className="hw-lead" style={{ marginTop: 12 }}>
+                  {regions.length
+                    ? <><b>Selected: {regionNames.join(", ")}.</b> Company size, targeting, data sources and daily plan will apply to all of these.</>
+                    : "Pick at least one region to continue."}
+                </p>
                 {!visibleRegions.length && <p className="note">No region is assigned to your account yet — ask a Super Admin to add one in Setup → Team.</p>}
               </div>
             )}
