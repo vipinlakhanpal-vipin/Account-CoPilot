@@ -1,11 +1,15 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.94";
+export const APP_VERSION = "1.95";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.95", date: "2026-09-29", notes: "The 'What to do' explanation is now a proper table with light row colors — amber for the one mode with an instant option, green for the three free/bulk-only ones — headed by 'Review this under \"What to do\"' so it's clear which dropdown it explains.",
+    changes: [
+      { what: "Replaced the bullet list explaining each 'What to do' choice with a table (What to do / What it does / Speed & cost), light amber for Add one specific company (the only one with an instant option), light green for the three free bulk-only modes, under a heading 'Review this under \"What to do\"'", where: "Setup → Settings → 1 · Search companies", why: "A table with color-coded rows scans faster than a bullet list, and the heading makes clear it's explaining the dropdown right above it" },
+    ] },
   { version: "1.94", date: "2026-09-29", notes: "Scheduled run history: removed the top 'Daily Run' badge in favor of a colored Run status badge on every row (purple for Instant search run, green for Daily run), and moved Activate Region next to Summary.",
     changes: [
       { what: "Run status is now a colored pill on every row — purple 'Instant search run' or green 'Daily run — <your local time>' — instead of a single 'Daily Run' badge sitting above the whole table", where: "Setup → Settings → Scheduled run history", why: "The old badge implied every row was a daily run; each row now shows which kind of run it actually was, at a glance" },

@@ -403,6 +403,8 @@ aside.brief.contact{width:min(760px,100%);z-index:70}
 .eng-card.free{border-left:3px solid #2ECC8F}.eng-card.paid{border-left:3px solid #F5A623}
 .cost-row-free td{background:color-mix(in srgb, #2ECC8F 8%, var(--surface))}
 .cost-row-paid td{background:color-mix(in srgb, #F5A623 8%, var(--surface))}
+.wtd-row-instant td{background:color-mix(in srgb, #F5A623 8%, var(--surface))}
+.wtd-row-bulk td{background:color-mix(in srgb, #2ECC8F 8%, var(--surface))}
 .eng-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:space-between;margin-bottom:6px}
 .eng-form{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin:10px 0}.eng-form label{display:flex;flex-direction:column;gap:4px;font:600 11.5px var(--body);color:var(--muted)}
 .eng-form select,.eng-form input{background:rgba(var(--ink),.05);border:1px solid rgba(var(--ink),.15);border-radius:8px;color:var(--text);padding:7px 9px;font:13px var(--body);min-width:120px}
