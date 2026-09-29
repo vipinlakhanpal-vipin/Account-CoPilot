@@ -298,9 +298,8 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                 </div>
                 <label className="hw-field">Minimum net revenue
                   <MoneyField value={draft.revenue} onChange={(v) => setDraft((d) => ({ ...d, revenue: v }))} />
-                  <span className="hint">Most recent annual net revenue, converted to USD. Shown as $250M or $2.50B at rest — click in and type a
-                    number, with an optional M or B (e.g. 250M, 3.5B). $250M is a solid default for enterprise procurement deals — raise it to focus
-                    only on the very largest accounts, lower it to widen the net.</span></label>
+                  <span className="hint">Most recent annual net revenue, in USD. $250M works well for most enterprise deals — raise it for only the
+                    largest accounts, lower it to include more companies.</span></label>
                 <label className="hw-field">Minimum employees
                   <input type="number" min={0} value={draft.employees} onChange={(e) => setDraft((d) => ({ ...d, employees: Number(e.target.value) || 0 }))} />
                   <span className="hint">Global headcount, not just this region. Revenue on its own lets small holding entities or shell companies
