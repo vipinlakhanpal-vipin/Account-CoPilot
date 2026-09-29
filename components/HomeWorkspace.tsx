@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { REGIONS, OPTIONS, normalizeDefinition, type Definition, type Rules } from "@/lib/icpDefinition.mjs";
 import type { Access } from "@/lib/access";
 import { ask, notify } from "@/components/Confirm";
@@ -35,6 +35,16 @@ const ICON = {
 
 function Ico({ name }: { name: keyof typeof ICON }) {
   return <svg className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{ICON[name]}</svg>;
+}
+// A pill that's also visibly a checkbox: empty box when off, a tick in a filled box when on — for multi-select lists
+// (regions, domains) where several can be true at once, as opposed to a single either/or choice.
+function CheckPill({ on, disabled, onClick, children }: { on: boolean; disabled?: boolean; onClick: () => void; children: ReactNode }) {
+  return (
+    <button type="button" className={`hw-pill hw-check-pill ${on ? "on" : ""}`} disabled={disabled} aria-pressed={on} onClick={onClick}>
+      <span className="hw-pill-box" aria-hidden="true">{on && <svg viewBox="0 0 12 12" width="9" height="9"><path d="M2 6.2l2.6 2.6L10 3" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}</span>
+      {children}
+    </button>
+  );
 }
 const stepColor = (v: string): CSSProperties => ({ "--step-color": v } as CSSProperties);
 const usdM = (n: number) => (n >= 1000 ? `$${(n / 1000).toFixed(2).replace(/\.?0+$/, "")}B` : `$${n}M`);
@@ -215,12 +225,10 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                 <div className="hw-pillrow">
                   {visibleRegions.map((r) => {
                     const nextPhase = def.regions[r.key]?.status === "next";
-                    const on = regions.includes(r.key);
                     return (
-                      <button key={r.key} type="button" className={`hw-pill hw-region-pill ${on ? "on" : ""}`} disabled={nextPhase}
-                        aria-pressed={on} onClick={() => toggleRegion(r.key)}>
+                      <CheckPill key={r.key} on={regions.includes(r.key)} disabled={nextPhase} onClick={() => toggleRegion(r.key)}>
                         {r.name}{nextPhase ? " (next phase)" : ""}
-                      </button>
+                      </CheckPill>
                     );
                   })}
                 </div>
@@ -298,7 +306,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                 </div>
                 <div className="hw-pillrow">
                   {OPTIONS.domains.map((d) => (
-                    <button key={d.key} type="button" className={`hw-pill ${domains.includes(d.key) ? "on" : ""}`} onClick={() => toggleDomain(d.key)}>{d.label}</button>
+                    <CheckPill key={d.key} on={domains.includes(d.key)} onClick={() => toggleDomain(d.key)}>{d.label}</CheckPill>
                   ))}
                 </div>
                 <p className="hw-lead" style={{ marginTop: 12 }}>
@@ -349,19 +357,19 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                   <input type="number" min={0} max={60} value={draft.verifyPerDay} onChange={(e) => setDraft((d) => ({ ...d, verifyPerDay: Number(e.target.value) || 0 }))} />
                   <span className="hint">How many existing companies get their revenue and size re-checked each morning, oldest checks first.</span></label>
                 <label className="hw-checkrow"><input type="checkbox" checked={activateNow} onChange={(e) => setActivateNow(e.target.checked)} />
-                  Activate {regions.length > 1 ? "these regions'" : "this region's"} daily run now — leave unchecked to save these rules without
-                  switching the run on yet</label>
+                  Turn the daily run on now for {regionNames.length ? <b>{regionNames.join(", ")}</b> : "the regions checked in step 1"}</label>
+                <span className="hint">Checked: these regions start the daily run automatically once you save. Unchecked: everything above is still
+                  saved, but nothing runs until you come back and turn it on.</span>
 
                 <div className="hw-tint hw-tint--data" style={{ marginTop: 18 }}>
-                  <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--sky)")}><Ico name="coin" /></span><h3>Just the free daily pace, or paid profiling too?</h3></div>
-                  <p className="hw-lead">The plan above is entirely free — it&apos;s your Claude plan, not the Anthropic API key. If you&apos;d rather
-                    have Claude go deeper on companies than the free daily pace allows — fuller profiles, more sources, faster than 25 a day — that&apos;s
-                    a separate, paid action (Data → Research Queue, or Research more) using the Anthropic API key. This is just to set expectations;
-                    nothing is charged from this wizard.</p>
+                  <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--sky)")}><Ico name="coin" /></span><h3>Free daily pace, or paid profiling?</h3></div>
+                  <p className="hw-lead">The plan above is entirely free — your Claude plan, not the Anthropic API key. Paid profiling is a
+                    different, separate action for when you want Claude to go deeper on companies than the free daily pace allows. This button
+                    doesn&apos;t start anything or spend anything — it just decides whether to show you what that would cost.</p>
                 </div>
                 <div className="hw-pillrow">
-                  <button type="button" className={`hw-pill ${wantsProfiling === "free" ? "on" : ""}`} onClick={() => setWantsProfiling("free")}>Just the free daily pace is fine</button>
-                  <button type="button" className={`hw-pill ${wantsProfiling === "paid" ? "on" : ""}`} onClick={() => setWantsProfiling("paid")}>I&apos;ll want paid profiling too</button>
+                  <button type="button" className={`hw-pill ${wantsProfiling === "free" ? "on" : ""}`} onClick={() => setWantsProfiling("free")}>Free daily pace only</button>
+                  <button type="button" className={`hw-pill ${wantsProfiling === "paid" ? "on" : ""}`} onClick={() => setWantsProfiling("paid")}>Paid profiling</button>
                 </div>
                 {wantsProfiling === "paid" && (
                   <div className="tablewrap" style={{ marginTop: 12 }}>
@@ -378,8 +386,9 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                         ))}
                       </tbody>
                     </table>
-                    <p className="hint" style={{ marginTop: 8 }}>Same per-company rates as Setup → Learn Me → Costs &amp; usage. You approve
-                      every paid run before anything is spent, and a Super Admin can require a PIN.</p>
+                    <p className="hint" style={{ marginTop: 8 }}>These rates are for reference only — nothing here is selectable or charged. To
+                      actually run one, go to <b>Data → Research Queue</b> and pick Quick, Standard or Deep there (or use <b>Research more</b> on
+                      the left panel), where you approve the cost before anything runs, and a Super Admin can require a PIN.</p>
                   </div>
                 )}
               </div>
@@ -391,7 +400,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                   <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--muted)")}><Ico name="clipboard" /></span><h3>Review</h3></div>
                   <p className="hw-lead">Here&apos;s what this sets up, in plain terms. Nothing is saved until you press Save &amp; apply below.</p>
                 </div>
-                <p className="hw-lead" style={{ marginBottom: 16 }}>
+                <p className="hw-lead hw-lead-wide" style={{ marginBottom: 16 }}>
                   You&apos;re setting up <b>{regionNames.length || 0} region{regionNames.length === 1 ? "" : "s"}</b>
                   {regionNames.length ? <> ({regionNames.join(", ")})</> : null} with a bar of <b>{usdM(draft.revenue)} revenue</b> and{" "}
                   <b>{draft.employees}+ employees</b>. {activateNow ? "Once you save, the daily run switches on for these regions" : "These rules save now, but the daily run stays paused for these regions until you activate them"} —
@@ -399,18 +408,30 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                   weighted toward {domains.length ? domains.map((k) => OPTIONS.domains.find((x) => x.key === k)?.label).join(", ") : "your current targeting"}.
                   All of this runs on your Claude plan, at no extra cost.{wantsProfiling === "paid" ? " Whenever you want it to go deeper than that free pace, Research Queue or Research more (Data tab) will do it, at the rates shown in the previous step." : ""}
                 </p>
-                <p className="hw-lead" style={{ marginBottom: 16 }}>
+                <p className="hw-lead hw-lead-wide" style={{ marginBottom: 16 }}>
                   <b>When to expect something worth looking at:</b> the first new and re-checked companies land within a day or two of the run
                   switching on. A dataset that&apos;s broadly verified across everything in these regions typically takes <b>2–4 weeks</b> to build up
                   at this pace — sooner if you&apos;re starting from an existing list, longer for a region starting from nothing.
                 </p>
-                <ul className="hw-review-list">
-                  <li>Regions <b>{regionNames.length ? regionNames.join(", ") : "none checked"}{activateNow ? " — will be Active" : ""}</b></li>
-                  <li>Company size <b>revenue ≥ {usdM(draft.revenue)}, employees ≥ {draft.employees}</b></li>
-                  <li>Targeting <b>{domains.length ? domains.map((k) => OPTIONS.domains.find((x) => x.key === k)?.label).join(", ") : "no change to current targeting"}</b></li>
-                  <li>Daily plan <b>find {draft.discoverPerDay}, verify {draft.verifyPerDay} per day</b></li>
-                </ul>
-                <button type="button" className="btn primary" disabled={saving || !regions.length} onClick={save}>{saving ? "Saving…" : "Save & apply"}</button>
+                <div className="hw-review-grid">
+                  <div className="hw-review-row hw-review-row--region">
+                    <span className="k">Regions</span>
+                    <span className="v">{regionNames.length ? regionNames.join(", ") : "none checked"}{activateNow ? " — will be Active" : ""}</span>
+                  </div>
+                  <div className="hw-review-row hw-review-row--region">
+                    <span className="k">Company size</span>
+                    <span className="v">revenue ≥ {usdM(draft.revenue)}, employees ≥ {draft.employees}</span>
+                  </div>
+                  <div className="hw-review-row hw-review-row--people">
+                    <span className="k">Targeting</span>
+                    <span className="v">{domains.length ? domains.map((k) => OPTIONS.domains.find((x) => x.key === k)?.label).join(", ") : "no change to current targeting"}</span>
+                  </div>
+                  <div className="hw-review-row hw-review-row--data">
+                    <span className="k">Daily plan</span>
+                    <span className="v">find {draft.discoverPerDay}, verify {draft.verifyPerDay} per day</span>
+                  </div>
+                </div>
+                <button type="button" className="btn primary" disabled={saving || !regions.length} onClick={save} style={{ marginTop: 16 }}>{saving ? "Saving…" : "Save & apply"}</button>
               </div>
             )}
 
