@@ -1,11 +1,16 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.95";
+export const APP_VERSION = "1.96";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.96", date: "2026-09-29", notes: "Scheduled run history now says plainly that Run status tags itself automatically from here on — older runs just show '—'. Also backfilled the two most recent instant-search runs (Egyptian Refining Company, Sukoon Insurance) with the correct badge.",
+    changes: [
+      { what: "A note under 'Scheduled run history': every run from here on tags itself automatically as Daily or Instant, no extra step; runs from before this existed show '—'", where: "Setup → Settings → Scheduled run history", why: "So it's clear this is automatic going forward, not something that needs to be set up or repeated" },
+      { what: "Backfilled the Egyptian Refining Company and Sukoon Insurance log entries with the correct 'instant' source, so they show the purple badge instead of '—' even though they ran before this tracking existed", where: "Behind the scenes (one-off data fix)", why: "Both were confirmed from this session's own trigger records to have been instant runs" },
+    ] },
   { version: "1.95", date: "2026-09-29", notes: "The 'What to do' explanation is now a proper table with light row colors — amber for the one mode with an instant option, green for the three free/bulk-only ones — headed by 'Review this under \"What to do\"' so it's clear which dropdown it explains.",
     changes: [
       { what: "Replaced the bullet list explaining each 'What to do' choice with a table (What to do / What it does / Speed & cost), light amber for Add one specific company (the only one with an instant option), light green for the three free bulk-only modes, under a heading 'Review this under \"What to do\"'", where: "Setup → Settings → 1 · Search companies", why: "A table with color-coded rows scans faster than a bullet list, and the heading makes clear it's explaining the dropdown right above it" },

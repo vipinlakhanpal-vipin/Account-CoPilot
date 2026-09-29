@@ -135,6 +135,7 @@ export default function EngineSettings() {
         </div>
 
         {s?.log && s.log.length > 0 && <div className="eng-card"><div className="eng-head"><h3>Scheduled run history</h3></div>
+          <p className="note">Every run from here on tags itself automatically — Run status shows a badge with no extra step. Older runs, from before this existed, show &quot;—&quot;.</p>
           <div className="tablewrap"><table><thead><tr><th>When</th><th>Summary</th><th>Activate Region</th><th>Verified</th><th>New companies</th><th>Run status</th></tr></thead>
             <tbody>{s.log.slice(0, 10).map((e) => { const held = e.details?.filter((d) => /^held/i.test(d.status)) || [];
               return <tr key={e.at}><td className="muted">{new Date(e.at).toLocaleString()}</td>
