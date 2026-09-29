@@ -74,7 +74,9 @@ const erpKey = (e: unknown) => {
   if (/e-business|ebs/i.test(v)) return "Oracle E-Business Suite";
   if (/oracle/i.test(v)) return "Oracle (other)";
   if (/dynamics|microsoft/i.test(v)) return "Microsoft Dynamics";
-  return v.split(/[;(,]/)[0].trim();
+  // Anything else falls through as-is (e.g. a raw enum like "not_public" or "not_found") — humanize it so it
+  // reads like the rest ("Not Public"), instead of breaking the chart's casing pattern.
+  return v.split(/[;(,]/)[0].trim().replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 };
 
 const ICP_ORDER = ["ICP — Verified", "ICP — Likely", "ICP — Needs check", "Unknown", "Not ICP"];

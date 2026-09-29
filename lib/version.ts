@@ -1,11 +1,15 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.18";
+export const APP_VERSION = "2.19";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.19", date: "2026-09-30", notes: "Fixed the ERP Landscape chart on Dashboard showing raw, unformatted values like 'not_public' and 'not_found' next to properly-cased labels like 'SAP Ariba' — looked like a font-size mismatch, but the chart's font size was already identical everywhere; the real issue was an unrecognized ERP value falling through un-humanized.",
+    changes: [
+      { what: "erpKey()'s fallback (used when a company's ERP value doesn't match a known system) now converts underscores to spaces and title-cases the result, so a raw value like 'not_public' displays as 'Not Public' instead of leaking through as-is", where: "Dashboard → ERP Landscape chart", why: "Reported as inconsistent font size across the four Dashboard charts; the charts share one font-size rule already — the actual cause was unformatted raw values breaking the visual pattern" },
+    ] },
   { version: "2.18", date: "2026-09-30", notes: "Header tagline changed from 'B2B procurement intelligence' to 'AI Autonomous Agent for Account Intelligence' — leads with what actually makes the engine different (it runs itself) instead of the generic category name.",
     changes: [
       { what: "The line under the logo (and the page's own description metadata) now reads 'AI Autonomous Agent for Account Intelligence' instead of 'B2B procurement intelligence'", where: "Every page, top-left under the Account CoPilot logo", why: "The old line described a category anyone in this space could claim; the new one names the actual differentiator" },
