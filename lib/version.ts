@@ -1,11 +1,16 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.84";
+export const APP_VERSION = "1.85";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.85", date: "2026-09-29", notes: "Wording caught up with v1.84's instant trigger: the free search button now says 'Search now (free)', and job captions no longer imply a firm wait until 6am.",
+    changes: [
+      { what: "The one-company search button now reads 'Search now (free)' instead of 'Queue (free)', with a matching 'Searching…' spinner", where: "Setup → Settings → 1 · Search companies", why: "'Queue' undersold it now that it usually finishes in a minute or two, and it needed to read differently from the adjacent 'Run now (≈ $0.55)'" },
+      { what: "A waiting job's caption now reads 'usually a minute or two — falls back to <6am time> if that doesn't fire', instead of just showing the 6am time as if that were the only run", where: "Setup → Settings → job status table", why: "The old caption looked like a firm 'runs Wednesday 6am' promise, which was no longer true and confused how soon it would actually run" },
+    ] },
   { version: "1.84", date: "2026-09-29", notes: "Queuing a job now fires the instant job runner right away (within a minute or two) instead of only running at 6am — no extra click needed.",
     changes: [
       { what: "Queuing a job (Start / Queue (free) / Add one specific company) now opens a GitHub issue in the background, which fires the instant job runner routine straight away — the free 'Waiting → In progress → Completed' flow now usually finishes in a couple of minutes instead of waiting until the next 6am run", where: "Setup → Settings → 1 · Search companies", why: "Previously nothing made the instant routine fire on its own; queuing only ever got picked up at 6am unless someone triggered it by hand" },

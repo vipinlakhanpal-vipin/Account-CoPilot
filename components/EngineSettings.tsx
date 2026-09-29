@@ -94,15 +94,16 @@ export default function EngineSettings() {
               onClick={async () => { const specific = q.mode === "company" || (q.mode === "discover" && q.company.trim().length >= 2); setQueueBusy(true);
                 await post(specific ? { action: "queue", region: q.region, count: 1, mode: "company", company_name: q.company.trim(), website: q.website.trim() }
                 : { action: "queue", region: q.region, count: q.count === "max" ? "max" : Number(q.count), mode: q.mode },
-                specific ? `Queued: ${q.company.trim()} (${q.region}) for the next run (${nextRun()}), free. The job below shows Waiting → In progress → Completed, with a link to the account.` : `Job queued for the next run (${nextRun()}).`);
-                setQueueBusy(false); }}>{queueBusy ? <span className="btn-spin">Queuing…</span> : (q.mode === "company" || (q.mode === "discover" && q.company.trim())) ? "Queue (free)" : "Start"}</button>
+                specific ? `Searching ${q.company.trim()} (${q.region}) now, free — usually done in a minute or two (falls back to the next run, ${nextRun()}, if that doesn't fire). The job below shows Waiting → In progress → Completed, with a link to the account.`
+                  : `Job started, free — usually a minute or two (falls back to the next run, ${nextRun()}, if that doesn't fire).`);
+                setQueueBusy(false); }}>{queueBusy ? <span className="btn-spin">Searching…</span> : (q.mode === "company" || (q.mode === "discover" && q.company.trim())) ? "Search now (free)" : "Start"}</button>
             {(q.mode === "company" || (q.mode === "discover" && q.company.trim().length >= 2)) && (
               <button type="button" className="btn" onClick={runNow} title="Researches it now with the Anthropic API (≈ $0.55, asks for your PIN)">Run now (≈ $0.55)</button>)}
           </div>
           {nowMsg && <p className={`now-msg ${nowMsg.ok ? "ok" : "err"}`}>{nowMsg.text}{nowMsg.company && <> <a href="/research">Follow it in Data → Research Queue →</a> When it finishes it appears in <a href={`/?tab=accounts&country=${encodeURIComponent(q.region)}`}>{q.region} accounts →</a></>}</p>}
           {s && s.jobs.length > 0 && <div className="tablewrap"><table><thead><tr><th>Job</th><th>Region</th><th>How many</th><th>Status</th><th>Requested</th><th>Result</th><th></th></tr></thead>
             <tbody>{s.jobs.slice(0, 10).map((j) => <tr key={j.id}><td>{MODE[j.mode] || j.mode}{j.company_name && <div className="muted">{j.company_name}{j.website ? ` · ${j.website}` : ""}</div>}</td><td>{j.region}</td><td>{j.count}</td><td><span className={`job-st ${j.status}`}>{j.status === "queued" ? "Waiting" : j.status === "running" ? "In progress" : j.status === "done" ? "Completed" : j.status === "error" ? "Failed" : j.status === "cancelled" ? "Cancelled" : j.status}</span>
-                {j.status === "queued" && <div className="muted">next run {nextRun()}</div>}{j.status === "running" && <div className="muted">started by the scheduled session</div>}</td>
+                {j.status === "queued" && <div className="muted">usually a minute or two — falls back to {nextRun()} if that doesn't fire</div>}{j.status === "running" && <div className="muted">started by the scheduled session</div>}</td>
               <td className="muted">{new Date(j.requested_at).toLocaleString()}<div>{j.requested_by}</div></td><td className="wrap">{j.result}{j.status === "done" && <div><a className="job-link" href={j.slug ? `/?open=${encodeURIComponent(j.slug)}&country=${encodeURIComponent(j.region)}` : `/?tab=accounts&country=${encodeURIComponent(j.region)}`}>{j.slug ? "View the account →" : `View ${j.region} accounts →`}</a></div>}</td>
               <td>{j.status === "queued" && <button type="button" className="btn tiny ghost" onClick={() => post({ action: "cancel", id: j.id }, "Job cancelled.")}>Cancel</button>}</td></tr>)}</tbody></table></div>}
         </div>
