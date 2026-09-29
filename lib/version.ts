@@ -1,11 +1,15 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.12";
+export const APP_VERSION = "2.13";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.13", date: "2026-09-30", notes: "Added breathing room between About Account CoPilot's intro paragraph and the 4 cards below it — they were almost touching.",
+    changes: [
+      { what: "Added spacing above the About panel's card grid (What each tab does, Tokens & cost, etc.) so it no longer sits flush against the intro paragraph's last line", where: "Home → About Account CoPilot", why: "The text was nearly touching the tiles below it" },
+    ] },
   { version: "2.12", date: "2026-09-30", notes: "Simplified Team's 'Change access' row: Role, Region and the Save/Cancel buttons now stack vertically instead of being crammed side by side in a narrow table cell.",
     changes: [
       { what: "Clicking 'Change' next to a team member now shows Role, then Region, then Save/Cancel stacked one below the other, instead of all four squeezed into one horizontal row inside the table cell", where: "Setup → Team → Change access", why: "Four controls crammed sideways in a narrow cell read as cluttered and hard to follow; a vertical order is much clearer" },

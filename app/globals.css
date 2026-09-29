@@ -447,7 +447,7 @@ aside.brief.contact{width:min(760px,100%);z-index:70}
 .hw-lead{color:var(--muted);font-size:13px;margin:0;max-width:62ch;line-height:1.55}
 .hw-lead-wide{max-width:none}
 .hw-lead-justify{max-width:none;text-align:justify;text-justify:inter-word}
-.hw-about-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.hw-about-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
 .hw-about-card{background:var(--surface-2);border:1px solid transparent;border-radius:10px;padding:14px 16px}
 .hw-about-card .hw-icon-badge{width:30px;height:30px;border-radius:8px;margin-bottom:8px;background:var(--surface);color:var(--teal)}
 .hw-about-card .hw-icon-badge .ico{width:16px;height:16px}
