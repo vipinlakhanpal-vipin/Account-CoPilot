@@ -1,18 +1,47 @@
 import { requirePageUser } from "@/lib/auth";
-import { getAccess } from "@/lib/access";
+import { getAccess, scopeData } from "@/lib/access";
+import { supabaseServer } from "@/lib/supabase/server";
+import { loadAllCached } from "@/lib/dataCache";
+import { REGIONS, normalizeDefinition, regionOf } from "@/lib/icpDefinition.mjs";
 import Hero from "@/components/Hero";
 import SetupWizard from "@/components/SetupWizard";
 import Link from "next/link";
+
+export const dynamic = "force-dynamic";
 
 // Home: a short, plain-English orientation to Account CoPilot, plus the Setup Wizard.
 // The deep reference (scoring formulas, engine steps, cost tables) stays in Setup → Learn Me.
 export default async function HomePage() {
   const user = await requirePageUser();
   const access = await getAccess(user);
+  const sb = await supabaseServer();
+  const [{ data: defRow }, all] = await Promise.all([
+    sb.from("settings").select("value").eq("key", "icp_definition").maybeSingle(),
+    loadAllCached().then((d) => scopeData(d, access)),
+  ]);
+  const def = normalizeDefinition(defRow?.value);
+  const visibleRegions = REGIONS.filter((r) => access.isSuper || access.regions.includes(r.key));
+  const counts: Record<string, number> = {};
+  for (const a of all.accounts) { const k = regionOf((a as { country?: string }).country); counts[k] = (counts[k] || 0) + 1; }
+  const regionStats = visibleRegions.map((r) => ({ ...r, count: counts[r.key] || 0, status: def.regions[r.key]?.status || "paused" }));
+  const totalCompanies = regionStats.reduce((t, r) => t + r.count, 0);
+  const activeCount = regionStats.filter((r) => r.status === "active").length;
+  const needsSetup = regionStats.filter((r) => r.status !== "active" || r.count === 0);
 
   return (
     <div className="wrap">
       <Hero title="Home" text="Get to know your Account CoPilot AI Agent, and set it up in a few minutes." />
+
+      <section className="panel">
+        <div className="roles">
+          <div className="metric-tile"><div className="note">Companies tracked</div><div style={{ fontSize: 24, fontWeight: 500 }}>{totalCompanies}</div></div>
+          <div className="metric-tile"><div className="note">Active regions</div><div style={{ fontSize: 24, fontWeight: 500 }}>{activeCount} of {regionStats.length}</div></div>
+        </div>
+        {needsSetup.length > 0 && <p className="note" style={{ marginTop: 10 }}>
+          {needsSetup.length === regionStats.length ? "None of your regions are fully set up yet." : `${needsSetup.map((r) => r.name).join(", ")} ${needsSetup.length === 1 ? "isn't" : "aren't"} fully set up yet (paused, or no companies tracked).`}{" "}
+          Use the Setup Wizard below to get started.
+        </p>}
+      </section>
 
       <section className="panel">
         <h2>What is Account CoPilot?</h2>

@@ -1,11 +1,17 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.97";
+export const APP_VERSION = "1.98";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.98", date: "2026-09-29", notes: "Home page and Setup Wizard improvements: live company/region stats and a setup-progress nudge at the top of Home, the Wizard's step pills are now clickable to jump to any step, and your Data sources answers are now saved and reloaded instead of forgotten on close.",
+    changes: [
+      { what: "Home page now opens with two live stats (companies tracked, active regions out of total) plus a note naming which regions still aren't fully set up (paused, or no companies tracked yet), pointing at the Setup Wizard below", where: "Home (top of page)", why: "Gives a returning user an at-a-glance read on where things stand, and nudges anyone with incomplete setup toward the wizard without them having to go looking" },
+      { what: "Setup Wizard's step pills (1. Region, 2. Existing data, …) are now clickable — jump straight to any step instead of only Back/Next", where: "Home → Setup Wizard", why: "\"Go back and edit your answers\" should mean one click on the step you want to change, not stepping through every screen in between" },
+      { what: "Data sources answers (ZoomInfo, Crunchbase, other subscription) are now saved to the account and reloaded next time the wizard opens, instead of resetting every time", where: "Home → Setup Wizard → Data sources", why: "These were being asked and then silently discarded — worth keeping since they inform what to help connect next" },
+    ] },
   { version: "1.97", date: "2026-09-29", notes: "New Home tab: a plain-English orientation to Account CoPilot (what it is, every tab explained, tokens & API costs, the find/check/verify process, what ICP means) plus a Setup Wizard that configures your real Define ICP settings step by step.",
     changes: [
       { what: "New 'Home' tab, first in the main nav — explains Account CoPilot as an autonomous AI Agent, what every other tab does, the difference between your Claude plan (free) and the Anthropic API (paid actions), how it finds/checks/verifies companies, and what ICP means, all in plain English", where: "Home (new, first tab)", why: "There was no single starting point for a new user to understand what this Agent does before diving into a specific tab" },

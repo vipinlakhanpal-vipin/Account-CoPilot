@@ -25,7 +25,7 @@ export default function SetupWizard({ access }: { access: Access }) {
   const [sources, setSources] = useState<Sources>({ seamless: false, lusha: false, zoominfo: false, crunchbase: false, other: "" });
   const [activateNow, setActivateNow] = useState(true);
 
-  async function loadForRegion(key: string) {
+  async function loadForRegion(key: string, jumpIfConfigured: boolean) {
     setLoading(true);
     try {
       const res = await fetch("/api/icp");
@@ -33,12 +33,24 @@ export default function SetupWizard({ access }: { access: Access }) {
       const d = normalizeDefinition(j.regions ? { regions: j.regions, version: j.version } : j);
       setDef(d);
       const r = d.regions[key];
-      if (r) setDomains(OPTIONS.domains.filter((x) => r.personas.departments.includes(x.department)).map((x) => x.key));
+      if (r) {
+        setDomains(OPTIONS.domains.filter((x) => r.personas.departments.includes(x.department)).map((x) => x.key));
+        setActivateNow(r.status === "active");
+        // Already configured (Active or Next phase, not the untouched default Paused)? Jump straight to Review — "editing your
+        // answers" is then just clicking a step pill, not re-walking the whole flow.
+        if (jumpIfConfigured && r.status !== "paused") setStep(STEPS.length - 1);
+      }
     } catch { notify("Could not load Define ICP settings.", "error"); }
     setLoading(false);
   }
-  useEffect(() => { if (open) loadForRegion(region); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [open]);
-  useEffect(() => { if (open) loadForRegion(region); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [region]);
+  useEffect(() => {
+    if (!open) return;
+    loadForRegion(region, true);
+    fetch("/api/wizard-sources").then((r) => r.json()).then((s) => { if (s && typeof s === "object") setSources((cur) => ({ ...cur, ...s })); }).catch(() => {});
+    /* eslint-disable-next-line react-hooks/exhaustive-deps */
+  }, [open]);
+  useEffect(() => { if (open) loadForRegion(region, false); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [region]);
+  const saveSources = (next: Sources) => { setSources(next); fetch("/api/wizard-sources", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(next) }).catch(() => {}); };
 
   const r: Rules | null = def?.regions[region] || null;
   const setR = (fn: (x: Rules) => void) => setDef((d) => { if (!d) return d; const n = clone(d); fn(n.regions[region]); return n; });
@@ -75,7 +87,8 @@ export default function SetupWizard({ access }: { access: Access }) {
   return (
     <section className="panel">
       <h2>Setup Wizard — {REGIONS.find((x) => x.key === region)?.name || region}</h2>
-      <div className="roles" style={{ marginBottom: 10 }}>{STEPS.map((s, i) => <span key={s} className={`tag ${i === step ? "fact" : i < step ? "likely" : "unv"}`}>{i + 1}. {s}</span>)}</div>
+      <div className="roles" style={{ marginBottom: 10 }}>{STEPS.map((s, i) => <span key={s} role="button" tabIndex={0} onClick={() => setStep(i)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setStep(i); }}
+        className={`tag ${i === step ? "fact" : i < step ? "likely" : "unv"}`} style={{ cursor: "pointer" }}>{i + 1}. {s}</span>)}</div>
       {loading || !r ? <p className="note">Loading your current settings…</p> : <>
 
       {step === 0 && <div>
@@ -113,10 +126,10 @@ export default function SetupWizard({ access }: { access: Access }) {
         <div className="roles">
           <label><input type="checkbox" checked disabled /> Seamless.ai — connected</label>
           <label><input type="checkbox" checked disabled /> Lusha — connected</label>
-          <label><input type="checkbox" checked={sources.zoominfo} onChange={(e) => setSources((s) => ({ ...s, zoominfo: e.target.checked }))} /> ZoomInfo — available as a Claude connector; needs your authorization in Claude's connector settings</label>
-          <label><input type="checkbox" checked={sources.crunchbase} onChange={(e) => setSources((s) => ({ ...s, crunchbase: e.target.checked }))} /> Crunchbase — available as a Claude connector; needs your authorization</label>
+          <label><input type="checkbox" checked={sources.zoominfo} onChange={(e) => saveSources({ ...sources, zoominfo: e.target.checked })} /> ZoomInfo — available as a Claude connector; needs your authorization in Claude's connector settings</label>
+          <label><input type="checkbox" checked={sources.crunchbase} onChange={(e) => saveSources({ ...sources, crunchbase: e.target.checked })} /> Crunchbase — available as a Claude connector; needs your authorization</label>
         </div>
-        <label>Other subscription you have (e.g. Refinitiv, Dun &amp; Bradstreet)<input type="text" placeholder="e.g. Refinitiv" value={sources.other} onChange={(e) => setSources((s) => ({ ...s, other: e.target.value }))} /></label>
+        <label>Other subscription you have (e.g. Refinitiv, Dun &amp; Bradstreet)<input type="text" placeholder="e.g. Refinitiv" value={sources.other} onChange={(e) => setSources((s) => ({ ...s, other: e.target.value }))} onBlur={() => saveSources(sources)} /></label>
         {sources.other.trim() && <p className="note">Noted. These aren't connected to Claude yet — if you can get a Claude connector or MCP server for {sources.other}, ask me and I'll wire it into your research once it's available; otherwise send exports and I'll fold them in by hand.</p>}
         <p className="note">Even with none of the above, the free daily engine (your own Claude plan, not the Anthropic API) can still find and verify companies with its own web search — see the next step.</p>
       </div>}
