@@ -162,6 +162,12 @@ export default function HomeWorkspace({ access }: { access: Access }) {
   }
 
   const regionNames = regions.map((k) => REGIONS.find((r) => r.key === k)?.name || k);
+  // Shared by the "Setup Wizard" label and the chevron, so both always behave the same way: switching in from
+  // elsewhere opens the step list, and clicking again once already there toggles it open or closed.
+  const toggleWizard = () => {
+    if (section !== "wizard") { setSection("wizard"); setExpanded(true); }
+    else setExpanded((v) => !v);
+  };
 
   return (
     <section className="panel hw">
@@ -169,10 +175,9 @@ export default function HomeWorkspace({ access }: { access: Access }) {
         <button type="button" className="hw-rail-item" aria-current={section === "about"} onClick={() => setSection("about")}>
           <span className="hw-rail-icon"><Ico name="book" /></span>About Account CoPilot</button>
         <div className="hw-rail-row">
-          <button type="button" className="hw-rail-item" aria-current={section === "wizard"} onClick={() => { setSection("wizard"); setExpanded(true); }}>
+          <button type="button" className="hw-rail-item" aria-current={section === "wizard"} onClick={toggleWizard}>
             <span className="hw-rail-icon"><Ico name="wand" /></span>Setup Wizard</button>
-          <button type="button" className="hw-chevron" aria-expanded={expanded} aria-label={expanded ? "Collapse the 7 steps" : "Expand the 7 steps"}
-            onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}>
+          <button type="button" className="hw-chevron" aria-expanded={expanded} aria-label={expanded ? "Collapse the 7 steps" : "Expand the 7 steps"} onClick={toggleWizard}>
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" style={{ transition: "transform .18s ease", transform: expanded ? "none" : "rotate(-90deg)" }}>
               <path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </button>

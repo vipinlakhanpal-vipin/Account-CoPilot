@@ -1,11 +1,15 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.06";
+export const APP_VERSION = "2.07";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.07", date: "2026-09-29", notes: "The 'Setup Wizard' label and its chevron now share one behaviour: clicking either one opens the step list when it's not already showing, and clicking either one again toggles it open or closed — no more inconsistency between which control 'worked'.",
+    changes: [
+      { what: "The 'Setup Wizard' label and the chevron next to it now call the same handler: from another tab, either one switches in and opens the step list; once already on Setup Wizard, either one toggles the list open or closed", where: "Home → left rail → Setup Wizard", why: "Previously the label always forced the list open (never closed it) while the chevron toggled it — so depending on which one you clicked, it looked like only one of them 'worked'" },
+    ] },
   { version: "2.06", date: "2026-09-29", notes: "Region and domain pills now show an actual checkbox (ticked = selected, in colour), not just a click-to-toggle chip. The revenue input and its $250M preview are now visibly matched in colour. The Activate-daily-run checkbox names the actual regions you picked in step 1 instead of a vague 'these regions'. Paid profiling is clearly labelled as reference-only, with a direct pointer to where you actually run one. Review's fact rows are now full-width, left-aligned, colour-coded cells instead of a half-width dashed list.",
     changes: [
       { what: "Region (step 1) and domain (step 4) pills now show a real checkbox square — empty when unselected, ticked and filled when selected — instead of relying on colour alone to show selection state", where: "Home → Setup Wizard → Region, → Who you're after", why: "Colour-only selection wasn't read as 'tick this box'; a visible checkbox makes the multi-select nature and the current state unambiguous" },
