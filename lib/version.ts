@@ -1,11 +1,16 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.90";
+export const APP_VERSION = "1.91";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.91", date: "2026-09-29", notes: "Contact tiers now actually drive research: every research run (Research Queue, Research more, Refresh) reads your current tier titles and descriptions live, instead of a fixed internal copy.",
+    changes: [
+      { what: "The research extractor now reads Setup → Settings → Contact tiers directly from the database on every run and uses your current titles and example titles to classify each contact — before, it always used a fixed internal copy that ignored anything typed here", where: "Every paid research run: Research Queue, Research more, Refresh, and the account page's Research again", why: "Editing tiers had no effect anywhere; now it changes who gets classified into which tier on the very next research run" },
+      { what: "If tiers have never been saved, research falls back to the same default definitions as before, so nothing changes until you actually edit and save", where: "Behind the scenes", why: "A blank or misconfigured setting shouldn't break research" },
+    ] },
   { version: "1.90", date: "2026-09-29", notes: "A batch of job-table clarity fixes: no more duplicated region info, the Pending link now scrolls to the right place, Activate Region is its own column, clearer token and tier-safety notes, and a light-coloured cost table.",
     changes: [
       { what: "Clicking a 'Waiting for region activation' link now scrolls to the right place — the Pending card was landing half-hidden behind the page header", where: "Setup → Settings → job status table, bell, Scheduled run history", why: "The anchor link didn't account for the sticky header's height" },

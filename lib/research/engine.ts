@@ -62,12 +62,12 @@ export async function researchNotes(opts: { company: string; country: string; ro
 }
 
 /** EXTRACTOR + VERIFIER: turns notes into the structured record. */
-export async function extract(notes: string, company: string, meter?: Meter): Promise<ResearchResultT> {
+export async function extract(notes: string, company: string, meter?: Meter, tierText?: string): Promise<ResearchResultT> {
   const res = await client.messages.parse({
     model: MODEL,
     max_tokens: 32000,
     thinking: { type: "adaptive" },
-    system: EXTRACTOR_SYSTEM,
+    system: EXTRACTOR_SYSTEM(tierText),
     messages: [{ role: "user", content: `Company: ${company}\n\nRESEARCH NOTES:\n${notes}` }],
     output_config: { effort: "medium", format: zodOutputFormat(ResearchResult) },
   });

@@ -57,12 +57,17 @@ export async function POST(req: Request) {
   }).select("id").single();
   if (error || !run) return NextResponse.json({ error: "Could not start the research run." }, { status: 500 });
 
+  // Contact tiers (Setup → Settings → Contact tiers) drive the extractor's classification — falls back to the built-in defaults if never saved.
+  const tierRows = (await db.from("settings").select("value").eq("key", "contact_tiers").maybeSingle()).data?.value as
+    { tier: string; label: string; examples: string }[] | undefined;
+  const tierText = tierRows?.length ? tierRows.map((t) => `${t.tier}: ${t.label} — ${t.examples}.`).join(" ") : undefined;
+
   after(async () => {
     try {
       const meter = newMeter();
       const notes = await researchNotes({ company: b.company, country: b.country, roles: b.roles, depth: b.depth as Depth, existing }, meter);
       await db.from("research_runs").update({ status: "extracting" }).eq("id", run.id);
-      const result = await extract(notes, b.company, meter);
+      const result = await extract(notes, b.company, meter, tierText);
       await db.from("research_runs").update({ status: "reconciling" }).eq("id", run.id);
       const { companyId, stats } = await reconcile(db, run.id, result, b.companyId);
       // Same rules as scripts/recompute_icp.mjs (thresholds from Setup → Define ICP for the company's region).
