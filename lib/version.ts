@@ -1,11 +1,16 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.83";
+export const APP_VERSION = "1.84";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.84", date: "2026-09-29", notes: "Queuing a job now fires the instant job runner right away (within a minute or two) instead of only running at 6am — no extra click needed.",
+    changes: [
+      { what: "Queuing a job (Start / Queue (free) / Add one specific company) now opens a GitHub issue in the background, which fires the instant job runner routine straight away — the free 'Waiting → In progress → Completed' flow now usually finishes in a couple of minutes instead of waiting until the next 6am run", where: "Setup → Settings → 1 · Search companies", why: "Previously nothing made the instant routine fire on its own; queuing only ever got picked up at 6am unless someone triggered it by hand" },
+      { what: "Needs a one-time setup: a GitHub personal access token (Issues: write only, scoped to the account-copilot-jobs repo) added to Vercel as GITHUB_JOBS_TOKEN. Without it, queuing still works exactly as before — the job just waits for 6am", where: "Vercel project environment variables (one-time, done outside the app)", why: "Keeps the instant path optional and safe to add whenever it's convenient" },
+    ] },
   { version: "1.83", date: "2026-09-29", notes: "Clearer run-details table: the summary is now a small note above a proper table header; queuing a job shows a spinner and job status badges pulse while waiting or running; next-run time shows AM/PM.",
     changes: [
       { what: "The one-line summary above the run-details table is now a small caption, with the table's header row filled so it reads clearly as a table, not another line of text", where: "Bell notifications; Setup → Settings → Scheduled run history", why: "The summary and table looked like one run-on block of text" },

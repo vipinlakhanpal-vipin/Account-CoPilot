@@ -30,6 +30,23 @@ async function getSetting<T>(db: ReturnType<typeof supabaseAdmin>, key: string, 
 const setSetting = (db: ReturnType<typeof supabaseAdmin>, key: string, value: unknown) =>
   db.from("settings").upsert({ key, value, updated_at: new Date().toISOString() });
 
+// Opens a GitHub issue in account-copilot-jobs so the "instant job runner" routine's GitHub-event trigger fires right
+// away, instead of waiting for the next 6am run. Needs GITHUB_JOBS_TOKEN (a fine-grained PAT, Issues: write only, scoped
+// to that one repo) in Vercel's environment variables. Best-effort: if it's not set or the call fails, the job still
+// sits in the free queue and gets picked up at the next scheduled run — nothing here is required for queueing to work.
+async function openJobIssue(job: Job) {
+  const token = process.env.GITHUB_JOBS_TOKEN;
+  if (!token) return;
+  const title = job.mode === "company" ? `Job ${job.id}: check "${job.company_name}" (${job.region})` : `Job ${job.id}: ${job.mode} ${job.count} in ${job.region}`;
+  const body = `Queued by ${job.requested_by} at ${job.requested_at}.\n\nAuto-opened by Account CoPilot so the instant job runner fires now instead of waiting for 6am. The job itself is tracked in the app (Setup → Settings), not in this issue — closing or leaving this open makes no difference.`;
+  try {
+    await fetch("https://api.github.com/repos/vipinlakhanpal-vipin/account-copilot-jobs/issues", {
+      method: "POST", headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json", "Content-Type": "application/json" },
+      body: JSON.stringify({ title, body }),
+    });
+  } catch { /* best-effort */ }
+}
+
 async function summary(db: ReturnType<typeof supabaseAdmin>) {
   const [jobs, refresh, balance] = await Promise.all([getSetting<{ jobs: Job[] }>(db, "engine_jobs", { jobs: [] }),
     getSetting<{ batches: Batch[] }>(db, "engine_refresh", { batches: [] }), getSetting<{ amount?: number; as_of?: string; by?: string }>(db, "engine_balance", {})]);
@@ -134,9 +151,12 @@ export async function POST(req: Request) {
   if (b.action === "queue" || b.action === "cancel") {
     const st = await getSetting<{ jobs: Job[] }>(db, "engine_jobs", { jobs: [] });
     if (b.action === "queue" && b.mode === "company" && !(b.company_name && b.company_name.length >= 2)) return NextResponse.json({ error: "Enter the company name." }, { status: 400 });
-    if (b.action === "queue") st.jobs.unshift({ id, region: b.region, count: b.mode === "company" ? 1 : b.count, mode: b.mode, ...(b.mode === "company" ? { company_name: b.company_name, website: b.website || "" } : {}),
-      requested_by: user.email || "", requested_at: now, status: "queued" });
-    else st.jobs = st.jobs.filter((j) => !(j.id === b.id && j.status === "queued"));
+    if (b.action === "queue") {
+      const job: Job = { id, region: b.region, count: b.mode === "company" ? 1 : b.count, mode: b.mode, ...(b.mode === "company" ? { company_name: b.company_name, website: b.website || "" } : {}),
+        requested_by: user.email || "", requested_at: now, status: "queued" };
+      st.jobs.unshift(job);
+      await openJobIssue(job);
+    } else st.jobs = st.jobs.filter((j) => !(j.id === b.id && j.status === "queued"));
     await setSetting(db, "engine_jobs", { jobs: st.jobs.slice(0, 50) });
   } else if (b.action === "balance") {
     await setSetting(db, "engine_balance", { amount: b.amount, as_of: now, by: user.email });
