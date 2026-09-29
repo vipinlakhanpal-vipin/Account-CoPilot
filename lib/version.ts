@@ -1,11 +1,17 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.85";
+export const APP_VERSION = "1.86";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.86", date: "2026-09-29", notes: "A held (pending-region) result no longer shows a misleading 'View <wrong region> accounts' link — it links straight to the Pending card instead, both in the bell and Scheduled run history; the Pending card's action column now has a label.",
+    changes: [
+      { what: "A completed job that was held pending region activation now shows 'Pending — waiting for <real region> activation →' linking straight to Settings' Pending card, instead of a 'View <the search box's region> accounts' link that named the wrong region and led to an account that doesn't exist yet", where: "Setup → Settings → job status table", why: "A search for 'Egypt Refinery Company' queued from the UAE region box showed 'View UAE accounts', which was both the wrong region and pointed at nothing" },
+      { what: "The Pending card's action column has a header, 'Activate region'", where: "Setup → Settings → Pending — waiting for region activation", why: "The Activate/Add now links sat under a blank header" },
+      { what: "A held company in the bell and Scheduled run history's result table now shows an 'Activate region →' link straight to the Pending card, next to its row", where: "Bell notifications; Setup → Settings → Scheduled run history", why: "So the very first place you see a held result (the bell) already tells you what to do about it" },
+    ] },
   { version: "1.85", date: "2026-09-29", notes: "Wording caught up with v1.84's instant trigger: the free search button now says 'Search now (free)', and job captions no longer imply a firm wait until 6am.",
     changes: [
       { what: "The one-company search button now reads 'Search now (free)' instead of 'Queue (free)', with a matching 'Searching…' spinner", where: "Setup → Settings → 1 · Search companies", why: "'Queue' undersold it now that it usually finishes in a minute or two, and it needed to read differently from the adjacent 'Run now (≈ $0.55)'" },

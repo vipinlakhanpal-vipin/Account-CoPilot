@@ -104,7 +104,10 @@ export default function EngineSettings() {
           {s && s.jobs.length > 0 && <div className="tablewrap"><table><thead><tr><th>Job</th><th>Region</th><th>How many</th><th>Status</th><th>Requested</th><th>Result</th><th></th></tr></thead>
             <tbody>{s.jobs.slice(0, 10).map((j) => <tr key={j.id}><td>{MODE[j.mode] || j.mode}{j.company_name && <div className="muted">{j.company_name}{j.website ? ` · ${j.website}` : ""}</div>}</td><td>{j.region}</td><td>{j.count}</td><td><span className={`job-st ${j.status}`}>{j.status === "queued" ? "Waiting" : j.status === "running" ? "In progress" : j.status === "done" ? "Completed" : j.status === "error" ? "Failed" : j.status === "cancelled" ? "Cancelled" : j.status}</span>
                 {j.status === "queued" && <div className="muted">usually a minute or two — falls back to {nextRun()} if that doesn't fire</div>}{j.status === "running" && <div className="muted">started by the scheduled session</div>}</td>
-              <td className="muted">{new Date(j.requested_at).toLocaleString()}<div>{j.requested_by}</div></td><td className="wrap">{j.result}{j.status === "done" && <div><a className="job-link" href={j.slug ? `/?open=${encodeURIComponent(j.slug)}&country=${encodeURIComponent(j.region)}` : `/?tab=accounts&country=${encodeURIComponent(j.region)}`}>{j.slug ? "View the account →" : `View ${j.region} accounts →`}</a></div>}</td>
+              <td className="muted">{new Date(j.requested_at).toLocaleString()}<div>{j.requested_by}</div></td><td className="wrap">{j.result}
+                {j.status === "done" && (() => { const held = String(j.result || "").match(/held pending ([A-Za-z ]+?) activation/i);
+                  return held ? <div><a className="job-link" href="/settings#engine-pending">Pending — waiting for {held[1]} activation →</a></div>
+                    : <div><a className="job-link" href={j.slug ? `/?open=${encodeURIComponent(j.slug)}&country=${encodeURIComponent(j.region)}` : `/?tab=accounts&country=${encodeURIComponent(j.region)}`}>{j.slug ? "View the account →" : `View ${j.region} accounts →`}</a></div>; })()}</td>
               <td>{j.status === "queued" && <button type="button" className="btn tiny ghost" onClick={() => post({ action: "cancel", id: j.id }, "Job cancelled.")}>Cancel</button>}</td></tr>)}</tbody></table></div>}
         </div>
 
@@ -114,17 +117,18 @@ export default function EngineSettings() {
               <td className="wrap">
                 {e.details && e.details.length > 0 ? (<>
                   <p className="note run-note">{e.summary}</p>
-                  <table className="run-table"><thead><tr><th>Company</th><th>Status</th><th>Revenue</th></tr></thead>
-                    <tbody>{e.details.slice(0, 30).map((d, i) => <tr key={i}><td>{d.name}</td><td><span className={`tag ${statusTag(d.status)}`}>{d.status}</span></td><td className="muted">{d.revenue || "—"}</td></tr>)}</tbody></table></>
+                  <table className="run-table"><thead><tr><th>Company</th><th>Status</th><th>Revenue</th><th>Activate region</th></tr></thead>
+                    <tbody>{e.details.slice(0, 30).map((d, i) => <tr key={i}><td>{d.name}</td><td><span className={`tag ${statusTag(d.status)}`}>{d.status}</span></td><td className="muted">{d.revenue || "—"}</td>
+                      <td>{/^held/i.test(d.status) && <a className="job-link" href="/settings#engine-pending">Activate region →</a>}</td></tr>)}</tbody></table></>
                 ) : e.summary}
               </td>
               <td>{e.verified}</td>
               <td className="wrap">{e.new_companies.join(", ") || "—"}</td></tr>)}</tbody></table></div></div>}
 
-        {s?.pending && s.pending.length > 0 && <div className="eng-card">
+        {s?.pending && s.pending.length > 0 && <div className="eng-card" id="engine-pending">
           <div className="eng-head"><h3>Pending — waiting for region activation</h3><span className="tag unv">{s.pending.length}</span></div>
           <p className="note">Each of these belongs to a region that isn&apos;t Active yet, so it hasn&apos;t been added as a live account. Activate the region in Define ICP, then click Add — or dismiss it.</p>
-          <div className="tablewrap"><table><thead><tr><th>Company</th><th>Region</th><th>Why</th><th>Requested</th><th></th></tr></thead>
+          <div className="tablewrap"><table><thead><tr><th>Company</th><th>Region</th><th>Why</th><th>Requested</th><th>Activate region</th></tr></thead>
             <tbody>{s.pending.map((p) => <tr key={p.id}>
               <td>{p.name}{p.website && <div className="muted">{p.website}</div>}</td>
               <td>{p.region} <span className={`tag ${p.region_status === "active" ? "fact" : "unv"}`}>{p.region_status === "active" ? "Active" : p.region_status === "next" ? "Next phase" : "Paused"}</span></td>
