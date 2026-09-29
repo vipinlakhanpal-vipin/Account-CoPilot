@@ -1,11 +1,15 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.99";
+export const APP_VERSION = "2.00";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.00", date: "2026-09-29", notes: "Master Book's HubSpot Deals sheet now only lists deals from January 2025 onward, dropping stale deals from mid-2024 and earlier.",
+    changes: [
+      { what: "HubSpot Deals sheet filters out any deal whose close date is before 2025-01-01 (deals with no close date yet, e.g. open pipeline, are still kept); the sheet's caption now states the cutoff", where: "Master Book export → HubSpot Deals sheet", why: "The sheet was showing deals as old as June 2024, cluttering it with closed business no longer relevant to current outreach" },
+    ] },
   { version: "1.99", date: "2026-09-29", notes: "Home tab redesigned: About and Setup Wizard now live side by side in one workspace with a left rail, icon-led navigation, and a collapsible list of the wizard's 7 steps — each step explains what it does and why before you fill it in. The wizard can now set up several regions at once. Also: the Master Book download button now shows progress instead of appearing to do nothing.",
     changes: [
       { what: "Home tab rebuilt as one workspace (new HomeWorkspace component): a left rail switches between 'About Account CoPilot' and 'Setup Wizard', each filling the full content pane — replaces the old stack of separate About sections and a gated wizard", where: "Home", why: "The five separate About panels and a hidden-behind-a-button wizard read as disconnected pieces; one workspace with two clear destinations is easier to navigate and to return to" },

@@ -156,12 +156,16 @@ export async function buildWorkbook(d: AllData, icpDef?: unknown): Promise<Buffe
     `Exported ${today} · one row per person, best buyer-persona fit first within each company (Define ICP) · official emails only, never guessed · teal columns from SCP's HubSpot`,
     listCols, contactRows, 1, [], conLogos);
 
-  // HubSpot deals linked to profiled companies (read-only copy; stays inside this app and its export)
-  const dealRows = d.accounts.flatMap((a) => (a.profile?.["HubSpot"]?.deals || []).map((x: Row) => ({ company: a.company_name, hs_name: a.profile["HubSpot"].hubspot_name,
-    deal: x.name, stage: x.stage, amount: x.amount ?? "", close: x.close, owner: a.profile["HubSpot"].owner })))
+  // HubSpot deals linked to profiled companies (read-only copy; stays inside this app and its export).
+  // Only deals closing (or already closed) from 2025-01-01 onward — older deals are dropped as stale.
+  const DEALS_FROM = "2025-01-01";
+  const dealRows = d.accounts.flatMap((a) => (a.profile?.["HubSpot"]?.deals || [])
+    .filter((x: Row) => !x.close || String(x.close) >= DEALS_FROM)
+    .map((x: Row) => ({ company: a.company_name, hs_name: a.profile["HubSpot"].hubspot_name,
+      deal: x.name, stage: x.stage, amount: x.amount ?? "", close: x.close, owner: a.profile["HubSpot"].owner })))
     .sort((a, b) => String(a.company).localeCompare(String(b.company)) || String(b.close).localeCompare(String(a.close)));
   table(wb, "HubSpot Deals", "HUBSPOT DEALS — Deals on profiled companies",
-    `Exported ${today} · read-only from SCP HubSpot · company matched by domain, then name`,
+    `Exported ${today} · read-only from SCP HubSpot · company matched by domain, then name · deals from ${DEALS_FROM} onward`,
     [["Company (app)", "company", 30], ["Company (HubSpot)", "hs_name", 28], ["Deal", "deal", 44, "wrap"], ["Deal Stage", "stage", 16], ["Amount", "amount", 14, "usd"],
       ["Close Date", "close", 12], ["Company Owner", "owner", 22]], dealRows, 2);
 
