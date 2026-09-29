@@ -16,7 +16,7 @@ export default function TierSettings({ initial }: { initial: Tier[] }) {
     <section className="view">
       <div className="panel">
         <h2>Contact tiers</h2>
-        <p className="note">Tiers are an internal sales classification, not a fact. Edit the gold-framed fields; the research engine and your team use these definitions.</p>
+        <p className="note">Tiers are an internal sales classification, not a fact — for your own reference only. Editing them is safe: nothing else in the app currently reads these labels or example titles for scoring or research (only Super Admins can reach this page at all).</p>
         <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 12 }}>
           {tiers.map((t, i) => (
             <div key={t.tier} className="form-grid tier-row" style={{ gridTemplateColumns: "90px 1fr 2fr", alignItems: "center" }}>

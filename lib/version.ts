@@ -1,11 +1,21 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.89";
+export const APP_VERSION = "1.90";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.90", date: "2026-09-29", notes: "A batch of job-table clarity fixes: no more duplicated region info, the Pending link now scrolls to the right place, Activate Region is its own column, clearer token and tier-safety notes, and a light-coloured cost table.",
+    changes: [
+      { what: "Clicking a 'Waiting for region activation' link now scrolls to the right place — the Pending card was landing half-hidden behind the page header", where: "Setup → Settings → job status table, bell, Scheduled run history", why: "The anchor link didn't account for the sticky header's height" },
+      { what: "Company name no longer repeats the region in brackets (Region already has its own column), and the Region column no longer shows a 'searched from UAE' subtitle that added noise without adding information", where: "Setup → Settings → job status table", why: "Both pieces of information were already shown elsewhere in the row" },
+      { what: "'Activate Region' is now its own column in Scheduled run history, next to New companies — not buried inside the Summary cell's inner table", where: "Setup → Settings → Scheduled run history", why: "It read as part of the run's plain-text summary instead of an action you could take" },
+      { what: "'View <Company> (<Region>) Account' for a single company, 'View the (<Region>) Accounts' for a region-wide result — used consistently everywhere a result links to an account", where: "Setup → Settings → job status table", why: "One consistent phrasing instead of several different link labels for the same kind of link" },
+      { what: "The engine token note now says plainly: it never expires on its own, and only a Super Admin can generate, regenerate or revoke it", where: "Setup → Settings → Scheduled session access", why: "There was no answer to 'does this expire' or 'who can do this' anywhere in the UI" },
+      { what: "Corrected the Contact tiers note — it no longer claims the research engine uses these definitions (it doesn't currently; nothing outside this page reads them). The page itself was already Super-Admin-only", where: "Setup → Settings → Contact tiers", why: "The old wording overstated what editing this actually affects" },
+      { what: "The Costs & usage table now has a light green or amber fill per row, matching whether that action is free or uses the Anthropic API", where: "Setup → Learn Me → Costs & usage", why: "Free vs. paid actions were hard to tell apart at a glance in a long table" },
+    ] },
   { version: "1.89", date: "2026-09-29", notes: "Run-details table now sits right below the timestamp, with the one-line summary as small print underneath it; the status pill is smaller so it fits the row cleanly.",
     changes: [
       { what: "The Company/Status/Revenue table now appears directly under the date and time, with the plain-language summary as smaller fine print below it — instead of the summary first and the table after", where: "Bell notifications; Setup → Settings → Scheduled run history", why: "The table is the structured, scannable part; the summary is just a caption for it, so it reads better underneath" },

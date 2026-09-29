@@ -114,35 +114,36 @@ export default function EngineSettings() {
               const realRegion = parsed ? parsed[2].trim() : j.region;
               const held = parsed ? /held pending activation/i.test(parsed[3]) : !!legacyHeld;
               return <tr key={j.id}>
-              <td>{j.mode === "company" ? (parsed ? `${parsed[1].trim()} (${realRegion})` : j.company_name) : "—"}{j.website && <div className="muted">{j.website}</div>}</td>
-              <td>{MODE[j.mode] || j.mode}</td><td>{realRegion}{realRegion !== j.region && <div className="muted">searched from {j.region}</div>}</td><td>{j.count}</td><td><span className={`job-st ${j.status}`}>{j.status === "queued" ? "Waiting" : j.status === "running" ? "In progress" : j.status === "done" ? "Completed" : j.status === "error" ? "Failed" : j.status === "cancelled" ? "Cancelled" : j.status}</span>
+              <td>{j.mode === "company" ? (parsed ? parsed[1].trim() : j.company_name) : "—"}{j.website && <div className="muted">{j.website}</div>}</td>
+              <td>{MODE[j.mode] || j.mode}</td><td>{realRegion}</td><td>{j.count}</td><td><span className={`job-st ${j.status}`}>{j.status === "queued" ? "Waiting" : j.status === "running" ? "In progress" : j.status === "done" ? "Completed" : j.status === "error" ? "Failed" : j.status === "cancelled" ? "Cancelled" : j.status}</span>
                 {j.status === "queued" && <div className="muted">usually a minute or two — falls back to {nextRun()} if that doesn't fire</div>}{j.status === "running" && <div className="muted">started by the scheduled session</div>}</td>
               <td className="muted">{new Date(j.requested_at).toLocaleString()}<div>{j.requested_by}</div></td><td className="wrap">{j.result}
                 {j.status === "done" && (held
-                  ? <div><a className="job-link" href="/settings#engine-pending">Pending — waiting for {parsed ? realRegion : legacyHeld?.[1]} activation →</a></div>
-                  : <div><a className="job-link" href={j.slug ? `/?open=${encodeURIComponent(j.slug)}&country=${encodeURIComponent(realRegion)}` : `/?tab=accounts&country=${encodeURIComponent(realRegion)}`}>{j.slug ? `View ${parsed ? parsed[1].trim() : j.company_name || "the"} (${realRegion}) Account →` : `View ${realRegion} accounts →`}</a></div>)}</td>
+                  ? <div><a className="job-link" href="/settings#engine-pending">Waiting for {(parsed ? realRegion : legacyHeld?.[1]) || "region"} Region Activation →</a></div>
+                  : <div><a className="job-link" href={j.slug ? `/?open=${encodeURIComponent(j.slug)}&country=${encodeURIComponent(realRegion)}` : `/?tab=accounts&country=${encodeURIComponent(realRegion)}`}>{j.slug ? `View ${parsed ? parsed[1].trim() : j.company_name || "the"} (${realRegion}) Account →` : `View the (${realRegion}) Accounts →`}</a></div>)}</td>
               <td>{j.status === "queued" && <button type="button" className="btn tiny ghost" onClick={() => post({ action: "cancel", id: j.id }, "Job cancelled.")}>Cancel</button>}</td></tr>; })}</tbody></table></div>}
         </div>
 
         {s?.log && s.log.length > 0 && <div className="eng-card"><div className="eng-head"><h3>Scheduled run history</h3><span className="tag fact">Daily Run — {dailyRunLocal()}</span></div>
-          <div className="tablewrap"><table><thead><tr><th>When</th><th>Summary</th><th>Verified</th><th>New companies</th><th>Run status</th></tr></thead>
-            <tbody>{s.log.slice(0, 10).map((e) => <tr key={e.at}><td className="muted">{new Date(e.at).toLocaleString()}</td>
+          <div className="tablewrap"><table><thead><tr><th>When</th><th>Summary</th><th>Verified</th><th>New companies</th><th>Activate Region</th><th>Run status</th></tr></thead>
+            <tbody>{s.log.slice(0, 10).map((e) => { const held = e.details?.filter((d) => /^held/i.test(d.status)) || [];
+              return <tr key={e.at}><td className="muted">{new Date(e.at).toLocaleString()}</td>
               <td className="wrap">
                 {e.details && e.details.length > 0 ? (<>
-                  <table className="run-table"><thead><tr><th>Company</th><th>Status</th><th>Revenue</th><th>Activate region</th></tr></thead>
-                    <tbody>{e.details.slice(0, 30).map((d, i) => <tr key={i}><td>{d.name}</td><td><span className={`tag ${statusTag(d.status)}`}>{d.status}</span></td><td className="muted">{d.revenue || "—"}</td>
-                      <td>{/^held/i.test(d.status) && <a className="job-link" href="/settings#engine-pending">Activate region →</a>}</td></tr>)}</tbody></table>
+                  <table className="run-table"><thead><tr><th>Company</th><th>Status</th><th>Revenue</th></tr></thead>
+                    <tbody>{e.details.slice(0, 30).map((d, i) => <tr key={i}><td>{d.name}</td><td><span className={`tag ${statusTag(d.status)}`}>{d.status}</span></td><td className="muted">{d.revenue || "—"}</td></tr>)}</tbody></table>
                   <p className="note run-note">{e.summary}</p></>
                 ) : e.summary}
               </td>
               <td>{e.verified}</td>
               <td className="wrap">{e.new_companies.join(", ") || "—"}</td>
-              <td className="muted">{e.source === "instant" ? "Instant Search Run" : e.source === "daily" ? `Daily Run — ${dailyRunLocal()}` : "—"}</td></tr>)}</tbody></table></div></div>}
+              <td>{held.map((d, i) => <div key={i}><a className="job-link" href="/settings#engine-pending">Activate {d.status.replace(/^held \(|\)$/gi, "")} →</a></div>)}</td>
+              <td className="muted">{e.source === "instant" ? "Instant Search Run" : e.source === "daily" ? `Daily Run — ${dailyRunLocal()}` : "—"}</td></tr>; })}</tbody></table></div></div>}
 
         {s?.pending && s.pending.length > 0 && <div className="eng-card" id="engine-pending">
-          <div className="eng-head"><h3>Pending — waiting for region activation</h3><span className="tag unv">{s.pending.length}</span></div>
+          <div className="eng-head"><h3>Waiting for region activation</h3><span className="tag unv">{s.pending.length}</span></div>
           <p className="note">Each of these belongs to a region that isn&apos;t Active yet, so it hasn&apos;t been added as a live account. Activate the region in Define ICP, then click Add — or dismiss it.</p>
-          <div className="tablewrap"><table><thead><tr><th>Company</th><th>Region</th><th>Why</th><th>Requested</th><th>Activate region</th></tr></thead>
+          <div className="tablewrap"><table><thead><tr><th>Company</th><th>Region</th><th>Why</th><th>Requested</th><th>Activate Region</th></tr></thead>
             <tbody>{s.pending.map((p) => <tr key={p.id}>
               <td>{p.name}{p.website && <div className="muted">{p.website}</div>}</td>
               <td>{p.region} <span className={`tag ${p.region_status === "active" ? "fact" : "unv"}`}>{p.region_status === "active" ? "Active" : p.region_status === "next" ? "Next phase" : "Paused"}</span></td>
@@ -157,7 +158,7 @@ export default function EngineSettings() {
 
         <div className="eng-card">
           <div className="eng-head"><h3>Scheduled session access</h3><span className={`tag ${s?.token_info ? "fact" : "unv"}`} title={s?.token_info ? "Last 4 characters of the current token — the app only stores its hash, not the full value. Check this matches the ENGINE_TOKEN you pasted into the cloud environment." : undefined}>{s?.token_info ? `Active · token ends in ${s.token_info.hint}` : "Not set up"}</span></div>
-          <p className="note">The daily 6am Claude session talks to the app with a limited engine token: it can read the job queue and the verification queue, submit revenue results, add discovered companies and post notifications — it cannot read contacts or delete anything. Put it in the cloud environment's variables as <code>ENGINE_TOKEN</code> (with <code>APP_URL=https://account-copilot.vercel.app</code>). It's shown only once; generating a new one revokes the old.</p>
+          <p className="note">The daily 6am Claude session talks to the app with a limited engine token: it can read the job queue and the verification queue, submit revenue results, add discovered companies and post notifications — it cannot read contacts or delete anything. Put it in the cloud environment's variables as <code>ENGINE_TOKEN</code> (with <code>APP_URL=https://account-copilot.vercel.app</code>). It's shown only once; generating a new one revokes the old. <b>It never expires on its own</b> — it stays active until you regenerate or revoke it here. Only a Super Admin can generate, regenerate or revoke it; nobody else can reach this action.</p>
           <div className="eng-form">
             <button type="button" className="btn" onClick={async () => { if (!s?.token_info || await ask({ title: "Generate a new engine token?", tone: "danger", confirm: "Generate new token", points: ["The current token stops working immediately.", "Update ENGINE_TOKEN in the routine environment with the new one."] })) post({ action: "token", op: "generate" }, "New engine token generated — copy it now."); }}>{s?.token_info ? "Regenerate token" : "Generate token"}</button>
             {s?.token_info && <button type="button" className="btn ghost" onClick={async () => { if (await ask({ title: "Revoke the engine token?", tone: "danger", confirm: "Revoke token", points: ["The daily 6am run stops until a new token is generated and set."] })) post({ action: "token", op: "revoke" }, "Engine token revoked."); }}>Revoke</button>}

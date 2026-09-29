@@ -34,7 +34,7 @@ export default function CostInfo() {
       <h4 className="sub">What each action costs</h4>
       <div className="tablewrap"><table>
         <thead><tr><th>Action</th><th>Uses API?</th><th>Typical usage</th><th>Typical cost</th></tr></thead>
-        <tbody>{ROWS.map(([a, u, t, c]) => <tr key={a}><td><b>{a}</b></td><td>{u}</td><td className="muted">{t}</td><td className="mono">{c}</td></tr>)}</tbody>
+        <tbody>{ROWS.map(([a, u, t, c]) => <tr key={a} className={u === "Yes" ? "cost-row-paid" : "cost-row-free"}><td><b>{a}</b></td><td>{u}</td><td className="muted">{t}</td><td className="mono">{c}</td></tr>)}</tbody>
       </table></div>
       <h4 className="sub">Other costs to know</h4>
       <ul className="plain">
