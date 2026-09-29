@@ -10,7 +10,11 @@ import { ask, notify } from "@/components/Confirm";
 // they configure: region/size in teal, targeting in gold, sources/pace in sky, review neutral.
 const clone = <T,>(x: T): T => JSON.parse(JSON.stringify(x));
 
-type Sources = { seamless: boolean; lusha: boolean; zoominfo: boolean; crunchbase: boolean; other: string };
+// Seamless.ai is the only source actually wired into this app today (lib/sources.ts, scripts/apply_verification.mjs) —
+// everything else here is just the user's own inventory of what they subscribe to, recorded for later, not a live
+// connection. Never mark anything "connected" unless it genuinely is.
+type Sources = { checked: string[]; custom: string[] };
+const KNOWN_SOURCES = ["ZoomInfo", "Crunchbase", "Lusha", "Dun & Bradstreet", "Refinitiv", "Thomson Reuters"];
 type Draft = { revenue: number; employees: number; listing: Rules["listing"]; entity: Rules["entity_level"]; discoverPerDay: number; verifyPerDay: number };
 
 const ICON = {
@@ -34,6 +38,14 @@ function Ico({ name }: { name: keyof typeof ICON }) {
 }
 const stepColor = (v: string): CSSProperties => ({ "--step-color": v } as CSSProperties);
 const usdM = (n: number) => (n >= 1000 ? `$${(n / 1000).toFixed(2).replace(/\.?0+$/, "")}B` : `$${n}M`);
+// Same per-company rates published in Setup → Learn Me → Costs & usage (components/CostInfo.tsx) — kept in sync with those, not re-derived.
+const fmtUsd = (n: number) => `$${n % 1 === 0 ? n.toFixed(0) : n.toFixed(2)}`;
+const costRange = (u: number | [number, number], n: number) => (Array.isArray(u) ? `${fmtUsd(u[0] * n)}–${fmtUsd(u[1] * n)}` : fmtUsd(u * n));
+const PROFILE_TIERS: { label: string; unit: number | [number, number]; note: string }[] = [
+  { label: "Quick", unit: 0.55, note: "fast pass, ~5 searches" },
+  { label: "Standard", unit: [1.2, 1.5], note: "more sources, ~10 searches" },
+  { label: "Deep", unit: [2.5, 3.5], note: "most thorough, ~20 searches" },
+];
 
 const STEPS: { n: number; label: string; icon: keyof typeof ICON; cls: string }[] = [
   { n: 1, label: "Region", icon: "pin", cls: "hw-step--region" },
@@ -56,8 +68,10 @@ export default function HomeWorkspace({ access }: { access: Access }) {
   const [regions, setRegions] = useState<string[]>([]);
   const [hasList, setHasList] = useState<"yes" | "no" | "">("");
   const [domains, setDomains] = useState<string[]>([]);
-  const [sources, setSources] = useState<Sources>({ seamless: false, lusha: false, zoominfo: false, crunchbase: false, other: "" });
+  const [sources, setSources] = useState<Sources>({ checked: [], custom: [] });
+  const [newSource, setNewSource] = useState("");
   const [activateNow, setActivateNow] = useState(true);
+  const [wantsProfiling, setWantsProfiling] = useState<"free" | "paid" | "">("");
   const [draft, setDraft] = useState<Draft>({ revenue: 250, employees: 100, listing: "any", entity: "group_hq", discoverPerDay: 5, verifyPerDay: 25 });
 
   useEffect(() => {
@@ -81,7 +95,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
           }
         }
         const s = await srcRes.json().catch(() => null);
-        if (!cancelled && s && typeof s === "object") setSources((cur) => ({ ...cur, ...s }));
+        if (!cancelled && s && Array.isArray(s.checked)) setSources({ checked: s.checked, custom: Array.isArray(s.custom) ? s.custom : [] });
       } catch { if (!cancelled) notify("Could not load Define ICP settings.", "error"); }
       if (!cancelled) setLoading(false);
     })();
@@ -95,13 +109,22 @@ export default function HomeWorkspace({ access }: { access: Access }) {
   };
   const toggleRegion = (key: string) => setRegions((cur) => (cur.includes(key) ? cur.filter((k) => k !== key) : [...cur, key]));
   const toggleDomain = (key: string) => setDomains((cur) => (cur.includes(key) ? cur.filter((k) => k !== key) : [...cur, key]));
+  const toggleSource = (name: string) => saveSources({ ...sources, checked: sources.checked.includes(name) ? sources.checked.filter((x) => x !== name) : [...sources.checked, name] });
+  const addSource = () => {
+    const name = newSource.trim();
+    if (!name) return;
+    const known = [...KNOWN_SOURCES, ...sources.custom].find((x) => x.toLowerCase() === name.toLowerCase());
+    if (known) { if (!sources.checked.includes(known)) saveSources({ ...sources, checked: [...sources.checked, known] }); }
+    else saveSources({ checked: [...sources.checked, name], custom: [...sources.custom, name] });
+    setNewSource("");
+  };
 
   async function save() {
     if (!def) return;
     if (!regions.length) { notify("Pick at least one region in step 1.", "error"); setSection("wizard"); setExpanded(true); setStep(1); return; }
     const names = regions.map((k) => REGIONS.find((r) => r.key === k)?.name || k).join(", ");
     if (!(await ask({ title: "Save this setup?", confirm: "Save & apply", body: `Applies to ${names}.`,
-      points: ["Every company's ICP status is recalculated straight away.", "The next 6am run uses these rules for each region checked."] }))) return;
+      points: ["Every company's ICP status is recalculated straight away.", "The next daily run uses these rules for each region checked."] }))) return;
     setSaving(true);
     const chosenDepts = domains.map((k) => OPTIONS.domains.find((x) => x.key === k)?.department).filter((x): x is string => !!x);
     const extraTriggers = domains.flatMap((k) => OPTIONS.domains.find((x) => x.key === k)?.extraTriggers || []);
@@ -167,7 +190,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                   <li>Stakeholders — contacts, seniority, persona fit</li><li>Data — sources, conflicts, tech signals, research queue</li>
                   <li>Setup — Define ICP, engine settings, team access</li></ul></div>
               <div className="hw-about-card"><span className="hw-icon-badge"><Ico name="coin" /></span><h4>Tokens &amp; cost</h4>
-                <p>Your <b>Claude plan</b> covers the daily 6am run and anything you queue for free — no Anthropic key touched. The
+                <p>Your <b>Claude plan</b> covers the daily run and anything you queue for free — no Anthropic key touched. The
                   <b> Anthropic API key</b> is only spent by Research Queue, Research more, Draft pitch and paid Refresh — each shows its cost
                   first, and a PIN can gate all of them.</p></div>
               <div className="hw-about-card"><span className="hw-icon-badge"><Ico name="search" /></span><h4>How it verifies</h4>
@@ -290,19 +313,24 @@ export default function HomeWorkspace({ access }: { access: Access }) {
               <div>
                 <div className="hw-tint hw-tint--data">
                   <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--sky)")}><Ico name="database" /></span><h3>Which data sources do you have?</h3></div>
-                  <p className="hw-lead">This just records what&apos;s available — nothing here blocks you from continuing. Seamless.ai and Lusha are
-                    already connected and free to use for contact enrichment.</p>
+                  <p className="hw-lead">Seamless.ai is the one source genuinely connected and in use today, for contact enrichment. Everything else
+                    below is just your own inventory — tick what you have a subscription to, so I know what to ask for exports from; nothing here
+                    connects automatically.</p>
                 </div>
                 <div className="hw-checkrow">Seamless.ai <span className="hw-tag-sm">connected</span></div>
-                <div className="hw-checkrow">Lusha <span className="hw-tag-sm">connected</span></div>
-                <label className="hw-checkrow"><input type="checkbox" checked={sources.zoominfo} onChange={(e) => saveSources({ ...sources, zoominfo: e.target.checked })} />
-                  ZoomInfo — available as a Claude connector, needs your authorization</label>
-                <label className="hw-checkrow"><input type="checkbox" checked={sources.crunchbase} onChange={(e) => saveSources({ ...sources, crunchbase: e.target.checked })} />
-                  Crunchbase — available as a Claude connector, needs your authorization</label>
-                <label className="hw-field">Other subscription you have
-                  <input type="text" placeholder="e.g. Refinitiv, Dun & Bradstreet" value={sources.other}
-                    onChange={(e) => setSources((s) => ({ ...s, other: e.target.value }))} onBlur={() => saveSources(sources)} />
-                  <span className="hint">Not connected to Claude yet — send an export and it&apos;s folded in by hand until a connector exists.</span></label>
+                {[...KNOWN_SOURCES, ...sources.custom].map((name) => (
+                  <label key={name} className="hw-checkrow">
+                    <input type="checkbox" checked={sources.checked.includes(name)} onChange={() => toggleSource(name)} />
+                    {name} <span className="hint" style={{ marginLeft: 4 }}>— not connected to this app yet</span>
+                  </label>
+                ))}
+                <label className="hw-field">Have another subscription not listed above?
+                  <div className="hw-field-row">
+                    <input type="text" placeholder="e.g. Coresignal, S&P Capital IQ" value={newSource}
+                      onChange={(e) => setNewSource(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSource(); } }} />
+                    <button type="button" className="btn" disabled={!newSource.trim()} onClick={addSource}>Add</button>
+                  </div>
+                  <span className="hint">Adds it to the list above, ticked. Send exports and I&apos;ll fold them in by hand until a real connector exists.</span></label>
               </div>
             )}
 
@@ -310,8 +338,9 @@ export default function HomeWorkspace({ access }: { access: Access }) {
               <div>
                 <div className="hw-tint hw-tint--data">
                   <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--sky)")}><Ico name="calendar" /></span><h3>Daily plan</h3></div>
-                  <p className="hw-lead">Sets how much unattended work the 6am run does each morning, on your Claude plan at no extra cost. A good
-                    starting point for extending an existing list: find 5 a day, verify 25.</p>
+                  <p className="hw-lead">Sets how much unattended work the daily run does, on your Claude plan at no extra cost. A good
+                    starting point for extending an existing list: find 5 a day, verify 25. Change what time it runs any time in
+                    Setup → Settings.</p>
                 </div>
                 <label className="hw-field">New companies to find per day
                   <input type="number" min={0} max={50} value={draft.discoverPerDay} onChange={(e) => setDraft((d) => ({ ...d, discoverPerDay: Number(e.target.value) || 0 }))} />
@@ -322,6 +351,37 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                 <label className="hw-checkrow"><input type="checkbox" checked={activateNow} onChange={(e) => setActivateNow(e.target.checked)} />
                   Activate {regions.length > 1 ? "these regions'" : "this region's"} daily run now — leave unchecked to save these rules without
                   switching the run on yet</label>
+
+                <div className="hw-tint hw-tint--data" style={{ marginTop: 18 }}>
+                  <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--sky)")}><Ico name="coin" /></span><h3>Just the free daily pace, or paid profiling too?</h3></div>
+                  <p className="hw-lead">The plan above is entirely free — it&apos;s your Claude plan, not the Anthropic API key. If you&apos;d rather
+                    have Claude go deeper on companies than the free daily pace allows — fuller profiles, more sources, faster than 25 a day — that&apos;s
+                    a separate, paid action (Data → Research Queue, or Research more) using the Anthropic API key. This is just to set expectations;
+                    nothing is charged from this wizard.</p>
+                </div>
+                <div className="hw-pillrow">
+                  <button type="button" className={`hw-pill ${wantsProfiling === "free" ? "on" : ""}`} onClick={() => setWantsProfiling("free")}>Just the free daily pace is fine</button>
+                  <button type="button" className={`hw-pill ${wantsProfiling === "paid" ? "on" : ""}`} onClick={() => setWantsProfiling("paid")}>I&apos;ll want paid profiling too</button>
+                </div>
+                {wantsProfiling === "paid" && (
+                  <div className="tablewrap" style={{ marginTop: 12 }}>
+                    <table>
+                      <thead><tr><th>Research depth</th><th>Per company</th><th>Per 50 companies</th><th>Per 100 companies</th></tr></thead>
+                      <tbody>
+                        {PROFILE_TIERS.map((t) => (
+                          <tr key={t.label}>
+                            <td><b>{t.label}</b> <span className="hint">— {t.note}</span></td>
+                            <td className="mono">{costRange(t.unit, 1)}</td>
+                            <td className="mono">{costRange(t.unit, 50)}</td>
+                            <td className="mono">{costRange(t.unit, 100)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    <p className="hint" style={{ marginTop: 8 }}>Same per-company rates as Setup → Learn Me → Costs &amp; usage. You approve
+                      every paid run before anything is spent, and a Super Admin can require a PIN.</p>
+                  </div>
+                )}
               </div>
             )}
 
@@ -329,9 +389,21 @@ export default function HomeWorkspace({ access }: { access: Access }) {
               <div>
                 <div className="hw-tint hw-tint--review">
                   <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--muted)")}><Ico name="clipboard" /></span><h3>Review</h3></div>
-                  <p className="hw-lead">Nothing is saved until you press Save &amp; apply below — check the summary matches what you meant,
-                    especially the region list from step 1.</p>
+                  <p className="hw-lead">Here&apos;s what this sets up, in plain terms. Nothing is saved until you press Save &amp; apply below.</p>
                 </div>
+                <p className="hw-lead" style={{ marginBottom: 16 }}>
+                  You&apos;re setting up <b>{regionNames.length || 0} region{regionNames.length === 1 ? "" : "s"}</b>
+                  {regionNames.length ? <> ({regionNames.join(", ")})</> : null} with a bar of <b>{usdM(draft.revenue)} revenue</b> and{" "}
+                  <b>{draft.employees}+ employees</b>. {activateNow ? "Once you save, the daily run switches on for these regions" : "These rules save now, but the daily run stays paused for these regions until you activate them"} —
+                  every day it looks for <b>{draft.discoverPerDay} new</b> matching companies and re-checks <b>{draft.verifyPerDay} existing</b> ones,
+                  weighted toward {domains.length ? domains.map((k) => OPTIONS.domains.find((x) => x.key === k)?.label).join(", ") : "your current targeting"}.
+                  All of this runs on your Claude plan, at no extra cost.{wantsProfiling === "paid" ? " Whenever you want it to go deeper than that free pace, Research Queue or Research more (Data tab) will do it, at the rates shown in the previous step." : ""}
+                </p>
+                <p className="hw-lead" style={{ marginBottom: 16 }}>
+                  <b>When to expect something worth looking at:</b> the first new and re-checked companies land within a day or two of the run
+                  switching on. A dataset that&apos;s broadly verified across everything in these regions typically takes <b>2–4 weeks</b> to build up
+                  at this pace — sooner if you&apos;re starting from an existing list, longer for a region starting from nothing.
+                </p>
                 <ul className="hw-review-list">
                   <li>Regions <b>{regionNames.length ? regionNames.join(", ") : "none checked"}{activateNow ? " — will be Active" : ""}</b></li>
                   <li>Company size <b>revenue ≥ {usdM(draft.revenue)}, employees ≥ {draft.employees}</b></li>

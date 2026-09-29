@@ -326,11 +326,11 @@ export default async function GuidePage() {
 
             <section id="costs" className="panel"><h2>Costs</h2>
               <p className="note"><b>Paid-actions PIN:</b> every action that costs money asks for a PIN in the app before anything is spent: Research more, Draft pitch plan, Research Queue, Research again and the paid Refresh. A Super Admin sets the PIN in Setup → Settings → 2 · Paid refresh. Standard users are always asked; Super Admins only if they choose. Without the right PIN the server refuses and nothing is charged.</p>
-              <p>Browsing, filtering, scoring, Learn Me and Excel export are always free. Only actions marked with the amber <b>Cost impact</b> note use the Anthropic API. The daily 6am engine uses your Claude plan, not the API.</p>
+              <p>Browsing, filtering, scoring, Learn Me and Excel export are always free. Only actions marked with the amber <b>Cost impact</b> note use the Anthropic API. The daily engine uses your Claude plan, not the API.</p>
               <T head={["Action", "Where", "Uses the API?", "Typical cost", "Example"]} rows={[
                 ["Browse, filter, scores, Pipeline, Guide", "Everywhere", "No", "$0", "Open the Pipeline, filter by Coupa, read a brief — free"],
                 ["Download Master Book (Excel)", "Top bar", "No", "$0", "Export all 464 accounts — free"],
-                ["Daily 6am engine (find 5 + verify 25)", "Runs by itself", "No — your Claude plan", "$0 API", "Tomorrow's run adds 5 companies and verifies 25 — no API charge"],
+                ["Daily engine (find 5 + verify 25)", "Runs by itself", "No — your Claude plan", "$0 API", "Tomorrow's run adds 5 companies and verifies 25 — no API charge"],
                 ["Search companies (queued job)", "Setup → Settings → engine", "No — your Claude plan", "$0 API", "Queue 'Verify 50 in UAE' — done in the next scheduled session"],
                 ["Draft pitch plan", "Account brief", "Yes", "≈ $0.05–0.10", "Drafting a plan for GEMS Education ≈ $0.07"],
                 ["Refresh research (one account)", "Account brief", "Yes", "≈ $1.20–1.50", "Re-researching Emaar (Standard) ≈ $1.35"],
@@ -392,7 +392,7 @@ export default async function GuidePage() {
                 ["Last activity / last contacted date", "Available", "Can highlight accounts nobody has touched recently"],
                 ["Company properties recorded in HubSpot (industry, size, revenue, domain)", "Available", "Can be compared with the app's verified data"],
               ]} />
-              <p className="note">&quot;Available&quot; items can be switched on on request. HubSpot matches are refreshed in Claude sessions (and can be added to the daily 6am run).</p>
+              <p className="note">&quot;Available&quot; items can be switched on on request. HubSpot matches are refreshed in Claude sessions (and can be added to the daily run).</p>
               <p className="note"><b>Company in HubSpot</b> = <b>Yes</b> when the company exists in SCP&apos;s HubSpot, <b>No</b> when it doesn&apos;t; <b>Company Stage</b> is its HubSpot lifecycle stage and <b>Company Owner</b> its HubSpot owner. Companies not yet checked read &quot;Not checked yet&quot;.</p>
               <T head={["HubSpot Import Action", "Meaning"]} rows={[
                 ["Skip — contact already in HubSpot", "The email already exists in HubSpot; do not import this row"],
@@ -426,8 +426,8 @@ export default async function GuidePage() {
                 ["What it would add", "Exact business cases (savings, touchless-invoice ROI) instead of benchmark ranges."],
               ]} />
               <h3>3 · Automatic discovery &amp; monitoring through the API — Phase 2 (on hold)</h3>
-              <p>Part of this already runs at <b>no API cost</b>: the daily 6am engine finds 5 new companies and verifies 25 every day. Phase 2 is the paid, in-app version that goes further. It's on hold at your request to avoid API spend.</p>
-              <T head={["", "Daily 6am engine (live today)", "Phase 2 (if enabled)"]} rows={[
+              <p>Part of this already runs at <b>no API cost</b>: the daily engine finds 5 new companies and verifies 25 every day. Phase 2 is the paid, in-app version that goes further. It's on hold at your request to avoid API spend.</p>
+              <T head={["", "Daily engine (live today)", "Phase 2 (if enabled)"]} rows={[
                 ["Runs on", "Scheduled Claude session on your Claude plan", "The app itself (a scheduled job on Vercel) calling the Anthropic API"],
                 ["Cost", "No API cost", "API cost within a monthly budget cap you set"],
                 ["Adds new companies", "5 a day (UAE)", "Any number you choose, in every selected region, following your saved ICP criteria"],

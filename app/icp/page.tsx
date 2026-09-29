@@ -8,7 +8,7 @@ import { getAccess, ROLE_LABEL } from "@/lib/access";
 export const dynamic = "force-dynamic";
 
 // Setup → Define ICP: the rules the agent follows, one profile per region. Saved rules drive ICP status, the Pipeline,
-// the left panel defaults, in-app research and the daily 6am run (which reads them through the engine worker API).
+// the left panel defaults, in-app research and the daily run (which reads them through the engine worker API).
 export default async function DefineIcpPage() {
   const user = await requirePageUser();
   const db = supabaseAdmin();
@@ -27,7 +27,7 @@ export default async function DefineIcpPage() {
       <section className="panel icp-how">
         <h3>How the agent uses your ICP</h3>
         <ol>
-          <li><b>Search:</b> each morning the 6am run reads these rules first. It looks only in <b>active</b> regions, for companies of the size, type and industries you chose, and never adds anything on your &quot;never add&quot; list.</li>
+          <li><b>Search:</b> each day the daily run reads these rules first. It looks only in <b>active</b> regions, for companies of the size, type and industries you chose, and never adds anything on your &quot;never add&quot; list.</li>
           <li><b>Verify:</b> it checks revenue using the measure you chose (net revenue, or operating income for banks) and only the sources you allow for <b>Verified</b>.</li>
           <li><b>Decide status:</b> every account is Verified, Likely, Needs check, Not ICP or Unknown by these rules. When you save, every company is recalculated at once.</li>
           <li><b>Prioritise:</b> the Pipeline uses your weights and minimum ICP Match, and contact research follows your buyer personas.</li>

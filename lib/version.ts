@@ -1,11 +1,18 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.03";
+export const APP_VERSION = "2.04";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.04", date: "2026-09-29", notes: "Data sources step no longer claims Lusha is connected (it wasn't — that was a mistake); it's now an honest, extendable inventory of what you actually subscribe to. 'Daily 6am run' wording replaced with plain 'daily run' throughout the app. Review step rewritten as a plain-English summary with a 'when will this be worth looking at' estimate. Daily plan step now asks whether you'll want paid profiling on top of the free daily pace, with real per-company / per-50 / per-100 cost examples.",
+    changes: [
+      { what: "Removed the false 'Lusha — connected' claim from Data sources — Lusha was never actually connected to this app, only Seamless.ai genuinely is (confirmed against lib/sources.ts and the verification scripts). The step is now framed as your own inventory: tick ZoomInfo, Crunchbase, Lusha, Dun & Bradstreet, Refinitiv or Thomson Reuters if you have them, each honestly labelled 'not connected to this app yet', plus a free-text field with an Add button so anything else you type becomes its own tickable item in the list, same as the rest", where: "Home → Setup Wizard → Data sources", why: "Showing something as connected when it isn't is actively misleading, not just an inaccuracy — caught after being asked to confirm what made it show that way" },
+      { what: "Replaced 'the daily 6am run' / '6am engine' wording with plain 'the daily run' across the Home workspace, Define ICP, the Guide, Engine Settings and the instant-trigger GitHub issue text", where: "Home, Setup → Define ICP, Setup → Learn Me, Setup → Settings", why: "The exact clock hour isn't something a new user needs embedded in every sentence, and naming it added confusion rather than clarity" },
+      { what: "Setup Wizard's Daily plan step now asks whether the free daily pace is enough, or whether paid deeper profiling (Research Queue / Research more) is also wanted — if so, a real cost table shows Quick / Standard / Deep rates per company, per 50 and per 100 companies, using the same figures already published in Setup → Learn Me → Costs & usage", where: "Home → Setup Wizard → Daily plan", why: "Sets accurate cost expectations before someone assumes 'daily plan' numbers apply to paid profiling too" },
+      { what: "Review step rewritten: leads with a plain-English paragraph of what's being set up and what happens daily, plus a 'when to expect something worth looking at' estimate (first results within a day or two; a broadly verified dataset in 2–4 weeks at the chosen pace) — the fact table stays below it as backup detail, not the whole page", where: "Home → Setup Wizard → Review", why: "A bare key/value table with no explanation didn't give a sense of the outcome or the timeline — a first-time user has no way to know what to expect without it" },
+    ] },
   { version: "2.03", date: "2026-09-29", notes: "Setup Wizard step 1 (Region) now shows a 'Selected: …' summary line under the region pills, matching step 4's (Who you're after) layout for symmetry.",
     changes: [
       { what: "Step 1 now shows 'Selected: <region names>' below the region pill row, the same pattern step 4 already uses for domains, instead of a generic instructional line", where: "Home → Setup Wizard → Region", why: "Step 4 already confirmed your picks this way; step 1 lacked the same confirmation, so the two steps read inconsistently" },

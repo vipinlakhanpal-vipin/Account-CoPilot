@@ -38,7 +38,7 @@ async function openJobIssue(job: Job) {
   const token = process.env.GITHUB_JOBS_TOKEN;
   if (!token) return;
   const title = job.mode === "company" ? `Job ${job.id}: check "${job.company_name}" (${job.region})` : `Job ${job.id}: ${job.mode} ${job.count} in ${job.region}`;
-  const body = `Queued by ${job.requested_by} at ${job.requested_at}.\n\nAuto-opened by Account CoPilot so the instant job runner fires now instead of waiting for 6am. The job itself is tracked in the app (Setup → Settings), not in this issue — closing or leaving this open makes no difference.`;
+  const body = `Queued by ${job.requested_by} at ${job.requested_at}.\n\nAuto-opened by Account CoPilot so the instant job runner fires now instead of waiting for the next daily run. The job itself is tracked in the app (Setup → Settings), not in this issue — closing or leaving this open makes no difference.`;
   try {
     await fetch("https://api.github.com/repos/vipinlakhanpal-vipin/account-copilot-jobs/issues", {
       method: "POST", headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json", "Content-Type": "application/json" },
