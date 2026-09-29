@@ -1,11 +1,15 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.92";
+export const APP_VERSION = "1.93";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.93", date: "2026-09-29", notes: "Each 'What to do' option in Search companies is now explained right under the section title, so it's clear which one gets an instant option and which are bulk/free-only.",
+    changes: [
+      { what: "A short explanation for each of the four 'What to do' choices — Add one specific company, Verify existing companies, Find new companies, Verify existing + find new — placed right under the '1 · Search companies' heading, saying which are bulk (Start only, next scheduled session) and which one (a single company) also offers Search now (free) or Run now (≈ $0.55)", where: "Setup → Settings → 1 · Search companies", why: "It wasn't obvious why the instant buttons only appeared for one specific mode and not others" },
+    ] },
   { version: "1.92", date: "2026-09-29", notes: "Saving Contact tiers now asks for the paid-actions PIN, since a change here immediately changes how live research classifies every contact going forward.",
     changes: [
       { what: "Clicking 'Save tiers' now asks for the paid-actions PIN (if one is set) before saving — same PIN used everywhere else in the app, reused here for a sensitive setting rather than an API cost", where: "Setup → Settings → Contact tiers", why: "Since v1.91, editing tiers directly changes how the research engine classifies contacts on every run — this needed the same protection as other consequential actions" },

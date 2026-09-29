@@ -87,6 +87,12 @@ export default function EngineSettings() {
         <div className="eng-card free">
           <div className="eng-head"><h3>1 · Search companies — no API cost</h3><span className="tag fact">Included in your Claude plan</span></div>
           <p className="note">Queues a job for the scheduled Claude sessions, which work like the verification sessions you run today (web search, official sources first) and write results straight into the app. Runs on the next scheduled session; counts against your Claude plan's usage, not the Anthropic API key.</p>
+          <ul className="plain note" style={{ marginTop: 4 }}>
+            <li><b>Add one specific company</b> — look up one named company. The only mode with an instant option: <b>Search now (free)</b> queues it for the next scheduled session (usually a minute or two), or <b>Run now (≈ $0.55)</b> researches it immediately with the Anthropic API.</li>
+            <li><b>Verify existing companies</b> — re-checks revenue and ICP status for up to the number you pick, in bulk. Free, next scheduled session only (no instant option for a batch).</li>
+            <li><b>Find new companies</b> — discovers new companies that fit the ICP, in bulk. Free, next scheduled session only.</li>
+            <li><b>Verify existing + find new</b> — does both of the above in one run. Free, next scheduled session only.</li>
+          </ul>
           <div className="eng-form">
             <label>Region<select value={q.region} onChange={(e) => setQ({ ...q, region: e.target.value })}>{COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}</select></label>
             <label>What to do<select value={q.mode} onChange={(e) => setQ({ ...q, mode: e.target.value })}>{Object.entries(MODE).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></label>
