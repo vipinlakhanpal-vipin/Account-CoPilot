@@ -339,8 +339,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                 <div className="hw-tint hw-tint--data">
                   <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--sky)")}><Ico name="calendar" /></span><h3>Daily plan</h3></div>
                   <p className="hw-lead">Sets how much unattended work the daily run does, on your Claude plan at no extra cost. A good
-                    starting point for extending an existing list: find 5 a day, verify 25. Change what time it runs any time in
-                    Setup → Settings.</p>
+                    starting point for extending an existing list: find 5 a day, verify 25.</p>
                 </div>
                 <label className="hw-field">New companies to find per day
                   <input type="number" min={0} max={50} value={draft.discoverPerDay} onChange={(e) => setDraft((d) => ({ ...d, discoverPerDay: Number(e.target.value) || 0 }))} />
