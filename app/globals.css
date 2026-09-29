@@ -446,6 +446,7 @@ aside.brief.contact{width:min(760px,100%);z-index:70}
 .hw-icon-badge .ico{width:19px;height:19px}
 .hw-lead{color:var(--muted);font-size:13px;margin:0;max-width:62ch;line-height:1.55}
 .hw-lead-wide{max-width:none}
+.hw-lead-justify{max-width:none;text-align:justify;text-justify:inter-word}
 .hw-about-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .hw-about-card{background:var(--surface-2);border:1px solid transparent;border-radius:10px;padding:14px 16px}
 .hw-about-card .hw-icon-badge{width:30px;height:30px;border-radius:8px;margin-bottom:8px;background:var(--surface);color:var(--teal)}
@@ -472,9 +473,6 @@ aside.brief.contact{width:min(760px,100%);z-index:70}
 .hw-pill:hover:not(:disabled){border-color:var(--teal);color:var(--text)}
 .hw-pill.on{background:var(--teal);border-color:transparent;color:var(--accent-ink);font-weight:700}
 .hw-pill:disabled{opacity:.5;cursor:not-allowed}
-.hw-check-pill{display:inline-flex;align-items:center;gap:8px}
-.hw-pill-box{width:16px;height:16px;border-radius:4px;border:1.5px solid currentColor;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
-.hw-check-pill.on .hw-pill-box{background:var(--accent-ink);color:var(--teal)}
 .hw-yesno-yes{background:var(--sig-vs-bg);border-color:transparent}
 .hw-yesno-no{background:color-mix(in srgb, var(--sky) 14%, var(--surface));border-color:transparent}
 .hw-yesno-yes.selected{outline:2px solid var(--sig-vs);outline-offset:-1px}

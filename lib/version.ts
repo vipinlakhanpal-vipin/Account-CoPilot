@@ -1,11 +1,17 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.09";
+export const APP_VERSION = "2.10";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.10", date: "2026-09-30", notes: "Region and domain selection switched from pill-shaped chips to the same plain checkbox-list style Data sources already uses, for consistency. The 'Who you're after' step is now labelled 'Domains'. The About panel's intro paragraph now spans the full width and is justified.",
+    changes: [
+      { what: "Region (step 1) and domain (step 4) lists are now plain checkbox rows — square checkbox, name, note — matching Data sources' existing format, instead of pill-shaped chips", where: "Home → Setup Wizard → Region, → Domains", why: "Asked to use one consistent selection style across the wizard rather than two different-looking ones" },
+      { what: "Step 4's label changed from 'Who you're after' to 'Domains'", where: "Home → Setup Wizard step list", why: "Shorter, matches the step's own heading ('Which domains do you want to target?')" },
+      { what: "About Account CoPilot's opening paragraph now spans the full content width and is justified (even left and right edges), instead of stopping partway across the pane", where: "Home → About Account CoPilot", why: "The paragraph was only using about half the available width" },
+    ] },
   { version: "2.09", date: "2026-09-29", notes: "The minimum-revenue field itself now shows $250M / $2.50B at rest (click in to type a plain number or 250M/3.5B) — the same money-field pattern Define ICP already uses — instead of a raw number next to a separate formatted chip. Also shortened the long 'Prospects signalling…' domain label to just 'ERP'.",
     changes: [
       { what: "Minimum net revenue is now a proper money field: shows '$250M' or '$2.50B' when not focused, turns into an editable raw value ('250M', '3.5B', or a bare number in millions) when you click in, same parsing and display Define ICP's own revenue field already uses", where: "Home → Setup Wizard → Company size", why: "The field kept showing a plain number with a separately-formatted chip beside it, which wasn't what was asked for — the field itself needed to show the formatted amount" },

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { REGIONS, OPTIONS, normalizeDefinition, type Definition, type Rules } from "@/lib/icpDefinition.mjs";
 import type { Access } from "@/lib/access";
 import { ask, notify } from "@/components/Confirm";
@@ -36,16 +36,6 @@ const ICON = {
 function Ico({ name }: { name: keyof typeof ICON }) {
   return <svg className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{ICON[name]}</svg>;
 }
-// A pill that's also visibly a checkbox: empty box when off, a tick in a filled box when on — for multi-select lists
-// (regions, domains) where several can be true at once, as opposed to a single either/or choice.
-function CheckPill({ on, disabled, onClick, children }: { on: boolean; disabled?: boolean; onClick: () => void; children: ReactNode }) {
-  return (
-    <button type="button" className={`hw-pill hw-check-pill ${on ? "on" : ""}`} disabled={disabled} aria-pressed={on} onClick={onClick}>
-      <span className="hw-pill-box" aria-hidden="true">{on && <svg viewBox="0 0 12 12" width="9" height="9"><path d="M2 6.2l2.6 2.6L10 3" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}</span>
-      {children}
-    </button>
-  );
-}
 // "250" or "3500" (millions), typed as "250", "250M" or "3.5B" → USD millions. Same parsing rules as Define ICP's own money field.
 function parseUsdM(t: string): number | null {
   const v = t.replace(/[$,\s]/g, "").toUpperCase();
@@ -81,7 +71,7 @@ const STEPS: { n: number; label: string; icon: keyof typeof ICON; cls: string }[
   { n: 1, label: "Region", icon: "pin", cls: "hw-step--region" },
   { n: 2, label: "Existing data", icon: "folder", cls: "hw-step--region" },
   { n: 3, label: "Company size", icon: "building", cls: "hw-step--region" },
-  { n: 4, label: "Who you're after", icon: "crosshair", cls: "hw-step--people" },
+  { n: 4, label: "Domains", icon: "crosshair", cls: "hw-step--people" },
   { n: 5, label: "Data sources", icon: "database", cls: "hw-step--data" },
   { n: 6, label: "Daily plan", icon: "calendar", cls: "hw-step--data" },
   { n: 7, label: "Review", icon: "clipboard", cls: "hw-step--review" },
@@ -221,7 +211,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
         {section === "about" ? (
           <div>
             <h3 className="hw-h">About Account CoPilot</h3>
-            <p className="hw-lead">Account CoPilot is an <b>AI Agent</b> — it works on its own, not only when you ask. Every morning it looks for new
+            <p className="hw-lead hw-lead-justify">Account CoPilot is an <b>AI Agent</b> — it works on its own, not only when you ask. Every morning it looks for new
               companies fitting your ICP, checks their numbers against official sources, and updates your database. Nothing here is invented: every
               figure carries a source and a confidence label.</p>
             <div className="hw-about-grid">
@@ -252,13 +242,14 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                     for just one region. Regions marked <b>not started yet</b> haven&apos;t been set up at all — ticking one starts it: it moves to
                     Active or Paused (your choice in step 6) once you save.</p>
                 </div>
-                <div className="hw-pillrow">
+                <div>
                   {visibleRegions.map((r) => {
                     const nextPhase = def.regions[r.key]?.status === "next";
                     return (
-                      <CheckPill key={r.key} on={regions.includes(r.key)} onClick={() => toggleRegion(r.key)}>
-                        {r.name}{nextPhase ? " (not started yet)" : ""}
-                      </CheckPill>
+                      <label key={r.key} className="hw-checkrow">
+                        <input type="checkbox" checked={regions.includes(r.key)} onChange={() => toggleRegion(r.key)} />
+                        {r.name} {nextPhase && <span className="hint">— not started yet</span>}
+                      </label>
                     );
                   })}
                 </div>
@@ -334,9 +325,12 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                   <p className="hw-lead">This decides which people at each company the Agent treats as decision-makers — who gets surfaced first on
                     Stakeholders, and whose seniority counts toward Pipeline rank. Pick as many as apply.</p>
                 </div>
-                <div className="hw-pillrow">
+                <div>
                   {OPTIONS.domains.map((d) => (
-                    <CheckPill key={d.key} on={domains.includes(d.key)} onClick={() => toggleDomain(d.key)}>{d.label}</CheckPill>
+                    <label key={d.key} className="hw-checkrow">
+                      <input type="checkbox" checked={domains.includes(d.key)} onChange={() => toggleDomain(d.key)} />
+                      {d.label}
+                    </label>
                   ))}
                 </div>
                 <p className="hw-lead" style={{ marginTop: 12 }}>
