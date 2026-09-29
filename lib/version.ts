@@ -1,11 +1,16 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.08";
+export const APP_VERSION = "2.09";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.09", date: "2026-09-29", notes: "The minimum-revenue field itself now shows $250M / $2.50B at rest (click in to type a plain number or 250M/3.5B) — the same money-field pattern Define ICP already uses — instead of a raw number next to a separate formatted chip. Also shortened the long 'Prospects signalling…' domain label to just 'ERP'.",
+    changes: [
+      { what: "Minimum net revenue is now a proper money field: shows '$250M' or '$2.50B' when not focused, turns into an editable raw value ('250M', '3.5B', or a bare number in millions) when you click in, same parsing and display Define ICP's own revenue field already uses", where: "Home → Setup Wizard → Company size", why: "The field kept showing a plain number with a separately-formatted chip beside it, which wasn't what was asked for — the field itself needed to show the formatted amount" },
+      { what: "Domain label 'Prospects signalling they're about to buy an ERP system' shortened to 'ERP'", where: "Home → Setup Wizard → Who you're after", why: "Too long for the pill chip layout the other domain labels (Finance, Technology, HR…) use" },
+    ] },
   { version: "2.08", date: "2026-09-29", notes: "Setup Wizard step 1 can now select Europe and United States directly, instead of them being locked out until you first unlocked them in Define ICP. Ticking a 'not started yet' region and saving starts it — Active if you check 'activate now' in step 6, otherwise Paused.",
     changes: [
       { what: "Regions still in 'Next phase' (Europe, United States by default) are no longer disabled in the region picker — they're tickable like any other region, labelled 'not started yet' instead of 'next phase'. Saving the wizard for one of these regions moves it out of Next phase: to Active if step 6's 'activate now' is checked, otherwise to Paused", where: "Home → Setup Wizard → Region, and → Daily plan", why: "Previously the only way to start a Next-phase region was a separate trip to Setup → Define ICP first; the wizard can now do the whole thing in one pass" },

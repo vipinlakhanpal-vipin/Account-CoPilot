@@ -462,11 +462,11 @@ aside.brief.contact{width:min(760px,100%);z-index:70}
 .hw-about-card ul{margin:0;padding-left:16px;font-size:12.5px;color:var(--muted);line-height:1.65}
 .hw-field{display:flex;flex-direction:column;gap:5px;font-size:12.5px;font-weight:600;color:var(--text);margin-bottom:12px}
 .hw-field .hint{font-weight:400;color:var(--muted);font-size:11.5px}
-.hw-field select,.hw-field input[type="text"],.hw-field input[type="number"]{font:600 13px var(--body);background:var(--accent-soft);border:1.5px solid transparent;border-radius:7px;padding:8px 11px;color:var(--text);width:100%;max-width:280px}
+.hw-field select,.hw-field input[type="text"],.hw-field input[type="number"]{font:600 13px var(--body);background:var(--accent-soft);border:1.5px solid transparent;border-radius:7px;padding:8px 11px;color:var(--text);width:100%;max-width:280px;font-variant-numeric:tabular-nums}
 .hw-field select:focus,.hw-field input:focus{outline:2px solid var(--teal);outline-offset:1px}
+.hw-field input.bad{border-color:#E06C75;background:color-mix(in srgb, #E06C75 10%, var(--surface))}
 .hw-field-row{display:flex;align-items:center;gap:10px}
 .hw-field-row input{max-width:180px;border-color:var(--teal)}
-.hw-value-chip{font:700 13px var(--mono);color:var(--accent-ink);background:var(--teal);border-radius:999px;padding:7px 15px;white-space:nowrap;font-variant-numeric:tabular-nums}
 .hw-pillrow{display:flex;flex-wrap:wrap;gap:8px;max-width:520px;margin-bottom:4px}
 .hw-pill{font:600 12px var(--body);padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface-2);color:var(--muted);cursor:pointer}
 .hw-pill:hover:not(:disabled){border-color:var(--teal);color:var(--text)}

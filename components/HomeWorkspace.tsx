@@ -46,6 +46,26 @@ function CheckPill({ on, disabled, onClick, children }: { on: boolean; disabled?
     </button>
   );
 }
+// "250" or "3500" (millions), typed as "250", "250M" or "3.5B" → USD millions. Same parsing rules as Define ICP's own money field.
+function parseUsdM(t: string): number | null {
+  const v = t.replace(/[$,\s]/g, "").toUpperCase();
+  if (!v) return null;
+  const m = v.match(/^(\d+(?:\.\d+)?)(B|BN|M|MN)?$/);
+  if (!m) return NaN;
+  return m[2]?.startsWith("B") ? Number(m[1]) * 1000 : Number(m[1]);
+}
+// Shows "$250M" / "$2.50B" at rest; click in and it turns editable ("250M", "3.5B" — bare numbers still work, in millions).
+function MoneyField({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  const [text, setText] = useState<string | null>(null);
+  const parsed = text === null ? value : parseUsdM(text);
+  const bad = text !== null && Number.isNaN(parsed);
+  return (
+    <input type="text" inputMode="decimal" className={bad ? "bad" : undefined} value={text ?? usdM(value)}
+      onFocus={() => setText(value >= 1000 ? `${value / 1000}B` : `${value}M`)}
+      onChange={(e) => { setText(e.target.value); const p = parseUsdM(e.target.value); if (!Number.isNaN(p) && p !== null) onChange(p); }}
+      onBlur={() => setText(null)} />
+  );
+}
 const stepColor = (v: string): CSSProperties => ({ "--step-color": v } as CSSProperties);
 const usdM = (n: number) => (n >= 1000 ? `$${(n / 1000).toFixed(2).replace(/\.?0+$/, "")}B` : `$${n}M`);
 // Same per-company rates published in Setup → Learn Me → Costs & usage (components/CostInfo.tsx) — kept in sync with those, not re-derived.
@@ -285,13 +305,11 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                     research and the Pipeline ranking all read them straight from here. Get them right once and everything downstream follows
                     automatically.</p>
                 </div>
-                <label className="hw-field">Minimum net revenue (USD millions)
-                  <div className="hw-field-row">
-                    <input type="number" min={0} value={draft.revenue} onChange={(e) => setDraft((d) => ({ ...d, revenue: Number(e.target.value) || 0 }))} />
-                    <span className="hw-value-chip">{usdM(draft.revenue)}</span>
-                  </div>
-                  <span className="hint">Most recent annual net revenue, converted to USD. $250M is a solid default for enterprise procurement deals
-                    — raise it to focus only on the very largest accounts, lower it to widen the net.</span></label>
+                <label className="hw-field">Minimum net revenue
+                  <MoneyField value={draft.revenue} onChange={(v) => setDraft((d) => ({ ...d, revenue: v }))} />
+                  <span className="hint">Most recent annual net revenue, converted to USD. Shown as $250M or $2.50B at rest — click in and type a
+                    number, with an optional M or B (e.g. 250M, 3.5B). $250M is a solid default for enterprise procurement deals — raise it to focus
+                    only on the very largest accounts, lower it to widen the net.</span></label>
                 <label className="hw-field">Minimum employees
                   <input type="number" min={0} value={draft.employees} onChange={(e) => setDraft((d) => ({ ...d, employees: Number(e.target.value) || 0 }))} />
                   <span className="hint">Global headcount, not just this region. Revenue on its own lets small holding entities or shell companies
