@@ -2,7 +2,9 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
-type Entry = { at: string; summary: string; verified: number; new_companies: string[] };
+type Detail = { name: string; status: string; revenue?: string };
+type Entry = { at: string; summary: string; verified: number; new_companies: string[]; details?: Detail[] };
+const statusTag = (s: string) => (/verified/i.test(s) ? "fact" : /likely/i.test(s) ? "likely" : /not icp/i.test(s) ? "conflict" : "unv");
 
 // Bell in the top bar: notifications from the scheduled engine runs (6am daily). Unread = newer than the last time you opened it.
 export default function EngineBell() {
@@ -42,7 +44,10 @@ export default function EngineBell() {
               <div key={e.at} className={`bell-item${e.at > seen ? " new" : ""}`}>
                 <small>{new Date(e.at).toLocaleString()}</small>
                 <p>{e.summary}</p>
-                {e.new_companies.length > 0 && <p className="note">New companies: {e.new_companies.slice(0, 8).join(", ")}{e.new_companies.length > 8 ? ` +${e.new_companies.length - 8} more` : ""}</p>}
+                {e.details && e.details.length > 0 ? (
+                  <table className="bell-table"><thead><tr><th>Company</th><th>Status</th><th>Revenue</th></tr></thead>
+                    <tbody>{e.details.slice(0, 12).map((d, i) => <tr key={i}><td>{d.name}</td><td><span className={`tag ${statusTag(d.status)}`}>{d.status}</span></td><td className="muted">{d.revenue || "—"}</td></tr>)}</tbody></table>
+                ) : e.new_companies.length > 0 && <p className="note">New companies: {e.new_companies.slice(0, 8).join(", ")}{e.new_companies.length > 8 ? ` +${e.new_companies.length - 8} more` : ""}</p>}
               </div>))}
           <Link href="/settings#engine" className="btn tiny" onClick={() => setOpen(false)}>Open engine settings</Link>
         </div>)}

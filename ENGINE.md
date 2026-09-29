@@ -50,8 +50,12 @@ If `null`, do step 4. `count: "max"` = as many as you can in this session (aim f
 ## 3. Finish and notify
 `node scripts/engine_client.mjs finish <id> done "<N verified: X Verified, Y Likely, Z Needs check, W Not ICP; M new companies added>"`
 (or `finish <id> error "<reason>"`). Claim the next job if time allows. Then ALWAYS, at the very end:
-`node scripts/engine_client.mjs log "<one-line summary>" <verified_count> "<new company names separated by ;>"`
-— this is the notification under the bell in the app. Do not commit or push anything and do not change app code.
+1. Write `data/verification/run_details.json`: one row per company you checked or added this run (queued jobs and the daily batch together), in this exact shape:
+   `[{"name":"<company>","status":"<ICP — Verified|ICP — Likely|ICP — Needs check|Not ICP|Unknown|Held (<region>)>","revenue":"<e.g. $51.8B, ~$625.6M (estimate), Below $250M, or '' if none found>"}]`
+   This becomes the small table shown in the bell and in Settings → Scheduled run history — keep `revenue` short (one figure, no sentences).
+2. `node scripts/engine_client.mjs log "<one-line summary>" <verified_count> "<new company names separated by ;>"`
+   — this reads `run_details.json` automatically and posts both the summary and the table as the notification under the bell.
+Do not commit or push anything and do not change app code.
 
 ## 4. Default daily work (always, after any queued jobs)
 For **each region in `active`** of `icp_rules.json` (default: UAE, find 5, verify 25):

@@ -1,11 +1,16 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "1.81";
+export const APP_VERSION = "1.82";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "1.82", date: "2026-09-29", notes: "Scheduled run notifications (bell and Scheduled run history) show a small table of companies checked with status and revenue, instead of one paragraph. Contact tiers: each tier row has its own light colour.",
+    changes: [
+      { what: "The bell and Scheduled run history now show a compact table per run — Company, Status (Verified / Likely / Needs check / Not ICP), Revenue — alongside the one-line summary", where: "Top bar bell; Setup → Settings → Scheduled run history", why: "A wall of text was hard to scan; a small table shows exactly what was checked and found at a glance" },
+      { what: "Tier 1–4 rows in Contact tiers each have their own light colour (blue, purple, green, amber), matching the Team invite form's style", where: "Setup → Settings → Contact tiers", why: "Easier to tell the four tiers apart at a glance, consistent with the rest of Settings" },
+    ] },
   { version: "1.81", date: "2026-09-28", notes: "Fixed: a requested company is now tagged with its real country (not the region the request was queued from). If that real region isn't Active, it's held in a new 'Pending' list until you activate it, instead of being added under the wrong region.",
     changes: [
       { what: "A one-company request (Setup → Settings → Search companies → Add one specific company) is now tagged with the company's real country — found from its domain's country code and research — instead of whatever region you picked in the search box; a UAE search that turns up a Saudi company now correctly goes to KSA", where: "Setup → Settings → Search companies; the account page", why: "A Saudi company (baja.com.sa) was added as UAE because the old rule blindly copied the search box's region" },

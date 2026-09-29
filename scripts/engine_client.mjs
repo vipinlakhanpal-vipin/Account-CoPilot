@@ -6,7 +6,8 @@
 //   node scripts/engine_client.mjs add <file.json>                      → adds discovered companies (format: see scripts/add_companies.mjs)
 //   node scripts/engine_client.mjs hold <file.json>                     → queues a company whose real country's region isn't Active yet (same format as add); shown as a banner until a Super Admin activates that region
 //   node scripts/engine_client.mjs finish <id> done|error "<result>"
-//   node scripts/engine_client.mjs log "<summary>" <verified_count> "<new names;…>"
+//   node scripts/engine_client.mjs log "<summary>" <verified_count> "<new names;…>"           → also sends data/verification/run_details.json if present:
+//                                                                                                [{"name","status","revenue"}] (one row per company checked this run), for the bell's table
 import fs from "node:fs";
 import path from "node:path";
 
@@ -67,5 +68,9 @@ else if (cmd === "queue") {
   fs.writeFileSync("data/verification/existing_companies.json", JSON.stringify(companies, null, 1));
   console.log(`${companies.length} existing companies written to data/verification/existing_companies.json — do not propose any of these (or their group/subsidiary under another name)`);
 } else if (cmd === "finish") console.log(JSON.stringify(await call({ action: "finish", id: a, status: b === "error" ? "error" : "done", result: c || "", ...(process.argv[6] ? { slug: process.argv[6] } : {}) })));
-else if (cmd === "log") console.log(JSON.stringify(await call({ action: "log", summary: a || "", verified: Number(b) || 0, new_companies: String(c || "").split(";").map((x) => x.trim()).filter(Boolean) })));
+else if (cmd === "log") {
+  const detailsFile = "data/verification/run_details.json";
+  const details = fs.existsSync(detailsFile) ? JSON.parse(fs.readFileSync(detailsFile, "utf8")) : [];
+  console.log(JSON.stringify(await call({ action: "log", summary: a || "", verified: Number(b) || 0, new_companies: String(c || "").split(";").map((x) => x.trim()).filter(Boolean), details })));
+}
 else console.log("usage: claim | icp | names | watch [slug] | queue <region> <limit> | submit [dir] | add <file> | hold <file> | finish <id> done|error <result> | log <summary> <verified> <names;…>");
