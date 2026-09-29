@@ -1,11 +1,15 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.13";
+export const APP_VERSION = "2.14";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.14", date: "2026-09-30", notes: "The 'Selected: …' summary line under Region and Domains now spans the full width of the pane instead of stopping partway across, like the rest of the wizard's wide text.",
+    changes: [
+      { what: "The 'Selected: …' confirmation paragraph under the region checklist (step 1) and the domain checklist (step 4) now uses the full content width instead of wrapping at a narrow column", where: "Home → Setup Wizard → Region, → Domains", why: "It was still constrained to the narrower body-text width while everything else in the wizard had already been widened" },
+    ] },
   { version: "2.13", date: "2026-09-30", notes: "Added breathing room between About Account CoPilot's intro paragraph and the 4 cards below it — they were almost touching.",
     changes: [
       { what: "Added spacing above the About panel's card grid (What each tab does, Tokens & cost, etc.) so it no longer sits flush against the intro paragraph's last line", where: "Home → About Account CoPilot", why: "The text was nearly touching the tiles below it" },

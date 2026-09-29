@@ -253,7 +253,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                     );
                   })}
                 </div>
-                <p className="hw-lead" style={{ marginTop: 12 }}>
+                <p className="hw-lead hw-lead-wide" style={{ marginTop: 12 }}>
                   {regions.length
                     ? <><b>Selected: {regionNames.join(", ")}.</b> Company size, targeting, data sources and daily plan will apply to all of these.
                       {startingRegions.length > 0 && <> <b>{startingRegions.join(", ")}</b> {startingRegions.length === 1 ? "isn't" : "aren't"} started yet
@@ -333,7 +333,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                     </label>
                   ))}
                 </div>
-                <p className="hw-lead" style={{ marginTop: 12 }}>
+                <p className="hw-lead hw-lead-wide" style={{ marginTop: 12 }}>
                   {domains.length
                     ? <><b>Selected: {domains.map((k) => OPTIONS.domains.find((x) => x.key === k)?.label).join(", ")}.</b> The Agent prioritizes
                       matching titles when it scores contacts.</>
