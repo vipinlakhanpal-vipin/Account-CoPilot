@@ -841,7 +841,7 @@ td.logo-cell{width:40px;padding-top:0;padding-bottom:0;text-align:center}
 .region-multi summary::after{content:"▾";color:var(--muted);flex:none}
 .region-menu{position:absolute;z-index:40;top:calc(100% + 4px);left:0;min-width:220px;padding:8px;border-radius:12px;background:var(--surface);
   border:1px solid color-mix(in srgb, #2ECC8F 45%, transparent);box-shadow:0 12px 30px rgba(0,0,0,.25);display:grid;gap:2px}
-.region-menu label{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;font:500 13.5px var(--body);cursor:pointer}
+.region-menu label{display:flex;flex-direction:row;align-items:center;justify-content:flex-start;text-align:left;gap:8px;padding:6px 8px;border-radius:8px;font:500 13.5px var(--body);cursor:pointer}
 .region-menu label:hover{background:color-mix(in srgb, #2ECC8F 12%, transparent)}
 .region-menu input{width:16px;height:16px;accent-color:#0B7A66}
 .team-form .f-region .input-frame{display:flex;align-items:center}

@@ -1,11 +1,15 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.10";
+export const APP_VERSION = "2.11";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.11", date: "2026-09-30", notes: "Fixed the region checklist in Setup → Team → Invite a colleague — a CSS rule meant for a different label elsewhere on the page was leaking into it, stacking each checkbox above its region name (both centred) instead of side by side.",
+    changes: [
+      { what: "Fixed a CSS specificity collision: '.team-access label' (meant for the Role/Region field labels) was also matching the checkbox rows inside the region picker dropdown, since they're nested inside the same .team-access wrapper — forcing them into a column layout instead of the checkbox-then-name row they were built as", where: "Setup → Team → Invite a colleague → Region(s) dropdown", why: "The dropdown's own CSS already specified a left-to-right row; an unrelated, equally-specific rule elsewhere on the page was silently overriding just the flex-direction property" },
+    ] },
   { version: "2.10", date: "2026-09-30", notes: "Region and domain selection switched from pill-shaped chips to the same plain checkbox-list style Data sources already uses, for consistency. The 'Who you're after' step is now labelled 'Domains'. The About panel's intro paragraph now spans the full width and is justified.",
     changes: [
       { what: "Region (step 1) and domain (step 4) lists are now plain checkbox rows — square checkbox, name, note — matching Data sources' existing format, instead of pill-shaped chips", where: "Home → Setup Wizard → Region, → Domains", why: "Asked to use one consistent selection style across the wizard rather than two different-looking ones" },
