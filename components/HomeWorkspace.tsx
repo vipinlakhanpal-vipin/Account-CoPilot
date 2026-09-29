@@ -380,7 +380,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                   <input type="number" min={0} max={60} value={draft.verifyPerDay} onChange={(e) => setDraft((d) => ({ ...d, verifyPerDay: Number(e.target.value) || 0 }))} />
                   <span className="hint">How many existing companies get their revenue and size re-checked each morning, oldest checks first.</span></label>
                 <label className="hw-checkrow"><input type="checkbox" checked={activateNow} onChange={(e) => setActivateNow(e.target.checked)} />
-                  Turn the daily run on now for {regionNames.length ? <b>{regionNames.join(", ")}</b> : "the regions checked in step 1"}</label>
+                  Turn the daily run <b>ON</b> now for {regionNames.length ? <b>{regionNames.join(", ")}</b> : "the regions checked in step 1"}</label>
                 <span className="hint">Checked: these regions start the daily run automatically once you save. Unchecked: everything above is still
                   saved, but nothing runs until you come back and turn it on.</span>
 

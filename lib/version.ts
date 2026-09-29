@@ -1,11 +1,15 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.15";
+export const APP_VERSION = "2.16";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.16", date: "2026-09-30", notes: "The activate-daily-run checkbox now bolds 'ON' so the action reads clearly even when the region list after it runs long.",
+    changes: [
+      { what: "Checkbox label now reads 'Turn the daily run ON now for …' with ON bolded, instead of a lowercase 'on' that got lost in a long region list", where: "Home → Setup Wizard → Daily plan", why: "With several regions selected, the sentence ran long enough that the actual action (turning it on) stopped standing out" },
+    ] },
   { version: "2.15", date: "2026-09-30", notes: "Simplified the minimum-revenue hint text — dropped the mechanical explanation of how the field's formatting works, keeping just what the number means and how to adjust it.",
     changes: [
       { what: "Minimum net revenue's hint text shortened from a 3-sentence explanation of the field's $M/$B formatting and typing rules to two plain sentences about what the number means and when to raise or lower it", where: "Home → Setup Wizard → Company size", why: "The field itself already shows and accepts the formatted value — the hint didn't need to re-explain the mechanics" },
