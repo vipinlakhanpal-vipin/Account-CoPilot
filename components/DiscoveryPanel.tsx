@@ -87,9 +87,9 @@ export default function DiscoveryPanel({ criteria: applied, onApply, onSave, sav
       <div className="dp-stats">
         <div className="dp-stat"><b>{matches.accounts}</b><span>Accounts matching</span></div>
         <div className="dp-stat"><b>{matches.contacts}</b><span>Contacts matching</span></div>
-        <div className="dp-stat"><b>{n}</b><span>Filters active</span></div>
+        <div className="dp-stat"><b>{n}</b><span>Filters active</span>
+          {n > 0 && <em className="dp-active-fields">{activeFields(criteria).join(" · ")}</em>}</div>
       </div>
-      {n > 0 && <p className="dp-active-fields">{activeFields(criteria).join(" · ")}</p>}
       <div className="dp-step s1">
         <p className="dp-step-h"><span className="dp-n">1</span>Search the app</p>
         <p className="dp-step-sub">Find a company already in the app. Free, instant; filters every tab.</p>

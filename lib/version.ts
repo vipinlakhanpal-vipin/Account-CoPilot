@@ -1,11 +1,15 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.25";
+export const APP_VERSION = "2.26";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.26", date: "2026-09-30", notes: "Moved the active-filter names (e.g. 'Countries · Revenue · Employees') inside the 'Filters active' tile itself, directly under its number, instead of a separate line below all three tiles.",
+    changes: [
+      { what: "The list of which filters are active now sits inside the 'Filters active' tile, in fine print under its count, instead of as a standalone line beneath the whole row of tiles", where: "Dashboard, Accounts, Stakeholders — Account Discovery Criteria panel", why: "As a separate line it wasn't visually tied to the tile it was explaining; nesting it inside makes the connection unambiguous" },
+    ] },
   { version: "2.25", date: "2026-09-30", notes: "Account Discovery Criteria's stat tiles shrunk to genuinely tiny (bold number, fine-print label) — they were rendering larger than intended because of a leftover, unrelated CSS rule from a removed feature that happened to share the same class name.",
     changes: [
       { what: "Removed a dead '.dp-stats' CSS rule left over from a feature that no longer exists — it shared the same class name as the new stat tiles and was overriding their intended size (larger grid layout, 18px numbers) with stale styling", where: "app/globals.css", why: "The tiles looked bigger than designed because of an accidental class-name collision with orphaned CSS, the same category of bug as the Team invite region-list issue fixed earlier" },
