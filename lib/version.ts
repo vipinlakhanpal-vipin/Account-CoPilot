@@ -1,11 +1,16 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.37";
+export const APP_VERSION = "2.38";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.38", date: "2026-09-30", notes: "New \"Suggest an improvement\" button in the header — pick where and what category, describe it, and track it through Request received / Pending / In progress / Completed.",
+    changes: [
+      { what: "Added a header button (next to the theme toggle, visible on every page) opening a form: pick Where (Home, Dashboard, Accounts, Stakeholders, Data, Setup, Other) and a Category (Bug, Improvement, New feature, Question, Other), describe it, submit", where: "Header, all pages", why: "Requested — a very visible way to raise a suggestion, not buried in a settings page" },
+      { what: "Every suggestion starts as \"Request received\" automatically; a Super Admin can move it to Pending, In progress or Completed and attach a note at any stage — everyone can see the list and its current status/note", where: "New settings.suggestions record, app/api/suggestions", why: "Matches the requested status lifecycle with notes, and keeps visibility open so people don't duplicate a request already raised" },
+    ] },
   { version: "2.37", date: "2026-09-30", notes: "Setup Wizard: steps split into \"Mandatory\" (Region & size, Add Data, Domains, Daily plan) and \"Information only\" (Data sources), and \"Add Data\" now takes a real Excel upload instead of just saying \"send it over.\"",
     changes: [
       { what: "Wizard steps now show two labeled groups in the rail — \"Mandatory · affects the Agent\" (teal) and \"Information only\" (grey) — with Add Data moved into Mandatory and reordered right after Region & size; Review stays unlabeled, last, as the summary + Save & apply step", where: "Home → Setup Wizard", why: "Requested — group by what actually changes the Agent's behavior vs. what's just reference; the amber color first used for \"Mandatory\" read as a caution/warning, so it's teal (the app's primary color) instead" },

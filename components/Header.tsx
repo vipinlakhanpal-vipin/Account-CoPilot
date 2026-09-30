@@ -5,6 +5,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Logo from "@/components/Logo";
 import ProfileMenu from "@/components/ProfileMenu";
 import EngineBell from "@/components/EngineBell";
+import SuggestionsButton from "@/components/SuggestionsButton";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useNewVersionInfo } from "@/components/useVersion";
 import { notify } from "@/components/Confirm";
@@ -185,6 +186,7 @@ export default function Header({ subtitle }: { subtitle: string }) {
                 <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m0 0-3-3m3 3 3-3M3 13h10" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 <span>Master Book</span></>}
             </button>
+            <SuggestionsButton />
             <ThemeToggle />
             <ProfileMenu />
           </div>
