@@ -69,8 +69,8 @@ const PROFILE_TIERS: { label: string; unit: number | [number, number]; note: str
 
 const STEPS: { n: number; label: string; icon: keyof typeof ICON; cls: string }[] = [
   { n: 1, label: "Region", icon: "pin", cls: "hw-step--region" },
-  { n: 2, label: "Existing data", icon: "folder", cls: "hw-step--region" },
-  { n: 3, label: "Company size", icon: "building", cls: "hw-step--region" },
+  { n: 2, label: "Company size", icon: "building", cls: "hw-step--region" },
+  { n: 3, label: "Add Data", icon: "folder", cls: "hw-step--region" },
   { n: 4, label: "Domains", icon: "crosshair", cls: "hw-step--people" },
   { n: 5, label: "Data sources", icon: "database", cls: "hw-step--data" },
   { n: 6, label: "Daily plan", icon: "calendar", cls: "hw-step--data" },
@@ -267,30 +267,6 @@ export default function HomeWorkspace({ access }: { access: Access }) {
             {step === 2 && (
               <div>
                 <div className="hw-tint hw-tint--region">
-                  <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--teal)")}><Ico name="folder" /></span><h3>Do you already have a validated list?</h3></div>
-                  <p className="hw-lead hw-lead-wide">This decides how the Agent gets started for the region(s) you checked in step 1. Answer for whichever region
-                    you have the most data for — you can give a different answer next time you run the wizard for another region.</p>
-                </div>
-                <div className="hw-pillrow">
-                  <button type="button" className={`hw-pill ${hasList === "yes" ? "on" : ""}`} onClick={() => setHasList("yes")}>Yes, I have one</button>
-                  <button type="button" className={`hw-pill ${hasList === "no" ? "on" : ""}`} onClick={() => setHasList("no")}>No — help me build one from scratch</button>
-                </div>
-                <div className="hw-about-grid" style={{ marginTop: 14 }}>
-                  <div className={`hw-about-card hw-yesno-yes ${hasList === "yes" ? "selected" : ""}`}>
-                    <h4>If Yes {hasList === "yes" && <span className="note">— selected</span>}</h4>
-                    <p>Send it over and it&apos;s imported exactly as-is, the same way the UAE workbook was. Nothing in it is overwritten — the daily
-                      engine only adds new rows or fills in its own fields (revenue checks, ICP status), and explains any difference it finds.</p></div>
-                  <div className={`hw-about-card hw-yesno-no ${hasList === "no" ? "selected" : ""}`}>
-                    <h4>If No {hasList === "no" && <span className="note">— selected</span>}</h4>
-                    <p>No problem — the free daily engine can build your list from nothing, using its own web search. It just starts at a slower pace
-                      until it has found and verified enough companies to feel complete; you&apos;ll set that pace in step 6.</p></div>
-                </div>
-              </div>
-            )}
-
-            {step === 3 && (
-              <div>
-                <div className="hw-tint hw-tint--region">
                   <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--teal)")}><Ico name="building" /></span><h3>Company size — a company must meet both to count</h3></div>
                   <p className="hw-lead hw-lead-wide">These numbers are the actual pass/fail rule, not just a filter on this page — the daily engine, in-app
                     research and the Pipeline ranking all read them straight from here. Get them right once and everything downstream follows
@@ -314,6 +290,30 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                     {OPTIONS.entity.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
                   <span className="hint">Controls whether a single hotel, branch office, or small subsidiary of a qualifying group counts on its own,
                     or only the parent group does.</span></label>
+              </div>
+            )}
+
+            {step === 3 && (
+              <div>
+                <div className="hw-tint hw-tint--region">
+                  <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--teal)")}><Ico name="folder" /></span><h3>Do you already have a validated list?</h3></div>
+                  <p className="hw-lead hw-lead-wide">This decides how the Agent gets started for the region(s) you checked in step 1. Answer for whichever region
+                    you have the most data for — you can give a different answer next time you run the wizard for another region.</p>
+                </div>
+                <div className="hw-pillrow">
+                  <button type="button" className={`hw-pill ${hasList === "yes" ? "on" : ""}`} onClick={() => setHasList("yes")}>Yes, I have one</button>
+                  <button type="button" className={`hw-pill ${hasList === "no" ? "on" : ""}`} onClick={() => setHasList("no")}>No — help me build one from scratch</button>
+                </div>
+                <div className="hw-about-grid" style={{ marginTop: 14 }}>
+                  <div className={`hw-about-card hw-yesno-yes ${hasList === "yes" ? "selected" : ""}`}>
+                    <h4>If Yes {hasList === "yes" && <span className="note">— selected</span>}</h4>
+                    <p>Send it over and it&apos;s imported exactly as-is, the same way the UAE workbook was. Nothing in it is overwritten — the daily
+                      engine only adds new rows or fills in its own fields (revenue checks, ICP status), and explains any difference it finds.</p></div>
+                  <div className={`hw-about-card hw-yesno-no ${hasList === "no" ? "selected" : ""}`}>
+                    <h4>If No {hasList === "no" && <span className="note">— selected</span>}</h4>
+                    <p>No problem — the free daily engine can build your list from nothing, using its own web search. It just starts at a slower pace
+                      until it has found and verified enough companies to feel complete; you&apos;ll set that pace in step 6.</p></div>
+                </div>
               </div>
             )}
 

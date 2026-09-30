@@ -1,11 +1,16 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.29";
+export const APP_VERSION = "2.30";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.30", date: "2026-09-30", notes: "Setup Wizard: reordered step 2 and 3 (Company size now comes right after Region), and renamed \"Existing data\" to \"Add Data\".",
+    changes: [
+      { what: "Swapped the order of \"Company size\" and \"Existing data\" (now \"Add Data\") — Company size is now step 2, Add Data is step 3", where: "Home → Setup Wizard", why: "Requested reorder" },
+      { what: "Renamed \"Existing data\" to \"Add Data\"", where: "Home → Setup Wizard", why: "Requested rename" },
+    ] },
   { version: "2.29", date: "2026-09-30", notes: "\"Find new companies\" can now search several named companies at once, free or paid, and review each one (Add / Ignore) before it's added to the app.",
     changes: [
       { what: "The \"Company names (optional)\" field under Find new companies now accepts several names (comma-separated or one per line), not just one", where: "Setup → Settings → Discovery & refresh engine", why: "There was no way to search a short list of specific companies in one go — only one at a time or a blind bulk search" },
