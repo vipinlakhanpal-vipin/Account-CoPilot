@@ -1,11 +1,15 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.38";
+export const APP_VERSION = "2.39";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.39", date: "2026-09-30", notes: "Header tagline (\"AI Autonomous Agent for Account Intelligence\") now wraps onto two lines instead of being truncated with \"…\".",
+    changes: [
+      { what: "brand-sub now wraps within a 170px width instead of forcing one line with an ellipsis", where: "Header, all pages", why: "Requested — the tagline was being cut off" },
+    ] },
   { version: "2.38", date: "2026-09-30", notes: "New \"Suggest an improvement\" button in the header — pick where and what category, describe it, and track it through Request received / Pending / In progress / Completed.",
     changes: [
       { what: "Added a header button (next to the theme toggle, visible on every page) opening a form: pick Where (Home, Dashboard, Accounts, Stakeholders, Data, Setup, Other) and a Category (Bug, Improvement, New feature, Question, Other), describe it, submit", where: "Header, all pages", why: "Requested — a very visible way to raise a suggestion, not buried in a settings page" },
