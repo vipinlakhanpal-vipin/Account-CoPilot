@@ -34,8 +34,8 @@ export default function EngineBell() {
   };
   return (
     <div className="bell" ref={ref}>
-      <button type="button" className="bell-btn" onClick={toggle} aria-label={`Engine notifications${unread ? `, ${unread} new` : ""}`} title="Scheduled engine runs">
-        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.2a4 4 0 0 0-4 4v2.3L2.8 11h10.4L12 8.5V6.2a4 4 0 0 0-4-4ZM6.5 13a1.5 1.5 0 0 0 3 0" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" /></svg>
+      <button type="button" className="bell-btn notif-btn" onClick={toggle} aria-label={`Engine notifications${unread ? `, ${unread} new` : ""}`} title="Scheduled engine runs">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.2a4 4 0 0 0-4 4v2.3L2.8 11h10.4L12 8.5V6.2a4 4 0 0 0-4-4ZM6.5 13a1.5 1.5 0 0 0 3 0" fill="none" stroke="var(--teal)" strokeWidth="1.4" strokeLinejoin="round" /></svg>
         {unread > 0 && <span className="bell-dot">{unread}</span>}
       </button>
       {open && (

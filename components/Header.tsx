@@ -171,6 +171,7 @@ export default function Header({ meta }: { meta: string }) {
                     <Spin />v{APP_VERSION}{latest && <span className="dot" aria-label={`New version v${latest} available`} />}
                   </button>
                   <EngineBell />
+                  <SuggestionsButton />
                 </span>
               </div>
               <span className="brand-sub">{TAGLINE}</span>
@@ -187,7 +188,6 @@ export default function Header({ meta }: { meta: string }) {
                 <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m0 0-3-3m3 3 3-3M3 13h10" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 <span>Master Book</span></>}
             </button>
-            <SuggestionsButton />
             <ThemeToggle />
             <ProfileMenu />
           </div>
