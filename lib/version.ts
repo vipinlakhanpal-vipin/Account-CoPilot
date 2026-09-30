@@ -1,11 +1,16 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.24";
+export const APP_VERSION = "2.25";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.25", date: "2026-09-30", notes: "Account Discovery Criteria's stat tiles shrunk to genuinely tiny (bold number, fine-print label) — they were rendering larger than intended because of a leftover, unrelated CSS rule from a removed feature that happened to share the same class name.",
+    changes: [
+      { what: "Removed a dead '.dp-stats' CSS rule left over from a feature that no longer exists — it shared the same class name as the new stat tiles and was overriding their intended size (larger grid layout, 18px numbers) with stale styling", where: "app/globals.css", why: "The tiles looked bigger than designed because of an accidental class-name collision with orphaned CSS, the same category of bug as the Team invite region-list issue fixed earlier" },
+      { what: "The three stat tiles (Accounts matching, Contacts matching, Filters active) are now genuinely compact — smaller padding, a bold but small number, and fine-print uppercase labels", where: "Dashboard, Accounts, Stakeholders — Account Discovery Criteria panel", why: "Asked to make them tiny tiles that just fit the number and label" },
+    ] },
   { version: "2.24", date: "2026-09-30", notes: "Older runs (from before per-company detail tracking existed) now show one row per new company, same as recent runs, instead of dumping the whole free-text summary into the Company cell. Also: Status tags no longer wrap to two lines, and Revenue gets a bit more breathing room.",
     changes: [
       { what: "Runs without per-company detail records (older log entries) now fall back to one row per name in that run's new-companies list, with Status/Revenue shown as '—', instead of showing the entire raw summary sentence as a single 'company'", where: "Setup → Settings → Scheduled run history", why: "Runs from before detail tracking existed looked visibly different (and worse) from recent ones — this brings them into the same row-per-company format" },
