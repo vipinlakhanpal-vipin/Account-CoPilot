@@ -7,15 +7,15 @@ import { supabaseServer } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Account CoPilot", description: "AI Autonomous Agent for Account Intelligence" };
 
-/** Light header subtitle: account count and last update (cheap queries; blank if not signed in). */
-async function subtitle() {
+/** Fine-print meta shown in the green strip under the navbar: account count and last update (cheap queries; blank if not signed in). */
+async function headerMeta() {
   try {
     const sb = await supabaseServer();
     const { count } = await sb.from("companies").select("id", { count: "exact", head: true });
     const { data } = await sb.from("companies").select("updated_at").order("updated_at", { ascending: false }).limit(1);
-    if (!count) return "AI Autonomous Agent for Account Intelligence";
-    return `AI Autonomous Agent for Account Intelligence · ${count} accounts · data updated ${String(data?.[0]?.updated_at || "").slice(0, 10)}`;
-  } catch { return "AI Autonomous Agent for Account Intelligence"; }
+    if (!count) return "";
+    return `${count} accounts · data updated ${String(data?.[0]?.updated_at || "").slice(0, 10)}`;
+  } catch { return ""; }
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -27,7 +27,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" />
       </head>
-      <body><Suspense fallback={null}><Header subtitle={await subtitle()} /></Suspense>{children}<ConfirmHost /><footer className="site-footer">Designed and developed by <b>Vipin</b></footer></body>
+      <body><Suspense fallback={null}><Header meta={await headerMeta()} /></Suspense>{children}<ConfirmHost /><footer className="site-footer">Designed and developed by <b>Vipin</b></footer></body>
     </html>
   );
 }

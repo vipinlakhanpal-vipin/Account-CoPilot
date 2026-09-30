@@ -49,8 +49,15 @@ export default function SuggestionsButton() {
 
   return (
     <div className="bell" ref={ref}>
-      <button type="button" className="bell-btn" onClick={() => setOpen((o) => !o)} aria-label="Suggest an improvement" title="Suggest an improvement">
-        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.6a4.4 4.4 0 0 0-2.6 7.9c.4.3.6.8.6 1.3v.4h4v-.4c0-.5.2-1 .6-1.3A4.4 4.4 0 0 0 8 1.6Z" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" /><path d="M6 13.4h4M6.5 14.6h3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg>
+      <button type="button" className="bell-btn suggest-btn" onClick={() => setOpen((o) => !o)} aria-label="Suggest an improvement" title="Suggest an improvement">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <g stroke="#F2A93B" strokeWidth="1.6" strokeLinecap="round">
+            <path d="M12 1v2M4.6 4.6l1.4 1.4M1 12h2M4.6 19.4l1.4-1.4M19.4 19.4l-1.4-1.4M23 12h-2M19.4 4.6l-1.4 1.4" />
+          </g>
+          <path d="M12 4.2a5.8 5.8 0 0 0-3.4 10.5c.5.4.8 1 .8 1.7v.5h5.2v-.5c0-.7.3-1.3.8-1.7A5.8 5.8 0 0 0 12 4.2Z" fill="#FFD569" stroke="#E8971A" strokeWidth="1.1" strokeLinejoin="round" />
+          <path d="M10.2 8.6 12 10.4l2.2-2.2M12 10.4v3.2" stroke="#8A5A00" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+          <path d="M9.3 18.4h5.4M9.7 20h4.6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+        </svg>
       </button>
       {open && (
         <div className="bell-pop suggest-pop" role="dialog" aria-label="Suggest an improvement">

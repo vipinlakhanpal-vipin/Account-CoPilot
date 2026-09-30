@@ -32,7 +32,8 @@ const TAB_LABEL: Record<string, string> = { pipeline: "Pipeline", accounts: "Acc
 const PAGE_LABEL: Record<string, string> = { "/research": "Research Queue", "/settings": "Settings", "/guide": "Learn Me", "/icp": "Define ICP", "/team": "Team", "/home": "Home" };
 
 // Rendered once in the root layout, so it stays put across page changes (no rebuild, no jump).
-export default function Header({ subtitle }: { subtitle: string }) {
+const TAGLINE = "AI Autonomous Agent for Account Intelligence";
+export default function Header({ meta }: { meta: string }) {
   const { latest, releases, author } = useNewVersionInfo();
   const [showChanges, setShowChanges] = useState(false);
   // Open the "what's new" window once per new version (per browser session); the user can close it and reopen it from the banner.
@@ -172,7 +173,7 @@ export default function Header({ subtitle }: { subtitle: string }) {
                   <EngineBell />
                 </span>
               </div>
-              <span className="brand-sub">{subtitle}</span>
+              <span className="brand-sub">{TAGLINE}</span>
             </div>
           </div>
           <nav className="tabs" aria-label="Sections">
@@ -199,6 +200,7 @@ export default function Header({ subtitle }: { subtitle: string }) {
                   ? g.items.map(([href, label]) => <Link key={href} href={href} prefetch className="subtab" aria-selected={label === current} onClick={(e) => go(e, href)}>{SUB_LABEL[label] || label}</Link>)
                   : <span className="subtab" aria-hidden="true" style={{ visibility: "hidden" }}>&nbsp;</span> /* keeps the bar's height so nothing jumps */}
               </div>
+              {meta && <span className="subtabs-meta">{meta}</span>}
             </nav>) : null; })()}
       </header>
     </>
