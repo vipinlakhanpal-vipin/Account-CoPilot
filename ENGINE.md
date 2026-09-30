@@ -55,9 +55,10 @@ If `null`, do step 4. `count: "max"` = as many as you can in this session (aim f
 1. Write `data/verification/run_details.json`: one row per company you checked or added this run (queued jobs and the daily batch together), in this exact shape:
    `[{"name":"<company>","status":"<ICP — Verified|ICP — Likely|ICP — Needs check|Not ICP|Unknown|Held (<region>)>","revenue":"<e.g. $51.8B, ~$625.6M (estimate), Below $250M, or '' if none found>"}]`
    This becomes the small table shown in the bell and in Settings → Scheduled run history — keep `revenue` short (one figure, no sentences).
-2. `node scripts/engine_client.mjs log "<one-line summary>" <verified_count> "<new company names separated by ;>" <daily|instant>`
-   — the last argument is which routine you are (the daily 6am one, or the instant job runner — your own opening instructions say which); this reads `run_details.json`
-   automatically and posts the summary, the table and which kind of run it was as the notification under the bell.
+2. `node scripts/engine_client.mjs log "<one-line summary>" <verified_count> "<new company names separated by ;>" <daily|instant> [region]`
+   — the 4th argument is which routine you are (the daily 6am one, or the instant job runner — your own opening instructions say which); the optional 5th argument
+   is the region(s) this run actually worked (e.g. "UAE", or "UAE, KSA" if more than one region's `active` list was worked this run) — omit it if none applies.
+   This reads `run_details.json` automatically and posts the summary, the table, the region and which kind of run it was as the notification under the bell.
 Do not commit or push anything and do not change app code.
 
 ## 4. Default daily work (always, after any queued jobs)

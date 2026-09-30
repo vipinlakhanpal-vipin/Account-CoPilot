@@ -1,11 +1,18 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.27";
+export const APP_VERSION = "2.28";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.28", date: "2026-09-30", notes: "Scheduled run history: Summary moved out of the table into its own full-width section above it; the table's columns are now Date, Company, Status, Revenue, Region, Run Status, Activate Region.",
+    changes: [
+      { what: "The 'N verified / new companies' rollup is no longer a table column — it's now a labeled 'Summary' block, full width, between the note paragraph and the table, showing the latest run", where: "Setup → Settings → Scheduled run history", why: "As a table column it duplicated what the per-company rows already showed, and didn't make sense crammed into one cell" },
+      { what: "Renamed the old 'Activate Region' column to 'Region', now showing which region(s) the run actually worked (new field, populated going forward — older runs show '—')", where: "Setup → Settings → Scheduled run history", why: "There was no region information visible in the table at all" },
+      { what: "The 'Activate Region' link (shown only when a company is held pending region activation) now sits where Summary used to be, at the end of the row", where: "Setup → Settings → Scheduled run history", why: "Frees up the column order to put Region right after Revenue, where it reads naturally" },
+      { what: "The daily/instant scheduled routine now optionally reports which region(s) it worked, via a new argument to 'engine_client.mjs log' and a new 'region' field stored with each run", where: "ENGINE.md, scripts/engine_client.mjs, app/api/engine/worker", why: "Region wasn't tracked per run before — needed so the new Region column has real data to show for future runs" },
+    ] },
   { version: "2.27", date: "2026-09-30", notes: "Scheduled run history: Status is now plain colored text (no pill), shown compact as 'ICP-Verified' with 'Unknown' in red; Run Status shows a fixed 'Daily Run 6am GST' / 'Instant Run' label instead of computing the viewer's own timezone; Date/Time is compact and stacked. Also standardized the date/time format app-wide, and centered the Status column in the job-queue table.",
     changes: [
       { what: "Run-history Status column dropped its pill/box background — it's now plain colored text (teal for Verified-type statuses, amber for Likely, red for Not ICP, red for Unknown), shown compact as 'ICP-Verified' (no spaces around the dash) at a small fine-print size", where: "Setup → Settings → Scheduled run history", why: "The pill shape made the table feel cluttered and less compact; colored text carries the same signal with less visual weight" },

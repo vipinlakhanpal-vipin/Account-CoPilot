@@ -13,7 +13,7 @@ type Batch = { id: string; region: string; budget: number; available: number; pl
 type Pending = { id: string; name: string; website?: string; country: string; region: string; region_status: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; requested_at: string };
 type Summary = { pin?: { set: boolean; ask_super: boolean; set_by: string; set_at: string }; token_info: { created_at?: string; by?: string; hint?: string } | null; token?: string | null; jobs: Job[]; batches: Batch[]; carry: number; spentAll: number; spentMonth: number; balance: { amount?: number; as_of?: string; by?: string };
   balanceLeft: number | null; est: { update: number; discovery: number; profile: number };
-  log?: { at: string; summary: string; verified: number; new_companies: string[]; details?: { name: string; status: string; revenue?: string }[]; source?: "daily" | "instant" }[]; pending?: Pending[] };
+  log?: { at: string; summary: string; verified: number; new_companies: string[]; details?: { name: string; status: string; revenue?: string }[]; source?: "daily" | "instant"; region?: string }[]; pending?: Pending[] };
 const statusTag = (s: string) => (/verified/i.test(s) ? "fact" : /likely/i.test(s) ? "likely" : /not icp/i.test(s) ? "conflict" : "unv");
 /** Plain-text status color for the compact run-history table (no pill/box). */
 const statusColor = (s: string) => (/verified/i.test(s) ? "st-v" : /likely/i.test(s) ? "st-l" : /not icp/i.test(s) ? "st-n" : "st-u");
@@ -138,7 +138,13 @@ export default function EngineSettings() {
 
         {s?.log && s.log.length > 0 && <div className="eng-card"><div className="eng-head"><h3>Scheduled run history</h3></div>
           <p className="note">Every run from here on tags itself automatically — Run status shows a badge with no extra step. Older runs, from before this existed, show &quot;—&quot;.</p>
-          <div className="tablewrap"><table className="run-history-table"><thead><tr><th>Date</th><th>Company</th><th>Status</th><th>Revenue</th><th>Activate Region</th><th>Run Status</th><th>Summary</th></tr></thead>
+          {(() => { const latest = s.log[0]; return (
+            <div className="run-summary-box">
+              <div className="run-summary-box-label">Summary</div>
+              <div className="run-summary-box-body"><b>{latest.verified}</b> verified{latest.new_companies.length > 0 && <> · {latest.new_companies.length} new: {latest.new_companies.join(", ")}</>}</div>
+            </div>
+          ); })()}
+          <div className="tablewrap"><table className="run-history-table"><thead><tr><th>Date</th><th>Company</th><th>Status</th><th>Revenue</th><th>Region</th><th>Run Status</th><th>Activate Region</th></tr></thead>
             <tbody>{s.log.slice(0, 10).flatMap((e) => {
               // Older runs, from before per-company detail tracking existed, only have a free-text summary and a
               // new-companies list — fall back to one row per named company (status/revenue unknown) instead of
@@ -154,12 +160,9 @@ export default function EngineSettings() {
                   <td className="wrap">{d.name}</td>
                   <td>{d.status ? <span className={`status-plain ${statusColor(d.status)}`}>{compactStatus(d.status)}</span> : <span className="muted">—</span>}</td>
                   <td className="muted">{d.revenue || "—"}</td>
-                  {i === 0 && <td rowSpan={n}>{held.map((h, hi) => <div key={hi}><a className="job-link" href="/settings#engine-pending">Activate {h.status.replace(/^held \(|\)$/gi, "")} →</a></div>)}</td>}
+                  {i === 0 && <td rowSpan={n}>{e.region || <span className="muted">—</span>}</td>}
                   {i === 0 && <td rowSpan={n}>{e.source === "instant" ? <span className="run-badge instant">Instant Run</span> : e.source === "daily" ? <span className="run-badge daily">Daily Run 6am GST</span> : <span className="muted">—</span>}</td>}
-                  {i === 0 && <td rowSpan={n} className="run-summary-cell">
-                    <div className="run-summary-line run-summary-head">{e.verified} verified</div>
-                    <div className="run-summary-line wrap">{e.new_companies.length} new{e.new_companies.length ? `: ${e.new_companies.join(", ")}` : ""}</div>
-                  </td>}
+                  {i === 0 && <td rowSpan={n}>{held.length > 0 ? held.map((h, hi) => <div key={hi}><a className="job-link" href="/settings#engine-pending">Activate {h.status.replace(/^held \(|\)$/gi, "")} →</a></div>) : <span className="muted">—</span>}</td>}
                 </tr>
               ));
             })}</tbody></table></div></div>}
