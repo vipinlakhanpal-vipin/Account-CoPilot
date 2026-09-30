@@ -39,7 +39,11 @@ export default function EngineBell() {
       </button>
       {open && (
         <div className="bell-pop" role="dialog" aria-label="Engine notifications">
-          <b>Scheduled runs</b>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <b>Scheduled runs</b>
+            <button type="button" className="btn tiny" onClick={() => setOpen(false)}>Close</button>
+          </div>
+          <p className="bell-resize-hint">Drag the bottom-right corner to expand ↘</p>
           {entries.length === 0 ? <p className="note">No runs yet. The engine runs every day at <DailyRunLocalTime /> and posts a summary here.</p>
             : entries.slice(0, 8).map((e) => (
               <div key={e.at} className={`bell-item${e.at > seen ? " new" : ""}`}>
