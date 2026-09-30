@@ -27,6 +27,30 @@ export async function GET() {
   return NextResponse.json({ ...def, regions: Object.fromEntries(Object.entries(def.regions).filter(([k]) => canSeeRegion(access, k))) });
 }
 
+// Plain-English label for each field path shown in the history line — falls back to a humanized version of the
+// path itself (e.g. "focus.platforms" -> "Focus Platforms") for anything not listed here.
+const FIELD_LABEL: Record<string, string> = {
+  status: "Status", notes: "Notes",
+  "revenue.min_usd_m": "Minimum revenue", "revenue.max_usd_m": "Maximum revenue", "revenue.basis_general": "Revenue basis (general)",
+  "revenue.basis_banks": "Revenue basis (banks)", "revenue.basis_insurers": "Revenue basis (insurers)",
+  "employees.min": "Minimum employees", "employees.max": "Maximum employees",
+  listing: "Stock listing requirement", entity_level: "Which entities count",
+  ownership_allowed: "Ownership types allowed", industries_include: "Industries included", industries_exclude: "Industries excluded",
+  "exclude.government_bodies": "Exclude government bodies", "exclude.single_sites": "Exclude single sites",
+  "exclude.foreign_branches": "Exclude foreign branches", "exclude.keywords": "Exclude keywords",
+  "evidence.verified_sources": "Accepted evidence sources", "evidence.estimates_can_make_likely": "Estimates can count as Likely",
+  "evidence.not_icp_estimate_below_usd_m": "Not-ICP revenue floor (estimate)", "evidence.not_icp_estimate_max_staff": "Not-ICP staff ceiling (estimate)",
+  "evidence.seamless_likely_min_staff": "Seamless “Likely” staff minimum", "evidence.recheck_days": "Re-check interval (days)",
+  "pipeline.w_match": "Pipeline weight: ICP match", "pipeline.w_opportunity": "Pipeline weight: Opportunity", "pipeline.w_fit": "Pipeline weight: Coupa fit",
+  "pipeline.min_match": "Pipeline minimum match", "pipeline.exclude_not_icp": "Pipeline excludes Not ICP",
+  "focus.platforms": "S2P platforms to look for", "focus.erp": "ERP systems to look for", "focus.triggers": "Buying triggers to look for",
+  "personas.departments": "Target departments", "personas.seniority": "Target seniority", "personas.roles": "Priority roles",
+  "personas.max_per_account": "Max contacts per account",
+  "engine.discover_per_day": "New companies found per day", "engine.verify_per_day": "Companies verified per day",
+  "currency.code": "Local currency", "currency.per_usd": "Exchange rate (per USD)",
+};
+const humanizeField = (p: string) => FIELD_LABEL[p] || p.split(".").map((s) => s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())).join(" — ");
+
 /** What changed between two definitions, in plain words (for the history line). */
 function diff(a: Definition, b: Definition) {
   const out: string[] = [];
@@ -38,7 +62,7 @@ function diff(a: Definition, b: Definition) {
       if (JSON.stringify(u) === JSON.stringify(v)) return;
       if (u && v && typeof u === "object" && typeof v === "object" && !Array.isArray(u) && !Array.isArray(v)) {
         for (const k of new Set([...Object.keys(u as object), ...Object.keys(v as object)])) walk(p ? `${p}.${k}` : k, (u as Record<string, unknown>)[k], (v as Record<string, unknown>)[k]);
-      } else bits.push(`${p}: ${Array.isArray(u) ? u.join(", ") || "none" : u ?? "none"} → ${Array.isArray(v) ? v.join(", ") || "none" : v ?? "none"}`);
+      } else bits.push(`${humanizeField(p)}: ${Array.isArray(u) ? u.join(", ") || "none" : u ?? "none"} → ${Array.isArray(v) ? v.join(", ") || "none" : v ?? "none"}`);
     };
     walk("", x, y);
     out.push(`${key} — ${bits.slice(0, 8).join("; ")}${bits.length > 8 ? `; +${bits.length - 8} more` : ""}`);
