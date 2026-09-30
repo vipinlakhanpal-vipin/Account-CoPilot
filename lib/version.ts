@@ -1,11 +1,15 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.40";
+export const APP_VERSION = "2.41";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.41", date: "2026-09-30", notes: "Fixed: switching from Setup Wizard back to About Account CoPilot left the wizard's 6 steps showing open in the rail; now it collapses them, so re-opening the wizard starts clean.",
+    changes: [
+      { what: "Clicking \"About Account CoPilot\" now also collapses the wizard's step list, instead of leaving it expanded from before", where: "Home → left rail", why: "Reported: the 6 steps stayed visibly open under Setup Wizard after switching away to About, and reopening the wizard didn't reset that" },
+    ] },
   { version: "2.40", date: "2026-09-30", notes: "Header tagline is now just the tagline (2 lines) — account count and last-update date moved out into a fine-print line in the light green strip under the navbar. Also: the Suggestions header icon is now a glowing lightbulb with sun-rays.",
     changes: [
       { what: "Split the header's subtitle in two: the tagline alone is what wraps under the logo now (2 lines); \"N accounts · data updated <date>\" moved into a new fine-print line inside the existing sub-tab strip", where: "Header, all pages", why: "Requested — combining both into one string made the tagline wrap to 4 lines once truncation was removed" },

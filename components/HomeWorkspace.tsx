@@ -214,7 +214,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
   return (
     <section className="panel hw">
       <nav className="hw-rail">
-        <button type="button" className="hw-rail-item" aria-current={section === "about"} onClick={() => setSection("about")}>
+        <button type="button" className="hw-rail-item" aria-current={section === "about"} onClick={() => { setSection("about"); setExpanded(false); }}>
           <span className="hw-rail-icon"><Ico name="book" /></span>About Account CoPilot</button>
         <div className="hw-rail-row">
           <button type="button" className="hw-rail-item" aria-current={section === "wizard"} onClick={toggleWizard}>
