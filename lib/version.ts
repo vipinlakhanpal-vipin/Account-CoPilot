@@ -1,11 +1,19 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.44";
+export const APP_VERSION = "2.45";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.45", date: "2026-09-30", notes: "New global search bar in the header, right before the Home tab — type a company name, a location, or a threshold like \"revenue > 250M\" or \"employees > 500\", and it jumps to Accounts with the matching filters already applied. Also: the bell and bulb icons now share the exact same ring/glow shape, only the color differs.",
+    changes: [
+      { what: "Added a wide search bar in the main navbar, between the logo and the Home tab. Plain text searches company name/HQ location; \"revenue\"/\"employees\" with an operator (>, >=, <, <=, =) and a number is parsed and translated into the Discovery panel's own band filters ($250M-$500M, 100-250, etc. — both fields are band-based already, not raw numbers)", where: "Header, all pages; new lib/globalSearch.ts, components/GlobalSearchBar.tsx", why: "Requested — a fast way to jump straight to filtered Accounts from anywhere in the app" },
+      { what: "Submitting navigates to Accounts with a one-time ?gq= parameter that applies to the existing criteria state and then removes itself from the URL, so refreshing or going back doesn't re-trigger it", where: "components/CoPilotApp.tsx", why: "Reuses the exact filter system the Discovery panel already has, instead of building a second one" },
+      { what: "Bell and bulb icons now use the identical ring width and glow size — only the hue (teal vs amber) differs between them", where: "Header, all pages", why: "Requested — they looked like two different shapes before, not just two colors" },
+      { what: "Added a small filter icon button right before the search bar — jumps to Accounts and opens the full Discovery panel (all the advanced company/contact filters already there), for when the quick search bar isn't enough", where: "Header, all pages", why: "Requested \"advanced filter logic to search anything\" — reuses the existing advanced filter system rather than building a second one" },
+      { what: "Reduced the main nav tab font size (15px → 13.5px) to make room for the new search bar and filter button", where: "Header, all pages", why: "Requested — make space for the new elements rather than crowding the navbar" },
+    ] },
   { version: "2.44", date: "2026-09-30", notes: "Suggestions popover redesigned as a real table (Sl# / Suggestion / User / Date & Time / Action); marking one Completed now emails the person who submitted it. Also: Discovery panel's stat tiles got color fills and centered text, and two step titles shortened where the description already explains them.",
     changes: [
       { what: "Suggestions list is now a table with columns Sl#, Suggestion Request, User (name + email), Date & Time, and Action — replacing the stacked card list", where: "Header → Suggestions popover", why: "Requested — the card layout wasn't user-friendly" },

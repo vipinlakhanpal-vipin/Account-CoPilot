@@ -7,7 +7,8 @@ import CompanyLogo from "@/components/CompanyLogo";
 import { useCustomFilters, CustomFilterBar } from "@/components/CustomFilters";
 import InfoTip, { type Weights } from "@/components/InfoTip";
 import { useMemo, useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { parseGlobalQuery } from "@/lib/globalSearch";
 import Hero from "@/components/Hero";
 import type { AllData, Row } from "@/lib/data";
 import { ALL, COUNTRIES, DEFAULT_COUNTRY, countryCode } from "@/lib/countries";
@@ -184,6 +185,8 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "
 
 export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper = true }: { data: AllData; home?: string; isSuper?: boolean }) {
   const params = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const tab = params.get("tab") || "dashboard";
   const country = params.get("country") || home;
   // Everything below (dashboard, tabs, drill-downs) sees only the selected country's accounts and their linked rows.
@@ -210,6 +213,28 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
     supabaseBrowser().from("settings").select("value").eq("key", "icp_criteria").maybeSingle()
       .then(({ data: row }) => { if (row?.value) { setCriteria(withDefaults(row.value as Criteria)); setTeamCriteria(withDefaults(row.value as Criteria)); setSavedMeta((row.value as { _meta?: { by?: string; at?: string } })._meta || null); } });
   }, []);
+  // Header's global search (?gq=) applies once, then clears itself from the URL so it doesn't re-fire on refresh/back.
+  useEffect(() => {
+    const gq = params.get("gq");
+    if (!gq) return;
+    const parsed = parseGlobalQuery(gq);
+    setCriteria((c) => ({ ...c, company: { ...c.company, name: parsed.name || c.company.name,
+      ...(parsed.revenue.length ? { revenue: parsed.revenue } : {}), ...(parsed.employees.length ? { employees: parsed.employees } : {}) } }));
+    setCollapsed(false);
+    try { localStorage.setItem("dp-collapsed", "0"); } catch {}
+    const next = new URLSearchParams(params.toString()); next.delete("gq");
+    router.replace(`${pathname}?${next.toString()}`);
+    /* eslint-disable-next-line react-hooks/exhaustive-deps */
+  }, [params]);
+  // Header's "advanced filters" shortcut (?openFilters=1): just makes sure the Discovery panel is open.
+  useEffect(() => {
+    if (!params.get("openFilters")) return;
+    setCollapsed(false);
+    try { localStorage.setItem("dp-collapsed", "0"); } catch {}
+    const next = new URLSearchParams(params.toString()); next.delete("openFilters");
+    router.replace(`${pathname}?${next.toString()}`);
+    /* eslint-disable-next-line react-hooks/exhaustive-deps */
+  }, [params]);
   const toggle = () => setCollapsed((c) => { try { localStorage.setItem("dp-collapsed", c ? "0" : "1"); } catch {} return !c; });
   async function saveCriteria(c: Criteria) {
     if (!isSuper) return { ok: false, error: "Only a Super Admin can save the team's filters. Your changes still apply to your own view." };

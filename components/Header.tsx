@@ -6,6 +6,7 @@ import Logo from "@/components/Logo";
 import ProfileMenu from "@/components/ProfileMenu";
 import EngineBell from "@/components/EngineBell";
 import SuggestionsButton from "@/components/SuggestionsButton";
+import GlobalSearchBar from "@/components/GlobalSearchBar";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useNewVersionInfo } from "@/components/useVersion";
 import { notify } from "@/components/Confirm";
@@ -177,6 +178,7 @@ export default function Header({ meta }: { meta: string }) {
               <span className="brand-sub">{TAGLINE}</span>
             </div>
           </div>
+          <GlobalSearchBar />
           <nav className="tabs" aria-label="Sections">
             {GROUPS.map((g) => (
               <Link key={g.label} href={g.items[0][0]} prefetch className="tab" aria-selected={g.items.some(([, l]) => l === current)} onClick={(e) => go(e, g.items[0][0])}>{g.label}</Link>
