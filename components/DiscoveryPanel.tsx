@@ -7,6 +7,19 @@ const LABEL: Record<string, string> = { banking_financial: "Banking & financial"
   healthcare_pharma: "Healthcare & pharma", hospitality: "Hospitality & leisure", logistics_shipping: "Logistics & aviation", mining_resources: "Metals & mining",
   professional_services: "Professional services", retail_lifestyle: "Retail, food & consumer", tech_ai: "Technology & telecom", utilities: "Utilities" };
 
+// Human name for each criteria field, so the summary can say which filters are active, not just how many.
+const FIELD_LABEL: Record<string, string> = {
+  name: "Company name", website: "Website", hq: "HQ", industries: "Industries", countries: "Countries", regions: "Regions", ownership: "Ownership",
+  revenue: "Revenue", employees: "Employees", erp: "ERP", procurement: "Procurement", integration: "Integration", triggers: "Triggers", financial: "Financial",
+  firstName: "First name", lastName: "Last name", title: "Title", email: "Email", phone: "Phone", linkedin: "LinkedIn",
+  seniority: "Seniority", departments: "Departments", roles: "Roles", intelligence: "Intelligence", engagement: "Engagement",
+};
+function activeFields(c: Criteria): string[] {
+  const on = (v: unknown) => (Array.isArray(v) ? v.length > 0 : !!v);
+  return [...Object.entries(c.company).filter(([, v]) => on(v)).map(([k]) => FIELD_LABEL[k] || k),
+    ...Object.entries(c.contact).filter(([, v]) => on(v)).map(([k]) => FIELD_LABEL[k] || k)];
+}
+
 function Chips({ label, options, value, onChange, disabled = [] }: { label: string; options: readonly string[]; value: string[]; onChange: (v: string[]) => void; disabled?: string[] }) {
   return (
     <fieldset className="dp-field">
@@ -71,7 +84,12 @@ export default function DiscoveryPanel({ criteria: applied, onApply, onSave, sav
         <h2>Account Discovery Criteria</h2>
         <button type="button" className="dp-toggle-sm" onClick={onToggle} aria-expanded="true" title="Collapse panel">«</button>
       </div>
-      <p className="dp-summary"><b>{matches.accounts}</b> accounts · <b>{matches.contacts}</b> contacts match · {n} criteria set</p>
+      <div className="dp-stats">
+        <div className="dp-stat"><b>{matches.accounts}</b><span>Accounts matching</span></div>
+        <div className="dp-stat"><b>{matches.contacts}</b><span>Contacts matching</span></div>
+        <div className="dp-stat"><b>{n}</b><span>Filters active</span></div>
+      </div>
+      {n > 0 && <p className="dp-active-fields">{activeFields(criteria).join(" · ")}</p>}
       <div className="dp-step s1">
         <p className="dp-step-h"><span className="dp-n">1</span>Search the app</p>
         <p className="dp-step-sub">Find a company already in the app. Free, instant; filters every tab.</p>
