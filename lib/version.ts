@@ -1,11 +1,16 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.23";
+export const APP_VERSION = "2.24";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.24", date: "2026-09-30", notes: "Older runs (from before per-company detail tracking existed) now show one row per new company, same as recent runs, instead of dumping the whole free-text summary into the Company cell. Also: Status tags no longer wrap to two lines, and Revenue gets a bit more breathing room.",
+    changes: [
+      { what: "Runs without per-company detail records (older log entries) now fall back to one row per name in that run's new-companies list, with Status/Revenue shown as '—', instead of showing the entire raw summary sentence as a single 'company'", where: "Setup → Settings → Scheduled run history", why: "Runs from before detail tracking existed looked visibly different (and worse) from recent ones — this brings them into the same row-per-company format" },
+      { what: "Status tags (e.g. 'ICP — Verified') no longer wrap onto two lines; Revenue column gets a bit more left spacing", where: "Setup → Settings → Scheduled run history", why: "The tag pill was breaking mid-phrase in the narrower Status column" },
+    ] },
   { version: "2.23", date: "2026-09-30", notes: "The bell notifications popover can now be resized — drag its bottom-right corner to expand it (up to 900px wide / 80% of the screen tall) when there's more to read, then shrink it back or press Close.",
     changes: [
       { what: "The bell popover is now resizable by dragging its bottom-right corner, with sensible min/max bounds, plus an explicit Close button next to the 'Scheduled runs' heading and a small hint ('Drag the bottom-right corner to expand')", where: "Top bar → bell icon → notifications popover", why: "The fixed 340×420px box could feel cramped once a run's company table got long; letting it expand on demand (and shrink back) fixes that without permanently taking up more space" },

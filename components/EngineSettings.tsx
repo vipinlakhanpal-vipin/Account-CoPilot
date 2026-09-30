@@ -136,9 +136,14 @@ export default function EngineSettings() {
 
         {s?.log && s.log.length > 0 && <div className="eng-card"><div className="eng-head"><h3>Scheduled run history</h3></div>
           <p className="note">Every run from here on tags itself automatically — Run status shows a badge with no extra step. Older runs, from before this existed, show &quot;—&quot;.</p>
-          <div className="tablewrap"><table><thead><tr><th>Date</th><th>Company</th><th>Status</th><th>Revenue</th><th>Activate Region</th><th>Run Status</th><th>Summary</th></tr></thead>
+          <div className="tablewrap"><table className="run-history-table"><thead><tr><th>Date</th><th>Company</th><th>Status</th><th>Revenue</th><th>Activate Region</th><th>Run Status</th><th>Summary</th></tr></thead>
             <tbody>{s.log.slice(0, 10).flatMap((e) => {
-              const rows = e.details && e.details.length > 0 ? e.details.slice(0, 30) : [{ name: e.summary, status: "", revenue: "" }];
+              // Older runs, from before per-company detail tracking existed, only have a free-text summary and a
+              // new-companies list — fall back to one row per named company (status/revenue unknown) instead of
+              // dumping the whole sentence into the Company cell.
+              const rows = e.details && e.details.length > 0 ? e.details.slice(0, 30)
+                : e.new_companies && e.new_companies.length > 0 ? e.new_companies.map((name) => ({ name, status: "", revenue: "" }))
+                : [{ name: e.summary, status: "", revenue: "" }];
               const held = e.details?.filter((d) => /^held/i.test(d.status)) || [];
               const n = rows.length;
               return rows.map((d, i) => (
