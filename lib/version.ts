@@ -1,11 +1,17 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.30";
+export const APP_VERSION = "2.31";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.31", date: "2026-09-30", notes: "Setup Wizard: Region and Company size are now one merged step — each region gets its own size rule (revenue, employees, listing, entity level) in the same small tile, instead of one shared rule applied to every checked region.",
+    changes: [
+      { what: "Merged the Region and Company size steps into one — each region is now its own small, light-filled tile with its checkbox plus its own Min net revenue, Min employees, Stock listing and Which entities count fields", where: "Home → Setup Wizard, step 1", why: "Requested so region and its size rule can be set in one place, and so Europe/USA can carry a different bar than the Gulf" },
+      { what: "Company size is no longer one shared value applied to every checked region on Save — each region's own tile values are what gets saved for that region", where: "Home → Setup Wizard save logic", why: "The underlying ICP definition already stores size rules per region; the wizard just wasn't exposing that" },
+      { what: "The wizard is now 6 steps instead of 7 (Region & size, Add Data, Domains, Data sources, Daily plan, Review) — the Review step's Company size line shows one shared figure when every checked region matches, or a per-region breakdown when they differ", where: "Home → Setup Wizard", why: "Direct result of the merge above" },
+    ] },
   { version: "2.30", date: "2026-09-30", notes: "Setup Wizard: reordered step 2 and 3 (Company size now comes right after Region), and renamed \"Existing data\" to \"Add Data\".",
     changes: [
       { what: "Swapped the order of \"Company size\" and \"Existing data\" (now \"Add Data\") — Company size is now step 2, Add Data is step 3", where: "Home → Setup Wizard", why: "Requested reorder" },

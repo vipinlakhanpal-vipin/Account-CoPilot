@@ -6,7 +6,7 @@ import { ask, notify } from "@/components/Confirm";
 
 // Home workspace: a left rail with two destinations — About Account CoPilot (always free to read) and Setup Wizard
 // (reads and writes the exact settings.icp_definition record Setup → Define ICP uses, so there's no separate config to
-// drift out of sync). The wizard's 7 steps live as their own collapsible list under Setup Wizard, colour-coded by what
+// drift out of sync). The wizard's 6 steps live as their own collapsible list under Setup Wizard, colour-coded by what
 // they configure: region/size in teal, targeting in gold, sources/pace in sky, review neutral.
 const clone = <T,>(x: T): T => JSON.parse(JSON.stringify(x));
 
@@ -15,7 +15,8 @@ const clone = <T,>(x: T): T => JSON.parse(JSON.stringify(x));
 // connection. Never mark anything "connected" unless it genuinely is.
 type Sources = { checked: string[]; custom: string[] };
 const KNOWN_SOURCES = ["ZoomInfo", "Crunchbase", "Lusha", "Dun & Bradstreet", "Refinitiv", "Thomson Reuters"];
-type Draft = { revenue: number; employees: number; listing: Rules["listing"]; entity: Rules["entity_level"]; discoverPerDay: number; verifyPerDay: number };
+type Draft = { discoverPerDay: number; verifyPerDay: number };
+type SizeDraft = { revenue: number; employees: number; listing: Rules["listing"]; entity: Rules["entity_level"] };
 
 const ICON = {
   pin: (<><path d="M12 21s7-7.58 7-12a7 7 0 0 0-14 0c0 4.42 7 12 7 12z" /><circle cx="12" cy="9" r="2.4" /></>),
@@ -68,13 +69,12 @@ const PROFILE_TIERS: { label: string; unit: number | [number, number]; note: str
 ];
 
 const STEPS: { n: number; label: string; icon: keyof typeof ICON; cls: string }[] = [
-  { n: 1, label: "Region", icon: "pin", cls: "hw-step--region" },
-  { n: 2, label: "Company size", icon: "building", cls: "hw-step--region" },
-  { n: 3, label: "Add Data", icon: "folder", cls: "hw-step--region" },
-  { n: 4, label: "Domains", icon: "crosshair", cls: "hw-step--people" },
-  { n: 5, label: "Data sources", icon: "database", cls: "hw-step--data" },
-  { n: 6, label: "Daily plan", icon: "calendar", cls: "hw-step--data" },
-  { n: 7, label: "Review", icon: "clipboard", cls: "hw-step--review" },
+  { n: 1, label: "Region & size", icon: "pin", cls: "hw-step--region" },
+  { n: 2, label: "Add Data", icon: "folder", cls: "hw-step--region" },
+  { n: 3, label: "Domains", icon: "crosshair", cls: "hw-step--people" },
+  { n: 4, label: "Data sources", icon: "database", cls: "hw-step--data" },
+  { n: 5, label: "Daily plan", icon: "calendar", cls: "hw-step--data" },
+  { n: 6, label: "Review", icon: "clipboard", cls: "hw-step--review" },
 ];
 
 export default function HomeWorkspace({ access }: { access: Access }) {
@@ -92,7 +92,14 @@ export default function HomeWorkspace({ access }: { access: Access }) {
   const [newSource, setNewSource] = useState("");
   const [activateNow, setActivateNow] = useState(true);
   const [wantsProfiling, setWantsProfiling] = useState<"free" | "paid" | "">("");
-  const [draft, setDraft] = useState<Draft>({ revenue: 250, employees: 100, listing: "any", entity: "group_hq", discoverPerDay: 5, verifyPerDay: 25 });
+  const [draft, setDraft] = useState<Draft>({ discoverPerDay: 5, verifyPerDay: 25 });
+  const [sizeDraft, setSizeDraft] = useState<Record<string, SizeDraft>>({});
+  // Each region keeps its own size rule — Europe or the USA can carry a higher bar than the Gulf. Falls back to that
+  // region's own last-saved value (every region always has one, even unconfigured ones — DEFAULT_RULES), not a shared draft.
+  const sizeFor = (key: string): SizeDraft => sizeDraft[key] ?? (def?.regions[key]
+    ? { revenue: def.regions[key].revenue.min_usd_m, employees: def.regions[key].employees.min, listing: def.regions[key].listing, entity: def.regions[key].entity_level }
+    : { revenue: 250, employees: 100, listing: "any", entity: "group_hq" });
+  const setSize = (key: string, patch: Partial<SizeDraft>) => setSizeDraft((cur) => ({ ...cur, [key]: { ...sizeFor(key), ...patch } }));
 
   useEffect(() => {
     let cancelled = false;
@@ -108,8 +115,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
           setRegions([first]);
           const r = d.regions[first];
           if (r) {
-            setDraft({ revenue: r.revenue.min_usd_m, employees: r.employees.min, listing: r.listing, entity: r.entity_level,
-              discoverPerDay: r.engine.discover_per_day || 5, verifyPerDay: r.engine.verify_per_day || 25 });
+            setDraft({ discoverPerDay: r.engine.discover_per_day || 5, verifyPerDay: r.engine.verify_per_day || 25 });
             setDomains(OPTIONS.domains.filter((x) => r.personas.departments.includes(x.department)).map((x) => x.key));
             setActivateNow(r.status === "active");
           }
@@ -142,6 +148,9 @@ export default function HomeWorkspace({ access }: { access: Access }) {
   async function save() {
     if (!def) return;
     if (!regions.length) { notify("Pick at least one region in step 1.", "error"); setSection("wizard"); setExpanded(true); setStep(1); return; }
+    const named: { key: string; s: SizeDraft }[] = regions.map((key) => ({ key, s: sizeFor(key) }));
+    const badSize = named.find(({ s }) => !(s.revenue > 0) || !(s.employees >= 0));
+    if (badSize) { notify(`${REGIONS.find((r) => r.key === badSize.key)?.name || badSize.key}: enter a valid revenue and employee count.`, "error"); return; }
     const names = regions.map((k) => REGIONS.find((r) => r.key === k)?.name || k).join(", ");
     if (!(await ask({ title: "Save this setup?", confirm: "Save & apply", body: `Applies to ${names}.`,
       points: ["Every company's ICP status is recalculated straight away.", "The next daily run uses these rules for each region checked."] }))) return;
@@ -152,16 +161,17 @@ export default function HomeWorkspace({ access }: { access: Access }) {
     for (const key of regions) {
       const target = n.regions[key];
       if (!target) continue;
-      target.revenue.min_usd_m = draft.revenue;
-      target.employees.min = draft.employees;
-      target.listing = draft.listing;
-      target.entity_level = draft.entity;
+      const s = sizeFor(key);
+      target.revenue.min_usd_m = s.revenue;
+      target.employees.min = s.employees;
+      target.listing = s.listing;
+      target.entity_level = s.entity;
       target.personas.departments = [...new Set(chosenDepts.length ? chosenDepts : target.personas.departments)];
       target.focus.triggers = [...new Set([...target.focus.triggers, ...extraTriggers])];
       target.engine.discover_per_day = draft.discoverPerDay;
       target.engine.verify_per_day = draft.verifyPerDay;
       // Configuring a region here is what starts it: a region still marked "next phase" always leaves that state,
-      // landing on Active or Paused depending on the checkbox in step 6 — never left stuck as "not started".
+      // landing on Active or Paused depending on the checkbox in step 5 — never left stuck as "not started".
       if (activateNow) target.status = "active";
       else if (target.status === "next") target.status = "paused";
     }
@@ -175,6 +185,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
   }
 
   const regionNames = regions.map((k) => REGIONS.find((r) => r.key === k)?.name || k);
+  const uniformSize = regions.length > 0 && regions.every((k) => sizeFor(k).revenue === sizeFor(regions[0]).revenue && sizeFor(k).employees === sizeFor(regions[0]).employees);
   const startingRegions = regions.filter((k) => def?.regions[k]?.status === "next").map((k) => REGIONS.find((r) => r.key === k)?.name || k);
   // Shared by the "Setup Wizard" label and the chevron, so both always behave the same way: switching in from
   // elsewhere opens the step list, and clicking again once already there toggles it open or closed.
@@ -191,7 +202,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
         <div className="hw-rail-row">
           <button type="button" className="hw-rail-item" aria-current={section === "wizard"} onClick={toggleWizard}>
             <span className="hw-rail-icon"><Ico name="wand" /></span>Setup Wizard</button>
-          <button type="button" className="hw-chevron" aria-expanded={expanded} aria-label={expanded ? "Collapse the 7 steps" : "Expand the 7 steps"} onClick={toggleWizard}>
+          <button type="button" className="hw-chevron" aria-expanded={expanded} aria-label={expanded ? "Collapse the 6 steps" : "Expand the 6 steps"} onClick={toggleWizard}>
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" style={{ transition: "transform .18s ease", transform: expanded ? "none" : "rotate(-90deg)" }}>
               <path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </button>
@@ -236,26 +247,38 @@ export default function HomeWorkspace({ access }: { access: Access }) {
             {step === 1 && (
               <div>
                 <div className="hw-tint hw-tint--region">
-                  <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--teal)")}><Ico name="pin" /></span><h3>Which regions are you setting up?</h3></div>
-                  <p className="hw-lead hw-lead-wide">Tick every region you want this wizard to configure right now. The steps ahead — company size, targeting, data
-                    sources and daily plan — are set once and applied to each region checked below. You can always come back and run the wizard again
-                    for just one region. Regions marked <b>not started yet</b> haven&apos;t been set up at all — ticking one starts it: it moves to
-                    Active or Paused (your choice in step 6) once you save.</p>
+                  <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--teal)")}><Ico name="pin" /></span><h3>Which regions, and what counts as a fit?</h3></div>
+                  <p className="hw-lead hw-lead-wide">Tick every region you want this wizard to configure, and set its own size rule right in the same row — Europe or the
+                    USA can carry a higher bar than the Gulf, for instance. Targeting, data sources and daily plan (the steps ahead) are set once and applied to every
+                    region checked here. Regions marked <b>not started yet</b> haven&apos;t been set up at all — ticking one starts it: it moves to Active or Paused
+                    (your choice in step 5) once you save.</p>
                 </div>
-                <div>
+                <div className="hw-region-list">
                   {visibleRegions.map((r) => {
                     const nextPhase = def.regions[r.key]?.status === "next";
+                    const checked = regions.includes(r.key);
+                    const s = sizeFor(r.key);
                     return (
-                      <label key={r.key} className="hw-checkrow">
-                        <input type="checkbox" checked={regions.includes(r.key)} onChange={() => toggleRegion(r.key)} />
-                        {r.name} {nextPhase && <span className="hint">— not started yet</span>}
-                      </label>
+                      <div key={r.key} className={`hw-region-row ${checked ? "on" : ""}`}>
+                        <label className="hw-region-name">
+                          <input type="checkbox" checked={checked} onChange={() => toggleRegion(r.key)} />
+                          {r.name} {nextPhase && <span className="hint">— not started yet</span>}
+                        </label>
+                        <div className="hw-region-fields">
+                          <label>Min net rev<MoneyField value={s.revenue} onChange={(v) => setSize(r.key, { revenue: v })} /></label>
+                          <label>Min employees<input type="number" min={0} value={s.employees} onChange={(e) => setSize(r.key, { employees: Number(e.target.value) || 0 })} /></label>
+                          <label>Stock listing<select value={s.listing} onChange={(e) => setSize(r.key, { listing: e.target.value as Rules["listing"] })}>
+                            {OPTIONS.listing.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
+                          <label>Which entities count<select value={s.entity} onChange={(e) => setSize(r.key, { entity: e.target.value as Rules["entity_level"] })}>
+                            {OPTIONS.entity.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
+                        </div>
+                      </div>
                     );
                   })}
                 </div>
                 <p className="hw-lead hw-lead-wide" style={{ marginTop: 12 }}>
                   {regions.length
-                    ? <><b>Selected: {regionNames.join(", ")}.</b> Company size, targeting, data sources and daily plan will apply to all of these.
+                    ? <><b>Selected: {regionNames.join(", ")}.</b> Targeting, data sources and daily plan will apply to all of these.
                       {startingRegions.length > 0 && <> <b>{startingRegions.join(", ")}</b> {startingRegions.length === 1 ? "isn't" : "aren't"} started yet
                         — saving this wizard starts {startingRegions.length === 1 ? "it" : "them"}.</>}</>
                     : "Pick at least one region to continue."}
@@ -265,35 +288,6 @@ export default function HomeWorkspace({ access }: { access: Access }) {
             )}
 
             {step === 2 && (
-              <div>
-                <div className="hw-tint hw-tint--region">
-                  <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--teal)")}><Ico name="building" /></span><h3>Company size — a company must meet both to count</h3></div>
-                  <p className="hw-lead hw-lead-wide">These numbers are the actual pass/fail rule, not just a filter on this page — the daily engine, in-app
-                    research and the Pipeline ranking all read them straight from here. Get them right once and everything downstream follows
-                    automatically.</p>
-                </div>
-                <label className="hw-field">Minimum net revenue
-                  <MoneyField value={draft.revenue} onChange={(v) => setDraft((d) => ({ ...d, revenue: v }))} />
-                  <span className="hint">Most recent annual net revenue, in USD. $250M works well for most enterprise deals — raise it for only the
-                    largest accounts, lower it to include more companies.</span></label>
-                <label className="hw-field">Minimum employees
-                  <input type="number" min={0} value={draft.employees} onChange={(e) => setDraft((d) => ({ ...d, employees: Number(e.target.value) || 0 }))} />
-                  <span className="hint">Global headcount, not just this region. Revenue on its own lets small holding entities or shell companies
-                    slip through — this second threshold catches those.</span></label>
-                <label className="hw-field">Stock listing
-                  <select value={draft.listing} onChange={(e) => setDraft((d) => ({ ...d, listing: e.target.value as Rules["listing"] }))}>
-                    {OPTIONS.listing.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
-                  <span className="hint">Off by default — most of the strongest accounts in the Gulf are privately held. Turn this on only if you
-                    specifically need publicly listed companies.</span></label>
-                <label className="hw-field">Which entities count
-                  <select value={draft.entity} onChange={(e) => setDraft((d) => ({ ...d, entity: e.target.value as Rules["entity_level"] }))}>
-                    {OPTIONS.entity.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
-                  <span className="hint">Controls whether a single hotel, branch office, or small subsidiary of a qualifying group counts on its own,
-                    or only the parent group does.</span></label>
-              </div>
-            )}
-
-            {step === 3 && (
               <div>
                 <div className="hw-tint hw-tint--region">
                   <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--teal)")}><Ico name="folder" /></span><h3>Do you already have a validated list?</h3></div>
@@ -312,12 +306,12 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                   <div className={`hw-about-card hw-yesno-no ${hasList === "no" ? "selected" : ""}`}>
                     <h4>If No {hasList === "no" && <span className="note">— selected</span>}</h4>
                     <p>No problem — the free daily engine can build your list from nothing, using its own web search. It just starts at a slower pace
-                      until it has found and verified enough companies to feel complete; you&apos;ll set that pace in step 6.</p></div>
+                      until it has found and verified enough companies to feel complete; you&apos;ll set that pace in step 5.</p></div>
                 </div>
               </div>
             )}
 
-            {step === 4 && (
+            {step === 3 && (
               <div>
                 <div className="hw-tint hw-tint--people">
                   <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--gold)")}><Ico name="crosshair" /></span><h3>Which domains do you want to target?</h3></div>
@@ -341,7 +335,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
               </div>
             )}
 
-            {step === 5 && (
+            {step === 4 && (
               <div>
                 <div className="hw-tint hw-tint--data">
                   <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--sky)")}><Ico name="database" /></span><h3>Which data sources do you have?</h3></div>
@@ -366,7 +360,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
               </div>
             )}
 
-            {step === 6 && (
+            {step === 5 && (
               <div>
                 <div className="hw-tint hw-tint--data">
                   <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--sky)")}><Ico name="calendar" /></span><h3>Daily plan</h3></div>
@@ -418,7 +412,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
               </div>
             )}
 
-            {step === 7 && (
+            {step === 6 && (
               <div>
                 <div className="hw-tint hw-tint--review">
                   <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--muted)")}><Ico name="clipboard" /></span><h3>Review</h3></div>
@@ -426,8 +420,9 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                 </div>
                 <p className="hw-lead hw-lead-wide" style={{ marginBottom: 16 }}>
                   You&apos;re setting up <b>{regionNames.length || 0} region{regionNames.length === 1 ? "" : "s"}</b>
-                  {regionNames.length ? <> ({regionNames.join(", ")})</> : null} with a bar of <b>{usdM(draft.revenue)} revenue</b> and{" "}
-                  <b>{draft.employees}+ employees</b>. {activateNow ? "Once you save, the daily run switches on for these regions" : "These rules save now, but the daily run stays paused for these regions until you activate them"} —
+                  {regionNames.length ? <> ({regionNames.join(", ")})</> : null}{" "}
+                  {uniformSize ? <>with a bar of <b>{usdM(sizeFor(regions[0]).revenue)} revenue</b> and <b>{sizeFor(regions[0]).employees}+ employees</b></>
+                    : <>each with its own revenue and employee bar (see below)</>}. {activateNow ? "Once you save, the daily run switches on for these regions" : "These rules save now, but the daily run stays paused for these regions until you activate them"} —
                   every day it looks for <b>{draft.discoverPerDay} new</b> matching companies and re-checks <b>{draft.verifyPerDay} existing</b> ones,
                   weighted toward {domains.length ? domains.map((k) => OPTIONS.domains.find((x) => x.key === k)?.label).join(", ") : "your current targeting"}.
                   All of this runs on your Claude plan, at no extra cost.{wantsProfiling === "paid" ? " Whenever you want it to go deeper than that free pace, Research Queue (Data tab) or Research more (the left panel on Dashboard) will do it, at the rates shown in the previous step." : ""}
@@ -444,7 +439,8 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                   </div>
                   <div className="hw-review-row hw-review-row--region">
                     <span className="k">Company size</span>
-                    <span className="v">revenue ≥ {usdM(draft.revenue)}, employees ≥ {draft.employees}</span>
+                    <span className="v">{uniformSize ? `revenue ≥ ${usdM(sizeFor(regions[0]).revenue)}, employees ≥ ${sizeFor(regions[0]).employees}`
+                      : regions.map((k) => `${REGIONS.find((r) => r.key === k)?.name || k}: revenue ≥ ${usdM(sizeFor(k).revenue)}, employees ≥ ${sizeFor(k).employees}`).join(" · ")}</span>
                   </div>
                   <div className="hw-review-row hw-review-row--people">
                     <span className="k">Targeting</span>
@@ -461,7 +457,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
 
             <div className="row-actions" style={{ marginTop: 18 }}>
               {step > 1 && <button type="button" className="btn" onClick={() => setStep((s) => s - 1)}>Back</button>}
-              {step < 7 && <button type="button" className="btn primary" onClick={() => setStep((s) => s + 1)}>Next</button>}
+              {step < 6 && <button type="button" className="btn primary" onClick={() => setStep((s) => s + 1)}>Next</button>}
             </div>
           </div>
         )}
