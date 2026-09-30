@@ -533,6 +533,7 @@ aside.brief.contact{width:min(760px,100%);z-index:70}
 .bell-btn svg{width:17px;height:17px}.bell-dot{position:absolute;top:-4px;right:-4px;min-width:17px;height:17px;border-radius:999px;background:var(--red);color:var(--text-strong);font:700 10px var(--body);display:grid;place-items:center;padding:0 4px}
 .notif-btn{border-color:color-mix(in srgb, var(--teal) 45%, var(--line));box-shadow:0 0 10px 1px color-mix(in srgb, var(--teal) 25%, transparent)}
 .suggest-btn{border-color:color-mix(in srgb, #F2A93B 55%, var(--line));box-shadow:0 0 12px 2px color-mix(in srgb, #F2A93B 35%, transparent)}
+.suggest-btn svg{width:20px;height:20px}
 .bell-pop{position:absolute;right:0;top:42px;width:340px;height:420px;min-width:300px;min-height:220px;max-width:min(90vw,900px);max-height:80vh;overflow:auto;resize:both;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;z-index:40;box-shadow:0 12px 30px rgba(0,0,0,.4);display:flex;flex-direction:column;gap:8px}
 .bell-resize-hint{font-size:10.5px;color:var(--muted);text-align:right;margin:-4px 0 0}
 .bell-item{border-top:1px solid var(--line);padding-top:6px}.bell-item small{color:var(--muted);font-size:11px}.bell-item p{margin:3px 0;font-size:12.5px}.bell-item.new small{color:var(--ok-text)}
@@ -582,6 +583,7 @@ aside.brief.contact{width:min(760px,100%);z-index:70}
 .navbar.has-sub .nav-actions{align-self:flex-end;padding-bottom:4px}
 .navbar.has-sub .nav-actions .btn.dl{padding:6px 12px}.navbar.has-sub .avatar,.navbar.has-sub .bell-btn{width:30px;height:30px}
 .version .bell-btn{width:26px;height:26px}.version .bell-btn svg{width:14px;height:14px}.version .bell-dot{min-width:15px;height:15px;font-size:9.5px;top:-5px;right:-5px}
+.version .suggest-btn svg{width:18px;height:18px}
 .version .bell-pop{left:0;right:auto;top:34px}
 
 /* White text that sits on solid colour (same in both themes) */

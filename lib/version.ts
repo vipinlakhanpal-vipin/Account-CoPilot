@@ -1,11 +1,15 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.42";
+export const APP_VERSION = "2.43";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.43", date: "2026-09-30", notes: "The Suggestions bulb icon looked smaller than the bell inside its circle — bumped its size up to match.",
+    changes: [
+      { what: "Bulb SVG sized up (18px in the compact header row, 20px elsewhere) so it visually matches the bell's weight inside its circle button — the bulb glyph has more empty margin around it for the sun-rays, so it needed a bit more box size than the bell to look equal", where: "Header, all pages", why: "Requested — the bulb looked noticeably smaller than the bell side by side" },
+    ] },
   { version: "2.42", date: "2026-09-30", notes: "Moved the Suggestions bulb to sit right next to the notifications bell (both near the app name/version, out of the far-right icon cluster), and colored both — bell in teal, bulb in amber — so they're easy to tell apart at a glance.",
     changes: [
       { what: "SuggestionsButton moved from the far-right nav-actions cluster to sit directly beside EngineBell", where: "Header, all pages", why: "Requested — both notification-style icons look better grouped together" },
