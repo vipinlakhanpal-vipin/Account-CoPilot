@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { Resend } from "resend";
 import { requireUser } from "@/lib/auth";
 import { getAccess } from "@/lib/access";
 import { supabaseAdmin } from "@/lib/supabase/admin";
@@ -17,6 +18,21 @@ async function getItems(db: ReturnType<typeof supabaseAdmin>): Promise<Suggestio
 }
 const setItems = (db: ReturnType<typeof supabaseAdmin>, items: Suggestion[]) =>
   db.from("settings").upsert({ key: "suggestions", value: { items: items.slice(0, 500) }, updated_at: new Date().toISOString() });
+
+// Best-effort: if RESEND_API_KEY isn't set yet, this silently does nothing rather than failing the status update.
+async function notifyCompleted(item: Suggestion) {
+  if (!process.env.RESEND_API_KEY || !item.submitted_by) return;
+  try {
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL || "Account CoPilot <onboarding@resend.dev>",
+      to: item.submitted_by,
+      subject: "Your suggestion has been completed",
+      text: `Your suggestion has been completed:\n\n"${item.description}"\n(${item.where} · ${item.category})\n\n`
+        + `${item.note ? `Note: ${item.note}\n\n` : ""}You can check it in the app under ${item.where}.`,
+    });
+  } catch (e) { console.error("suggestion completion email failed", e); }
+}
 
 export async function GET() {
   const user = await requireUser();
@@ -53,8 +69,10 @@ export async function POST(req: Request) {
   if (!access.isSuper) return NextResponse.json({ error: "Only a Super Admin can update a suggestion's status." }, { status: 403 });
   const item = items.find((x) => x.id === b.id);
   if (!item) return NextResponse.json({ error: "Not found." }, { status: 404 });
+  const wasCompleted = item.status === "completed";
   item.status = b.status; item.note = b.note; item.updated_by = user.email || ""; item.updated_at = now;
   const { error } = await setItems(db, items);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (b.status === "completed" && !wasCompleted) await notifyCompleted(item);
   return NextResponse.json({ items });
 }

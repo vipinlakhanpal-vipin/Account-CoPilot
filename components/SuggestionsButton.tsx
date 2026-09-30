@@ -77,38 +77,48 @@ export default function SuggestionsButton() {
             {msg && <p className={`now-msg ${msg.ok ? "ok" : "err"}`} style={{ marginTop: 6 }}>{msg.text}</p>}
           </div>
 
-          <div className="suggest-list">
-            {items.length === 0 ? <p className="note">No suggestions yet — be the first.</p>
-              : items.slice(0, 30).map((it) => <SuggestionRow key={it.id} item={it} isSuper={isSuper} onUpdate={updateStatus} />)}
-          </div>
+          {items.length === 0 ? <p className="note">No suggestions yet — be the first.</p> : (
+            <div className="tablewrap suggest-tablewrap">
+              <table className="suggest-table">
+                <thead><tr><th>Sl#</th><th>Suggestion Request</th><th>User</th><th>Date &amp; Time</th><th>Action</th></tr></thead>
+                <tbody>{items.slice(0, 30).map((it, i) => <SuggestionRow key={it.id} n={i + 1} item={it} isSuper={isSuper} onUpdate={updateStatus} />)}</tbody>
+              </table>
+            </div>
+          )}
         </div>)}
     </div>
   );
 }
 
-function SuggestionRow({ item, isSuper, onUpdate }: { item: Suggestion; isSuper: boolean; onUpdate: (id: string, status: Suggestion["status"], note: string) => void }) {
+function SuggestionRow({ n, item, isSuper, onUpdate }: { n: number; item: Suggestion; isSuper: boolean; onUpdate: (id: string, status: Suggestion["status"], note: string) => void }) {
   const [editing, setEditing] = useState(false);
   const [status, setStatus] = useState(item.status);
   const [note, setNote] = useState(item.note || "");
   return (
-    <div className="suggest-item">
-      <div className="suggest-item-head">
-        <span className={`status-plain ${STATUS_CLASS[item.status]}`}>{STATUS_LABEL[item.status]}</span>
-        <span className="hint">{item.where} · {item.category}</span>
-      </div>
-      <p className="wrap">{item.description}</p>
-      <small className="muted">{item.submitted_by} · {fmtDateTime(item.submitted_at)}</small>
-      {item.note && <p className="note" style={{ marginTop: 4 }}>{item.note}</p>}
-      {isSuper && (editing ? (
-        <div className="suggest-edit">
-          <select value={status} onChange={(e) => setStatus(e.target.value as Suggestion["status"])}>
-            {(["received", "pending", "in_progress", "completed"] as const).map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
-          </select>
-          <input type="text" placeholder="Note (optional)" value={note} onChange={(e) => setNote(e.target.value)} />
-          <button type="button" className="btn tiny" onClick={() => { onUpdate(item.id, status, note); setEditing(false); }}>Save</button>
-          <button type="button" className="btn tiny ghost" onClick={() => setEditing(false)}>Cancel</button>
-        </div>
-      ) : <button type="button" className="btn tiny ghost" onClick={() => setEditing(true)}>Update status</button>)}
-    </div>
+    <>
+      <tr>
+        <td className="muted">{n}</td>
+        <td className="wrap">{item.description}<div className="muted" style={{ fontSize: 11 }}>{item.where} · {item.category}</div></td>
+        <td>{item.submitted_by.split("@")[0]}<div className="muted" style={{ fontSize: 11 }}>{item.submitted_by}</div></td>
+        <td className="muted">{fmtDateTime(item.submitted_at)}</td>
+        <td>{isSuper
+          ? <button type="button" className="btn tiny ghost" onClick={() => setEditing((v) => !v)}><span className={`status-plain ${STATUS_CLASS[item.status]}`}>{STATUS_LABEL[item.status]}</span></button>
+          : <span className={`status-plain ${STATUS_CLASS[item.status]}`}>{STATUS_LABEL[item.status]}</span>}
+          {item.note && <div className="muted" style={{ fontSize: 11, marginTop: 2 }}>{item.note}</div>}
+        </td>
+      </tr>
+      {editing && (
+        <tr>
+          <td colSpan={5} className="suggest-edit-row">
+            <select value={status} onChange={(e) => setStatus(e.target.value as Suggestion["status"])}>
+              {(["received", "pending", "in_progress", "completed"] as const).map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
+            </select>
+            <input type="text" placeholder="Note (optional)" value={note} onChange={(e) => setNote(e.target.value)} />
+            <button type="button" className="btn tiny" onClick={() => { onUpdate(item.id, status, note); setEditing(false); }}>Save</button>
+            <button type="button" className="btn tiny ghost" onClick={() => setEditing(false)}>Cancel</button>
+          </td>
+        </tr>
+      )}
+    </>
   );
 }

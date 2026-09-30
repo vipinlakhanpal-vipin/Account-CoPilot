@@ -1,11 +1,18 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.43";
+export const APP_VERSION = "2.44";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.44", date: "2026-09-30", notes: "Suggestions popover redesigned as a real table (Sl# / Suggestion / User / Date & Time / Action); marking one Completed now emails the person who submitted it. Also: Discovery panel's stat tiles got color fills and centered text, and two step titles shortened where the description already explains them.",
+    changes: [
+      { what: "Suggestions list is now a table with columns Sl#, Suggestion Request, User (name + email), Date & Time, and Action — replacing the stacked card list", where: "Header → Suggestions popover", why: "Requested — the card layout wasn't user-friendly" },
+      { what: "Marking a suggestion Completed now sends the submitter an email (via Resend) saying their request is done and where to check it in the app — only fires once, on the transition into Completed, not on every re-save", where: "app/api/suggestions", why: "Requested — needs RESEND_API_KEY (and optionally RESEND_FROM_EMAIL) added to Vercel's environment variables to actually send; silently skipped until then" },
+      { what: "Account Discovery Criteria's three stat tiles (Accounts matching, Contacts matching, Filters active) now have distinct light color fills (teal/gold/sky) instead of plain grey, with the number and label centered instead of left-aligned", where: "Dashboard, Accounts, Stakeholders — Discovery panel", why: "Requested" },
+      { what: "Shortened two Discovery-panel step titles — \"Search the app\" → \"Search\", \"Find new companies on the web\" → \"Discover\" — since the line right below each already explains it in full", where: "Discovery panel steps 1 and 3", why: "Requested — no need for a long, explicit title when the description right below already says it" },
+    ] },
   { version: "2.43", date: "2026-09-30", notes: "The Suggestions bulb icon looked smaller than the bell inside its circle — bumped its size up to match.",
     changes: [
       { what: "Bulb SVG sized up (18px in the compact header row, 20px elsewhere) so it visually matches the bell's weight inside its circle button — the bulb glyph has more empty margin around it for the sun-rays, so it needed a bit more box size than the bell to look equal", where: "Header, all pages", why: "Requested — the bulb looked noticeably smaller than the bell side by side" },

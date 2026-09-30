@@ -92,7 +92,7 @@ export default function DiscoveryPanel({ criteria: applied, onApply, onSave, sav
           {n > 0 && <em className="dp-active-fields">{activeFields(criteria).join(" · ")}</em>}</div>
       </div>
       <div className="dp-step s1">
-        <p className="dp-step-h"><span className="dp-n">1</span>Search the app</p>
+        <p className="dp-step-h"><span className="dp-n">1</span>Search</p>
         <p className="dp-step-sub">Find a company already in the app. Free, instant; filters every tab.</p>
         <input type="search" className="dp-search" value={co.name} onChange={(e) => setCo("name", e.target.value)} placeholder="Company name…" aria-label="Search companies in the app" />
       </div>
@@ -166,7 +166,7 @@ export default function DiscoveryPanel({ criteria: applied, onApply, onSave, sav
       )}
 
       <div className="dp-research dp-step s3" id="dp-research">
-        <p className="dp-step-h"><span className="dp-n">3</span>Find new companies on the web</p>
+        <p className="dp-step-h"><span className="dp-n">3</span>Discover</p>
         <p className="dp-step-sub">{where ? <>Adds companies not yet in the app, in <b>{where}</b> ({applied.company.countries.length ? "the countries ticked in step 2" : `the ${country} tile you are viewing`}). Same ICP rules: group HQs only; no government bodies, single sites or foreign branches.</> : "Tick a country in step 2 first."}</p>
         <div className="dp-find">Find up to <select className="dp-amber" value={limit} onChange={(e) => setLimit(Number(e.target.value))}>{[3, 5, 10].map((x) => <option key={x}>{x}</option>)}</select>{researchTargets.length > 1 ? " per country" : ""}</div>
         <label className="dp-deep"><input type="checkbox" checked={profile} onChange={(e) => setProfile(e.target.checked)} /> Also research each one in depth</label>
