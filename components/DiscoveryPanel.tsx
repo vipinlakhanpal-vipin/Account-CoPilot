@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { OPTIONS, UNAVAILABLE_ENGAGEMENT, DEFAULT_CRITERIA, activeCount, type Criteria } from "@/lib/icp";
+import { fmtDate } from "@/lib/dates";
 
 const LABEL: Record<string, string> = { banking_financial: "Banking & financial", chemicals_oil_gas: "Oil, gas & chemicals", construction: "Construction",
   healthcare_pharma: "Healthcare & pharma", hospitality: "Hospitality & leisure", logistics_shipping: "Logistics & aviation", mining_resources: "Metals & mining",
@@ -174,7 +175,7 @@ export default function DiscoveryPanel({ criteria: applied, onApply, onSave, sav
         {researchMsg && <p className="dp-saved">{researchMsg}</p>}
       </div>
       <div className="dp-foot">
-        {!dirty ? <p className="dp-state">✓ Showing the <b>team&apos;s filters</b>{savedMeta?.at && <> (saved {new Date(savedMeta.at).toLocaleDateString()}{savedMeta.by && ` by ${savedMeta.by}`})</>}</p>
+        {!dirty ? <p className="dp-state">✓ Showing the <b>team&apos;s filters</b>{savedMeta?.at && <> (saved {fmtDate(savedMeta.at)}{savedMeta.by && ` by ${savedMeta.by}`})</>}</p>
           : <>
             <p className="dp-state changed">You changed {changed || "some"} filter{changed === 1 ? "" : "s"} — only you see this view.</p>
             <div className="dp-acts">

@@ -1,11 +1,20 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.26";
+export const APP_VERSION = "2.27";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.27", date: "2026-09-30", notes: "Scheduled run history: Status is now plain colored text (no pill), shown compact as 'ICP-Verified' with 'Unknown' in red; Run Status shows a fixed 'Daily Run 6am GST' / 'Instant Run' label instead of computing the viewer's own timezone; Date/Time is compact and stacked. Also standardized the date/time format app-wide, and centered the Status column in the job-queue table.",
+    changes: [
+      { what: "Run-history Status column dropped its pill/box background — it's now plain colored text (teal for Verified-type statuses, amber for Likely, red for Not ICP, red for Unknown), shown compact as 'ICP-Verified' (no spaces around the dash) at a small fine-print size", where: "Setup → Settings → Scheduled run history", why: "The pill shape made the table feel cluttered and less compact; colored text carries the same signal with less visual weight" },
+      { what: "Run Status badge now always reads a fixed 'Daily Run 6am GST' or 'Instant Run', instead of computing and displaying each viewer's own local timezone name", where: "Setup → Settings → Scheduled run history", why: "The computed label was long and varied per viewer, when a single fixed, short label says the same thing more plainly" },
+      { what: "Date/Time column is now compact and stacked on two lines (date, then time like '6:24am') instead of the browser's full default date-time string", where: "Setup → Settings → Scheduled run history", why: "The old format was wide enough to wrap and crowd the Company column" },
+      { what: "Summary cell's 'N verified' line is now fully bold (not just the number), matching the bold weight the mockup used", where: "Setup → Settings → Scheduled run history", why: "Requested alignment/weight consistency between the number and the word next to it" },
+      { what: "Added lib/dates.ts (fmtDate, fmtDateTime, fmtTimeShort) and migrated every real date/time display across the app (Research runs, Team, Profile, Discovery panel, bell notifications, job/batch tables, Define ICP's 'last saved', the Guide) to it, keeping the Asia/Dubai pin where one existed", where: "App-wide", why: "One shared format instead of each component picking its own toLocaleString() options, so a future format change is a single-file edit" },
+      { what: "The job-queue table's Status column (Waiting/In progress/Completed/…) is now centered, both the header and the value, instead of sitting at the top-left of a tall row", where: "Setup → Settings → Discovery & refresh engine — job queue", why: "The cell often had a lot of empty space below a short status pill; centering reads better" },
+    ] },
   { version: "2.26", date: "2026-09-30", notes: "Moved the active-filter names (e.g. 'Countries · Revenue · Employees') inside the 'Filters active' tile itself, directly under its number, instead of a separate line below all three tiles.",
     changes: [
       { what: "The list of which filters are active now sits inside the 'Filters active' tile, in fine print under its count, instead of as a standalone line beneath the whole row of tiles", where: "Dashboard, Accounts, Stakeholders — Account Discovery Criteria panel", why: "As a separate line it wasn't visually tied to the tile it was explaining; nesting it inside makes the connection unambiguous" },

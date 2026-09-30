@@ -8,6 +8,7 @@ import { SOURCES, indexSources } from "@/lib/sources";
 import { supabaseServer } from "@/lib/supabase/server";
 import { loadAllCached } from "@/lib/dataCache";
 import { getAccess, scopeData, type Access } from "@/lib/access";
+import { fmtDateTime } from "@/lib/dates";
 import { statusPatch } from "@/lib/icpStatus.mjs";
 import { rulesFor } from "@/lib/icpDefinition.mjs";
 import { buildPeople } from "@/lib/people";
@@ -40,7 +41,7 @@ async function liveChecks(access: Access) {
   const dated = A.filter((c) => c.created_at && c.updated_at).length;
   const { data: lg } = await sb.from("settings").select("value").eq("key", "engine_log").maybeSingle();
   const last = (lg?.value as { entries?: { at: string; summary: string }[] } | null)?.entries?.[0] || null;
-  const when = (iso: string) => new Date(iso).toLocaleString("en-GB", { timeZone: "Asia/Dubai", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  const when = (iso: string) => fmtDateTime(iso, "Asia/Dubai");
   const checks: Check[] = [
     { label: "Every company's ICP status matches the rules", ok: !mism, result: mism ? `${n(mism)} of ${n(A.length)} don't match` : `${n(A.length)} of ${n(A.length)}` },
     { label: "Every Verified company has an official figure of $250M or more", ok: vOk === V.length, result: `${n(vOk)} of ${n(V.length)}` },

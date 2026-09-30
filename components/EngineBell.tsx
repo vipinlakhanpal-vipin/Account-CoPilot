@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import DailyRunLocalTime from "@/components/DailyRunLocalTime";
+import { fmtDateTime } from "@/lib/dates";
 
 type Detail = { name: string; status: string; revenue?: string };
 type Entry = { at: string; summary: string; verified: number; new_companies: string[]; details?: Detail[] };
@@ -47,7 +48,7 @@ export default function EngineBell() {
           {entries.length === 0 ? <p className="note">No runs yet. The engine runs every day at <DailyRunLocalTime /> and posts a summary here.</p>
             : entries.slice(0, 8).map((e) => (
               <div key={e.at} className={`bell-item${e.at > seen ? " new" : ""}`}>
-                <small>{new Date(e.at).toLocaleString()}</small>
+                <small>{fmtDateTime(e.at)}</small>
                 {e.details && e.details.length > 0 ? (<>
                   <table className="bell-table"><thead><tr><th>Company</th><th>Status</th><th>Revenue</th><th></th></tr></thead>
                     <tbody>{e.details.slice(0, 12).map((d, i) => <tr key={i}><td>{d.name}</td><td><span className={`tag ${statusTag(d.status)}`}>{d.status}</span></td><td className="muted">{d.revenue || "—"}</td>

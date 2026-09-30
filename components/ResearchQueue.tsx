@@ -2,6 +2,7 @@
 import CostNote from "@/components/CostNote";
 import { paidFetch } from "@/components/Confirm";
 import { useEffect, useState } from "react";
+import { fmtDateTime } from "@/lib/dates";
 
 type Run = { id: string; query: string; depth: string; status: string; company_id?: string; country?: string; error?: string; stats?: Record<string, unknown>; started_at: string; finished_at?: string; requested_by?: string };
 const ROLES = ["Procurement", "Finance", "IT", "Transformation", "Supply Chain"];
@@ -93,7 +94,7 @@ export default function ResearchQueue() {
           <tbody>{runs.map((r, i) => (
             <tr key={r.id}>
               <td className="num mono">{i + 1}</td>
-              <td className="mono">{new Date(r.started_at).toLocaleString()}</td><td><b>{r.query}</b></td><td>{r.depth}</td>
+              <td className="mono">{fmtDateTime(r.started_at)}</td><td><b>{r.query}</b></td><td>{r.depth}</td>
               <td><span className={`job-st ${r.status === "done" ? "done" : r.status === "error" ? "error" : "running"}`}>{r.status === "done" ? "Completed" : r.status === "error" ? "Failed" : "In progress"}</span>
                 {!["done", "error"].includes(r.status) && <div className="muted">{r.status}…</div>}</td>
               <td className="wrap">{r.status === "error" ? r.error : r.stats ? `${r.stats.company} · ${r.stats.newContacts} new contacts · ${r.stats.updatedContacts} updated · ${r.stats.signals} signals · ${r.stats.conflicts} conflicts` : ""}

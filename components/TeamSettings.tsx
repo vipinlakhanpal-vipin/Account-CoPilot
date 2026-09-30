@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { REGIONS } from "@/lib/icpDefinition.mjs";
+import { fmtDate } from "@/lib/dates";
 
 type Role = "super_admin" | "standard";
 type U = { id: string; email: string; name: string; invited_by: string; joined_from: string; created_at: string; last_sign_in: string | null; role: Role; regions: string[] };
@@ -106,8 +107,8 @@ export default function TeamSettings() {
                     <button type="button" className="btn" onClick={() => setEdit((m) => { const n = { ...m }; delete n[u.id]; return n; })}>Cancel</button>
                   </div></div>
                 : <button type="button" className="btn" onClick={() => setEdit((m) => ({ ...m, [u.id]: { role: u.role, regions: u.regions } }))}>Change</button>}</td>
-              <td className="muted">{u.invited_by || "—"}</td><td className="mono">{new Date(u.created_at).toLocaleDateString()}</td>
-              <td className="mono">{u.last_sign_in ? new Date(u.last_sign_in).toLocaleDateString() : "Not yet"}</td></tr>);
+              <td className="muted">{u.invited_by || "—"}</td><td className="mono">{fmtDate(u.created_at)}</td>
+              <td className="mono">{u.last_sign_in ? fmtDate(u.last_sign_in) : "Not yet"}</td></tr>);
         })}</tbody></table></div>
     </div>
   );

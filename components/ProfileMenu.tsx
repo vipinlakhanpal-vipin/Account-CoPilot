@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { supabaseBrowser } from "@/lib/supabase/browser";
+import { fmtDate, fmtDateTime } from "@/lib/dates";
 
 type Me = { email: string; name: string; joined_from: string; joined_at: string; last_sign_in: string };
 
@@ -35,8 +36,8 @@ export default function ProfileMenu() {
           <dl className="pm-facts">
             <dt>Email</dt><dd>{me?.email}</dd>
             <dt>Joined from</dt><dd>{me?.joined_from}</dd>
-            <dt>Joined</dt><dd>{me?.joined_at ? new Date(me.joined_at).toLocaleDateString() : ""}</dd>
-            <dt>Last sign-in</dt><dd>{me?.last_sign_in ? new Date(me.last_sign_in).toLocaleString() : ""}</dd>
+            <dt>Joined</dt><dd>{me?.joined_at ? fmtDate(me.joined_at) : ""}</dd>
+            <dt>Last sign-in</dt><dd>{me?.last_sign_in ? fmtDateTime(me.last_sign_in) : ""}</dd>
           </dl>
           <a className="btn" href="/settings#team">Invite a colleague</a>
           <button type="button" className="btn logout" onClick={logout}>Log out</button>

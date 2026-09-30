@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import CostNote from "@/components/CostNote";
 import { COUNTRIES } from "@/lib/countries";
+import { fmtDate, fmtDateTime, fmtTimeShort } from "@/lib/dates";
 
 type Job = { id: string; region: string; count: number | "max"; mode: string; company_name?: string; website?: string; slug?: string; requested_by: string; requested_at: string; status: string; done_at?: string; result?: string };
 type Batch = { id: string; region: string; budget: number; available: number; planned_update: number; planned_new: number; spent: number; runs: number; running: number; at: string; requested_by: string; companies: string[] };
@@ -14,14 +15,15 @@ type Summary = { pin?: { set: boolean; ask_super: boolean; set_by: string; set_a
   balanceLeft: number | null; est: { update: number; discovery: number; profile: number };
   log?: { at: string; summary: string; verified: number; new_companies: string[]; details?: { name: string; status: string; revenue?: string }[]; source?: "daily" | "instant" }[]; pending?: Pending[] };
 const statusTag = (s: string) => (/verified/i.test(s) ? "fact" : /likely/i.test(s) ? "likely" : /not icp/i.test(s) ? "conflict" : "unv");
+/** Plain-text status color for the compact run-history table (no pill/box). */
+const statusColor = (s: string) => (/verified/i.test(s) ? "st-v" : /likely/i.test(s) ? "st-l" : /not icp/i.test(s) ? "st-n" : "st-u");
+/** "ICP — Verified" -> "ICP-Verified": compact, no spaces around the dash. */
+const compactStatus = (s: string) => s.replace(/\s*—\s*/g, "-");
 
 /** Next daily run (fixed at 02:00 UTC), shown in the viewer's own local time and zone — not a fixed "UAE time" label,
  * so someone in South Africa sees their own local equivalent (e.g. "4:00 AM South Africa Standard Time"), not UAE's. */
 const nextRun = () => { const n = new Date(), t = new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate(), 2, 0, 0)); if (t <= n) t.setUTCDate(t.getUTCDate() + 1);
   return t.toLocaleString("en-US", { weekday: "short", hour: "2-digit", minute: "2-digit", hour12: true, timeZoneName: "long" }); };
-/** Same run, without the "next" weekday — just "what local time is 02:00 UTC for me", for static badges/labels. */
-const dailyRunLocal = () => { const d = new Date(), t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 2, 0, 0));
-  return t.toLocaleString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true, timeZoneName: "long" }); };
 const MODE: Record<string, string> = { company: "Add one specific company", verify: "Verify existing companies", discover: "Find new companies", both: "Verify existing + find new" };
 const money = (n: number) => `$${n.toFixed(2)}`;
 
@@ -116,7 +118,7 @@ export default function EngineSettings() {
               <button type="button" className="btn" onClick={runNow} title="Researches it now with the Anthropic API (≈ $0.55, asks for your PIN)">Run now (≈ $0.55)</button>)}
           </div>
           {nowMsg && <p className={`now-msg ${nowMsg.ok ? "ok" : "err"}`}>{nowMsg.text}{nowMsg.company && <> <a href="/research">Follow it in Data → Research Queue →</a> When it finishes it appears in <a href={`/?tab=accounts&country=${encodeURIComponent(q.region)}`}>{q.region} accounts →</a></>}</p>}
-          {s && s.jobs.length > 0 && <div className="tablewrap"><table><thead><tr><th>Company name</th><th>Job</th><th>Region</th><th>How many</th><th>Status</th><th>Requested</th><th>Result</th><th></th></tr></thead>
+          {s && s.jobs.length > 0 && <div className="tablewrap"><table className="jobs-table"><thead><tr><th>Company name</th><th>Job</th><th>Region</th><th>How many</th><th>Status</th><th>Requested</th><th>Result</th><th></th></tr></thead>
             <tbody>{s.jobs.slice(0, 10).map((j) => {
               // The routine's finish message names the company's real, correct name and region: "<Company> (<region>): <outcome>".
               const parsed = String(j.result || "").match(/^(.+)\(([A-Za-z ]+)\):\s*(.+)$/);
@@ -127,7 +129,7 @@ export default function EngineSettings() {
               <td>{j.mode === "company" ? (parsed ? parsed[1].trim() : j.company_name) : "—"}{j.website && <div className="muted">{j.website}</div>}</td>
               <td>{MODE[j.mode] || j.mode}</td><td>{realRegion}</td><td>{j.count}</td><td><span className={`job-st ${j.status}`}>{j.status === "queued" ? "Waiting" : j.status === "running" ? "In progress" : j.status === "done" ? "Completed" : j.status === "error" ? "Failed" : j.status === "cancelled" ? "Cancelled" : j.status}</span>
                 {j.status === "queued" && <div className="muted">usually a minute or two — falls back to {nextRun()} if that doesn't fire</div>}{j.status === "running" && <div className="muted">started by the scheduled session</div>}</td>
-              <td className="muted">{new Date(j.requested_at).toLocaleString()}<div>{j.requested_by}</div></td><td className="wrap">{j.result}
+              <td className="muted">{fmtDateTime(j.requested_at)}<div>{j.requested_by}</div></td><td className="wrap">{j.result}
                 {j.status === "done" && (held
                   ? <div><a className="job-link" href="/settings#engine-pending">Waiting for {(parsed ? realRegion : legacyHeld?.[1]) || "region"} Region Activation →</a></div>
                   : <div><a className="job-link" href={j.slug ? `/?open=${encodeURIComponent(j.slug)}&country=${encodeURIComponent(realRegion)}` : `/?tab=accounts&country=${encodeURIComponent(realRegion)}`}>{j.slug ? `View ${parsed ? parsed[1].trim() : j.company_name || "the"} (${realRegion}) Account →` : `View the (${realRegion}) Accounts →`}</a></div>)}</td>
@@ -148,14 +150,14 @@ export default function EngineSettings() {
               const n = rows.length;
               return rows.map((d, i) => (
                 <tr key={`${e.at}-${i}`} className={i === 0 ? "run-group-top" : undefined}>
-                  {i === 0 && <td className="muted" rowSpan={n}>{new Date(e.at).toLocaleString()}</td>}
+                  {i === 0 && <td className="muted run-date" rowSpan={n}>{fmtDate(e.at)}<br />{fmtTimeShort(e.at)}</td>}
                   <td className="wrap">{d.name}</td>
-                  <td>{d.status ? <span className={`tag ${statusTag(d.status)}`}>{d.status}</span> : <span className="muted">—</span>}</td>
+                  <td>{d.status ? <span className={`status-plain ${statusColor(d.status)}`}>{compactStatus(d.status)}</span> : <span className="muted">—</span>}</td>
                   <td className="muted">{d.revenue || "—"}</td>
                   {i === 0 && <td rowSpan={n}>{held.map((h, hi) => <div key={hi}><a className="job-link" href="/settings#engine-pending">Activate {h.status.replace(/^held \(|\)$/gi, "")} →</a></div>)}</td>}
-                  {i === 0 && <td rowSpan={n}>{e.source === "instant" ? <span className="run-badge instant">Instant search run</span> : e.source === "daily" ? <span className="run-badge daily">Daily run — {dailyRunLocal()}</span> : <span className="muted">—</span>}</td>}
+                  {i === 0 && <td rowSpan={n}>{e.source === "instant" ? <span className="run-badge instant">Instant Run</span> : e.source === "daily" ? <span className="run-badge daily">Daily Run 6am GST</span> : <span className="muted">—</span>}</td>}
                   {i === 0 && <td rowSpan={n} className="run-summary-cell">
-                    <div className="run-summary-line"><b>{e.verified}</b> verified</div>
+                    <div className="run-summary-line run-summary-head">{e.verified} verified</div>
                     <div className="run-summary-line wrap">{e.new_companies.length} new{e.new_companies.length ? `: ${e.new_companies.join(", ")}` : ""}</div>
                   </td>}
                 </tr>
@@ -170,7 +172,7 @@ export default function EngineSettings() {
               <td>{p.name}{p.website && <div className="muted">{p.website}</div>}</td>
               <td>{p.region} <span className={`tag ${p.region_status === "active" ? "fact" : "unv"}`}>{p.region_status === "active" ? "Active" : p.region_status === "next" ? "Next phase" : "Paused"}</span></td>
               <td className="wrap">{p.why_icp}</td>
-              <td className="muted">{new Date(p.requested_at).toLocaleString()}</td>
+              <td className="muted">{fmtDateTime(p.requested_at)}</td>
               <td>{p.region_status === "active"
                 ? <button type="button" className="btn tiny" onClick={() => post({ action: "release_pending", id: p.id }, <>{p.name} added. <a className="job-link" href={`/?tab=accounts&country=${encodeURIComponent(p.region)}`}>View {p.name} ({p.region}) Account →</a></>)}>Add now</button>
                 : <a className="job-link" href="/icp">Activate {p.region} →</a>}
@@ -197,7 +199,7 @@ export default function EngineSettings() {
           <div className={`eng-sub pin${s?.pin?.set ? "" : " off"}`}><h4>🔒 Paid-actions PIN {s?.pin?.set ? <span className="tag fact">On</span> : <span className="tag unv">Not set — only Super Admins can run paid actions</span>}</h4>
             <p className="note">Every action that costs money (Research more, Draft pitch plan, Research Queue, Research again, this Refresh) asks for this PIN in the app before anything is spent.
               Standard users are always asked{s?.pin?.ask_super ? "; Super Admins are asked too" : "; Super Admins are not asked unless you tick the box"}. Share it only with people allowed to spend.
-              Use a new number, not your sign-in password.{s?.pin?.set_at && ` Last changed ${new Date(s.pin.set_at).toLocaleString()} by ${s.pin.set_by}.`}</p>
+              Use a new number, not your sign-in password.{s?.pin?.set_at && ` Last changed ${fmtDateTime(s.pin.set_at)} by ${s.pin.set_by}.`}</p>
             <div className="pin-row">
               <label className="pin-in">{s?.pin?.set ? "New PIN (6–12 digits)" : "Set a PIN (6–12 digits)"}
                 <SecretInput value={pinNew} onChange={(v) => { setPinNew(v.replace(/\D/g, "").slice(0, 12)); setPinRes(null); }} inputMode="numeric" autoComplete="new-password" placeholder="e.g. 482915" /></label>
@@ -216,7 +218,7 @@ export default function EngineSettings() {
             <div><small>Carry-over for next Refresh</small><b>{s ? money(s.carry) : "…"}</b></div>
             <div><small>Estimated balance left</small><b>{s?.balanceLeft !== null && s?.balanceLeft !== undefined ? money(s.balanceLeft) : "Not set"}</b></div>
           </div>
-          <p className="note">The API key can't read your credit balance, so enter the balance shown at <a href="https://console.anthropic.com/settings/billing" target="_blank" rel="noopener noreferrer">console.anthropic.com → Billing</a>; the app subtracts what it spends from then on.{s?.balance.as_of && ` Last entered ${money(s.balance.amount || 0)} on ${new Date(s.balance.as_of).toLocaleString()}${s.balance.by ? ` by ${s.balance.by}` : ""}.`} Measured spend covers research, discovery and refresh runs; pitch-plan drafts (≈ $0.05–0.10 each) are not metered.</p>
+          <p className="note">The API key can't read your credit balance, so enter the balance shown at <a href="https://console.anthropic.com/settings/billing" target="_blank" rel="noopener noreferrer">console.anthropic.com → Billing</a>; the app subtracts what it spends from then on.{s?.balance.as_of && ` Last entered ${money(s.balance.amount || 0)} on ${fmtDateTime(s.balance.as_of)}${s.balance.by ? ` by ${s.balance.by}` : ""}.`} Measured spend covers research, discovery and refresh runs; pitch-plan drafts (≈ $0.05–0.10 each) are not metered.</p>
           <div className="eng-form">
             <label>Console balance (USD)<span className="money-input"><span aria-hidden="true">$</span><input type="number" min={0} step={0.01} value={bal} onChange={(e) => setBal(e.target.value)} placeholder="50.00" /></span></label>
             <button type="button" className="btn primary" disabled={!bal} onClick={() => { post({ action: "balance", amount: Number(bal) }, "Balance saved."); setBal(""); }}>Save balance</button>
@@ -245,7 +247,7 @@ export default function EngineSettings() {
               post({ action: "refresh", region: r.region, update_count: r.update, new_count: r.fresh, budget: r.budget }, "Refresh started. Follow it in Research Queue; spend updates here as each run finishes.");
           }}>Refresh</button>
           {s && s.batches.length > 0 && <div className="tablewrap" style={{ marginTop: 10 }}><table><thead><tr><th>When</th><th>Region</th><th>Planned</th><th>Budget</th><th>Spent</th><th>Left</th><th>Runs</th></tr></thead>
-            <tbody>{s.batches.slice(0, 10).map((b) => <tr key={b.id}><td className="muted">{new Date(b.at).toLocaleString()}<div>{b.requested_by}</div></td><td>{b.region}</td>
+            <tbody>{s.batches.slice(0, 10).map((b) => <tr key={b.id}><td className="muted">{fmtDateTime(b.at)}<div>{b.requested_by}</div></td><td>{b.region}</td>
               <td>{b.planned_update} updates · {b.planned_new} new</td><td className="mono">{money(b.available)}</td><td className="mono">{money(b.spent)}</td>
               <td className="mono">{money(Math.max(0, b.budget - b.spent))}</td><td>{b.runs}{b.running ? ` (${b.running} running)` : ""}</td></tr>)}</tbody></table></div>}
         </div>

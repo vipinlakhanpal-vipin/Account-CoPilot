@@ -3,13 +3,14 @@ import { ask, notify } from "@/components/Confirm";
 import InfoTip from "@/components/InfoTip";
 import { useEffect, useMemo, useState } from "react";
 import { REGIONS, OPTIONS, DEFAULT_RULES, normalizeDefinition, validateRules, summarizeRules, type Definition, type Rules } from "@/lib/icpDefinition.mjs";
+import { fmtDateTime } from "@/lib/dates";
 
 type Impact = Record<string, { before: Record<string, number>; after: Record<string, number>; changes: { company: string; from: string; to: string; why: string }[] }>;
 type Result = { ok: boolean; problems?: string[]; impact?: Impact; changed?: number; changes?: string[]; saved?: { version: number; at: string; by: string }; error?: string };
 
 const STATUSES = ["ICP — Verified", "ICP — Likely", "ICP — Needs check", "Unknown", "Not ICP"];
 const clone = <T,>(x: T): T => JSON.parse(JSON.stringify(x));
-const when = (iso?: string | null) => (iso ? new Date(iso).toLocaleString("en-GB", { timeZone: "Asia/Dubai", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "");
+const when = (iso?: string | null) => (iso ? fmtDateTime(iso, "Asia/Dubai") : "");
 
 /** What a parameter drives, so nobody wonders whether a setting is used. */
 const Uses = ({ items }: { items: ("Status" | "Discovery" | "Verification" | "Pipeline" | "Contacts" | "Daily run")[] }) => (
