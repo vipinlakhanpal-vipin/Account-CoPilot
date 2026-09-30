@@ -247,6 +247,25 @@ export default function HomeWorkspace({ access }: { access: Access }) {
               companies fitting your ICP, checks their numbers against official sources, and updates your database. Nothing here is invented: every
               figure carries a source and a confidence label.</p>
             <div className="hw-about-grid">
+              <div className="hw-about-card hw-about-card--teal"><span className="hw-icon-badge"><Ico name="search" /></span><h4>Free Daily Search Engine job</h4>
+                <ul>
+                  <li>Runs every day on your Claude plan — no Anthropic API cost, ever.</li>
+                  <li>Finds a handful of brand-new companies fitting the basic ICP shape: name, website, country, industry, HQ city.</li>
+                  <li>Checks each company&apos;s <b>revenue figure</b> and sets its ICP status — Verified, Likely, Needs check, Not ICP, or Unknown.</li>
+                  <li>That&apos;s the full scope — no contacts, S2P signals, ERP status, ownership or opportunity notes. Those only come from paid research (see the tile on the right).</li>
+                </ul>
+                <p className="hw-about-note">Keeps working after it&apos;s added: every company — free or paid — gets its revenue and ICP status automatically re-checked roughly every 180 days, so it can climb the ladder on its own over time (e.g. Likely → Verified) with no further action from you.</p></div>
+              <div className="hw-about-card hw-about-card--gold"><span className="hw-icon-badge"><Ico name="coin" /></span><h4>Paid Search Engine Job</h4>
+                <ul>
+                  <li>A deliberate, separate action you trigger — Research Queue or &quot;Research more&quot; with profiling on. Uses the Anthropic API key; you approve the cost each time.</li>
+                  <li><b>Contacts</b> — real names, titles, emails, phone numbers, LinkedIn, seniority and department.</li>
+                  <li><b>S2P/Coupa/Ariba signal level</b>, existing <b>ERP/S2P platform</b>, and <b>ownership structure</b> (parent, subsidiaries, procurement model).</li>
+                  <li><b>Buying triggers</b> and <b>opportunity classification</b> — transformation signals, implementation/consulting partners, Coupa/Ariba opportunity type.</li>
+                  <li>Board phone number, plus the full source/evidence trail behind every finding above.</li>
+                </ul>
+                <p className="hw-about-note">What keeps updating, and what doesn&apos;t: revenue/ICP status keeps re-checking for free, same as any company. But this richer profile is a snapshot from when you ran it — it does not refresh itself; you&apos;d need to run paid research on that company again to update it.</p></div>
+            </div>
+            <div className="hw-about-grid">
               <div className="hw-about-card hw-about-card--teal"><span className="hw-icon-badge"><Ico name="grid" /></span><h4>What each tab does</h4>
                 <ul><li>Dashboard — the big picture, drill into any number</li><li>Accounts — every company, ICP status, Pipeline rank</li>
                   <li>Stakeholders — contacts, seniority, persona fit</li><li>Data — sources, conflicts, tech signals, research queue</li>

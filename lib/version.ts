@@ -1,11 +1,16 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.45";
+export const APP_VERSION = "2.46";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.46", date: "2026-09-30", notes: "Two new tiles on the About page, above the existing 4: \"Free Daily Search Engine job\" and \"Paid Search Engine Job\" — plain-English, bulleted explanations of exactly what each one does and doesn't do, and what keeps updating on its own versus what needs paying for again.",
+    changes: [
+      { what: "Added \"Free Daily Search Engine job\" (teal) and \"Paid Search Engine Job\" (gold) tiles side by side, above the existing 4-tile grid, each with bullet points covering exactly what that tier adds to a company's record", where: "Home → About Account CoPilot", why: "Requested — this distinction (what free finds vs. what paid profiles) wasn't documented anywhere on the page" },
+      { what: "Each tile ends with a note on what keeps updating automatically: revenue/ICP status re-checks for free every ~180 days for any company; the richer paid profile (contacts, signals, ERP, ownership) is a one-time snapshot that does not refresh itself", where: "Home → About Account CoPilot", why: "Requested — clarifies that only the ICP-status layer self-updates; the deeper profile needs paid research run again to refresh" },
+    ] },
   { version: "2.45", date: "2026-09-30", notes: "New global search bar in the header, right before the Home tab — type a company name, a location, or a threshold like \"revenue > 250M\" or \"employees > 500\", and it jumps to Accounts with the matching filters already applied. Also: the bell and bulb icons now share the exact same ring/glow shape, only the color differs.",
     changes: [
       { what: "Added a wide search bar in the main navbar, between the logo and the Home tab. Plain text searches company name/HQ location; \"revenue\"/\"employees\" with an operator (>, >=, <, <=, =) and a number is parsed and translated into the Discovery panel's own band filters ($250M-$500M, 100-250, etc. — both fields are band-based already, not raw numbers)", where: "Header, all pages; new lib/globalSearch.ts, components/GlobalSearchBar.tsx", why: "Requested — a fast way to jump straight to filtered Accounts from anywhere in the app" },
