@@ -1,11 +1,16 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.21";
+export const APP_VERSION = "2.22";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.22", date: "2026-09-30", notes: "Scheduled run history table rebuilt: one row per company (Date, Company, Status, Revenue, Activate Region, Run Status, Summary) instead of a nested sub-table crammed into one 'Summary' cell — Verified and New companies merged into one compact Summary column, mocked up and confirmed before building.",
+    changes: [
+      { what: "The run history table now has one row per company, with Date / Activate Region / Run Status / Summary spanning all of that run's rows (a top border marks where each run starts) — Company, Status and Revenue are now real top-level columns instead of a nested table stuffed inside one 'Summary' cell", where: "Setup → Settings → Scheduled run history", why: "The old nested table made one run's row very tall with a lot of empty space around the other columns; flattening it removes both the nesting and the excess whitespace" },
+      { what: "The old separate Verified and New companies columns are merged into one compact Summary column (verified count + new-company list, smaller text)", where: "Setup → Settings → Scheduled run history", why: "Requested as part of the same table restructure — fewer, more purposeful columns" },
+    ] },
   { version: "2.21", date: "2026-09-30", notes: "Account Discovery Criteria's summary line ('102 accounts · 835 contacts match · 3 criteria set') replaced with three labeled stat tiles (Accounts matching / Contacts matching / Filters active) plus a line naming which filters those are — instead of a run-on sentence that read as if only contacts were matching.",
     changes: [
       { what: "The left Discovery panel's summary is now three small stat tiles (Accounts matching, Contacts matching, Filters active) instead of one sentence; when filters are active, a line beneath names them (e.g. 'Countries · Revenue · Employees') instead of just showing a bare count", where: "Dashboard, Accounts, Stakeholders — the left Account Discovery Criteria panel", why: "The old sentence had no verb attached to the accounts number, read as if only contacts matched, and '3 criteria set' never said which 3 — now every number is labeled and the active filters are named" },

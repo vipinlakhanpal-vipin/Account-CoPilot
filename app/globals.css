@@ -504,15 +504,16 @@ aside.brief.contact{width:min(760px,100%);z-index:70}
 .bell-btn svg{width:17px;height:17px}.bell-dot{position:absolute;top:-4px;right:-4px;min-width:17px;height:17px;border-radius:999px;background:var(--red);color:var(--text-strong);font:700 10px var(--body);display:grid;place-items:center;padding:0 4px}
 .bell-pop{position:absolute;right:0;top:42px;width:340px;max-height:420px;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;z-index:40;box-shadow:0 12px 30px rgba(0,0,0,.4);display:flex;flex-direction:column;gap:8px}
 .bell-item{border-top:1px solid var(--line);padding-top:6px}.bell-item small{color:var(--muted);font-size:11px}.bell-item p{margin:3px 0;font-size:12.5px}.bell-item.new small{color:var(--ok-text)}
-.bell-note,.run-note{margin:2px 0 4px;font-size:11px}
+.bell-note{margin:2px 0 4px;font-size:11px}
 .bell-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:2px;border-radius:6px;overflow:hidden}
 .bell-table th{text-align:left;color:var(--text-strong);font-weight:700;padding:4px;background:rgba(var(--ink),.06);border-bottom:1px solid var(--line)}
 .bell-table td{padding:2px 4px;border-bottom:1px solid rgba(var(--ink),.06);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bell-table .tag{font-size:9px;padding:0 5px;line-height:14px;margin:0}
-.run-table{width:100%;max-width:520px;border-collapse:collapse;font-size:12px;margin-top:2px;border-radius:8px;overflow:hidden}
-.run-table th{text-align:left;color:var(--text-strong);font-weight:700;padding:4px 8px;background:rgba(var(--ink),.06);border-bottom:1px solid var(--line)}
-.run-table td{padding:4px 8px;border-bottom:1px solid rgba(var(--ink),.06)}
-.run-table .tag{font-size:10px;padding:0 6px;line-height:16px;margin:0}
+.run-group-top td{border-top:2px solid var(--line-2)}
+.run-summary-cell{font-size:11.5px}
+.run-summary-line{margin:0 0 3px;color:var(--muted)}
+.run-summary-line:last-child{margin-bottom:0}
+.run-summary-line b{color:var(--text-strong);font-weight:700}
 .run-badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 9px;border-radius:999px;white-space:nowrap}
 .run-badge.instant{background:color-mix(in srgb, #5B4BC4 16%, transparent);color:#3C3489}
 .run-badge.daily{background:color-mix(in srgb, #2ECC8F 18%, transparent);color:#157A55}

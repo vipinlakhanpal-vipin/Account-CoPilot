@@ -136,20 +136,26 @@ export default function EngineSettings() {
 
         {s?.log && s.log.length > 0 && <div className="eng-card"><div className="eng-head"><h3>Scheduled run history</h3></div>
           <p className="note">Every run from here on tags itself automatically — Run status shows a badge with no extra step. Older runs, from before this existed, show &quot;—&quot;.</p>
-          <div className="tablewrap"><table><thead><tr><th>When</th><th>Summary</th><th>Activate Region</th><th>Verified</th><th>New companies</th><th>Run status</th></tr></thead>
-            <tbody>{s.log.slice(0, 10).map((e) => { const held = e.details?.filter((d) => /^held/i.test(d.status)) || [];
-              return <tr key={e.at}><td className="muted">{new Date(e.at).toLocaleString()}</td>
-              <td className="wrap">
-                {e.details && e.details.length > 0 ? (<>
-                  <table className="run-table"><thead><tr><th>Company</th><th>Status</th><th>Revenue</th></tr></thead>
-                    <tbody>{e.details.slice(0, 30).map((d, i) => <tr key={i}><td>{d.name}</td><td><span className={`tag ${statusTag(d.status)}`}>{d.status}</span></td><td className="muted">{d.revenue || "—"}</td></tr>)}</tbody></table>
-                  <p className="note run-note">{e.summary}</p></>
-                ) : e.summary}
-              </td>
-              <td>{held.map((d, i) => <div key={i}><a className="job-link" href="/settings#engine-pending">Activate {d.status.replace(/^held \(|\)$/gi, "")} →</a></div>)}</td>
-              <td>{e.verified}</td>
-              <td className="wrap">{e.new_companies.join(", ") || "—"}</td>
-              <td>{e.source === "instant" ? <span className="run-badge instant">Instant search run</span> : e.source === "daily" ? <span className="run-badge daily">Daily run — {dailyRunLocal()}</span> : <span className="muted">—</span>}</td></tr>; })}</tbody></table></div></div>}
+          <div className="tablewrap"><table><thead><tr><th>Date</th><th>Company</th><th>Status</th><th>Revenue</th><th>Activate Region</th><th>Run Status</th><th>Summary</th></tr></thead>
+            <tbody>{s.log.slice(0, 10).flatMap((e) => {
+              const rows = e.details && e.details.length > 0 ? e.details.slice(0, 30) : [{ name: e.summary, status: "", revenue: "" }];
+              const held = e.details?.filter((d) => /^held/i.test(d.status)) || [];
+              const n = rows.length;
+              return rows.map((d, i) => (
+                <tr key={`${e.at}-${i}`} className={i === 0 ? "run-group-top" : undefined}>
+                  {i === 0 && <td className="muted" rowSpan={n}>{new Date(e.at).toLocaleString()}</td>}
+                  <td className="wrap">{d.name}</td>
+                  <td>{d.status ? <span className={`tag ${statusTag(d.status)}`}>{d.status}</span> : <span className="muted">—</span>}</td>
+                  <td className="muted">{d.revenue || "—"}</td>
+                  {i === 0 && <td rowSpan={n}>{held.map((h, hi) => <div key={hi}><a className="job-link" href="/settings#engine-pending">Activate {h.status.replace(/^held \(|\)$/gi, "")} →</a></div>)}</td>}
+                  {i === 0 && <td rowSpan={n}>{e.source === "instant" ? <span className="run-badge instant">Instant search run</span> : e.source === "daily" ? <span className="run-badge daily">Daily run — {dailyRunLocal()}</span> : <span className="muted">—</span>}</td>}
+                  {i === 0 && <td rowSpan={n} className="run-summary-cell">
+                    <div className="run-summary-line"><b>{e.verified}</b> verified</div>
+                    <div className="run-summary-line wrap">{e.new_companies.length} new{e.new_companies.length ? `: ${e.new_companies.join(", ")}` : ""}</div>
+                  </td>}
+                </tr>
+              ));
+            })}</tbody></table></div></div>}
 
         {s?.pending && s.pending.length > 0 && <div className="eng-card" id="engine-pending">
           <div className="eng-head"><h3>Waiting for region activation</h3><span className="tag unv">{s.pending.length}</span></div>
