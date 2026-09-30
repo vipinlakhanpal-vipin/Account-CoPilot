@@ -132,7 +132,7 @@ h2{font-family:var(--display);font-weight:600;font-size:16px;letter-spacing:.06e
 .panel{background:linear-gradient(180deg,var(--surface),var(--panel-2));border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0}
 .bars{display:flex;flex-direction:column;gap:8px}
 .bar{display:grid;grid-template-columns:minmax(100px,40%) 1fr 34px;gap:10px;align-items:center;font-size:12.5px}
-.bar .lab{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar .lab{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-transform:uppercase;letter-spacing:.02em;font-weight:500}
 .bar .trk{height:10px;background:var(--sunken);border-radius:4px;overflow:hidden}
 .bar .fill{display:block;height:100%;background:var(--bar);border-radius:4px}
 .bar.top .fill{background:linear-gradient(90deg,var(--teal-2),var(--teal))}

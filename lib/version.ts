@@ -1,11 +1,15 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.19";
+export const APP_VERSION = "2.20";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.20", date: "2026-09-30", notes: "Standardized every Dashboard bar-chart label to the same uppercase, letter-spaced style — 'Accounts by S2P Signal' and 'Contacts by Role Family' used hardcoded all-caps category names while the other four panels showed Title Case, making the same 12.5px font look inconsistent across panels.",
+    changes: [
+      { what: "Every bar-chart label on Dashboard (Accounts by S2P Signal, Existing S2P Platform, ERP Landscape, Contacts by Role Family, Contact Trust, Accounts by Origin, Accounts by ICP Status) now renders uppercase with consistent letter-spacing and weight via one shared CSS rule, instead of mixing hardcoded all-caps category names with Title Case data values", where: "Dashboard, all bar-chart panels", why: "The font size was already identical everywhere; the visual size difference came from case, not size — fixed once at the CSS level so every future chart using the same component is automatically consistent too" },
+    ] },
   { version: "2.19", date: "2026-09-30", notes: "Fixed the ERP Landscape chart on Dashboard showing raw, unformatted values like 'not_public' and 'not_found' next to properly-cased labels like 'SAP Ariba' — looked like a font-size mismatch, but the chart's font size was already identical everywhere; the real issue was an unrecognized ERP value falling through un-humanized.",
     changes: [
       { what: "erpKey()'s fallback (used when a company's ERP value doesn't match a known system) now converts underscores to spaces and title-cases the result, so a raw value like 'not_public' displays as 'Not Public' instead of leaking through as-is", where: "Dashboard → ERP Landscape chart", why: "Reported as inconsistent font size across the four Dashboard charts; the charts share one font-size rule already — the actual cause was unformatted raw values breaking the visual pattern" },
