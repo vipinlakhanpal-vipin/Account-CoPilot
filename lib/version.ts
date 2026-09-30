@@ -1,11 +1,15 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.35";
+export const APP_VERSION = "2.36";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.36", date: "2026-09-30", notes: "Setup Wizard: the Min net revenue / Min employees / Stock listing / Which entities count fields inside every region tile now have a light teal fill instead of plain white, for every region, checked or not.",
+    changes: [
+      { what: "Region tile fields (Min net rev, Min employees, Stock listing, Which entities count) now use the same light teal fill as the tile itself, for every region row, not just white boxes", where: "Home → Setup Wizard, step 1", why: "Requested — the fields still looked plain/white against the colored tile" },
+    ] },
   { version: "2.35", date: "2026-09-30", notes: "UAE's display name shortened from \"United Arab Emirates\" to \"UAE\" everywhere it's shown (Setup Wizard, Team invite, Define ICP), matching how it's already written everywhere else in the app.",
     changes: [
       { what: "Changed the shared region name for UAE from \"United Arab Emirates\" to \"UAE\" at its one source (lib/icpDefinition.mjs)", where: "Home → Setup Wizard region tiles, Setup → Team invite region picker, and anywhere else region names are shown", why: "Requested — it was the only place still spelling it out; every other list (Accounts filter, Dashboard) already just says \"UAE\"" },
