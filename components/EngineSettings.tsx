@@ -13,6 +13,7 @@ type Job = { id: string; region: string; count: number | "max"; mode: string; co
 const parseNames = (s: string) => s.split(/[,\n]/).map((x) => x.trim()).filter(Boolean);
 type Batch = { id: string; region: string; budget: number; available: number; planned_update: number; planned_new: number; spent: number; runs: number; running: number; at: string; requested_by: string; companies: string[] };
 type Pending = { id: string; name: string; website?: string; country: string; region: string; region_status: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; requested_at: string };
+type UploadItem = { id: string; filename: string; region: string; uploaded_by: string; uploaded_at: string; rows: number; status: "waiting" | "done" | "error"; processed_at?: string; summary?: string };
 type Summary = { pin?: { set: boolean; ask_super: boolean; set_by: string; set_at: string }; token_info: { created_at?: string; by?: string; hint?: string } | null; token?: string | null; jobs: Job[]; batches: Batch[]; carry: number; spentAll: number; spentMonth: number; balance: { amount?: number; as_of?: string; by?: string };
   balanceLeft: number | null; est: { update: number; discovery: number; profile: number };
   log?: { at: string; summary: string; verified: number; new_companies: string[]; details?: { name: string; status: string; revenue?: string }[]; source?: "daily" | "instant"; region?: string }[]; pending?: Pending[] };
@@ -74,6 +75,9 @@ export default function EngineSettings() {
   const [newToken, setNewToken] = useState("");
   const load = () => fetch("/api/engine").then((x) => (x.ok ? x.json() : null)).then((j) => j && setS(j)).catch(() => {});
   useEffect(() => { load(); const t = setInterval(load, 30000); return () => clearInterval(t); }, []);
+  const [uploads, setUploads] = useState<UploadItem[]>([]);
+  const loadUploads = () => fetch("/api/wizard-upload").then((x) => (x.ok ? x.json() : null)).then((j) => j && setUploads(j.items || [])).catch(() => {});
+  useEffect(() => { loadUploads(); const t = setInterval(loadUploads, 30000); return () => clearInterval(t); }, []);
   const post = async (body: unknown, ok: ReactNode) => {
     const init = { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
     // A paid Refresh needs the paid-actions PIN (asked in the app when required).
@@ -220,6 +224,23 @@ export default function EngineSettings() {
                 : <a className="job-link" href="/icp">Activate {p.region} →</a>}
                 {" "}<button type="button" className="btn tiny ghost" onClick={async () => { if (await ask({ title: `Dismiss ${p.name}?`, tone: "danger", confirm: "Dismiss", points: ["It will not be added — you'd have to find it again later."] })) post({ action: "dismiss_pending", id: p.id }, `${p.name} dismissed.`); }}>Dismiss</button></td>
             </tr>)}</tbody></table></div>
+        </div>}
+
+        {uploads.length > 0 && <div className="eng-card">
+          <div className="eng-head"><h3>Uploaded lists</h3></div>
+          <p className="note">Spreadsheets uploaded from the Setup Wizard&apos;s &quot;Add Data&quot; step, waiting for a scheduled session to read and import.</p>
+          <div className="tablewrap"><table><thead><tr><th>File</th><th>Region</th><th>Rows</th><th>Uploaded</th><th>Status</th></tr></thead>
+            <tbody>{uploads.map((u) => (
+              <tr key={u.id}>
+                <td className="wrap">{u.filename}<div className="muted">{u.uploaded_by}</div></td>
+                <td>{u.region}</td>
+                <td className="muted">{u.rows}</td>
+                <td className="muted">{fmtDateTime(u.uploaded_at)}</td>
+                <td>{u.status === "waiting" ? <span className="status-plain st-l">Waiting to be processed</span>
+                  : u.status === "done" ? <span className="status-plain st-v">Processed{u.summary ? ` — ${u.summary}` : ""}</span>
+                  : <span className="status-plain st-u">Error{u.summary ? ` — ${u.summary}` : ""}</span>}</td>
+              </tr>
+            ))}</tbody></table></div>
         </div>}
 
         <div className="eng-card">

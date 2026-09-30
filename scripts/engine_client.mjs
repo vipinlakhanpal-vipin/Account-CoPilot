@@ -13,6 +13,9 @@
 //                                                                                                region is the region(s) worked this run (e.g. "UAE", or "UAE, KSA" if more than one — optional, omit if none applies); also
 //                                                                                                sends data/verification/run_details.json if present: [{"name","status","revenue"}]
 //                                                                                                (one row per company checked this run), for the bell's table
+//   node scripts/engine_client.mjs uploads                              → writes data/verification/uploaded_lists.json: [{"id","filename","region","url"}] waiting to be read
+//   node scripts/engine_client.mjs add_upload <file.json> <filename>    → imports one upload's extracted rows (format: see ENGINE.md "Reading an uploaded list")
+//   node scripts/engine_client.mjs upload_done <id> done|error "<summary>"
 import fs from "node:fs";
 import path from "node:path";
 
@@ -76,10 +79,26 @@ else if (cmd === "queue") {
   const jobDetailsFile = "data/verification/job_details.json";
   const jobDetails = fs.existsSync(jobDetailsFile) ? JSON.parse(fs.readFileSync(jobDetailsFile, "utf8")) : undefined;
   console.log(JSON.stringify(await call({ action: "finish", id: a, status: b === "error" ? "error" : "done", result: c || "", ...(process.argv[6] ? { slug: process.argv[6] } : {}), ...(jobDetails ? { details: jobDetails } : {}) })));
+} else if (cmd === "uploads") {
+  // Excel lists uploaded from the Setup Wizard's "Add Data" step, waiting to be read and imported.
+  const { uploads } = await call({ action: "uploads" });
+  fs.mkdirSync("data/verification", { recursive: true });
+  fs.writeFileSync("data/verification/uploaded_lists.json", JSON.stringify(uploads, null, 1));
+  console.log(`${uploads.length} upload(s) waiting → data/verification/uploaded_lists.json (each has an "url" to download)`);
+} else if (cmd === "add_upload") {
+  // add_upload <file.json> <original filename>  → file.json: [{"name","website","country","industry","hq_city","notes"}]
+  const list = JSON.parse(fs.readFileSync(a, "utf8"));
+  const { added, skipped, skipped_detail = [] } = await call({ action: "add_uploaded_companies", filename: b, companies: list });
+  added.forEach((x) => console.log(`added ${x.company_name} (${x.slug})`));
+  skipped_detail.forEach((x) => console.log(`SKIPPED ${x.name}: already in the app as "${x.matches}"`));
+  console.log(`${added.length} added, ${skipped} already in the app`);
+} else if (cmd === "upload_done") {
+  // upload_done <id> done|error "<summary>"
+  console.log(JSON.stringify(await call({ action: "finish_upload", id: a, status: b === "error" ? "error" : "done", summary: c || "" })));
 }
 else if (cmd === "log") {
   const detailsFile = "data/verification/run_details.json";
   const details = fs.existsSync(detailsFile) ? JSON.parse(fs.readFileSync(detailsFile, "utf8")) : [];
   console.log(JSON.stringify(await call({ action: "log", summary: a || "", verified: Number(b) || 0, new_companies: String(c || "").split(";").map((x) => x.trim()).filter(Boolean), details, source: d === "instant" ? "instant" : "daily", region: e || "" })));
 }
-else console.log("usage: claim | icp | names | watch [slug] | queue <region> <limit> | submit [dir] | add <file> | hold <file> | finish <id> done|error <result> | log <summary> <verified> <names;…> <daily|instant> [region]");
+else console.log("usage: claim | icp | names | watch [slug] | queue <region> <limit> | submit [dir] | add <file> | hold <file> | finish <id> done|error <result> | log <summary> <verified> <names;…> <daily|instant> [region] | uploads | add_upload <file.json> <filename> | upload_done <id> done|error <summary>");

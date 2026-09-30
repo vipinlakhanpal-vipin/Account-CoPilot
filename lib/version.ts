@@ -1,11 +1,21 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.36";
+export const APP_VERSION = "2.37";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.37", date: "2026-09-30", notes: "Setup Wizard: steps split into \"Mandatory\" (Region & size, Add Data, Domains, Daily plan) and \"Information only\" (Data sources), and \"Add Data\" now takes a real Excel upload instead of just saying \"send it over.\"",
+    changes: [
+      { what: "Wizard steps now show two labeled groups in the rail — \"Mandatory · affects the Agent\" (teal) and \"Information only\" (grey) — with Add Data moved into Mandatory and reordered right after Region & size; Review stays unlabeled, last, as the summary + Save & apply step", where: "Home → Setup Wizard", why: "Requested — group by what actually changes the Agent's behavior vs. what's just reference; the amber color first used for \"Mandatory\" read as a caution/warning, so it's teal (the app's primary color) instead" },
+      { what: "\"Add Data\" → \"Yes, I have one\" now shows a real upload dropzone (.xlsx/.xls only, 10MB limit) plus an optional downloadable blank template, generated on request via /api/wizard-template — not a committed file, so nothing binary sits in this public repo", where: "Home → Setup Wizard, step 2", why: "The old copy said \"send it over\" with no way to actually do that" },
+      { what: "Upload copy makes clear the template is optional — any spreadsheet works as-is if it's one worksheet, one company per row, headers in row 1; extra columns are fine and ignored", where: "Home → Setup Wizard, step 2", why: "Requested so an existing spreadsheet doesn't need to be reshaped first" },
+      { what: "\"No — help me build one from scratch\" now says plainly there's nothing to do — just continue to the next step", where: "Home → Setup Wizard, step 2", why: "The old copy only described what happens later; it never said what action (if any) to take right now" },
+      { what: "Data sources: ticking a known but unconnected provider (ZoomInfo, Crunchbase, D&B, Refinitiv, Thomson Reuters) now shows an inline note explaining it isn't connected yet and how it actually gets connected (a Super Admin sets it up as a Claude connector), instead of no explanation at all", where: "Home → Setup Wizard, step 5 (Information only)", why: "Requested — ticking a source with no explanation of what that does or doesn't do was confusing" },
+      { what: "A new Supabase Storage bucket (\"uploads\") plus settings.uploaded_lists tracks every uploaded file (filename, region, uploader, row count, status); a new \"Uploaded lists\" section in Settings shows Waiting to be processed / Processed / Error", where: "app/api/wizard-upload, Setup → Settings → Discovery & refresh engine", why: "So an upload has somewhere to land and be tracked, not just vanish after the upload click" },
+      { what: "ENGINE.md gives the scheduled session a new early step: check for pending uploads, download and read each one (first worksheet, flexible column matching), import rows as-is (channel \"User\", never researched or altered) skipping anything already in the app, then mark it processed", where: "ENGINE.md \"0c. Reading an uploaded list\", scripts/engine_client.mjs, app/api/engine/worker", why: "This is what actually turns an upload into real accounts, following the same never-overwrite/never-invent rule as every other import path" },
+    ] },
   { version: "2.36", date: "2026-09-30", notes: "Setup Wizard: the Min net revenue / Min employees / Stock listing / Which entities count fields inside every region tile now have a light teal fill instead of plain white, for every region, checked or not.",
     changes: [
       { what: "Region tile fields (Min net rev, Min employees, Stock listing, Which entities count) now use the same light teal fill as the tile itself, for every region row, not just white boxes", where: "Home → Setup Wizard, step 1", why: "Requested — the fields still looked plain/white against the colored tile" },

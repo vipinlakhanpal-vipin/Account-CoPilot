@@ -33,6 +33,8 @@ const Result = z.object({ slug: z.string(), company_name: z.string(), checked_at
   employees_source_url: z.string().optional().default(""), icp_verdict: z.enum(["Verified ICP", "Likely ICP", "Below minimum", "Below $250M", "Revenue not found"]), reasoning: z.string() });
 const NewCo = z.object({ name: z.string().min(2), website: z.string().optional().default(""), country: z.string().default("UAE"), industry: z.string().optional().default(""), watch: z.boolean().optional().default(false),
   hq_city: z.string().optional().default(""), why_icp: z.string().optional().default(""), source_url: z.string().optional().default("") });
+const NewCoUpload = z.object({ name: z.string().min(2), website: z.string().optional().default(""), country: z.string().default("UAE"), industry: z.string().optional().default(""),
+  hq_city: z.string().optional().default(""), notes: z.string().optional().default("") });
 const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("claim") }),
   z.object({ action: z.literal("finish"), id: z.string(), status: z.enum(["done", "error"]), result: z.string().max(2000), slug: z.string().max(120).optional(),
@@ -44,6 +46,9 @@ const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("hold_companies"), companies: z.array(NewCo).max(50) }),
   z.object({ action: z.literal("names") }),
   z.object({ action: z.literal("icp") }),
+  z.object({ action: z.literal("uploads") }),
+  z.object({ action: z.literal("finish_upload"), id: z.string(), status: z.enum(["done", "error"]), summary: z.string().max(1000) }),
+  z.object({ action: z.literal("add_uploaded_companies"), filename: z.string(), companies: z.array(NewCoUpload).max(2000) }),
   z.object({ action: z.literal("watch"), slug: z.string().optional() }),
   z.object({ action: z.literal("log"), summary: z.string().max(1000), verified: z.number().int().min(0).default(0), new_companies: z.array(z.string()).max(100).default([]),
     details: z.array(z.object({ name: z.string(), status: z.string(), revenue: z.string().optional().default("") })).max(60).optional().default([]),
@@ -131,6 +136,25 @@ export async function POST(req: Request) {
     return NextResponse.json({ companies: (data || []).flatMap((c) => [{ name: c.company_name, domain: c.domain || "", country: c.country || "" },
       ...aliases(c).map((a) => ({ ...a, country: c.country || "", merged_into: c.company_name }))]) });
   }
+  if (b.action === "uploads") {
+    // Excel lists uploaded from the Setup Wizard's "Add Data" step, waiting to be read and imported.
+    const st = await get<{ items: { id: string; filename: string; region: string; path: string; status: string }[] }>(db, "uploaded_lists", { items: [] });
+    const waiting = st.items.filter((x) => x.status === "waiting");
+    const withUrls = await Promise.all(waiting.map(async (x) => {
+      const { data } = await db.storage.from("uploads").createSignedUrl(x.path, 3600);
+      return { id: x.id, filename: x.filename, region: x.region, url: data?.signedUrl || null };
+    }));
+    return NextResponse.json({ uploads: withUrls.filter((x) => x.url) });
+  }
+  if (b.action === "finish_upload") {
+    const st = await get<{ items: { id: string; status: string; processed_at?: string; summary?: string }[] }>(db, "uploaded_lists", { items: [] });
+    const item = st.items.find((x) => x.id === b.id);
+    if (!item) return NextResponse.json({ error: "Upload not found." }, { status: 404 });
+    item.status = b.status; item.processed_at = now; item.summary = b.summary;
+    await put(db, "uploaded_lists", st);
+    invalidateAllData();
+    return NextResponse.json({ ok: true });
+  }
   if (b.action === "add_companies") {
     const { data: have } = await db.from("companies").select("company_name,domain,profile");
     const day = now.slice(0, 10);
@@ -144,6 +168,27 @@ export async function POST(req: Request) {
         company_website: c.website || null, domain: dom(c.website) || null, hq_city: c.hq_city || null, industry: c.industry || null, research_channel: "Claude discovery",
         lists: ["Claude discovery"], icp_status: "Unknown", account_notes: `Found by a scheduled Claude session on ${day}: ${c.why_icp} Source: ${c.source_url}`,
         profile: { "Claude discovery": { why: c.why_icp, source_url: c.source_url, via: "scheduled session (no API cost)" }, ...(c.watch ? { Watch: { since: now, reason: "requested in Settings" } } : {}) } };
+      const { error } = await db.from("companies").upsert([row], { onConflict: "slug", ignoreDuplicates: true });
+      if (!error) { added.push({ slug: row.slug, company_name: row.company_name }); pool.push({ name: row.company_name, domain: row.domain || "", as: row.company_name }); }
+    }
+    invalidateAllData();
+    return NextResponse.json({ added, skipped: skipped.length, skipped_detail: skipped });
+  }
+  if (b.action === "add_uploaded_companies") {
+    // The user's own spreadsheet, uploaded from the Setup Wizard's "Add Data" step — kept as-is like any reference
+    // list (channel "User"), never mislabeled as something the Agent found on its own.
+    const { data: have } = await db.from("companies").select("company_name,domain,profile");
+    const day = now.slice(0, 10);
+    const added: { slug: string; company_name: string }[] = [], skipped: { name: string; matches: string }[] = [];
+    const pool = existingPool(have || []);
+    for (const c of b.companies) {
+      const hit = pool.find((x) => sameCompany(c.name, c.website, x.name, x.domain));
+      if (hit) { skipped.push({ name: c.name, matches: hit.as }); continue; }
+      const row = {
+        slug: "cd-" + c.name.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60), company_name: c.name, country: c.country,
+        company_website: c.website || null, domain: dom(c.website) || null, hq_city: c.hq_city || null, industry: c.industry || null, research_channel: "User",
+        lists: [`User upload: ${b.filename}`], icp_status: "Unknown", account_notes: `From "${b.filename}", uploaded via Setup Wizard on ${day}.${c.notes ? ` Notes: ${c.notes}` : ""}`,
+        profile: { "User upload": { filename: b.filename, notes: c.notes || "", at: now } } };
       const { error } = await db.from("companies").upsert([row], { onConflict: "slug", ignoreDuplicates: true });
       if (!error) { added.push({ slug: row.slug, company_name: row.company_name }); pool.push({ name: row.company_name, domain: row.domain || "", as: row.company_name }); }
     }

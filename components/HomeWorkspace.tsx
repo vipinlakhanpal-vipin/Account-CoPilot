@@ -68,12 +68,12 @@ const PROFILE_TIERS: { label: string; unit: number | [number, number]; note: str
   { label: "Deep", unit: [2.5, 3.5], note: "most thorough, ~20 searches" },
 ];
 
-const STEPS: { n: number; label: string; icon: keyof typeof ICON; cls: string }[] = [
-  { n: 1, label: "Region & size", icon: "pin", cls: "hw-step--region" },
-  { n: 2, label: "Add Data", icon: "folder", cls: "hw-step--region" },
-  { n: 3, label: "Domains", icon: "crosshair", cls: "hw-step--people" },
-  { n: 4, label: "Data sources", icon: "database", cls: "hw-step--data" },
-  { n: 5, label: "Daily plan", icon: "calendar", cls: "hw-step--data" },
+const STEPS: { n: number; label: string; icon: keyof typeof ICON; cls: string; group?: "mandatory" | "info" }[] = [
+  { n: 1, label: "Region & size", icon: "pin", cls: "hw-step--region", group: "mandatory" },
+  { n: 2, label: "Add Data", icon: "folder", cls: "hw-step--region", group: "mandatory" },
+  { n: 3, label: "Domains", icon: "crosshair", cls: "hw-step--people", group: "mandatory" },
+  { n: 4, label: "Daily plan", icon: "calendar", cls: "hw-step--data", group: "mandatory" },
+  { n: 5, label: "Data sources", icon: "database", cls: "hw-step--data", group: "info" },
   { n: 6, label: "Review", icon: "clipboard", cls: "hw-step--review" },
 ];
 
@@ -87,6 +87,8 @@ export default function HomeWorkspace({ access }: { access: Access }) {
   const visibleRegions = useMemo(() => REGIONS.filter((r) => access.isSuper || access.regions.includes(r.key)), [access]);
   const [regions, setRegions] = useState<string[]>([]);
   const [hasList, setHasList] = useState<"yes" | "no" | "">("");
+  const [uploadBusy, setUploadBusy] = useState(false);
+  const [uploadMsg, setUploadMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [domains, setDomains] = useState<string[]>([]);
   const [sources, setSources] = useState<Sources>({ checked: [], custom: [] });
   const [newSource, setNewSource] = useState("");
@@ -144,6 +146,21 @@ export default function HomeWorkspace({ access }: { access: Access }) {
     else saveSources({ checked: [...sources.checked, name], custom: [...sources.custom, name] });
     setNewSource("");
   };
+  async function uploadFile(file: File) {
+    const region = regions[0];
+    if (!region) { setUploadMsg({ ok: false, text: "Pick at least one region in step 1 first." }); return; }
+    if (!/\.(xlsx|xls)$/i.test(file.name)) { setUploadMsg({ ok: false, text: "Only .xlsx or .xls files are accepted." }); return; }
+    setUploadBusy(true); setUploadMsg(null);
+    try {
+      const form = new FormData();
+      form.append("file", file); form.append("region", region);
+      const res = await fetch("/api/wizard-upload", { method: "POST", body: form });
+      const j = await res.json().catch(() => ({}));
+      if (res.ok) setUploadMsg({ ok: true, text: `"${file.name}" uploaded (${j.item?.rows ?? "?"} rows found) — it'll be read and imported by the next scheduled session. Track it in Settings → Discovery & refresh engine → Uploaded lists.` });
+      else setUploadMsg({ ok: false, text: j.error || "Could not upload that file." });
+    } catch { setUploadMsg({ ok: false, text: "Could not reach the server." }); }
+    setUploadBusy(false);
+  }
 
   async function save() {
     if (!def) return;
@@ -209,10 +226,14 @@ export default function HomeWorkspace({ access }: { access: Access }) {
         </div>
         {expanded && (
           <ol className="hw-steps">
-            {STEPS.map((s) => (
-              <li key={s.n}><button type="button" className={`hw-step ${s.cls}`} aria-current={step === s.n && section === "wizard"}
-                onClick={() => { setSection("wizard"); setStep(s.n); }}>
-                <span className="hw-step-num">{s.n}</span><Ico name={s.icon} />{s.label}</button></li>
+            {STEPS.map((s, i) => (
+              <li key={s.n}>
+                {s.group === "mandatory" && STEPS[i - 1]?.group !== "mandatory" && <div className="hw-step-group hw-step-group--mandatory">Mandatory · affects the Agent</div>}
+                {s.group === "info" && STEPS[i - 1]?.group !== "info" && <div className="hw-step-group hw-step-group--info">Information only</div>}
+                <button type="button" className={`hw-step ${s.cls}`} aria-current={step === s.n && section === "wizard"}
+                  onClick={() => { setSection("wizard"); setStep(s.n); }}>
+                  <span className="hw-step-num">{s.n}</span><Ico name={s.icon} />{s.label}</button>
+              </li>
             ))}
           </ol>
         )}
@@ -298,16 +319,39 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                   <button type="button" className={`hw-pill ${hasList === "yes" ? "on" : ""}`} onClick={() => setHasList("yes")}>Yes, I have one</button>
                   <button type="button" className={`hw-pill ${hasList === "no" ? "on" : ""}`} onClick={() => setHasList("no")}>No — help me build one from scratch</button>
                 </div>
-                <div className="hw-about-grid" style={{ marginTop: 14 }}>
-                  <div className={`hw-about-card hw-yesno-yes ${hasList === "yes" ? "selected" : ""}`}>
-                    <h4>If Yes {hasList === "yes" && <span className="note">— selected</span>}</h4>
-                    <p>Send it over and it&apos;s imported exactly as-is, the same way the UAE workbook was. Nothing in it is overwritten — the daily
-                      engine only adds new rows or fills in its own fields (revenue checks, ICP status), and explains any difference it finds.</p></div>
-                  <div className={`hw-about-card hw-yesno-no ${hasList === "no" ? "selected" : ""}`}>
-                    <h4>If No {hasList === "no" && <span className="note">— selected</span>}</h4>
-                    <p>No problem — the free daily engine can build your list from nothing, using its own web search. It just starts at a slower pace
-                      until it has found and verified enough companies to feel complete; you&apos;ll set that pace in step 5.</p></div>
-                </div>
+                {hasList === "yes" && (
+                  <div className="hw-upload-panel">
+                    <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8, flexWrap: "wrap" }}>
+                      <a className="btn" href="/api/wizard-template" download>⬇ Download the template (.xlsx)</a>
+                      <span className="hint">— optional, only if you&apos;re starting from scratch</span>
+                    </div>
+                    <p className="hw-lead hw-lead-justify">Already have a spreadsheet? You don&apos;t need to reshape it into the template — as long as it&apos;s
+                      one worksheet, one company per row, with column headers in the first row, just drop it in below as-is. It can have as many columns
+                      as you like; Account CoPilot picks out the fields it needs (company name, website, country, industry, HQ city) and leaves the rest alone.</p>
+                    <label className="hw-dropzone">
+                      <input type="file" accept=".xlsx,.xls" style={{ display: "none" }} disabled={uploadBusy}
+                        onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadFile(f); e.target.value = ""; }} />
+                      <span className="hw-dropzone-icon">📊</span>
+                      <b>{uploadBusy ? "Uploading…" : "Drop your Excel file here, or click to browse"}</b>
+                      <span className="hint">.xlsx or .xls only</span>
+                    </label>
+                    <div className="hw-upload-tips">
+                      <p><b>Before you upload</b></p>
+                      <ul>
+                        <li>Just one worksheet — if there&apos;s more than one, only the first is read</li>
+                        <li>Don&apos;t merge cells or add extra rows above the column headers</li>
+                        <li>One company per row; leave a cell blank rather than &quot;N/A&quot; or &quot;-&quot;</li>
+                      </ul>
+                    </div>
+                    {uploadMsg && <p className={`now-msg ${uploadMsg.ok ? "ok" : "err"}`}>{uploadMsg.text}</p>}
+                  </div>
+                )}
+                {hasList === "no" && (
+                  <div className="hw-about-card hw-yesno-no selected">
+                    <h4>Nothing to do here</h4>
+                    <p>Just continue to the next step — the free daily engine builds your list from nothing, using its own web search. It starts at a
+                      slower pace until it has found and verified enough companies to feel complete; you&apos;ll set that pace in step 4.</p></div>
+                )}
               </div>
             )}
 
@@ -336,31 +380,6 @@ export default function HomeWorkspace({ access }: { access: Access }) {
             )}
 
             {step === 4 && (
-              <div>
-                <div className="hw-tint hw-tint--data">
-                  <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--sky)")}><Ico name="database" /></span><h3>Which data sources do you have?</h3></div>
-                  <p className="hw-lead hw-lead-wide">Seamless.ai is the one source genuinely connected and in use today, for contact enrichment. Everything else
-                    below is just your own inventory — tick what you have a subscription to, so I know what to ask for exports from; nothing here
-                    connects automatically.</p>
-                </div>
-                <div className="hw-checkrow">Seamless.ai <span className="hw-tag-sm">connected</span></div>
-                {[...KNOWN_SOURCES, ...sources.custom].map((name) => (
-                  <label key={name} className="hw-checkrow">
-                    <input type="checkbox" checked={sources.checked.includes(name)} onChange={() => toggleSource(name)} />
-                    {name} <span className="hint" style={{ marginLeft: 4 }}>— not connected to this app yet</span>
-                  </label>
-                ))}
-                <label className="hw-field">Have another subscription not listed above?
-                  <div className="hw-field-row">
-                    <input type="text" placeholder="e.g. Coresignal, S&P Capital IQ" value={newSource}
-                      onChange={(e) => setNewSource(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSource(); } }} />
-                    <button type="button" className="btn" disabled={!newSource.trim()} onClick={addSource}>Add</button>
-                  </div>
-                  <span className="hint">Adds it to the list above, ticked. Send exports and I&apos;ll fold them in by hand until a real connector exists.</span></label>
-              </div>
-            )}
-
-            {step === 5 && (
               <div>
                 <div className="hw-tint hw-tint--data">
                   <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--sky)")}><Ico name="calendar" /></span><h3>Daily plan</h3></div>
@@ -409,6 +428,38 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                       and a Super Admin can require a PIN.</p>
                   </div>
                 )}
+              </div>
+            )}
+
+            {step === 5 && (
+              <div>
+                <div className="hw-tint hw-tint--data">
+                  <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--sky)")}><Ico name="database" /></span><h3>Which data sources do you have?</h3></div>
+                  <p className="hw-lead hw-lead-wide">Informational only — this doesn&apos;t change what the Agent searches. Seamless.ai is the one source genuinely
+                    connected and in use today, for contact enrichment. Everything else below is just your own inventory — tick what you have a
+                    subscription to, so anyone on the team knows what&apos;s available; nothing here connects automatically.</p>
+                </div>
+                <div className="hw-checkrow">Seamless.ai <span className="hw-tag-sm">connected</span></div>
+                {[...KNOWN_SOURCES, ...sources.custom].map((name) => (
+                  <div key={name}>
+                    <label className="hw-checkrow">
+                      <input type="checkbox" checked={sources.checked.includes(name)} onChange={() => toggleSource(name)} />
+                      {name} <span className="hint" style={{ marginLeft: 4 }}>— not connected to this app yet</span>
+                    </label>
+                    {sources.checked.includes(name) && (
+                      <p className="hw-connect-note">{name} isn&apos;t connected to Account CoPilot yet — connecting it would let the Agent pull from
+                        it directly instead of just knowing you subscribe to it. To connect it, ask a Super Admin to set it up as a Claude
+                        connector in Settings, the same way HubSpot and Seamless.ai are connected.</p>
+                    )}
+                  </div>
+                ))}
+                <label className="hw-field">Have another subscription not listed above?
+                  <div className="hw-field-row">
+                    <input type="text" placeholder="e.g. Coresignal, S&P Capital IQ" value={newSource}
+                      onChange={(e) => setNewSource(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSource(); } }} />
+                    <button type="button" className="btn" disabled={!newSource.trim()} onClick={addSource}>Add</button>
+                  </div>
+                  <span className="hint">Adds it to the list above, ticked. Send exports and I&apos;ll fold them in by hand until a real connector exists.</span></label>
               </div>
             )}
 

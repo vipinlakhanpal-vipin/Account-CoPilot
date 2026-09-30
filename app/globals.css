@@ -409,7 +409,8 @@ aside.brief.contact{width:min(760px,100%);z-index:70}
 .cost-row-paid td{background:color-mix(in srgb, #F5A623 8%, var(--surface))}
 .wtd-row-instant td{background:color-mix(in srgb, #F5A623 8%, var(--surface))}
 .wtd-row-bulk td{background:color-mix(in srgb, #2ECC8F 8%, var(--surface))}
-.metric-tile{background:var(--accent-soft);border-radius:10px;padding:12px 18px;min-width:140px}
+.metric-tile{background:var(--accent-soft);border-radius:10px;padding:12px 18px;min-width:140px;text-align:center}
+.metric-tile .note{display:flex;align-items:center;justify-content:center}
 .metric-tile:nth-of-type(2){background:var(--sig-vs-bg)}
 .metric-tile .note svg{width:13px;height:13px;color:var(--teal);margin-right:5px;vertical-align:-2px}
 .metric-tile:nth-of-type(2) .note svg{color:var(--sig-vs)}
@@ -439,6 +440,20 @@ aside.brief.contact{width:min(760px,100%);z-index:70}
 .hw-step[aria-current="true"] .hw-step-num{background:var(--surface);color:var(--step-color,var(--teal))}
 .hw-step[aria-current="true"] .ico{color:var(--accent-ink)}
 .hw-step--region{--step-color:var(--teal)} .hw-step--people{--step-color:var(--gold)} .hw-step--data{--step-color:var(--sky)} .hw-step--review{--step-color:var(--muted)}
+.hw-step-group{font:800 10px var(--body);letter-spacing:.06em;text-transform:uppercase;margin:10px 0 6px 6px}
+.hw-step-group--mandatory{color:var(--teal)}
+.hw-step-group--info{color:var(--muted)}
+/* Add Data step: real Excel upload */
+.hw-upload-panel{margin-top:6px}
+.hw-dropzone{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-align:center;border:1.5px dashed color-mix(in srgb, var(--teal) 45%, var(--line));
+  border-radius:12px;padding:22px;background:var(--accent-soft);cursor:pointer;margin:10px 0}
+.hw-dropzone:hover{border-color:var(--teal)}
+.hw-dropzone-icon{font-size:22px}
+.hw-upload-tips{background:var(--surface-2);border-radius:9px;padding:10px 12px;margin-top:10px}
+.hw-upload-tips p{margin:0 0 6px;font:700 11px var(--body);color:var(--text)}
+.hw-upload-tips ul{margin:0;padding-left:18px;font-size:12px;color:var(--muted);line-height:1.7}
+.hw-connect-note{margin:2px 0 9px 23px;padding:9px 11px;background:color-mix(in srgb, #E0A21B 14%, var(--surface));border:1px solid color-mix(in srgb, #E0A21B 40%, transparent);
+  border-radius:9px;font-size:12px;line-height:1.55;color:var(--text);max-width:60ch}
 .hw-content{flex:1;padding:22px 26px 28px;min-width:0;min-height:520px}
 .hw-h{font-family:var(--display);font-size:17px;font-weight:600;margin:0 0 6px;color:var(--text);text-transform:none;letter-spacing:0}
 .hw-tint{border-radius:10px;padding:16px 18px;margin-bottom:16px}

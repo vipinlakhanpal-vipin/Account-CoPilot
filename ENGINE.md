@@ -19,6 +19,22 @@ No install is needed: `scripts/engine_client.mjs` uses only built-in Node (fetch
 - `focus` (platforms, ERP, triggers): signals to look for and mention in the reasoning.
 - `active` lists the regions to work on and their daily counts (`discover_per_day`, `verify_per_day`). Never discover in a region that is not active.
 
+## 0c. Reading an uploaded list (ALWAYS check, before claiming a job)
+`node scripts/engine_client.mjs uploads` writes `data/verification/uploaded_lists.json`: `[{"id","filename","region","url"}]` — spreadsheets a user
+uploaded from the Setup Wizard's "Add Data" step, waiting to be read in. If it's empty, skip to step 1. For each one:
+1. Download the file from its `url` (a signed link, valid ~1 hour) and open it — first worksheet only, ignore any others.
+2. The header row's exact wording varies — map columns by meaning, not literal text: a company-name column (e.g. "Company Name", "Company", "Name")
+   is required; website, country, industry, HQ city and notes columns are optional and may be named slightly differently or missing entirely.
+   Skip a row with no usable company name. Never invent a value for a blank cell.
+3. If `region` isn't given for a row, use the upload's own `region` field. Do not research or verify revenue for these — they're the user's own list,
+   added as-is (same principle as the original workbook import in CLAUDE.md: reference data is kept verbatim, never pattern-guessed or invented).
+4. Write the extracted rows to a file (e.g. `data/verification/upload_rows.json`): `[{"name","website","country","industry","hq_city","notes"}]`,
+   then run `node scripts/engine_client.mjs add_upload data/verification/upload_rows.json "<original filename>"`. It skips anything already in the
+   app (by name or domain) the same way `add` does.
+5. Finish with `node scripts/engine_client.mjs upload_done <id> done "<N added, M already in the app>"` (or `upload_done <id> error "<reason>"`
+   if the file couldn't be read at all — e.g. wrong format, no recognizable company-name column).
+Do this for every pending upload before moving on to step 1.
+
 ## 1. Claim a job
 `node scripts/engine_client.mjs claim` prints e.g. `{"id":"ab12cd34","region":"UAE","count":50,"mode":"verify"}` or `null`.
 If `null`, do step 4. `count: "max"` = as many as you can in this session (aim for 50). A `mode: "discover"` job may also carry `company_names` (specific names the user
