@@ -1,11 +1,15 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.32";
+export const APP_VERSION = "2.33";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.33", date: "2026-09-30", notes: "Define ICP: removed the \"Mark as next phase\" option for a Paused region — the only choice now is Make Active, which unlocks the fields right away.",
+    changes: [
+      { what: "A Paused region with no accounts no longer offers \"Mark as next phase\" as a separate action — just \"Make {region} Active\"", where: "Setup → Define ICP", why: "Requested — the extra option was confusing; Paused → Active is the only move that makes sense here" },
+    ] },
   { version: "2.32", date: "2026-09-30", notes: "Define ICP page: input/select fields (daily counts, currency, rate) now have a light teal fill instead of plain white, matching the fields elsewhere in the app.",
     changes: [
       { what: "Every field on Define ICP (New companies to find per day, Companies to verify per day, Local currency, exchange rate, etc.) now has a light teal background instead of plain white/page background", where: "Setup → Define ICP", why: "Consistency with the same light-filled field style already used on the Home Setup Wizard" },

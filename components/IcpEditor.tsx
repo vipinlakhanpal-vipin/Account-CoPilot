@@ -78,8 +78,7 @@ function StatusChoice({ region, value, accounts, onChange }: { region: string; v
   const moves: { to: Rules["status"]; label: string; outcome: string }[] =
     value === "active" ? [{ to: "paused", label: "Pause the daily run", outcome: `No new ${region} companies or daily checks; the ${accounts.toLocaleString()} accounts here keep their status. Make it Active again any time.` }]
     : value === "paused" ? [
-      { to: "active", label: `Make ${region} Active`, outcome: "Starts the daily run with the numbers below and unlocks the settings." },
-      ...(accounts ? [] : [{ to: "next" as const, label: "Mark as next phase", outcome: "A planned market with no accounts yet; nothing runs." }]) ]
+      { to: "active", label: `Make ${region} Active`, outcome: "Starts the daily run with the numbers below and unlocks the settings." } ]
     : [
       { to: "active", label: `Make ${region} Active`, outcome: "Starts the daily run with the numbers below and unlocks the settings." },
       { to: "paused", label: "Pause", outcome: "Rules apply to any accounts added by hand; still no daily run." } ];
