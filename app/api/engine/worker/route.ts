@@ -35,7 +35,9 @@ const NewCo = z.object({ name: z.string().min(2), website: z.string().optional()
   hq_city: z.string().optional().default(""), why_icp: z.string().optional().default(""), source_url: z.string().optional().default("") });
 const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("claim") }),
-  z.object({ action: z.literal("finish"), id: z.string(), status: z.enum(["done", "error"]), result: z.string().max(2000), slug: z.string().max(120).optional() }),
+  z.object({ action: z.literal("finish"), id: z.string(), status: z.enum(["done", "error"]), result: z.string().max(2000), slug: z.string().max(120).optional(),
+    details: z.array(z.object({ name: z.string(), status: z.string().optional().default(""), revenue: z.string().optional().default(""), industry: z.string().optional().default(""),
+      hq_city: z.string().optional().default(""), why_icp: z.string().optional().default(""), source_url: z.string().optional().default(""), country: z.string().optional().default("") })).max(60).optional() }),
   z.object({ action: z.literal("queue"), region: z.string().default("UAE"), limit: z.number().int().min(1).max(200).default(50) }),
   z.object({ action: z.literal("submit"), results: z.array(Result).max(50) }),
   z.object({ action: z.literal("add_companies"), companies: z.array(NewCo).max(50) }),
@@ -47,7 +49,8 @@ const Body = z.discriminatedUnion("action", [
     details: z.array(z.object({ name: z.string(), status: z.string(), revenue: z.string().optional().default("") })).max(60).optional().default([]),
     source: z.enum(["daily", "instant"]).optional(), region: z.string().max(200).optional().default("") }),
 ]);
-type Job = { id: string; status: string; started_at?: string; done_at?: string; result?: string };
+type Job = { id: string; status: string; started_at?: string; done_at?: string; result?: string; company_names?: string[];
+  details?: { name: string; status?: string; revenue?: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; country?: string; decided?: "added" | "ignored" }[] };
 type PendingCo = { id: string; name: string; website?: string; country: string; region: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; watch?: boolean; requested_at: string };
 
 export async function POST(req: Request) {
@@ -67,7 +70,9 @@ export async function POST(req: Request) {
     }
     const job = st.jobs.find((j) => j.id === b.id);
     if (!job) return NextResponse.json({ error: "Job not found." }, { status: 404 });
-    job.status = b.status; job.done_at = now; job.result = b.result; if (b.slug) (job as Job & { slug?: string }).slug = b.slug; await put(db, "engine_jobs", st);
+    job.status = b.status; job.done_at = now; job.result = b.result; if (b.slug) (job as Job & { slug?: string }).slug = b.slug;
+    if (b.details) (job as Job & { details?: unknown }).details = b.details;
+    await put(db, "engine_jobs", st);
     return NextResponse.json({ ok: true });
   }
   const icpDef = normalizeDefinition((await db.from("settings").select("value").eq("key", "icp_definition").maybeSingle()).data?.value);

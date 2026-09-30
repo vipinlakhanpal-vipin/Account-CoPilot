@@ -21,7 +21,8 @@ No install is needed: `scripts/engine_client.mjs` uses only built-in Node (fetch
 
 ## 1. Claim a job
 `node scripts/engine_client.mjs claim` prints e.g. `{"id":"ab12cd34","region":"UAE","count":50,"mode":"verify"}` or `null`.
-If `null`, do step 4. `count: "max"` = as many as you can in this session (aim for 50).
+If `null`, do step 4. `count: "max"` = as many as you can in this session (aim for 50). A `mode: "discover"` job may also carry `company_names` (specific names the user
+typed in) — see "Multi-name discover jobs" under step 2.
 
 ## 2. Do the job
 - **verify** — `node scripts/engine_client.mjs queue <region> <count>` writes `data/verification/revenue_queue.json`
@@ -32,6 +33,12 @@ If `null`, do step 4. `count: "max"` = as many as you can in this session (aim f
   single hotels/hospitals/schools/attractions and local branches of foreign HQs). Write them to `data/verification/new_companies.json`
   as `[{"name","website","country","industry","hq_city","why_icp","source_url"}]`, run `node scripts/engine_client.mjs add data/verification/new_companies.json`,
   then verify the added companies' revenue as in **verify** (use the returned slugs).
+  - **Multi-name discover jobs (`company_names` is present on the claimed job, e.g. `{"mode":"discover","company_names":["Almarai","Gulf Steel Works"],...}`)** — the user named these
+    specific companies for a free, one-off check; they are reviewed and added (or ignored) by hand in the app, so do **not** run `add` or `hold` for any of them. For each name in
+    `company_names`: run `names` first (skip it if already in the app — note that in its result entry instead), determine its real country as in **company** below, and research enough
+    to say whether it looks like an ICP fit (industry, size signal, why) — no need to verify an official revenue figure for this path. Write `data/verification/job_details.json`:
+    `[{"name","status":"<a short read, e.g. 'Looks like an ICP fit' | 'Below the ICP floor' | 'Already in the app' | 'Not enough public information'>","industry","hq_city","why_icp","source_url","country"}]`
+    (one entry per name, in the same order). Finish with `finish <id> done "<count> companies checked, ready for review"` — the `finish` command sends `job_details.json` automatically.
 - **both** — half verify, half discover.
 - **company** — one specific company the user asked for (`company_name`, optional `website`, `region`). Run `node scripts/engine_client.mjs names` and check
   whether it is already in the app (any spelling, acronym or domain). **If it is**: verify its revenue now (as in **verify**) and add it to the watch list with

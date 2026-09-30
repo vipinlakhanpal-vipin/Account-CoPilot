@@ -1,11 +1,20 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.28";
+export const APP_VERSION = "2.29";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.29", date: "2026-09-30", notes: "\"Find new companies\" can now search several named companies at once, free or paid, and review each one (Add / Ignore) before it's added to the app.",
+    changes: [
+      { what: "The \"Company names (optional)\" field under Find new companies now accepts several names (comma-separated or one per line), not just one", where: "Setup → Settings → Discovery & refresh engine", why: "There was no way to search a short list of specific companies in one go — only one at a time or a blind bulk search" },
+      { what: "\"Search now (free)\" for several named companies runs a narrower, free check per company via the scheduled session (confirms it exists, a rough size/industry signal) — none of them are added automatically", where: "Setup → Settings → Discovery & refresh engine", why: "So a quick free look doesn't commit anything until it's reviewed" },
+      { what: "\"Run now — deep research\" now also works for several named companies at once (paid, ≈$0.55 each), not just one, for when you want the full profile straight away instead of a free narrow check first", where: "Setup → Settings → Discovery & refresh engine", why: "The paid instant option only worked for a single company before" },
+      { what: "Once a multi-name free search completes, each company shows up as its own row under that job with Add / Ignore, plus an \"Add all\" button for the whole batch — nothing is added until you decide", where: "Setup → Settings → Discovery & refresh engine — job queue", why: "Requested a review step instead of the app committing found companies automatically" },
+      { what: "Ignoring a found company doesn't delete it — it's kept on a quiet 180-day watch list (same idea as the existing revenue re-check cycle) in case it grows into an ICP fit later", where: "Backend only — settings.engine_ignored", why: "So a company dismissed today isn't permanently lost if it later qualifies" },
+      { what: "ENGINE.md and scripts/engine_client.mjs updated so the scheduled routine knows how to handle a multi-name search: research each company for free but never auto-add or auto-hold any of them, reporting results back for review instead", where: "ENGINE.md, scripts/engine_client.mjs, app/api/engine + app/api/engine/worker", why: "This is a new, clearly separate code path — the existing single-company and bulk-discover behaviors are unchanged" },
+    ] },
   { version: "2.28", date: "2026-09-30", notes: "Scheduled run history: Summary moved out of the table into its own full-width section above it; the table's columns are now Date, Company, Status, Revenue, Region, Run Status, Activate Region.",
     changes: [
       { what: "The 'N verified / new companies' rollup is no longer a table column — it's now a labeled 'Summary' block, full width, between the note paragraph and the table, showing the latest run", where: "Setup → Settings → Scheduled run history", why: "As a table column it duplicated what the per-company rows already showed, and didn't make sense crammed into one cell" },

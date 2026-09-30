@@ -17,8 +17,10 @@ export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 const EST = { update: 0.55, discovery: 0.75, profile: 0.55 }; // USD per Quick research / discovery search / new-company profile
 
-type Job = { id: string; region: string; count: number | "max"; mode: "verify" | "discover" | "both" | "company"; company_name?: string; website?: string; requested_by: string; requested_at: string;
-  status: "queued" | "running" | "done" | "error"; done_at?: string; result?: string };
+type JobDetail = { name: string; status?: string; revenue?: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; country?: string; decided?: "added" | "ignored" };
+type Job = { id: string; region: string; count: number | "max"; mode: "verify" | "discover" | "both" | "company"; company_name?: string; website?: string; company_names?: string[]; requested_by: string; requested_at: string;
+  status: "queued" | "running" | "done" | "error"; done_at?: string; result?: string; details?: JobDetail[] };
+type IgnoredCo = { id: string; name: string; country: string; region: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; ignored_at: string; ignored_by: string; recheck_at: string };
 type Batch = { id: string; region: string; update_count: number; new_count: number; budget: number; available: number; planned_update: number; planned_new: number;
   requested_by: string; at: string; companies: string[] };
 type PendingCo = { id: string; name: string; website?: string; country: string; region: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; watch?: boolean; requested_at: string };
@@ -45,6 +47,16 @@ async function openJobIssue(job: Job) {
       body: JSON.stringify({ title, body }),
     });
   } catch { /* best-effort */ }
+}
+
+// Shared insert for a company found by a scheduled session (held pending region activation, or held pending the user's Add/Ignore review).
+function foundCompanyRow(p: { name: string; website?: string; country: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; watch?: boolean }, at: string) {
+  const slug = "cd-" + p.name.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
+  return { slug, company_name: p.name, country: p.country, company_website: p.website || null,
+    domain: (p.website || "").toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0] || null,
+    hq_city: p.hq_city || null, industry: p.industry || null, research_channel: "Claude discovery", lists: ["Claude discovery"], icp_status: "Unknown",
+    account_notes: `Found by a scheduled Claude session: ${p.why_icp || ""} Source: ${p.source_url || ""}`,
+    profile: { "Claude discovery": { why: p.why_icp || "", source_url: p.source_url || "", via: "scheduled session (no API cost)" }, ...(p.watch ? { Watch: { since: at, reason: "requested in Settings" } } : {}) } };
 }
 
 async function summary(db: ReturnType<typeof supabaseAdmin>) {
@@ -79,7 +91,10 @@ export async function GET(req: Request) {
 
 const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("queue"), region: z.string().min(2).max(40), count: z.union([z.number().int().min(1).max(500), z.literal("max")]), mode: z.enum(["verify", "discover", "both", "company"]),
-    company_name: z.string().trim().max(120).optional(), website: z.string().trim().max(200).optional() }),
+    company_name: z.string().trim().max(120).optional(), website: z.string().trim().max(200).optional(), company_names: z.array(z.string().trim().min(2).max(120)).max(30).optional() }),
+  z.object({ action: z.literal("add_found"), job_id: z.string(), name: z.string() }),
+  z.object({ action: z.literal("ignore_found"), job_id: z.string(), name: z.string() }),
+  z.object({ action: z.literal("add_all_found"), job_id: z.string() }),
   z.object({ action: z.literal("refresh"), region: z.string().min(2).max(40), update_count: z.number().int().min(0).max(50), new_count: z.number().int().min(0).max(10), budget: z.number().min(0).max(500) }),
   z.object({ action: z.literal("balance"), amount: z.number().min(0).max(100000) }),
   z.object({ action: z.literal("cancel"), id: z.string() }),
@@ -136,23 +151,46 @@ export async function POST(req: Request) {
     if (b.action === "release_pending") {
       const icpDef = normalizeDefinition((await db.from("settings").select("value").eq("key", "icp_definition").maybeSingle()).data?.value);
       if (icpDef.regions[p.region]?.status !== "active") return NextResponse.json({ error: `${p.region} is not Active yet — activate it in Define ICP first.` }, { status: 400 });
-      const slug = "cd-" + p.name.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
-      const row = { slug, company_name: p.name, country: p.country, company_website: p.website || null, domain: (p.website || "").toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0] || null,
-        hq_city: p.hq_city || null, industry: p.industry || null, research_channel: "Claude discovery", lists: ["Claude discovery"], icp_status: "Unknown",
-        account_notes: `Found by a scheduled Claude session, held until ${p.region} was activated: ${p.why_icp} Source: ${p.source_url}`,
-        profile: { "Claude discovery": { why: p.why_icp, source_url: p.source_url, via: "scheduled session (no API cost)" }, ...(p.watch ? { Watch: { since: now, reason: "requested in Settings" } } : {}) } };
-      const { error } = await db.from("companies").upsert([row], { onConflict: "slug", ignoreDuplicates: true });
+      const { error } = await db.from("companies").upsert([foundCompanyRow(p, now)], { onConflict: "slug", ignoreDuplicates: true });
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
       invalidateAllData();
     }
     await setSetting(db, "engine_pending", { items: st.items.filter((x) => x.id !== b.id) });
     return NextResponse.json(await summary(db));
   }
+  if (b.action === "add_found" || b.action === "ignore_found" || b.action === "add_all_found") {
+    // A "Find new companies" job searched for several named companies for free and reported back per-company results
+    // (job.details) without adding any of them — the user decides here, per company or all at once.
+    const st = await getSetting<{ jobs: Job[] }>(db, "engine_jobs", { jobs: [] });
+    const job = st.jobs.find((j) => j.id === b.job_id);
+    if (!job || !job.details) return NextResponse.json({ error: "Job not found, or has no results to act on." }, { status: 404 });
+    const targets = b.action === "add_all_found" ? job.details.filter((d) => !d.decided) : job.details.filter((d) => d.name === b.name);
+    if (targets.length === 0) return NextResponse.json({ error: "Not found — it may already have been added or ignored." }, { status: 404 });
+    if (b.action === "ignore_found") {
+      const ig = await getSetting<{ items: IgnoredCo[] }>(db, "engine_ignored", { items: [] });
+      for (const t of targets) ig.items.unshift({ id: crypto.randomUUID().slice(0, 8), name: t.name, country: t.country || job.region, region: job.region,
+        industry: t.industry, hq_city: t.hq_city, why_icp: t.why_icp, source_url: t.source_url, ignored_at: now, ignored_by: user.email || "",
+        recheck_at: new Date(Date.now() + 180 * 864e5).toISOString() });
+      await setSetting(db, "engine_ignored", { items: ig.items.slice(0, 300) });
+    } else {
+      const rows = targets.map((t) => foundCompanyRow({ name: t.name, country: t.country || job.region, industry: t.industry, hq_city: t.hq_city, why_icp: t.why_icp, source_url: t.source_url }, now));
+      const { error } = await db.from("companies").upsert(rows, { onConflict: "slug", ignoreDuplicates: true });
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      invalidateAllData();
+    }
+    const names = new Set(targets.map((t) => t.name));
+    const decided: "added" | "ignored" = b.action === "ignore_found" ? "ignored" : "added";
+    job.details = job.details.map((d) => names.has(d.name) ? { ...d, decided } : d);
+    await setSetting(db, "engine_jobs", st);
+    return NextResponse.json(await summary(db));
+  }
   if (b.action === "queue" || b.action === "cancel") {
     const st = await getSetting<{ jobs: Job[] }>(db, "engine_jobs", { jobs: [] });
     if (b.action === "queue" && b.mode === "company" && !(b.company_name && b.company_name.length >= 2)) return NextResponse.json({ error: "Enter the company name." }, { status: 400 });
     if (b.action === "queue") {
-      const job: Job = { id, region: b.region, count: b.mode === "company" ? 1 : b.count, mode: b.mode, ...(b.mode === "company" ? { company_name: b.company_name, website: b.website || "" } : {}),
+      const names = b.mode === "discover" ? (b.company_names || []).filter((n) => n.length >= 2) : [];
+      const job: Job = { id, region: b.region, count: b.mode === "company" ? 1 : names.length ? names.length : b.count, mode: b.mode,
+        ...(b.mode === "company" ? { company_name: b.company_name, website: b.website || "" } : {}), ...(names.length ? { company_names: names } : {}),
         requested_by: user.email || "", requested_at: now, status: "queued" };
       st.jobs.unshift(job);
       await openJobIssue(job);

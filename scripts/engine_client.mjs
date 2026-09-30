@@ -5,7 +5,10 @@
 //   node scripts/engine_client.mjs submit [dir]                         → sends every result file in data/verification/revenue (default) not yet sent
 //   node scripts/engine_client.mjs add <file.json>                      → adds discovered companies (format: see scripts/add_companies.mjs)
 //   node scripts/engine_client.mjs hold <file.json>                     → queues a company whose real country's region isn't Active yet (same format as add); shown as a banner until a Super Admin activates that region
-//   node scripts/engine_client.mjs finish <id> done|error "<result>"
+//   node scripts/engine_client.mjs finish <id> done|error "<result>" [slug]  → also sends data/verification/job_details.json if present:
+//                                                                            [{"name","status","revenue","industry","hq_city","why_icp","source_url","country"}]
+//                                                                            (one row per company checked in a multi-name "Find new companies" job) — write it only
+//                                                                            right before finishing that job (see ENGINE.md "Multi-name discover jobs")
 //   node scripts/engine_client.mjs log "<summary>" <verified_count> "<new names;…>" <daily|instant> [region]  → source is which routine you are (required — see ENGINE.md step 3);
 //                                                                                                region is the region(s) worked this run (e.g. "UAE", or "UAE, KSA" if more than one — optional, omit if none applies); also
 //                                                                                                sends data/verification/run_details.json if present: [{"name","status","revenue"}]
@@ -69,7 +72,11 @@ else if (cmd === "queue") {
   fs.mkdirSync("data/verification", { recursive: true });
   fs.writeFileSync("data/verification/existing_companies.json", JSON.stringify(companies, null, 1));
   console.log(`${companies.length} existing companies written to data/verification/existing_companies.json — do not propose any of these (or their group/subsidiary under another name)`);
-} else if (cmd === "finish") console.log(JSON.stringify(await call({ action: "finish", id: a, status: b === "error" ? "error" : "done", result: c || "", ...(process.argv[6] ? { slug: process.argv[6] } : {}) })));
+} else if (cmd === "finish") {
+  const jobDetailsFile = "data/verification/job_details.json";
+  const jobDetails = fs.existsSync(jobDetailsFile) ? JSON.parse(fs.readFileSync(jobDetailsFile, "utf8")) : undefined;
+  console.log(JSON.stringify(await call({ action: "finish", id: a, status: b === "error" ? "error" : "done", result: c || "", ...(process.argv[6] ? { slug: process.argv[6] } : {}), ...(jobDetails ? { details: jobDetails } : {}) })));
+}
 else if (cmd === "log") {
   const detailsFile = "data/verification/run_details.json";
   const details = fs.existsSync(detailsFile) ? JSON.parse(fs.readFileSync(detailsFile, "utf8")) : [];

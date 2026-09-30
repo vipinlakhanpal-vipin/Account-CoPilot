@@ -8,7 +8,9 @@ import CostNote from "@/components/CostNote";
 import { COUNTRIES } from "@/lib/countries";
 import { fmtDate, fmtDateTime, fmtTimeShort } from "@/lib/dates";
 
-type Job = { id: string; region: string; count: number | "max"; mode: string; company_name?: string; website?: string; slug?: string; requested_by: string; requested_at: string; status: string; done_at?: string; result?: string };
+type JobDetail = { name: string; status?: string; revenue?: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; country?: string; decided?: "added" | "ignored" };
+type Job = { id: string; region: string; count: number | "max"; mode: string; company_name?: string; website?: string; company_names?: string[]; slug?: string; requested_by: string; requested_at: string; status: string; done_at?: string; result?: string; details?: JobDetail[] };
+const parseNames = (s: string) => s.split(/[,\n]/).map((x) => x.trim()).filter(Boolean);
 type Batch = { id: string; region: string; budget: number; available: number; planned_update: number; planned_new: number; spent: number; runs: number; running: number; at: string; requested_by: string; companies: string[] };
 type Pending = { id: string; name: string; website?: string; country: string; region: string; region_status: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; requested_at: string };
 type Summary = { pin?: { set: boolean; ask_super: boolean; set_by: string; set_at: string }; token_info: { created_at?: string; by?: string; hint?: string } | null; token?: string | null; jobs: Job[]; batches: Batch[]; carry: number; spentAll: number; spentMonth: number; balance: { amount?: number; as_of?: string; by?: string };
@@ -58,6 +60,13 @@ export default function EngineSettings() {
     const r = await paidFetch("/api/research", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ company: q.website.trim() ? `${name} (${q.website.trim()})` : name, country: q.region, depth: "quick" }) }, `Researching ${name}`);
     setNowMsg(r.ok ? { ok: true, text: `In progress: researching ${name} (about 1–2 minutes).`, company: name } : { ok: false, text: "Could not start the research." });
   }
+  // Instant route for several named companies at once: same paid Quick research, run once per name.
+  async function runNowMulti(names: string[]) {
+    if (!(await ask({ title: `Research ${names.length} companies now?`, tone: "cost", confirm: "Run now", points: [`Researches each of the ${names.length} named companies straight away and adds it to ${q.region}.`, "Free alternative: Search now (free) — a narrower check, done in the next scheduled run."], cost: `≈ $${(names.length * 0.55).toFixed(2)} (Quick research × ${names.length})` }))) return;
+    setNowMsg({ ok: true, text: "Starting…" });
+    for (const name of names) await paidFetch("/api/research", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ company: name, country: q.region, depth: "quick" }) }, `Researching ${name}`);
+    setNowMsg({ ok: true, text: `In progress: researching ${names.length} companies (about 1–2 minutes each).` });
+  }
   const pinAsk = (s as { pin?: { ask_super?: boolean } } | null)?.pin?.ask_super;
   useEffect(() => { if (pinAsk !== undefined) setAskSuper(!!pinAsk); }, [pinAsk]);
   const [queueBusy, setQueueBusy] = useState(false);
@@ -78,6 +87,7 @@ export default function EngineSettings() {
   let left = avail; const pu = Math.min(r.update, Math.floor(left / est.update)); left -= pu * est.update;
   const pn = left >= est.discovery + est.profile ? Math.min(r.fresh, Math.floor((left - est.discovery) / est.profile)) : 0;
   const estCost = +(pu * est.update + (pn ? est.discovery + pn * est.profile : 0)).toFixed(2);
+  const names = parseNames(q.company); // discover mode: 0 = normal bulk search, 1 = a single named company, 2+ = several named companies at once
 
   return (
     <section className="view">
@@ -105,35 +115,64 @@ export default function EngineSettings() {
             {q.mode === "company" ? <>
               <label>Company name<input value={q.company} onChange={(e) => setQ({ ...q, company: e.target.value })} placeholder="e.g. Almarai" /></label>
               <label>Website (optional)<input value={q.website} onChange={(e) => setQ({ ...q, website: e.target.value })} placeholder="e.g. almarai.com" /></label>
-            </> : <>{q.mode === "discover" && <label className="eng-co"><span>Company name (optional)<InfoTip k="companyName" /></span><input value={q.company} onChange={(e) => setQ({ ...q, company: e.target.value })} placeholder="e.g. Almarai" /></label>}
-              {!(q.mode === "discover" && q.company.trim()) && <label>How many<select value={q.count} onChange={(e) => setQ({ ...q, count: e.target.value })}>{["1", "5", "10", "30", "50", "max"].map((n) => <option key={n} value={n}>{n === "max" ? "Max (as many as a session can)" : n}</option>)}</select></label>}</>}
+            </> : <>{q.mode === "discover" && <label className="eng-co"><span>Company names (optional)<InfoTip k="companyName" /></span>
+              <textarea rows={names.length > 1 ? 3 : 1} value={q.company} onChange={(e) => setQ({ ...q, company: e.target.value })} placeholder="e.g. Almarai, Gulf Steel Works, Emirates Bio Farm — one per line or comma-separated" /></label>}
+              {names.length === 0 && <label>How many<select value={q.count} onChange={(e) => setQ({ ...q, count: e.target.value })}>{["1", "5", "10", "30", "50", "max"].map((n) => <option key={n} value={n}>{n === "max" ? "Max (as many as a session can)" : n}</option>)}</select></label>}
+              {names.length > 1 && <span className="eng-namecount">{names.length} companies — from the names above</span>}</>}
             <button type="button" className="btn primary" disabled={queueBusy || (q.mode === "company" && q.company.trim().length < 2)}
-              onClick={async () => { const specific = q.mode === "company" || (q.mode === "discover" && q.company.trim().length >= 2); setQueueBusy(true);
+              onClick={async () => { const specific = q.mode === "company" || (q.mode === "discover" && names.length === 1); setQueueBusy(true);
                 await post(specific ? { action: "queue", region: q.region, count: 1, mode: "company", company_name: q.company.trim(), website: q.website.trim() }
+                : names.length > 1 ? { action: "queue", region: q.region, count: names.length, mode: "discover", company_names: names }
                 : { action: "queue", region: q.region, count: q.count === "max" ? "max" : Number(q.count), mode: q.mode },
                 specific ? `Searching ${q.company.trim()} (${q.region}) now, free — usually done in a minute or two (falls back to the next run, ${nextRun()}, if that doesn't fire). The job below shows Waiting → In progress → Completed, with a link to the account.`
+                  : names.length > 1 ? `Searching ${names.length} companies (${q.region}) now, free — usually done in a minute or two. Each one will show up below with Add / Ignore once it's checked.`
                   : `Job started, free — usually a minute or two (falls back to the next run, ${nextRun()}, if that doesn't fire).`);
-                setQueueBusy(false); }}>{queueBusy ? <span className="btn-spin">Searching…</span> : (q.mode === "company" || (q.mode === "discover" && q.company.trim())) ? "Search now (free)" : "Start"}</button>
-            {(q.mode === "company" || (q.mode === "discover" && q.company.trim().length >= 2)) && (
+                setQueueBusy(false); }}>{queueBusy ? <span className="btn-spin">Searching…</span> : (q.mode === "company" || (q.mode === "discover" && names.length > 0)) ? "Search now (free)" : "Start"}</button>
+            {(q.mode === "company" || (q.mode === "discover" && names.length === 1)) && (
               <button type="button" className="btn" onClick={runNow} title="Researches it now with the Anthropic API (≈ $0.55, asks for your PIN)">Run now (≈ $0.55)</button>)}
+            {q.mode === "discover" && names.length > 1 && (
+              <button type="button" className="btn" onClick={() => runNowMulti(names)} title="Researches each one now with the Anthropic API, asks for your PIN">Run now — deep research (≈ ${(names.length * 0.55).toFixed(2)}, {names.length}{" "}× $0.55)</button>)}
           </div>
+          {q.mode === "discover" && names.length > 1 && <p className="note" style={{ marginTop: 8 }}>&quot;Search now&quot; is a narrower, free lookup (confirms it exists, a rough size/industry signal) — each one lands below with Add / Ignore. &quot;Run now&quot; is full paid research per company (revenue, ERP/S2P signals, contacts), added straight away.</p>}
           {nowMsg && <p className={`now-msg ${nowMsg.ok ? "ok" : "err"}`}>{nowMsg.text}{nowMsg.company && <> <a href="/research">Follow it in Data → Research Queue →</a> When it finishes it appears in <a href={`/?tab=accounts&country=${encodeURIComponent(q.region)}`}>{q.region} accounts →</a></>}</p>}
           {s && s.jobs.length > 0 && <div className="tablewrap"><table className="jobs-table"><thead><tr><th>Company name</th><th>Job</th><th>Region</th><th>How many</th><th>Status</th><th>Requested</th><th>Result</th><th></th></tr></thead>
-            <tbody>{s.jobs.slice(0, 10).map((j) => {
+            <tbody>{s.jobs.slice(0, 10).flatMap((j) => {
               // The routine's finish message names the company's real, correct name and region: "<Company> (<region>): <outcome>".
               const parsed = String(j.result || "").match(/^(.+)\(([A-Za-z ]+)\):\s*(.+)$/);
               const legacyHeld = parsed ? null : String(j.result || "").match(/held pending ([A-Za-z ]+?) activation/i);
               const realRegion = parsed ? parsed[2].trim() : j.region;
               const held = parsed ? /held pending activation/i.test(parsed[3]) : !!legacyHeld;
-              return <tr key={j.id}>
+              const statusCell = <><span className={`job-st ${j.status}`}>{j.status === "queued" ? "Waiting" : j.status === "running" ? "In progress" : j.status === "done" ? "Completed" : j.status === "error" ? "Failed" : j.status === "cancelled" ? "Cancelled" : j.status}</span>
+                {j.status === "queued" && <div className="muted">usually a minute or two — falls back to {nextRun()} if that doesn't fire</div>}{j.status === "running" && <div className="muted">started by the scheduled session</div>}</>;
+              // A multi-name discover job: several companies searched for free under one job, each awaiting an Add / Ignore decision.
+              if (j.mode === "discover" && j.details && j.details.length > 1) {
+                const n = j.details.length, pending = j.details.filter((d) => !d.decided).length;
+                return [...j.details.map((d, i) => (
+                  <tr key={`${j.id}-${i}`} className={i === 0 ? "run-group-top" : undefined}>
+                    <td className="wrap">{d.name}</td>
+                    {i === 0 && <td rowSpan={n}>{MODE[j.mode] || j.mode}</td>}
+                    {i === 0 && <td rowSpan={n}>{j.region}</td>}
+                    {i === 0 && <td rowSpan={n}>{j.count}</td>}
+                    {i === 0 && <td rowSpan={n}>{statusCell}</td>}
+                    {i === 0 && <td className="muted" rowSpan={n}>{fmtDateTime(j.requested_at)}<div>{j.requested_by}</div></td>}
+                    <td className="wrap">{d.status}{d.why_icp && <div className="muted">{d.why_icp}</div>}</td>
+                    <td className="wrap">{!d.decided ? <>
+                      <button type="button" className="btn-check ok" onClick={() => post({ action: "add_found", job_id: j.id, name: d.name }, `${d.name} added.`)}><span className="btn-check-box">✓</span> Add</button>
+                      <button type="button" className="btn-check no" onClick={() => post({ action: "ignore_found", job_id: j.id, name: d.name }, `${d.name} ignored — will resurface in 180 days if it grows.`)}><span className="btn-check-box">✓</span> Ignore</button>
+                    </> : <span className="muted" style={{ fontStyle: "italic" }}>{d.decided === "added" ? "Added" : "Ignored — resurfaces in 180 days"}</span>}</td>
+                  </tr>
+                )), pending > 1 && <tr key={`${j.id}-addall`}><td colSpan={8} className="jobs-addall">
+                  <button type="button" className="btn tiny" onClick={() => post({ action: "add_all_found", job_id: j.id }, `${pending} companies added.`)}>Add all {pending} to app</button>
+                </td></tr>];
+              }
+              return [<tr key={j.id}>
               <td>{j.mode === "company" ? (parsed ? parsed[1].trim() : j.company_name) : "—"}{j.website && <div className="muted">{j.website}</div>}</td>
-              <td>{MODE[j.mode] || j.mode}</td><td>{realRegion}</td><td>{j.count}</td><td><span className={`job-st ${j.status}`}>{j.status === "queued" ? "Waiting" : j.status === "running" ? "In progress" : j.status === "done" ? "Completed" : j.status === "error" ? "Failed" : j.status === "cancelled" ? "Cancelled" : j.status}</span>
-                {j.status === "queued" && <div className="muted">usually a minute or two — falls back to {nextRun()} if that doesn't fire</div>}{j.status === "running" && <div className="muted">started by the scheduled session</div>}</td>
+              <td>{MODE[j.mode] || j.mode}</td><td>{realRegion}</td><td>{j.count}</td><td>{statusCell}</td>
               <td className="muted">{fmtDateTime(j.requested_at)}<div>{j.requested_by}</div></td><td className="wrap">{j.result}
                 {j.status === "done" && (held
                   ? <div><a className="job-link" href="/settings#engine-pending">Waiting for {(parsed ? realRegion : legacyHeld?.[1]) || "region"} Region Activation →</a></div>
                   : <div><a className="job-link" href={j.slug ? `/?open=${encodeURIComponent(j.slug)}&country=${encodeURIComponent(realRegion)}` : `/?tab=accounts&country=${encodeURIComponent(realRegion)}`}>{j.slug ? `View ${parsed ? parsed[1].trim() : j.company_name || "the"} (${realRegion}) Account →` : `View the (${realRegion}) Accounts →`}</a></div>)}</td>
-              <td>{j.status === "queued" && <button type="button" className="btn tiny ghost" onClick={() => post({ action: "cancel", id: j.id }, "Job cancelled.")}>Cancel</button>}</td></tr>; })}</tbody></table></div>}
+              <td>{j.status === "queued" && <button type="button" className="btn tiny ghost" onClick={() => post({ action: "cancel", id: j.id }, "Job cancelled.")}>Cancel</button>}</td></tr>]; })}</tbody></table></div>}
         </div>
 
         {s?.log && s.log.length > 0 && <div className="eng-card"><div className="eng-head"><h3>Scheduled run history</h3></div>
