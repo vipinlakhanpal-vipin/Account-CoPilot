@@ -1,11 +1,15 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.34";
+export const APP_VERSION = "2.35";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.35", date: "2026-09-30", notes: "UAE's display name shortened from \"United Arab Emirates\" to \"UAE\" everywhere it's shown (Setup Wizard, Team invite, Define ICP), matching how it's already written everywhere else in the app.",
+    changes: [
+      { what: "Changed the shared region name for UAE from \"United Arab Emirates\" to \"UAE\" at its one source (lib/icpDefinition.mjs)", where: "Home → Setup Wizard region tiles, Setup → Team invite region picker, and anywhere else region names are shown", why: "Requested — it was the only place still spelling it out; every other list (Accounts filter, Dashboard) already just says \"UAE\"" },
+    ] },
   { version: "2.34", date: "2026-09-30", notes: "Define ICP's Change history now shows plain-English field names (\"S2P platforms to look for\", \"New companies found per day\") instead of raw internal paths (\"focus.platforms\", \"engine.discover_per_day\").",
     changes: [
       { what: "Added a label map so every field the Change history can mention (revenue, employees, focus, personas, engine, evidence, pipeline, currency, etc.) reads in plain English instead of its dotted internal path", where: "app/api/icp — Change history line", why: "Requested — the UAE entry ('focus.platforms: ... ; focus.erp: ... ; personas.roles: ...') was confusing next to the simple, readable Paused/Active entries" },
