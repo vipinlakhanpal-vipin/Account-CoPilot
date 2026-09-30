@@ -1,11 +1,15 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.31";
+export const APP_VERSION = "2.32";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.32", date: "2026-09-30", notes: "Define ICP page: input/select fields (daily counts, currency, rate) now have a light teal fill instead of plain white, matching the fields elsewhere in the app.",
+    changes: [
+      { what: "Every field on Define ICP (New companies to find per day, Companies to verify per day, Local currency, exchange rate, etc.) now has a light teal background instead of plain white/page background", where: "Setup → Define ICP", why: "Consistency with the same light-filled field style already used on the Home Setup Wizard" },
+    ] },
   { version: "2.31", date: "2026-09-30", notes: "Setup Wizard: Region and Company size are now one merged step — each region gets its own size rule (revenue, employees, listing, entity level) in the same small tile, instead of one shared rule applied to every checked region.",
     changes: [
       { what: "Merged the Region and Company size steps into one — each region is now its own small, light-filled tile with its checkbox plus its own Min net revenue, Min employees, Stock listing and Which entities count fields", where: "Home → Setup Wizard, step 1", why: "Requested so region and its size rule can be set in one place, and so Europe/USA can carry a different bar than the Gulf" },

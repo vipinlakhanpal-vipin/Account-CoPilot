@@ -679,7 +679,7 @@ td.chk-bad > span{background:color-mix(in srgb, #FF4D6A 16%, var(--surface));bor
 @media (max-width:560px){.icp-row,.icp-row.three{grid-template-columns:1fr}}
 .icp-field{display:flex;flex-direction:column;gap:4px;margin:0 0 10px;font:600 13px var(--body);color:var(--text-strong)}
 .icp-field small{font:400 12px var(--body);color:var(--muted)}
-.icp-field input,.icp-field select,.icp-tools select{font:500 14px var(--body);padding:7px 10px;border-radius:9px;border:1px solid rgba(var(--ink),.18);background:var(--bg);color:var(--text);min-width:0}
+.icp-field input,.icp-field select,.icp-tools select{font:500 14px var(--body);padding:7px 10px;border-radius:9px;border:1px solid transparent;background:var(--accent-soft);color:var(--text);min-width:0}
 .icp-num{display:flex;align-items:center;gap:6px}.icp-num input{flex:1;width:100%}.icp-num em{font:600 12px var(--body);color:var(--muted);font-style:normal;white-space:nowrap}
 .icp-label{margin:10px 0 6px;font:600 13px var(--body);color:var(--text-strong)}
 .icp-chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
