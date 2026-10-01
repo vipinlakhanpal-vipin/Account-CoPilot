@@ -315,7 +315,7 @@ h2 .count{font:600 12px var(--body);letter-spacing:.02em;text-transform:none;col
 .formula{background:var(--sunken);border:1px solid var(--line-2);border-left:3px solid var(--teal);border-radius:8px;padding:12px 14px;margin:10px 0;font-size:14px}
 h4.sub{margin:16px 0 6px;font:600 12px var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--teal)}
 ul.plain{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;max-width:90ch}
-.temp-pass{background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.45);border-radius:8px;padding:10px 12px}
+.temp-pass{background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.45);border-radius:8px;padding:10px 12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .temp-pass code{font:600 14px var(--mono);color:var(--warn-text)}
 .draft-email{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-top:8px}
 .draft-email-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px}

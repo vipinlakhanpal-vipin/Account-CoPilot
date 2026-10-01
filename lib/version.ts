@@ -1,11 +1,14 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.54";
+export const APP_VERSION = "2.55";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.55", date: "2026-10-01", notes: "Team: the one-time password and ready-to-send email (v2.54) were easy to miss sitting quietly below the invite form. They now appear in a popup that's impossible to miss, with Copy buttons for both the password and the email.", changes: [
+      { what: "The one-time password and draft email (after an invite or a password reset) now open in a popup dialog instead of an inline note below the form, with a Copy password button and a Copy email button", where: "components/TeamSettings.tsx", why: "Requested — make the one-time password impossible to miss and quick to copy" },
+    ] },
   { version: "2.54", date: "2026-10-01", notes: "Team: \"Email invitation\" was silently relying on Supabase's own invite mailer, which isn't configured (no SMTP/Resend) and sent nothing. It now creates the account the same reliable way \"Temporary password\" does, and additionally drafts a ready-to-send email (subject + body, the temporary password built in) with a Copy button — paste it into your own mail client until Resend is connected. The same draft now also appears after a password reset. Also added \"Delete\" per person — permanently removes their Supabase Auth account and role/region record, so a stuck invite (lost password, wrong details) can be wiped and redone from scratch.",
     changes: [
       { what: "\"Email invitation\" now creates the account with a one-time password (like \"Temporary password\" does) instead of calling Supabase's unconfigured invite mailer, and returns a ready-to-paste email (subject + body with the password and sign-in link) shown with a Copy button; the same draft is now shown after Reset password too", where: "app/api/team (POST), components/TeamSettings.tsx", why: "Reported — \"Email invitation\" was a dummy option that sent nothing; this gives a real, usable stand-in until Resend is wired up" },

@@ -67,6 +67,12 @@ export default function TeamSettings() {
       () => notify("Copied — paste it into an email and send.", "ok"),
       () => notify("Could not copy. Select the text and copy it manually.", "error"));
   }
+  function copyPassword() {
+    if (!temp) return;
+    navigator.clipboard.writeText(temp).then(
+      () => notify("Password copied.", "ok"),
+      () => notify("Could not copy. Select it and copy manually.", "error"));
+  }
   async function invite(e: React.FormEvent) {
     e.preventDefault();
     if (role === "standard" && !regions.length) { setMsg("Choose at least one region for this Standard User."); return; }
@@ -126,12 +132,27 @@ export default function TeamSettings() {
         <div><button className="btn primary">Invite</button></div>
       </form>
       {msg && <p className="note" style={{ marginTop: 8 }}>{msg}</p>}
-      {temp && <p className="temp-pass">Temporary password: <code>{temp}</code>. Copy it now and share it privately; it will not be shown again.</p>}
-      {draft && (
-        <div className="draft-email">
-          <div className="draft-email-head"><b>Ready to send</b><button type="button" className="btn tiny" onClick={copyDraft}>Copy email</button></div>
-          <p className="muted mono">Subject: {draft.subject}</p>
-          <pre>{draft.body}</pre>
+      {temp && (
+        <div className="wn-backdrop" onClick={() => { setTemp(""); setDraft(null); }}>
+          <div className="wn ask ask-primary" role="dialog" aria-modal="true" aria-labelledby="temp-title" onClick={(e) => e.stopPropagation()}>
+            <div className="wn-head">
+              <div><p className="wn-kicker">Copy this now</p><h2 id="temp-title">One-time password</h2></div>
+              <button type="button" className="wn-close" onClick={() => { setTemp(""); setDraft(null); }} aria-label="Close">×</button>
+            </div>
+            <div className="wn-body ask-body">
+              <p className="note">It will not be shown again — copy it (or the email below) and share it with them privately.</p>
+              <p className="temp-pass"><code>{temp}</code> <button type="button" className="btn tiny" onClick={copyPassword}>Copy password</button></p>
+              {draft && (
+                <div className="draft-email">
+                  <div className="draft-email-head"><b>Ready to send</b><button type="button" className="btn tiny" onClick={copyDraft}>Copy email</button></div>
+                  <p className="muted mono">Subject: {draft.subject}</p>
+                  <pre>{draft.body}</pre>
+                </div>
+              )}
+            </div>
+            <div className="wn-foot"><span /><span className="wn-actions">
+              <button type="button" className="btn primary" onClick={() => { setTemp(""); setDraft(null); }}>Done</button></span></div>
+          </div>
         </div>
       )}
       <div className="tablewrap" style={{ marginTop: 12 }}><table>
