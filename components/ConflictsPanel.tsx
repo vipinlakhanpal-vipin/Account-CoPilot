@@ -47,11 +47,13 @@ function Group({ g, isSuper, onResolved }: { g: ConflictGroup; isSuper: boolean;
             {canResolve && open && <input type="radio" name={g.key} checked={pick === i} onChange={() => setPick(i)} />}
             <div>
               <p>&ldquo;{c.value}&rdquo; {i === g.suggestedIndex && <span className="suggested-tag">Suggested</span>}</p>
-              <p className="note">{c.sources.length > 1 ? `Agreed by ${c.sources.length} sources — ` : ""}{c.sources.join(", ") || "Source not recorded"}</p>
+              <p className="note">{c.sources.length > 1 ? <b>{c.sources.length} sources agree: </b> : null}{c.sources.join(", ") || "Source not recorded"}</p>
             </div>
           </div>
         ))}
       </div>
+      {g.suggestedIndex === -1 && g.candidates.length > 1 && !g.resolved
+        && <p className="note conflict-tied">No source outweighs the other here — pick based on judgment.</p>}
       {g.resolution && <p className="note">{g.resolution}</p>}
       {canResolve && (open
         ? <button type="button" className="btn tiny primary" disabled={busy} onClick={apply}>{busy ? "Applying…" : "Apply"}</button>

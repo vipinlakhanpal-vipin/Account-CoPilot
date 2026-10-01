@@ -1,11 +1,16 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.49";
+export const APP_VERSION = "2.50";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.50", date: "2026-10-01", notes: "Fixed: the Conflicts redesign (v2.49) was marking a candidate \"Suggested\" even when it had no real edge over the other — e.g. two single-source candidates that both happened to come from Seamless. A pick is now only labelled Suggested when it actually has more agreeing sources, or a stronger source tier, than the runner-up; otherwise the group says plainly that no source outweighs the other. Also made multi-source agreement read clearer (\"2 sources agree: …\").",
+    changes: [
+      { what: "A candidate is only marked Suggested when it strictly beats the runner-up on agreeing-source count or source tier; a true tie (including two different single-source mentions of the same provider) shows \"No source outweighs the other here — pick based on judgment\" instead of an arbitrary pick", where: "lib/conflicts.ts (pickSuggested)", why: "Reported — the first-listed candidate was being suggested even when both sides were equally (un)supported, e.g. two separate Seamless lookups" },
+      { what: "When a value is backed by more than one source, the candidate line now leads with \"N sources agree:\" in bold before listing them", where: "components/ConflictsPanel.tsx", why: "Requested — make real multi-source agreement unambiguous at a glance" },
+    ] },
   { version: "2.49", date: "2026-10-01", notes: "Conflicts tab and the account brief's \"Conflicts retained\" section redesigned: instead of a flat Value A/B table, conflicts are now grouped by company, then by person and field, merging every report ever filed for that person into one list of candidate values with their sources. The value backed by the most agreeing sources (then by source strength) is marked Suggested. A Super Admin can review and apply a value, which writes it to the real record and clears the conflict everywhere it's shown.",
     changes: [
       { what: "New grouping: all historical conflict rows for the same company + person + field are merged into one card showing every distinct value seen, with its source(s) — ranked by how many independent sources agree, then by source strength (official filing/website > Claude research with a cited link > Seamless/aggregator estimate > your own workbook entry) as a tiebreak. The top-ranked value is labelled Suggested — a transparent, source-strength suggestion, never a claimed fact-check", where: "New lib/conflicts.ts (groupConflicts), components/ConflictsPanel.tsx" , why: "Requested — the old table showed two raw values with no way to tell which sources backed which, or whether several reports actually agreed" },

@@ -179,6 +179,7 @@ h2{font-family:var(--display);font-weight:600;font-size:16px;letter-spacing:.06e
 .conflict-candidate p{margin:0}
 .conflict-candidate .note{margin-top:1px}
 .suggested-tag{font:700 9px var(--body);background:var(--teal);color:var(--accent-ink);padding:1px 7px;border-radius:999px;margin-left:4px}
+.conflict-tied{font-style:italic;margin-top:2px}
 .conflict-group .btn{margin-top:6px}
 .bars{display:flex;flex-direction:column;gap:8px}
 .bar{display:grid;grid-template-columns:minmax(100px,40%) 1fr 34px;gap:10px;align-items:center;font-size:12.5px}

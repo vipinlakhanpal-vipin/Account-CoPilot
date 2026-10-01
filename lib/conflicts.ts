@@ -10,6 +10,16 @@ export type ConflictGroup = {
   candidates: Candidate[]; suggestedIndex: number; rowIds: string[]; resolved: boolean; resolution?: string;
 };
 
+// A pick is only shown as "Suggested" when the top candidate actually beats the runner-up on the stated
+// criteria (strictly more agreeing sources, or a strictly stronger source tier). Two single-source candidates
+// tied on both — even if both happen to cite the same provider (e.g. two different Seamless lookups) — are
+// a real, unresolved disagreement: no suggestion, left for a person to judge.
+function pickSuggested(candidates: Candidate[]): number {
+  if (candidates.length < 2) return -1;
+  const [top, second] = candidates;
+  return (top.sources.length > second.sources.length || top.tier < second.tier) ? 0 : -1;
+}
+
 // Tier 1 official filing/website, 2 Claude research with a cited link, 3 aggregator estimate (Seamless/ZoomInfo/...),
 // 4 the user's own workbook entry ("Existing" — trusted but not independently re-verified), 5 unclassified.
 function tierOf(source: string): number {
@@ -43,7 +53,7 @@ export function groupConflicts(rows: Row[]): ConflictGroup[] {
   }
   for (const g of groups.values()) {
     g.candidates.sort((x, y) => y.sources.length - x.sources.length || x.tier - y.tier);
-    g.suggestedIndex = g.candidates.length > 1 ? 0 : -1;
+    g.suggestedIndex = pickSuggested(g.candidates);
   }
   return [...groups.values()].sort((x, y) => x.company.localeCompare(y.company) || x.entity.localeCompare(y.entity));
 }
