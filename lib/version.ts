@@ -1,11 +1,15 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.55";
+export const APP_VERSION = "2.56";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.56", date: "2026-10-01", notes: "Fixed: Accounts, Pipeline, Stakeholders, S2P signals, ERP, Sources and Reports tables silently stopped rendering after 800 rows, with no indication anything was cut off (the count shown above the table was always the full, correct total). Also added \"Change password\" to the profile menu, so anyone who signed in with a one-time temporary password can set their own — mentioned in the invite email text.", changes: [
+      { what: "Removed a hard 800-row cap on the table body in the shared table component — every table now renders every row that matches the current filters, matching the count already shown above it", where: "components/CoPilotApp.tsx (FilterTable)", why: "Reported — Source evidence, Accounts, Stakeholders, S2P signals and ERP tables were not appearing in full" },
+      { what: "Added a \"Change password\" field to the profile menu (top right) — sets your own password after signing in, no email required; the invite email now tells new colleagues to use it after their first sign-in", where: "components/ProfileMenu.tsx; app/api/team (draftInvite text)", why: "Requested — there was no way for someone to move off a temporary password on their own" },
+    ] },
   { version: "2.55", date: "2026-10-01", notes: "Team: the one-time password and ready-to-send email (v2.54) were easy to miss sitting quietly below the invite form. They now appear in a popup that's impossible to miss, with Copy buttons for both the password and the email.", changes: [
       { what: "The one-time password and draft email (after an invite or a password reset) now open in a popup dialog instead of an inline note below the form, with a Copy password button and a Copy email button", where: "components/TeamSettings.tsx", why: "Requested — make the one-time password impossible to miss and quick to copy" },
     ] },

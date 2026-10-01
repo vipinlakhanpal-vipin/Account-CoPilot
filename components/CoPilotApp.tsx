@@ -172,7 +172,7 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "
         <table>
           <thead><tr><th className="num">#</th>{cols.map((c) => <th key={c.h} className={c.cls}>{c.h}{c.tip && <InfoTip k={c.tip} w={tipW} />}</th>)}</tr></thead>
           <tbody>
-            {out.slice(0, 800).map((r, i) => (
+            {out.map((r, i) => (
               <tr key={r.id || i} className={onRow ? "click" : undefined} tabIndex={onRow ? 0 : undefined}
                 onClick={(e) => { if (onRow && !(e.target as HTMLElement).closest("a")) onRow(r); }}
                 onKeyDown={(e) => { if (onRow && e.key === "Enter") onRow(r); }}>

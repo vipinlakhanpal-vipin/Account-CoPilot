@@ -34,6 +34,7 @@ function draftInvite(opts: { name?: string; email: string; temp: string; origin:
   const subject = "Your Account CoPilot access";
   const body = `${greet}\n\n${opts.invitedBy} has set you up with access to Account CoPilot.\n\n`
     + `Sign in here: ${opts.origin}/login\nEmail: ${opts.email}\nTemporary password: ${opts.temp}\n\n`
+    + `Once you're signed in, open your profile (top right) and use "Change password" to set your own.\n\n`
     + `If you have any trouble signing in, just reply to this email.`;
   return { subject, body };
 }
