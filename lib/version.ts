@@ -1,11 +1,17 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.56";
+export const APP_VERSION = "2.57";
+
+// Shared with the login page, so both read the one tagline.
+export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.57", date: "2026-10-01", notes: "Login page now shows the same tagline as the main header — \"AI Autonomous Agent for Account Intelligence\" — in place of the older \"B2B procurement intelligence\" line, with the current version number next to it.", changes: [
+      { what: "Replaced the login page's tagline (\"B2B procurement intelligence\") with \"AI Autonomous Agent for Account Intelligence\", the same TAGLINE now shared with the header, shown with the current app version", where: "app/login/page.tsx; TAGLINE moved to lib/version.ts so Header and the login page read one shared constant", why: "Requested — keep the login page's tagline consistent with the header's, and keep showing the version there" },
+    ] },
   { version: "2.56", date: "2026-10-01", notes: "Fixed: Accounts, Pipeline, Stakeholders, S2P signals, ERP, Sources and Reports tables silently stopped rendering after 800 rows, with no indication anything was cut off (the count shown above the table was always the full, correct total). Also added \"Change password\" to the profile menu, so anyone who signed in with a one-time temporary password can set their own — mentioned in the invite email text.", changes: [
       { what: "Removed a hard 800-row cap on the table body in the shared table component — every table now renders every row that matches the current filters, matching the count already shown above it", where: "components/CoPilotApp.tsx (FilterTable)", why: "Reported — Source evidence, Accounts, Stakeholders, S2P signals and ERP tables were not appearing in full" },
       { what: "Added a \"Change password\" field to the profile menu (top right) — sets your own password after signing in, no email required; the invite email now tells new colleagues to use it after their first sign-in", where: "components/ProfileMenu.tsx; app/api/team (draftInvite text)", why: "Requested — there was no way for someone to move off a temporary password on their own" },

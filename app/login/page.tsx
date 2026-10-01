@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import SecretInput from "@/components/SecretInput";
-import { APP_VERSION } from "@/lib/version";
+import { APP_VERSION, TAGLINE } from "@/lib/version";
 import Logo from "@/components/Logo";
 
 export default function Login() {
@@ -44,7 +44,7 @@ export default function Login() {
   return (
     <main className="login">
       <div className="login-card">
-        <div className="brand"><Logo /><div className="brand-text"><span className="appname">Account CoPilot</span><span className="brand-sub">B2B procurement intelligence · v{APP_VERSION}</span></div></div>
+        <div className="brand"><Logo /><div className="brand-text"><span className="appname">Account CoPilot</span><span className="brand-sub">{TAGLINE} · v{APP_VERSION}</span></div></div>
         {state === "sent" ? (
           <p>If <b>{email}</b> has an account, a sign-in link is on its way. You can close this tab.</p>
         ) : (

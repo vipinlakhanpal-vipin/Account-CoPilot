@@ -10,7 +10,7 @@ import GlobalSearchBar from "@/components/GlobalSearchBar";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useNewVersionInfo } from "@/components/useVersion";
 import { notify } from "@/components/Confirm";
-import { APP_VERSION } from "@/lib/version";
+import { APP_VERSION, TAGLINE } from "@/lib/version";
 
 // Main tabs with sub-tabs underneath (Coupa-style). A main tab opens its first sub-tab.
 const GROUPS: { label: string; items: [string, string][] }[] = [
@@ -32,7 +32,6 @@ const TAB_LABEL: Record<string, string> = { pipeline: "Pipeline", accounts: "Acc
 const PAGE_LABEL: Record<string, string> = { "/research": "Research Queue", "/settings": "Settings", "/guide": "Learn Me", "/icp": "Define ICP", "/team": "Team", "/home": "Home" };
 
 // Rendered once in the root layout, so it stays put across page changes (no rebuild, no jump).
-const TAGLINE = "AI Autonomous Agent for Account Intelligence";
 export default function Header({ meta }: { meta: string }) {
   const { latest, releases, author } = useNewVersionInfo();
   const [showChanges, setShowChanges] = useState(false);

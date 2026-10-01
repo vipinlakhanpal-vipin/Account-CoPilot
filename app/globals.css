@@ -264,6 +264,7 @@ textarea{min-height:64px;resize:vertical}
 .login{min-height:100vh;display:grid;place-items:center;padding:24px;background:var(--stripes),radial-gradient(900px 500px at 70% 0%, rgba(46,196,166,.14), transparent 60%),var(--bg)}
 .login-card{width:min(420px,100%);background:linear-gradient(180deg,var(--surface-2),var(--surface));border:1px solid var(--line-2);border-radius:14px;padding:28px;box-shadow:0 20px 50px rgba(3,8,20,.45)}
 .login-card .brand{margin:0 0 20px}
+.login-card .brand-sub{max-width:none}
 .login-card form{display:flex;flex-direction:column;gap:10px}
 
 @media (max-width:640px){.wrap{padding-inline:16px}header.top{padding-inline:10px}.kpi b{font-size:28px}.brief-body,.brief-head{padding-inline:16px}.hero{padding:18px}}
