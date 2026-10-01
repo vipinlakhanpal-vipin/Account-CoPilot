@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { REGIONS } from "@/lib/icpDefinition.mjs";
 import { fmtDate } from "@/lib/dates";
+import { ask } from "@/components/Confirm";
 
 type Role = "super_admin" | "standard";
 type U = { id: string; email: string; name: string; invited_by: string; joined_from: string; created_at: string; last_sign_in: string | null; role: Role; regions: string[] };
@@ -62,6 +63,15 @@ export default function TeamSettings() {
     setMsg(j.message || j.error || ""); if (j.tempPassword) setTemp(j.tempPassword);
     if (r.ok) { setEmail(""); setName(""); setRegions([]); load(); }
   }
+  async function resetPassword(u: U) {
+    if (!(await ask({ title: "Set a new temporary password?", body: u.email,
+      points: ["Their old password (if they never got it, or it was lost) stops working.", "You'll see the new one-time password here — copy it and share it with them privately."],
+      confirm: "Set new password", tone: "primary" }))) return;
+    setMsg("Working…"); setTemp("");
+    const r = await fetch("/api/team", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "reset_password", id: u.id }) });
+    const j = await r.json();
+    setMsg(j.message || j.error || ""); if (j.tempPassword) setTemp(j.tempPassword);
+  }
   async function saveAccess(u: U) {
     const x = edit[u.id]; if (!x) return;
     const r = await fetch("/api/team", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: u.id, ...x }) });
@@ -94,7 +104,7 @@ export default function TeamSettings() {
       {msg && <p className="note" style={{ marginTop: 8 }}>{msg}</p>}
       {temp && <p className="temp-pass">Temporary password: <code>{temp}</code>. Copy it now and share it privately; it will not be shown again.</p>}
       <div className="tablewrap" style={{ marginTop: 12 }}><table>
-        <thead><tr><th className="num">#</th><th>Name</th><th>Email</th><th>Role</th><th>Region(s)</th><th>Change access</th><th>Invited by</th><th>Joined</th><th>Last sign-in</th></tr></thead>
+        <thead><tr><th className="num">#</th><th>Name</th><th>Email</th><th>Role</th><th>Region(s)</th><th>Change access</th><th>Invited by</th><th>Joined</th><th>Last sign-in</th><th></th></tr></thead>
         <tbody>{users.map((u, i) => {
           const x = edit[u.id];
           return (
@@ -108,7 +118,8 @@ export default function TeamSettings() {
                   </div></div>
                 : <button type="button" className="btn" onClick={() => setEdit((m) => ({ ...m, [u.id]: { role: u.role, regions: u.regions } }))}>Change</button>}</td>
               <td className="muted">{u.invited_by || "—"}</td><td className="mono">{fmtDate(u.created_at)}</td>
-              <td className="mono">{u.last_sign_in ? fmtDate(u.last_sign_in) : "Not yet"}</td></tr>);
+              <td className="mono">{u.last_sign_in ? fmtDate(u.last_sign_in) : "Not yet"}</td>
+              <td>{!u.last_sign_in && <button type="button" className="btn tiny" onClick={() => resetPassword(u)} title="They haven't signed in yet — set a fresh one-time password to share with them">Reset password</button>}</td></tr>);
         })}</tbody></table></div>
     </div>
   );

@@ -41,7 +41,21 @@ export async function GET() {
 // mode "email" asks Supabase to send an invitation email.
 export async function POST(req: Request) {
   const g = await superOnly(); if ("error" in g) return g.error;
-  const { email, name, mode, role, regions } = await req.json().catch(() => ({}));
+  const body = await req.json().catch(() => ({}));
+
+  // Someone already created with a temporary password that never reached them (lost, or the admin didn't copy it)
+  // has no other way back in: re-inviting fails with "already has an account", so this sets a fresh one instead.
+  if (body.action === "reset_password") {
+    const { id } = body;
+    if (typeof id !== "string") return NextResponse.json({ error: "Bad request." }, { status: 400 });
+    const db = supabaseAdmin();
+    const temp = randomBytes(9).toString("base64url");
+    const { data, error } = await db.auth.admin.updateUserById(id, { password: temp });
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    return NextResponse.json({ ok: true, tempPassword: temp, message: `New temporary password set for ${data.user.email}.` });
+  }
+
+  const { email, name, mode, role, regions } = body;
   if (typeof email !== "string" || !/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(email)) return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
   if (!emailAllowed(email)) return NextResponse.json({ error: "That email domain is not allowed. Add it to ALLOWED_EMAIL_DOMAINS in Vercel first." }, { status: 400 });
   const acc = clean(role, regions);

@@ -1,11 +1,14 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.52";
+export const APP_VERSION = "2.53";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.53", date: "2026-10-01", notes: "Team: added a \"Reset password\" action for anyone who hasn't signed in yet. Previously, if a \"Temporary password\" invite's one-time password was lost before it reached them, re-inviting the same email failed with \"That person already has an account\" and there was no way back in. Now their account can be given a fresh one-time password instead.", changes: [
+      { what: "Added a \"Reset password\" button, shown only for someone who hasn't signed in yet, that sets a brand-new one-time temporary password on their existing account and shows it once to copy and share — the same flow as the original invite, without needing to delete and recreate the account", where: "Settings → Team; new action on app/api/team (POST action \"reset_password\", Super-Admin gated), components/TeamSettings.tsx", why: "Reported — re-inviting pavel@scp-worldwide.com after his original temporary password was never shared with him failed with \"already has an account\", and there was no recovery path" },
+    ] },
   { version: "2.52", date: "2026-10-01", notes: "Conflicts: tightened the Suggested rule to the actual crux — 2+ sources landing on the same (or equivalent) value is corroboration and gets Suggested; a value backed by only 1 source, with nothing else corroborating it, is always left as a judgment call for a person, even if that lone source outranks the other lone source on tier. Source tier now only breaks a tie between two values that are each already corroborated by 2+ sources.",
     changes: [
       { what: "pickSuggested no longer lets source tier alone promote a single-source value over another single-source value — a Suggested tag now requires the top value to have strictly more agreeing sources, with tier used only to break a tie between two already-corroborated (2+ source) values", where: "lib/conflicts.ts (pickSuggested)", why: "Requested — the crux is \"more than 1 source agreeing\" triggers a suggestion; single-source-vs-single-source should always be left to the user regardless of which source looks stronger" },
