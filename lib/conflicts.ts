@@ -2,24 +2,27 @@ import type { Row } from "@/lib/data";
 
 // Groups the flat conflicts table (one row per disagreement found, possibly several per person/field over time)
 // into one card per company > person > field, merging every value ever seen for that pair — recognizing a
-// known abbreviation vs. its spelled-out form (Title only) as agreement, not a third distinct value — and
-// ranking the candidates so the UI can suggest one. This is a transparent, source-strength suggestion — never
-// a claimed fact-check — so the ranking is: (1) how many independent sources agree on a value, then (2) tier
-// as a tiebreak.
+// known abbreviation vs. its spelled-out form (Title only) as agreement, not a third distinct value. The crux:
+// 2+ sources landing on the same value is corroboration, so that value is Suggested and the rest are left as
+// alternatives to review; a single source with nothing else corroborating it is a judgment call for a person,
+// never an automatic pick — source tier only breaks a tie between two values that are both already corroborated.
 export type Candidate = { value: string; sources: string[]; tier: number };
 export type ConflictGroup = {
   key: string; company_id: string; company: string; entity: string; field: string;
   candidates: Candidate[]; suggestedIndex: number; rowIds: string[]; resolved: boolean; resolution?: string;
 };
 
-// A pick is only shown as "Suggested" when the top candidate actually beats the runner-up on the stated
-// criteria (strictly more agreeing sources, or a strictly stronger source tier). Two single-source candidates
-// tied on both — even if both happen to cite the same provider (e.g. two different Seamless lookups) — are
-// a real, unresolved disagreement: no suggestion, left for a person to judge.
+// Suggesting a value requires real corroboration: at least 2 independent sources landing on the same (or
+// equivalent) value. Source tier only breaks a tie between two values that are BOTH already multi-sourced —
+// it never promotes a single-source value over another single-source value. When every candidate here has
+// just one source and nothing else was found to corroborate it, that's a genuine single-witness disagreement:
+// no suggestion, left for a person to judge.
 function pickSuggested(candidates: Candidate[]): number {
   if (candidates.length < 2) return -1;
   const [top, second] = candidates;
-  return (top.sources.length > second.sources.length || top.tier < second.tier) ? 0 : -1;
+  if (top.sources.length < 2) return -1;
+  if (top.sources.length > second.sources.length) return 0;
+  return (top.sources.length === second.sources.length && top.tier < second.tier) ? 0 : -1;
 }
 
 // Title variants that mean the same role (abbreviation vs. spelled out) must count as agreement, not a 3-way

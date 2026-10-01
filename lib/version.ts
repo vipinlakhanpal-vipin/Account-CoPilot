@@ -1,11 +1,15 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.51";
+export const APP_VERSION = "2.52";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.52", date: "2026-10-01", notes: "Conflicts: tightened the Suggested rule to the actual crux — 2+ sources landing on the same (or equivalent) value is corroboration and gets Suggested; a value backed by only 1 source, with nothing else corroborating it, is always left as a judgment call for a person, even if that lone source outranks the other lone source on tier. Source tier now only breaks a tie between two values that are each already corroborated by 2+ sources.",
+    changes: [
+      { what: "pickSuggested no longer lets source tier alone promote a single-source value over another single-source value — a Suggested tag now requires the top value to have strictly more agreeing sources, with tier used only to break a tie between two already-corroborated (2+ source) values", where: "lib/conflicts.ts (pickSuggested)", why: "Requested — the crux is \"more than 1 source agreeing\" triggers a suggestion; single-source-vs-single-source should always be left to the user regardless of which source looks stronger" },
+    ] },
   { version: "2.51", date: "2026-10-01", notes: "Conflicts: a Title conflict like CFO vs. Chief Finance Officer vs. Account Manager was being treated as three separate, equally-unsupported values — it's really two sources agreeing on one role (just one abbreviated) against one outlier. Known title abbreviations (CFO, CEO, COO, CTO, CIO, CMO, CPO, CRO, CDO, CHRO, EVP/SVP/VP, MD, GM) now count as the same value as their spelled-out form, so agreement is recognized and the outlier is correctly left unsuggested.",
     changes: [
       { what: "Title values are now compared by a canonical form that treats a common abbreviation and its spelled-out equivalent (e.g. \"CFO\" / \"Chief Finance Officer\" / \"Chief Financial Officer\") as the same candidate, merging their sources — the display value becomes the more fully spelled-out form once two sources agree", where: "lib/conflicts.ts (canonicalOf, TITLE_ALIASES)", why: "Requested — abbreviation vs. full title was wrongly counted as a 3rd disagreeing value instead of 2 sources agreeing" },
