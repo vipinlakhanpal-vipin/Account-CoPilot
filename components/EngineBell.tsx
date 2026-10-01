@@ -23,9 +23,11 @@ export default function EngineBell() {
     const onFocus = () => { if (document.visibilityState === "visible") load(); };
     document.addEventListener("visibilitychange", onFocus);
     window.addEventListener("focus", onFocus);
+    // mousedown (not click) — a resize-corner drag reliably starts with mousedown on the element itself, so this
+    // doesn't misfire the way "click" can once a native CSS resize drag changes what ends up under the cursor.
     const close = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
-    document.addEventListener("click", close);
-    return () => { clearInterval(t); document.removeEventListener("visibilitychange", onFocus); window.removeEventListener("focus", onFocus); document.removeEventListener("click", close); };
+    document.addEventListener("mousedown", close);
+    return () => { clearInterval(t); document.removeEventListener("visibilitychange", onFocus); window.removeEventListener("focus", onFocus); document.removeEventListener("mousedown", close); };
   }, []);
   const unread = entries.filter((e) => e.at > seen).length;
   const toggle = () => {

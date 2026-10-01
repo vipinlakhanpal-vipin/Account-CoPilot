@@ -12,6 +12,7 @@ const LABEL: Record<string, string> = { banking_financial: "Banking & financial"
 const FIELD_LABEL: Record<string, string> = {
   name: "Company name", website: "Website", hq: "HQ", industries: "Industries", countries: "Countries", regions: "Regions", ownership: "Ownership",
   revenue: "Revenue", employees: "Employees", erp: "ERP", procurement: "Procurement", integration: "Integration", triggers: "Triggers", financial: "Financial",
+  icpStatus: "ICP status", listing: "Listing status", signal: "S2P signal",
   firstName: "First name", lastName: "Last name", title: "Title", email: "Email", phone: "Phone", linkedin: "LinkedIn",
   seniority: "Seniority", departments: "Departments", roles: "Roles", intelligence: "Intelligence", engagement: "Engagement",
 };
@@ -117,6 +118,11 @@ export default function DiscoveryPanel({ criteria: applied, onApply, onSave, sav
           <Section title="Company size" open>
             <Chips label="Annual revenue" options={OPTIONS.revenue} value={co.revenue} onChange={(v) => setCo("revenue", v)} />
             <Chips label="Employees" options={OPTIONS.employees} value={co.employees} onChange={(v) => setCo("employees", v)} />
+          </Section>
+          <Section title="Status & signal" open>
+            <Chips label="ICP status" options={OPTIONS.icpStatus} value={co.icpStatus} onChange={(v) => setCo("icpStatus", v)} />
+            <Chips label="Listing status" options={OPTIONS.listing} value={co.listing} onChange={(v) => setCo("listing", v)} />
+            <Chips label="S2P signal" options={OPTIONS.signal} value={co.signal} onChange={(v) => setCo("signal", v)} />
           </Section>
           <Section title="Procurement & spend intelligence" open>
             <p className="dp-q">Show procurement spend and transaction estimates on account briefs?</p>

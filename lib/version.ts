@@ -1,11 +1,19 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.46";
+export const APP_VERSION = "2.47";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.47", date: "2026-10-01", notes: "Search bar now shows results in a dropdown (same pattern as the bell/suggestions popover) instead of navigating away immediately; added ICP status, Listing status and S2P signal as new searchable/filterable fields; fixed a bug where resizing the bell or Suggestions popover closed it.",
+    changes: [
+      { what: "New /api/search endpoint runs the parsed query through the same hard filters (companyPasses) the Discovery panel uses, scoped to the signed-in user's regions, and returns up to 8 matches plus a total count", where: "app/api/search" , why: "Powers the dropdown without duplicating the filter logic" },
+      { what: "The header search bar now shows a dropdown table of matches as you type (debounced) or on Enter — click a row to jump straight to that account, or click \"View all N in Accounts\" to open the full filtered list. Nothing navigates away until you click something", where: "Header, all pages", why: "Requested — a dropdown preview is more useful than an immediate page jump for narrow lookups" },
+      { what: "Added three new filterable fields: ICP status, Listing status, and S2P signal — as chip filters in the Discovery panel, and as free-text keywords in the search bar (\"icp = verified\", \"listing = listed\", \"signal = strong\")", where: "lib/icp.ts, components/DiscoveryPanel.tsx, lib/globalSearch.ts", why: "Requested — these were searchable in the data but not exposed as filters anywhere" },
+      { what: "Search bar shows a spinning \"Searching…\" indicator while a query is in flight", where: "components/GlobalSearchBar.tsx", why: "Requested visual feedback while a search runs" },
+      { what: "Fixed: dragging the resize corner on the bell or Suggestions popover closed it immediately — the outside-click detection now uses mousedown instead of click, since a resize drag's release point isn't reliably reported as inside the element", where: "components/EngineBell.tsx, components/SuggestionsButton.tsx", why: "Reported bug" },
+    ] },
   { version: "2.46", date: "2026-09-30", notes: "Two new tiles on the About page, above the existing 4: \"Free Daily Search Engine job\" and \"Paid Search Engine Job\" — plain-English, bulleted explanations of exactly what each one does and doesn't do, and what keeps updating on its own versus what needs paying for again.",
     changes: [
       { what: "Added \"Free Daily Search Engine job\" (teal) and \"Paid Search Engine Job\" (gold) tiles side by side, above the existing 4-tile grid, each with bullet points covering exactly what that tier adds to a company's record", where: "Home → About Account CoPilot", why: "Requested — this distinction (what free finds vs. what paid profiles) wasn't documented anywhere on the page" },

@@ -25,9 +25,11 @@ export default function SuggestionsButton() {
   const load = () => fetch("/api/suggestions").then((r) => (r.ok ? r.json() : null)).then((j) => { if (j) { setItems(j.items || []); setIsSuper(!!j.isSuper); } }).catch(() => {});
   useEffect(() => {
     load();
+    // mousedown (not click) — a resize-corner drag reliably starts with mousedown on the element itself, so this
+    // doesn't misfire the way "click" can once a native CSS resize drag changes what ends up under the cursor.
     const close = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
-    document.addEventListener("click", close);
-    return () => document.removeEventListener("click", close);
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
   }, []);
 
   async function submit() {

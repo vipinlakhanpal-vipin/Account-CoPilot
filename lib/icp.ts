@@ -24,6 +24,9 @@ export const OPTIONS = {
   departments: ["PROCUREMENT", "SUPPLY CHAIN", "FINANCE", "IT", "TRANSFORMATION", "EXECUTIVE", "OTHER"],
   intelligence: ["Decision Maker", "Influencer", "Champion", "Technical Evaluator", "Economic Buyer"],
   engagement: ["Recently Promoted", "New Hire", "Changed Company", "Posted Procurement Content", "Attended Procurement Event", "Active on LinkedIn"],
+  icpStatus: ["ICP — Verified", "ICP — Likely", "ICP — Needs check", "Not ICP", "Unknown"],
+  listing: ["Listed", "Private", "Government-owned", "Subsidiary of listed group", "Unknown"],
+  signal: ["VERY STRONG SIGNAL", "STRONG SIGNAL", "MODERATE SIGNAL", "WEAK SIGNAL", "NO SIGNAL", "CONFLICTING SIGNAL"],
 } as const;
 /** Engagement signals that need a data source the app does not have yet (shown disabled in the panel). */
 export const UNAVAILABLE_ENGAGEMENT = ["Posted Procurement Content", "Attended Procurement Event", "Active on LinkedIn"];
@@ -32,6 +35,7 @@ export type Criteria = {
   company: {
     name: string; website: string; hq: string; industries: string[]; countries: string[]; regions: string[]; ownership: string[];
     revenue: string[]; employees: string[]; erp: string[]; procurement: string[]; integration: string[]; triggers: string[]; financial: string[];
+    icpStatus: string[]; listing: string[]; signal: string[];
   };
   contact: {
     firstName: string; lastName: string; title: string; email: string; phone: string; linkedin: string;
@@ -43,7 +47,8 @@ export type Criteria = {
 /** Default = the current ICP: revenue ≥ $250M, 100+ employees, UAE. */
 export const DEFAULT_CRITERIA: Criteria = {
   company: { name: "", website: "", hq: "", industries: [], countries: ["UAE"], regions: [], ownership: [], revenue: ["$250M-$500M", "$500M-$1B", "$1B-$5B", "$5B+"],
-    employees: ["100-250", "250-500", "500-1000", "1000-5000", "5000+"], erp: [], procurement: [], integration: [], triggers: [], financial: [] },
+    employees: ["100-250", "250-500", "500-1000", "1000-5000", "5000+"], erp: [], procurement: [], integration: [], triggers: [], financial: [],
+    icpStatus: [], listing: [], signal: [] },
   contact: { firstName: "", lastName: "", title: "", email: "", phone: "", linkedin: "", seniority: [], departments: [], roles: [], intelligence: [], engagement: [] },
   showSpend: false,
 };
@@ -335,6 +340,9 @@ export function companyPasses(a: Row, c: Criteria): boolean {
   if (k.name && !s(a.company_name).toLowerCase().includes(k.name.toLowerCase())) return false;
   if (k.website && !`${s(a.company_website)} ${s(a.domain)}`.toLowerCase().includes(k.website.toLowerCase())) return false;
   if (k.hq && !`${s(a.hq_city)} ${s(a.country)}`.toLowerCase().includes(k.hq.toLowerCase())) return false;
+  if (k.icpStatus.length && !k.icpStatus.includes(s(a.icp_status))) return false;
+  if (k.listing.length && !k.listing.some((l) => s(a.listing_status).toLowerCase().includes(l.toLowerCase()))) return false;
+  if (k.signal.length && !k.signal.includes(s(a.s2p_signal_level))) return false;
   return true;
 }
 

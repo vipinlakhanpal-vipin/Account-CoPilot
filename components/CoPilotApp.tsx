@@ -219,7 +219,9 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
     if (!gq) return;
     const parsed = parseGlobalQuery(gq);
     setCriteria((c) => ({ ...c, company: { ...c.company, name: parsed.name || c.company.name,
-      ...(parsed.revenue.length ? { revenue: parsed.revenue } : {}), ...(parsed.employees.length ? { employees: parsed.employees } : {}) } }));
+      ...(parsed.revenue.length ? { revenue: parsed.revenue } : {}), ...(parsed.employees.length ? { employees: parsed.employees } : {}),
+      ...(parsed.icpStatus.length ? { icpStatus: parsed.icpStatus } : {}), ...(parsed.listing.length ? { listing: parsed.listing } : {}),
+      ...(parsed.signal.length ? { signal: parsed.signal } : {}) } }));
     setCollapsed(false);
     try { localStorage.setItem("dp-collapsed", "0"); } catch {}
     const next = new URLSearchParams(params.toString()); next.delete("gq");
