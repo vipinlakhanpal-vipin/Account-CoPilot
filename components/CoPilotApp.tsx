@@ -13,6 +13,8 @@ import Hero from "@/components/Hero";
 import type { AllData, Row } from "@/lib/data";
 import { ALL, COUNTRIES, DEFAULT_COUNTRY, countryCode } from "@/lib/countries";
 import DiscoveryPanel from "@/components/DiscoveryPanel";
+import ConflictGroupsView from "@/components/ConflictsPanel";
+import { groupConflicts } from "@/lib/conflicts";
 import { SOURCES, indexSources, evidenceGroup, originName } from "@/lib/sources";
 import { buildPeople, contributorOf, TRUST_ORDER, type Person, type Trust } from "@/lib/people";
 import { supabaseBrowser } from "@/lib/supabase/browser";
@@ -410,12 +412,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
         { h: "Status", cell: (r) => <StatusTag s={r.status} /> }, { h: "Evidence", cell: (r) => r.evidence, wrap: true }, { h: "Source", cell: (r) => <Ext href={r.source_url}>source</Ext> }]}
       onRow={openRow} />;
   } else if (tab === "conflicts") {
-    view = <FilterTable unit="conflicts" title="Conflicts" note="Both values are kept. Nothing is overwritten." rows={data.conflicts}
-      search={(c) => [c.company, c.entity, c.field, c.value_a, c.value_b].join(" ")} filters={[{ label: "Field", get: (c) => c.field }]}
-      cols={[{ h: "Company", cell: (c) => c.company }, { h: "Entity", cell: (c) => c.entity }, { h: "Field", cell: (c) => c.field },
-        { h: "Value A", cell: (c) => c.value_a, wrap: true }, { h: "Source A", cell: (c) => c.source_a }, { h: "Value B", cell: (c) => c.value_b, wrap: true },
-        { h: "Source B", cell: (c) => c.source_b }, { h: "Determination", cell: (c) => c.determination, wrap: true }]}
-      onRow={openRow} />;
+    view = <ConflictGroupsView groups={groupConflicts(data.conflicts)} isSuper={isSuper} onResolved={() => router.refresh()} />;
   } else if (tab === "sources") {
     const region = country === ALL ? "All regions" : country;
     const idx = indexSources(A, data.sources.filter((s) => A.some((a) => a.id === s.company_id)), data.contacts);
@@ -553,7 +550,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
         : view}</section>
       {drill && <DrillDown d={drill} byCo={byCo} onClose={() => setDrill(null)} onAccount={setOpen} onContact={setContact} />}
       {open && A.find((x) => x.id === open) && <Brief a={A.find((x) => x.id === open)!} data={data} people={byCo[open] || []} onClose={() => setOpen(null)} onContact={setContact}
-        scores={scores[open]} criteria={criteria} />}
+        scores={scores[open]} criteria={criteria} isSuper={isSuper} />}
       {contact && (() => { const p = P.find((x) => x.id === contact); return p ? <ContactCard p={p} data={data} onClose={() => setContact(null)} onAccount={(id) => { setContact(null); setOpen(id); }} /> : null; })()}
     </div>
     </div>
@@ -565,8 +562,9 @@ function Fact({ l, children }: { l: string; children: React.ReactNode }) {
   return <div className="fact"><small>{l}</small><div>{children}</div></div>;
 }
 
-function Brief({ a, data, people, onClose, onContact, scores, criteria }: { a: Row; data: AllData; people: Row[]; onClose: () => void; onContact: (id: string) => void;
-  scores?: Scores; criteria: Criteria }) {
+function Brief({ a, data, people, onClose, onContact, scores, criteria, isSuper }: { a: Row; data: AllData; people: Row[]; onClose: () => void; onContact: (id: string) => void;
+  scores?: Scores; criteria: Criteria; isSuper: boolean }) {
+  const router = useRouter();
   const spend = criteria.showSpend ? estimateSpend(a) : null;
   const why = scores ? whySelected(a, criteria, scores.m, spend) : [];
   const rec = scores ? recommendedActions(a, people, scores.f) : null;
@@ -688,7 +686,7 @@ function Brief({ a, data, people, onClose, onContact, scores, criteria }: { a: R
             {pitch && <div className="pitch-out">{pitch}</div>}
           </div>
           {conf.length > 0 && <div className="block"><h4>Conflicts retained ({conf.length})</h4>
-            {conf.map((c) => <p key={c.id} className="note"><b>{c.entity} · {c.field}</b>: “{c.value_a}” ({c.source_a}) vs “{c.value_b}” ({c.source_b}) — {c.determination}</p>)}</div>}
+            <ConflictGroupsView groups={groupConflicts(conf)} isSuper={isSuper} onResolved={() => router.refresh()} byCompany={false} /></div>}
           <div className="block"><h4>Evidence ({srcs.length} sources)</h4>
             {srcs.map((s) => <p key={s.id} className="note"><span className="tag">{s.source_tier}</span> <b>{s.source}</b> {s.date_published && `(${s.date_published})`} — {s.information_found} <Ext href={s.url}>open</Ext></p>)}</div>
         </div>

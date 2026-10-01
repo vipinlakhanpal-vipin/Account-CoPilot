@@ -151,6 +151,35 @@ h2{font-family:var(--display);font-weight:600;font-size:16px;letter-spacing:.06e
 .saved-reports-head h4{margin:0;font-size:14px}
 .saved-reports-naming{display:flex;gap:6px;align-items:center}
 .saved-reports-naming input{background:var(--accent-soft);border:1px solid transparent;border-radius:7px;padding:6px 9px;font-size:13px;min-width:180px}
+
+/* Conflicts tab + account-brief "Conflicts retained": grouped by company > person, candidates ranked and one
+   suggested, with a Super-Admin "Review & resolve" picker that writes the chosen value back to the real record. */
+.conflicts-head{margin-bottom:10px}
+.conflicts-head h3{margin:0 0 4px;font-size:18px}
+.conflicts-count{font-size:12.5px;font-weight:600;background:var(--teal);color:var(--accent-ink);padding:3px 10px;border-radius:999px;margin-left:8px;vertical-align:middle}
+.conflicts-toolbar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.conflicts-toolbar input{flex:1;max-width:320px;padding:8px 12px;border:1px solid var(--line);border-radius:999px;font-size:13px;background:var(--surface)}
+.conflicts-toolbar select{padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:12.5px;background:var(--surface)}
+.conflict-company{margin-bottom:14px}
+.conflict-company h4{margin:0 0 4px;font-size:14px;letter-spacing:0;text-transform:none;color:var(--text)}
+.conflict-company > .note{margin-bottom:6px}
+.conflicts-list .conflict-group:first-child{border-top:none;padding-top:0}
+.conflict-group{border-top:1px solid var(--line);padding:10px 0}
+.conflict-group.resolved{opacity:.6}
+.conflict-group-head{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px;font-size:13px}
+.conflict-merged{font-size:10.5px}
+.conflict-field{display:inline-block;font-weight:700;padding:2px 8px;border-radius:999px;font-size:10.5px}
+.conflict-field.title{color:var(--sky);background:color-mix(in srgb, var(--sky) 16%, var(--surface))}
+.conflict-field.name{color:var(--gold);background:color-mix(in srgb, var(--gold) 16%, var(--surface))}
+.conflict-field.other{color:var(--muted);background:var(--surface-2)}
+.conflict-resolved-tag{font-size:10.5px;font-weight:700;color:var(--sig-vs)}
+.conflict-candidates{display:flex;flex-direction:column;gap:4px;margin-left:2px}
+.conflict-candidate{display:flex;gap:8px;align-items:flex-start;font-size:12px;padding:3px 0}
+.conflict-candidate input[type="radio"]{margin-top:4px}
+.conflict-candidate p{margin:0}
+.conflict-candidate .note{margin-top:1px}
+.suggested-tag{font:700 9px var(--body);background:var(--teal);color:var(--accent-ink);padding:1px 7px;border-radius:999px;margin-left:4px}
+.conflict-group .btn{margin-top:6px}
 .bars{display:flex;flex-direction:column;gap:8px}
 .bar{display:grid;grid-template-columns:minmax(100px,40%) 1fr 34px;gap:10px;align-items:center;font-size:12.5px}
 .bar .lab{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-transform:uppercase;letter-spacing:.02em;font-weight:500}

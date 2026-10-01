@@ -1,11 +1,18 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.48";
+export const APP_VERSION = "2.49";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.49", date: "2026-10-01", notes: "Conflicts tab and the account brief's \"Conflicts retained\" section redesigned: instead of a flat Value A/B table, conflicts are now grouped by company, then by person and field, merging every report ever filed for that person into one list of candidate values with their sources. The value backed by the most agreeing sources (then by source strength) is marked Suggested. A Super Admin can review and apply a value, which writes it to the real record and clears the conflict everywhere it's shown.",
+    changes: [
+      { what: "New grouping: all historical conflict rows for the same company + person + field are merged into one card showing every distinct value seen, with its source(s) — ranked by how many independent sources agree, then by source strength (official filing/website > Claude research with a cited link > Seamless/aggregator estimate > your own workbook entry) as a tiebreak. The top-ranked value is labelled Suggested — a transparent, source-strength suggestion, never a claimed fact-check", where: "New lib/conflicts.ts (groupConflicts), components/ConflictsPanel.tsx" , why: "Requested — the old table showed two raw values with no way to tell which sources backed which, or whether several reports actually agreed" },
+      { what: "Each group is labelled e.g. \"Ahsan Akhtar — conflict with Titles\", with the field type shown as a colored badge (Title in blue, Name in amber) so the two types of conflict read apart at a glance", where: "components/ConflictsPanel.tsx", why: "Requested exact label format and distinct colors per conflict type" },
+      { what: "A Super Admin can expand a group (\"Review & resolve\"), pick a candidate value and Apply it — this updates the real record (contacts.title_verbatim for a Title conflict) everywhere it's used (Accounts, Pipeline, Stakeholders) and stamps every conflict row for that group as resolved, behind a confirmation step", where: "New app/api/conflicts (POST action \"resolve\", Super-Admin gated)", why: "Requested — resolving a conflict in this table should update the main record, not just acknowledge it" },
+      { what: "Rebuilt the standalone Conflicts tab (grouped by company, with a search box and a Field filter) and the account brief's \"Conflicts retained\" section (flat list, same grouping) on the same component", where: "components/CoPilotApp.tsx (tab === \"conflicts\"; Brief's Conflicts retained block)", why: "Keeps both surfaces consistent and reuses one resolve flow" },
+    ] },
   { version: "2.48", date: "2026-10-01", notes: "New Dashboard → Reports sub-tab: a contact-level results table (Company, Contact Name, Job Title, Email, Phone, Country, ICP Status, Revenue, Employees, S2P Signal, ERP) driven by the same search/filter as everywhere else, with the option to save a search under a name and revisit it later. Also: merged Stakeholders into Accounts as a sub-tab (reordered Accounts, Pipeline, Stakeholders, S2P Signals, ERP & Apps) to free up room in the main nav.",
     changes: [
       { what: "Added a \"Reports\" sub-tab under Dashboard — one row per contact (not per company), joined with that contact's account context, so it's a ready list to call or email straight from the filtered results", where: "Dashboard → Reports; components/CoPilotApp.tsx", why: "Requested — a dedicated place for search/filter output as an actionable contact list" },
