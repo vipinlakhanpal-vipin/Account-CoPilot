@@ -1,11 +1,15 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.50";
+export const APP_VERSION = "2.51";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.51", date: "2026-10-01", notes: "Conflicts: a Title conflict like CFO vs. Chief Finance Officer vs. Account Manager was being treated as three separate, equally-unsupported values — it's really two sources agreeing on one role (just one abbreviated) against one outlier. Known title abbreviations (CFO, CEO, COO, CTO, CIO, CMO, CPO, CRO, CDO, CHRO, EVP/SVP/VP, MD, GM) now count as the same value as their spelled-out form, so agreement is recognized and the outlier is correctly left unsuggested.",
+    changes: [
+      { what: "Title values are now compared by a canonical form that treats a common abbreviation and its spelled-out equivalent (e.g. \"CFO\" / \"Chief Finance Officer\" / \"Chief Financial Officer\") as the same candidate, merging their sources — the display value becomes the more fully spelled-out form once two sources agree", where: "lib/conflicts.ts (canonicalOf, TITLE_ALIASES)", why: "Requested — abbreviation vs. full title was wrongly counted as a 3rd disagreeing value instead of 2 sources agreeing" },
+    ] },
   { version: "2.50", date: "2026-10-01", notes: "Fixed: the Conflicts redesign (v2.49) was marking a candidate \"Suggested\" even when it had no real edge over the other — e.g. two single-source candidates that both happened to come from Seamless. A pick is now only labelled Suggested when it actually has more agreeing sources, or a stronger source tier, than the runner-up; otherwise the group says plainly that no source outweighs the other. Also made multi-source agreement read clearer (\"2 sources agree: …\").",
     changes: [
       { what: "A candidate is only marked Suggested when it strictly beats the runner-up on agreeing-source count or source tier; a true tie (including two different single-source mentions of the same provider) shows \"No source outweighs the other here — pick based on judgment\" instead of an arbitrary pick", where: "lib/conflicts.ts (pickSuggested)", why: "Reported — the first-listed candidate was being suggested even when both sides were equally (un)supported, e.g. two separate Seamless lookups" },

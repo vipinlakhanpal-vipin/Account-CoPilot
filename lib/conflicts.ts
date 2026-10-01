@@ -1,9 +1,11 @@
 import type { Row } from "@/lib/data";
 
 // Groups the flat conflicts table (one row per disagreement found, possibly several per person/field over time)
-// into one card per company > person > field, merging every value ever seen for that pair and ranking the
-// candidates so the UI can suggest one. This is a transparent, source-strength suggestion — never a claimed
-// fact-check — so the ranking is: (1) how many independent sources agree on a value, then (2) tier as a tiebreak.
+// into one card per company > person > field, merging every value ever seen for that pair — recognizing a
+// known abbreviation vs. its spelled-out form (Title only) as agreement, not a third distinct value — and
+// ranking the candidates so the UI can suggest one. This is a transparent, source-strength suggestion — never
+// a claimed fact-check — so the ranking is: (1) how many independent sources agree on a value, then (2) tier
+// as a tiebreak.
 export type Candidate = { value: string; sources: string[]; tier: number };
 export type ConflictGroup = {
   key: string; company_id: string; company: string; entity: string; field: string;
@@ -18,6 +20,35 @@ function pickSuggested(candidates: Candidate[]): number {
   if (candidates.length < 2) return -1;
   const [top, second] = candidates;
   return (top.sources.length > second.sources.length || top.tier < second.tier) ? 0 : -1;
+}
+
+// Title variants that mean the same role (abbreviation vs. spelled out) must count as agreement, not a 3-way
+// split — "CFO" and "Chief Finance Officer" are the same fact from two sources, not two different facts.
+const TITLE_ALIASES: [RegExp, string][] = [
+  [/^ceo$|chief executive officer/, "chief executive officer"],
+  [/^cfo$|chief finance(ial)? officer/, "chief financial officer"],
+  [/^coo$|chief operating officer/, "chief operating officer"],
+  [/^cto$|chief technology officer/, "chief technology officer"],
+  [/^cio$|chief information officer/, "chief information officer"],
+  [/^cmo$|chief marketing officer/, "chief marketing officer"],
+  [/^cpo$|chief procurement officer/, "chief procurement officer"],
+  [/^cro$|chief revenue officer/, "chief revenue officer"],
+  [/^cdo$|chief digital officer/, "chief digital officer"],
+  [/^chro$|chief human resources officer|chief people officer/, "chief human resources officer"],
+  [/^evp$|executive vice president/, "executive vice president"],
+  [/^svp$|senior vice president/, "senior vice president"],
+  [/^vp$|vice president/, "vice president"],
+  [/^md$|managing director/, "managing director"],
+  [/^gm$|general manager/, "general manager"],
+];
+
+function clean(s: string): string { return s.toLowerCase().replace(/[.,]/g, "").replace(/\s+/g, " ").trim(); }
+
+// The key used to decide whether two raw strings are "the same value" for grouping — not what's shown.
+function canonicalOf(field: string, raw: string): string {
+  const s = clean(raw);
+  if (field === "Title") { for (const [re, canon] of TITLE_ALIASES) if (re.test(s)) return canon; }
+  return s;
 }
 
 // Tier 1 official filing/website, 2 Claude research with a cited link, 3 aggregator estimate (Seamless/ZoomInfo/...),
@@ -45,8 +76,10 @@ export function groupConflicts(rows: Row[]): ConflictGroup[] {
     if (r.resolution) g.resolution = r.resolution; else g.resolved = false;
     for (const [value, source] of [[r.value_a, r.source_a], [r.value_b, r.source_b]] as [string, string][]) {
       if (!value) continue;
-      let c = g.candidates.find((x) => x.value.trim().toLowerCase() === value.trim().toLowerCase());
+      const key2 = canonicalOf(r.field, value);
+      let c = g.candidates.find((x) => canonicalOf(r.field, x.value) === key2);
       if (!c) { c = { value, sources: [], tier: tierOf(source) }; g.candidates.push(c); }
+      else if (value.length > c.value.length) c.value = value; // show the more fully spelled-out form once two sources agree
       if (source && !c.sources.includes(source)) c.sources.push(source);
       c.tier = Math.min(c.tier, tierOf(source));
     }
