@@ -317,6 +317,11 @@ h4.sub{margin:16px 0 6px;font:600 12px var(--body);letter-spacing:.1em;text-tran
 ul.plain{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;max-width:90ch}
 .temp-pass{background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.45);border-radius:8px;padding:10px 12px}
 .temp-pass code{font:600 14px var(--mono);color:var(--warn-text)}
+.draft-email{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-top:8px}
+.draft-email-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px}
+.draft-email pre{margin:0;white-space:pre-wrap;font:12px var(--mono);color:var(--text)}
+.team-row-actions{display:flex;gap:6px;flex-wrap:wrap}
+.team-row-actions .btn{margin-left:0}
 
 button.kpi{font:inherit;text-align:left;cursor:pointer;position:relative;transition:transform .12s ease, box-shadow .12s ease}
 button.kpi:hover{transform:translateY(-2px);box-shadow:0 10px 24px color-mix(in srgb, var(--k) 25%, transparent)}

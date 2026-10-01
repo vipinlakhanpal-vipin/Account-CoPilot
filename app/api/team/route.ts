@@ -25,6 +25,19 @@ async function superOnly() {
   return { me, access };
 }
 
+// Supabase's own invitation email is unconfigured (no SMTP/Resend set up yet), so "Email invitation" doesn't
+// actually send anything today. Until that's wired up, it instead creates the account the same way "Temporary
+// password" does and hands back a ready-to-paste email (subject + body) with the password built in, so it can
+// be copied into whatever mail client is at hand.
+function draftInvite(opts: { name?: string; email: string; temp: string; origin: string; invitedBy: string }) {
+  const greet = opts.name ? `Hi ${opts.name},` : "Hi,";
+  const subject = "Your Account CoPilot access";
+  const body = `${greet}\n\n${opts.invitedBy} has set you up with access to Account CoPilot.\n\n`
+    + `Sign in here: ${opts.origin}/login\nEmail: ${opts.email}\nTemporary password: ${opts.temp}\n\n`
+    + `If you have any trouble signing in, just reply to this email.`;
+  return { subject, body };
+}
+
 export async function GET() {
   const g = await superOnly(); if ("error" in g) return g.error;
   const db = supabaseAdmin();
@@ -52,7 +65,9 @@ export async function POST(req: Request) {
     const temp = randomBytes(9).toString("base64url");
     const { data, error } = await db.auth.admin.updateUserById(id, { password: temp });
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-    return NextResponse.json({ ok: true, tempPassword: temp, message: `New temporary password set for ${data.user.email}.` });
+    const origin = new URL(req.url).origin;
+    const draftEmail = draftInvite({ name: data.user.user_metadata?.full_name, email: data.user.email || "", temp, origin, invitedBy: g.me.email || "Your admin" });
+    return NextResponse.json({ ok: true, tempPassword: temp, draftEmail, message: `New temporary password set for ${data.user.email}. Copy the email below and send it to them.` });
   }
 
   const { email, name, mode, role, regions } = body;
@@ -61,23 +76,44 @@ export async function POST(req: Request) {
   const acc = clean(role, regions);
   if (!acc) return NextResponse.json({ error: "Choose the region this Standard User will work on." }, { status: 400 });
   const db = supabaseAdmin(), admin = db.auth.admin;
-  const meta = { full_name: typeof name === "string" ? name.trim() : "", invited_by: g.me.email };
-  let userId = "", temp = "";
-  if (mode === "email") {
-    const origin = new URL(req.url).origin;
-    const { data, error } = await admin.inviteUserByEmail(email, { data: meta, redirectTo: `${origin}/auth/callback` });
-    if (error) return NextResponse.json({ error: `Invitation email could not be sent: ${error.message}. Use a temporary password instead.` }, { status: 400 });
-    userId = data.user.id;
-  } else {
-    temp = randomBytes(9).toString("base64url");
-    const { data, error } = await admin.createUser({ email, password: temp, email_confirm: true, user_metadata: meta });
-    if (error) return NextResponse.json({ error: error.message.includes("already") ? "That person already has an account." : error.message }, { status: 400 });
-    userId = data.user.id;
-  }
+  const cleanName = typeof name === "string" ? name.trim() : "";
+  const meta = { full_name: cleanName, invited_by: g.me.email };
+  const temp = randomBytes(9).toString("base64url");
+  const { data, error } = await admin.createUser({ email, password: temp, email_confirm: true, user_metadata: meta });
+  if (error) return NextResponse.json({ error: error.message.includes("already") ? "That person already has an account. Use Reset password on their row instead." : error.message }, { status: 400 });
+  const userId = data.user.id;
   const { error: e3 } = await db.from("user_access").upsert({ user_id: userId, email: email.toLowerCase(), ...acc, updated_at: new Date().toISOString(), updated_by: g.me.email });
   const what = acc.role === "super_admin" ? "Super Admin (all regions)" : `Standard User for ${acc.regions.join(", ")}`;
   const warn = e3 ? " Note: roles are not active yet — run the region-access database update first (see Setup → Team)." : "";
-  return NextResponse.json({ ok: true, tempPassword: temp || undefined, message: mode === "email" ? `Invitation email sent to ${email} as ${what}.${warn}` : `Account created for ${email} as ${what}.${warn}` });
+  // "Email invitation" doesn't send anything yet (no SMTP/Resend configured) — it hands back a ready-to-paste
+  // email instead of Supabase's own invite mail, which is otherwise unreachable from here.
+  if (mode === "email") {
+    const origin = new URL(req.url).origin;
+    const draftEmail = draftInvite({ name: cleanName, email, temp, origin, invitedBy: g.me.email || "Your admin" });
+    return NextResponse.json({ ok: true, tempPassword: temp, draftEmail, message: `Account created for ${email} as ${what}. Copy the email below and send it to them.${warn}` });
+  }
+  return NextResponse.json({ ok: true, tempPassword: temp, message: `Account created for ${email} as ${what}.${warn}` });
+}
+
+// Permanently removes someone: their Supabase Auth account and their region/role record. Irreversible — the
+// only way back is a brand-new invite.
+export async function DELETE(req: Request) {
+  const g = await superOnly(); if ("error" in g) return g.error;
+  const { id } = await req.json().catch(() => ({}));
+  if (typeof id !== "string") return NextResponse.json({ error: "Bad request." }, { status: 400 });
+  if (id === g.me.id) return NextResponse.json({ error: "You can't delete your own account here." }, { status: 400 });
+  const db = supabaseAdmin();
+  const { data: targetAcc, error: raErr } = await db.from("user_access").select("role").eq("user_id", id).maybeSingle();
+  if (!raErr && targetAcc?.role === "super_admin") {
+    const { count } = await db.from("user_access").select("user_id", { count: "exact", head: true }).eq("role", "super_admin");
+    if ((count || 0) <= 1) return NextResponse.json({ error: "That's the only Super Admin. Make someone else Super Admin first." }, { status: 400 });
+  }
+  const { data: u } = await db.auth.admin.getUserById(id);
+  const email = u?.user?.email || "that user";
+  const { error } = await db.auth.admin.deleteUser(id);
+  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  await db.from("user_access").delete().eq("user_id", id);
+  return NextResponse.json({ ok: true, message: `Deleted ${email}. You can invite them again from scratch.` });
 }
 
 // Change someone's role / region(s).

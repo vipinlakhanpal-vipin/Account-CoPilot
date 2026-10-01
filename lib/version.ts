@@ -1,11 +1,16 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.53";
+export const APP_VERSION = "2.54";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.54", date: "2026-10-01", notes: "Team: \"Email invitation\" was silently relying on Supabase's own invite mailer, which isn't configured (no SMTP/Resend) and sent nothing. It now creates the account the same reliable way \"Temporary password\" does, and additionally drafts a ready-to-send email (subject + body, the temporary password built in) with a Copy button — paste it into your own mail client until Resend is connected. The same draft now also appears after a password reset. Also added \"Delete\" per person — permanently removes their Supabase Auth account and role/region record, so a stuck invite (lost password, wrong details) can be wiped and redone from scratch.",
+    changes: [
+      { what: "\"Email invitation\" now creates the account with a one-time password (like \"Temporary password\" does) instead of calling Supabase's unconfigured invite mailer, and returns a ready-to-paste email (subject + body with the password and sign-in link) shown with a Copy button; the same draft is now shown after Reset password too", where: "app/api/team (POST), components/TeamSettings.tsx", why: "Reported — \"Email invitation\" was a dummy option that sent nothing; this gives a real, usable stand-in until Resend is wired up" },
+      { what: "Added a \"Delete\" action per person (not shown on your own row) — Super-Admin gated, permanently removes their Supabase Auth account and their role/region record, with a confirmation naming exactly what's removed; blocked if they're the only Super Admin", where: "app/api/team (new DELETE), components/TeamSettings.tsx", why: "Requested — a way to wipe a stuck account completely and re-invite from scratch" },
+    ] },
   { version: "2.53", date: "2026-10-01", notes: "Team: added a \"Reset password\" action for anyone who hasn't signed in yet. Previously, if a \"Temporary password\" invite's one-time password was lost before it reached them, re-inviting the same email failed with \"That person already has an account\" and there was no way back in. Now their account can be given a fresh one-time password instead.", changes: [
       { what: "Added a \"Reset password\" button, shown only for someone who hasn't signed in yet, that sets a brand-new one-time temporary password on their existing account and shows it once to copy and share — the same flow as the original invite, without needing to delete and recreate the account", where: "Settings → Team; new action on app/api/team (POST action \"reset_password\", Super-Admin gated), components/TeamSettings.tsx", why: "Reported — re-inviting pavel@scp-worldwide.com after his original temporary password was never shared with him failed with \"already has an account\", and there was no recovery path" },
     ] },

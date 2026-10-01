@@ -2,7 +2,9 @@
 import { useEffect, useState } from "react";
 import { REGIONS } from "@/lib/icpDefinition.mjs";
 import { fmtDate } from "@/lib/dates";
-import { ask } from "@/components/Confirm";
+import { ask, notify } from "@/components/Confirm";
+
+type DraftEmail = { subject: string; body: string };
 
 type Role = "super_admin" | "standard";
 type U = { id: string; email: string; name: string; invited_by: string; joined_from: string; created_at: string; last_sign_in: string | null; role: Role; regions: string[] };
@@ -48,29 +50,51 @@ export default function TeamSettings() {
   const [regions, setRegions] = useState<string[]>([]);
   const [msg, setMsg] = useState("");
   const [temp, setTemp] = useState("");
+  const [draft, setDraft] = useState<DraftEmail | null>(null);
+  const [myEmail, setMyEmail] = useState("");
   const [edit, setEdit] = useState<Record<string, { role: Role; regions: string[] }>>({});
   const load = () => fetch("/api/team").then(async (r) => {
     if (r.status === 403) { setDenied(true); return; }
     const j = r.ok ? await r.json() : { users: [] }; setUsers(j.users || []); setReady(j.ready !== false);
   });
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    fetch("/api/me").then((r) => (r.ok ? r.json() : null)).then((j) => j?.email && setMyEmail(j.email)).catch(() => {});
+  }, []);
+  function copyDraft() {
+    if (!draft) return;
+    navigator.clipboard.writeText(`Subject: ${draft.subject}\n\n${draft.body}`).then(
+      () => notify("Copied — paste it into an email and send.", "ok"),
+      () => notify("Could not copy. Select the text and copy it manually.", "error"));
+  }
   async function invite(e: React.FormEvent) {
     e.preventDefault();
     if (role === "standard" && !regions.length) { setMsg("Choose at least one region for this Standard User."); return; }
-    setMsg("Working…"); setTemp("");
+    setMsg("Working…"); setTemp(""); setDraft(null);
     const r = await fetch("/api/team", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, name, mode, role, regions }) });
     const j = await r.json();
-    setMsg(j.message || j.error || ""); if (j.tempPassword) setTemp(j.tempPassword);
+    setMsg(j.message || j.error || ""); if (j.tempPassword) setTemp(j.tempPassword); if (j.draftEmail) setDraft(j.draftEmail);
     if (r.ok) { setEmail(""); setName(""); setRegions([]); load(); }
   }
   async function resetPassword(u: U) {
     if (!(await ask({ title: "Set a new temporary password?", body: u.email,
-      points: ["Their old password (if they never got it, or it was lost) stops working.", "You'll see the new one-time password here — copy it and share it with them privately."],
+      points: ["Their old password (if they never got it, or it was lost) stops working.", "You'll see the new one-time password — and a ready email to send — here afterward."],
       confirm: "Set new password", tone: "primary" }))) return;
-    setMsg("Working…"); setTemp("");
+    setMsg("Working…"); setTemp(""); setDraft(null);
     const r = await fetch("/api/team", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "reset_password", id: u.id }) });
     const j = await r.json();
-    setMsg(j.message || j.error || ""); if (j.tempPassword) setTemp(j.tempPassword);
+    setMsg(j.message || j.error || ""); if (j.tempPassword) setTemp(j.tempPassword); if (j.draftEmail) setDraft(j.draftEmail);
+  }
+  async function deleteUser(u: U) {
+    if (!(await ask({ title: "Delete this user completely?", body: u.email,
+      points: ["Removes their Supabase Auth account and their role/region record — permanent, cannot be undone.",
+        "They lose access immediately. You can invite them again from scratch afterward."],
+      confirm: "Delete permanently", tone: "danger" }))) return;
+    setMsg("Working…"); setTemp(""); setDraft(null);
+    const r = await fetch("/api/team", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: u.id }) });
+    const j = await r.json();
+    setMsg(j.message || j.error || "");
+    if (r.ok) load();
   }
   async function saveAccess(u: U) {
     const x = edit[u.id]; if (!x) return;
@@ -89,7 +113,7 @@ export default function TeamSettings() {
         <div><b>Standard User</b><span>{ROLE_HELP.standard} The whole app — dashboard, accounts, pipeline, research, the daily engine and exports — works only on that region, by that region&apos;s ICP.</span></div>
       </div>
       {!ready && <p className="team-warn">Roles and regions are saved, but they take effect only after the one-time region-access database update has been run in Supabase (see the release notes). Until then everyone sees every region.</p>}
-      <p className="note">Invite colleagues from an allowed email domain and choose what they can see. <b>Temporary password</b> creates the account immediately: share the password privately; they can change it later. <b>Email invitation</b> uses Supabase&apos;s mailer, which company mail filters sometimes block.</p>
+      <p className="note">Invite colleagues from an allowed email domain and choose what they can see. Both options create the account immediately with a one-time password — <b>Temporary password</b> just shows it to copy; <b>Email invitation</b> also drafts a ready-to-send email with it built in (until Resend is connected, nothing is sent automatically — copy the draft into your own mail client).</p>
       <form onSubmit={invite} className="form-grid team-form" style={{ marginTop: 10 }}>
         <div className="f-email" style={{ display: "flex", flexDirection: "column", gap: 6 }}><label htmlFor="inv-email">Work email</label>
           <input id="inv-email" type="email" required className="input-frame" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="colleague@scp-worldwide.com" /></div>
@@ -103,6 +127,13 @@ export default function TeamSettings() {
       </form>
       {msg && <p className="note" style={{ marginTop: 8 }}>{msg}</p>}
       {temp && <p className="temp-pass">Temporary password: <code>{temp}</code>. Copy it now and share it privately; it will not be shown again.</p>}
+      {draft && (
+        <div className="draft-email">
+          <div className="draft-email-head"><b>Ready to send</b><button type="button" className="btn tiny" onClick={copyDraft}>Copy email</button></div>
+          <p className="muted mono">Subject: {draft.subject}</p>
+          <pre>{draft.body}</pre>
+        </div>
+      )}
       <div className="tablewrap" style={{ marginTop: 12 }}><table>
         <thead><tr><th className="num">#</th><th>Name</th><th>Email</th><th>Role</th><th>Region(s)</th><th>Change access</th><th>Invited by</th><th>Joined</th><th>Last sign-in</th><th></th></tr></thead>
         <tbody>{users.map((u, i) => {
@@ -119,7 +150,10 @@ export default function TeamSettings() {
                 : <button type="button" className="btn" onClick={() => setEdit((m) => ({ ...m, [u.id]: { role: u.role, regions: u.regions } }))}>Change</button>}</td>
               <td className="muted">{u.invited_by || "—"}</td><td className="mono">{fmtDate(u.created_at)}</td>
               <td className="mono">{u.last_sign_in ? fmtDate(u.last_sign_in) : "Not yet"}</td>
-              <td>{!u.last_sign_in && <button type="button" className="btn tiny" onClick={() => resetPassword(u)} title="They haven't signed in yet — set a fresh one-time password to share with them">Reset password</button>}</td></tr>);
+              <td className="team-row-actions">
+                {!u.last_sign_in && <button type="button" className="btn tiny" onClick={() => resetPassword(u)} title="They haven't signed in yet — set a fresh one-time password to share with them">Reset password</button>}
+                {u.email.toLowerCase() !== myEmail.toLowerCase() && <button type="button" className="btn tiny danger" onClick={() => deleteUser(u)}>Delete</button>}
+              </td></tr>);
         })}</tbody></table></div>
     </div>
   );
