@@ -1,11 +1,17 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.47";
+export const APP_VERSION = "2.48";
 
 /** One change in a release, shown in the "Update available" banner: what changed, where to see it, and why. */
 export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.48", date: "2026-10-01", notes: "New Dashboard → Reports sub-tab: a contact-level results table (Company, Contact Name, Job Title, Email, Phone, Country, ICP Status, Revenue, Employees, S2P Signal, ERP) driven by the same search/filter as everywhere else, with the option to save a search under a name and revisit it later. Also: merged Stakeholders into Accounts as a sub-tab (reordered Accounts, Pipeline, Stakeholders, S2P Signals, ERP & Apps) to free up room in the main nav.",
+    changes: [
+      { what: "Added a \"Reports\" sub-tab under Dashboard — one row per contact (not per company), joined with that contact's account context, so it's a ready list to call or email straight from the filtered results", where: "Dashboard → Reports; components/CoPilotApp.tsx", why: "Requested — a dedicated place for search/filter output as an actionable contact list" },
+      { what: "Added \"Save this report\" (names and stores the current filter under settings.saved_reports with who created it and when) and a \"Saved reports\" list that re-runs a saved filter live against current data when opened — never a frozen snapshot", where: "New app/api/reports, components/SavedReports.tsx", why: "Requested — save a search under your name and revisit it later with current numbers" },
+      { what: "Merged the standalone \"Stakeholders\" top-level tab into \"Accounts\" as a sub-tab, reordered to Accounts, Pipeline, Stakeholders, S2P Signals, ERP & Apps — one fewer top-level group in the main nav", where: "Header, all pages", why: "Requested, and frees up room that was causing the Setup tab to get crowded out" },
+    ] },
   { version: "2.47", date: "2026-10-01", notes: "Search bar now shows results in a dropdown (same pattern as the bell/suggestions popover) instead of navigating away immediately; added ICP status, Listing status and S2P signal as new searchable/filterable fields; fixed a bug where resizing the bell or Suggestions popover closed it.",
     changes: [
       { what: "New /api/search endpoint runs the parsed query through the same hard filters (companyPasses) the Discovery panel uses, scoped to the signed-in user's regions, and returns up to 8 matches plus a total count", where: "app/api/search" , why: "Powers the dropdown without duplicating the filter logic" },

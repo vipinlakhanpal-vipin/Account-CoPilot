@@ -16,11 +16,13 @@ import DiscoveryPanel from "@/components/DiscoveryPanel";
 import { SOURCES, indexSources, evidenceGroup, originName } from "@/lib/sources";
 import { buildPeople, contributorOf, TRUST_ORDER, type Person, type Trust } from "@/lib/people";
 import { supabaseBrowser } from "@/lib/supabase/browser";
-import { withDefaults, icpMatch, opportunity, coupaFit, companyPasses, contactMatches, estimateSpend, whySelected, recommendedActions,
+import { withDefaults, icpMatch, opportunity, coupaFit, companyPasses, contactMatches, estimateSpend, whySelected, recommendedActions, revenueOf,
   type Criteria, type Score } from "@/lib/icp";
+import SavedReports from "@/components/SavedReports";
 
 const HERO: Record<string, [string, string]> = {
   dashboard: ["Dashboard", "A live snapshot of UAE target accounts, S2P signals, ERP landscape and decision makers."],
+  reports: ["Reports", "Search or filter, then see a ready-to-work contact list — who to call or email, and the account context behind each one. Save it under a name to revisit later."],
   accounts: ["Accounts", "Every account with ICP status, S2P platform and signal strength. Select one to open its brief."],
   stakeholders: ["Stakeholders", "Company and contact details for campaign planning. Emails are never pattern-guessed."],
   signals: ["S2P Signals", "Evidence-based Source-to-Pay, Coupa and SAP Ariba signals, strongest first."],
@@ -471,6 +473,27 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
         { h: "Information found", cell: (s) => s.information_found, wrap: true }, { h: "Published", cell: (s) => <span className="mono">{s.date_published}</span> },
         { h: "Confidence", cell: (s) => s.confidence }, { h: "URL", cell: (s) => <Ext href={s.url}>open</Ext> }]}
       onRow={openRow} /></>;
+  } else if (tab === "reports") {
+    const fmtM = (n: number | null) => n === null ? "—" : n >= 1000 ? `$${(n / 1000).toFixed(2).replace(/\.?0+$/, "")}B` : `$${Math.round(n)}M`;
+    const byId = new Map(A.map((a) => [a.id, a]));
+    const reportRows: Row[] = P.map((p) => {
+      const a = byId.get(p.company_id);
+      return { ...p, r_country: a ? regionOf(a.country) : "", r_icp: a?.icp_status || "Unknown", r_revenue: a ? fmtM(revenueOf(a)) : "—",
+        r_employees: a?.employee_range || "—", r_listing: a?.listing_status || "—", r_erp: a ? erpKey(a.erp) : "—", r_signal: p.account_s2p_signal || "NO SIGNAL" };
+    });
+    view = <>
+      <SavedReports criteria={criteria} matchCount={reportRows.length}
+        onOpen={(c) => { setCriteria(c); setCollapsed(false); try { localStorage.setItem("dp-collapsed", "0"); } catch {} }} />
+      <FilterTable unit="contacts" title="Search / Filter results" note="One row per contact, with the account context alongside — a ready list to call or email. Driven by the Discovery panel's filters on the left (and the header search bar)."
+        rows={reportRows}
+        search={(p) => [p.company, p.full_name, p.title_verbatim, p.email, p.r_country].join(" ")}
+        filters={[{ label: "ICP status", get: (p) => p.r_icp }, { label: "Country", get: (p) => p.r_country }, { label: "S2P signal", get: (p) => p.r_signal }]}
+        cols={[{ h: "Company", cell: (p) => <b>{p.company}</b> }, { h: "Contact Name", cell: (p) => p.full_name }, { h: "Job Title", cell: (p) => p.title_verbatim, wrap: true },
+          { h: "Email", cell: (p) => <span className="mono">{p.email}</span> }, { h: "Phone", cell: (p) => <span className="mono">{p.phone}</span> },
+          { h: "Country", cell: (p) => p.r_country }, { h: "ICP Status", cell: (p) => p.r_icp }, { h: "Revenue", cell: (p) => p.r_revenue },
+          { h: "Employees", cell: (p) => p.r_employees }, { h: "S2P Signal", cell: (p) => <Pill s={p.r_signal} /> }, { h: "ERP", cell: (p) => p.r_erp }]}
+        onRow={(p) => setContact(p.best_id || p.id)} />
+    </>;
   } else {
     const top = A.filter((a) => sigRank(a.s2p_signal_level) <= 1).sort((a, b) => sigRank(a.s2p_signal_level) - sigRank(b.s2p_signal_level));
     const ACT = ["Evaluation", "RFP / Tender", "Currently Implementing", "Replacement / Transformation"];

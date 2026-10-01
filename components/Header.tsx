@@ -15,9 +15,8 @@ import { APP_VERSION } from "@/lib/version";
 // Main tabs with sub-tabs underneath (Coupa-style). A main tab opens its first sub-tab.
 const GROUPS: { label: string; items: [string, string][] }[] = [
   { label: "Home", items: [["/home", "Home"]] },
-  { label: "Dashboard", items: [["/", "Dashboard"]] },
-  { label: "Accounts", items: [["/?tab=pipeline", "Pipeline"], ["/?tab=accounts", "Accounts"], ["/?tab=signals", "S2P Signals"], ["/?tab=erp", "ERP & Apps"]] },
-  { label: "Stakeholders", items: [["/?tab=stakeholders", "Stakeholders"]] },
+  { label: "Dashboard", items: [["/", "Dashboard"], ["/?tab=reports", "Reports"]] },
+  { label: "Accounts", items: [["/?tab=accounts", "Accounts"], ["/?tab=pipeline", "Pipeline"], ["/?tab=stakeholders", "Stakeholders"], ["/?tab=signals", "S2P Signals"], ["/?tab=erp", "ERP & Apps"]] },
   { label: "Data", items: [["/?tab=sources", "Sources"], ["/?tab=conflicts", "Conflicts"], ["/research", "Research Queue"]] },
   { label: "Setup", items: [["/icp", "Define ICP"], ["/settings", "Settings"], ["/guide", "Learn Me"], ["/team", "Team"]] },
 ];
@@ -28,7 +27,7 @@ const Spin = () => (
 );
 
 const TAB_LABEL: Record<string, string> = { pipeline: "Pipeline", accounts: "Accounts", stakeholders: "Stakeholders", signals: "S2P Signals", erp: "ERP & Apps",
-  conflicts: "Conflicts", sources: "Sources" };
+  conflicts: "Conflicts", sources: "Sources", reports: "Reports" };
 
 const PAGE_LABEL: Record<string, string> = { "/research": "Research Queue", "/settings": "Settings", "/guide": "Learn Me", "/icp": "Define ICP", "/team": "Team", "/home": "Home" };
 
