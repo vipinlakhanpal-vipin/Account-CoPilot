@@ -355,6 +355,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
   const P = useMemo(() => { const ids = new Set(A.map((a) => a.id));
     return data.contacts.filter((p) => ids.has(p.company_id) && (!contactSet || contactMatches(p, criteria, data.history, famKey))); }, [data, A, criteria, contactSet]);
   const people = useMemo(() => buildPeople(P), [P]);
+  const coById = useMemo(() => Object.fromEntries(A.map((a) => [a.id, a])), [A]);
   const [perPerson, setPerPerson] = useState(true);
   // Geography follows the country tile you selected (so KSA accounts aren't marked down for not being in the panel's default UAE).
   const scoreCriteria = useMemo<Criteria>(() => country === ALL ? criteria : { ...criteria, company: { ...criteria.company, countries: [country], regions: [] } }, [criteria, country]);
@@ -463,13 +464,13 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
         : "Every source row as imported or added by a Claude check. Nothing is deleted when rows are merged into one person."}
       rows={[...rows].map((p): Row => ({ ...p, __pf: personaFit(p, personas) })).sort((a, b) => b.__pf.score - a.__pf.score || TRUST_ORDER.indexOf(a.trust) - TRUST_ORDER.indexOf(b.trust) || sigRank(a.account_s2p_signal) - sigRank(b.account_s2p_signal) || str(a.company).localeCompare(b.company))}
       search={(p) => [p.company, p.full_name, p.title_verbatim, p.email, p.notes_contact].join(" ")}
-      filters={[...(perPerson ? [{ label: "Trust", get: (p: Row) => p.trust }, { label: "Sources", get: (p: Row) => (p.sources || []).join(" + ") }] : [{ label: "Source", get: (p: Row) => contributorOf(p) }]),
+      filters={[...(perPerson ? [{ label: "Trust", get: (p: Row) => p.trust }, { label: "Sources", get: (p: Row) => (p.sources || []).join(" + ") }] : [{ label: "Source", get: (p: Row) => simpleOrigin(coById[p.company_id]), tip: "source" }]),
         { label: "Persona fit", get: (p) => p.__pf?.label }, { label: "Tier", get: (p) => p.contact_tier }, { label: "Role family", get: (p) => famKey(p.role_family) }, { label: "Email status", get: (p) => p.email_status }]}
       cols={[{ h: "Company", field: "company", cell: (p) => p.company }, { h: "Full name", field: "full_name", cell: (p) => <b>{p.full_name}</b> }, { h: "Title (verbatim)", field: "title_verbatim", cell: (p) => p.title_verbatim, wrap: true },
         { h: "Persona fit", tip: "personaFit", cell: (p) => p.__pf?.label === "No personas set" ? <span className="muted">—</span>
           : <span className={`pf ${p.__pf.score >= 99 ? "hi" : p.__pf.score >= 50 ? "mid" : "lo"}`} title={p.__pf.why}>{p.__pf.score}%<small>{p.__pf.label}</small></span> },
         ...(perPerson ? [{ h: "Trust", tip: "trust", field: "trust", cell: (p: Row) => <><TrustTag t={p.trust} why={p.trust_reason} /><div className="muted">{(p.sources || []).join(" + ")}</div></> }]
-          : [{ h: "Source", cell: (p: Row) => <>{contributorOf(p)}<div className="muted">{p.record_status}</div></> }]),
+          : [{ h: "Source", tip: "source", cell: (p: Row) => <>{simpleOrigin(coById[p.company_id])}<div className="muted">{p.record_status}</div></> }]),
         { h: "Role family", field: "role_family", cell: (p) => p.role_family }, { h: "Tier", field: "contact_tier", cell: (p) => p.contact_tier },
         { h: "Email", field: "email", cell: (p) => <span className="mono">{p.email}</span> }, { h: "Email status", field: "email_status", cell: (p) => p.email_status },
         { h: "Phone", field: "phone", cell: (p) => <><span className="mono">{p.phone}</span> <span className="muted">{p.phone_type}</span></> },
