@@ -619,6 +619,8 @@ aside.brief.contact{width:min(760px,100%);z-index:70}
 .bell-resize-hint{font-size:10.5px;color:var(--muted);text-align:right;margin:-4px 0 0}
 .bell-item{border-top:1px solid var(--line);padding-top:6px}.bell-item small{color:var(--muted);font-size:11px}.bell-item p{margin:3px 0;font-size:12.5px}.bell-item.new small{color:var(--ok-text)}
 .bell-note{margin:2px 0 4px;font-size:11px}
+.bell-region{margin:4px 0 2px;font:700 11px var(--body);letter-spacing:.04em;text-transform:uppercase;color:var(--teal)}
+.bell-subhead{margin:4px 0 1px;font-weight:600}
 .bell-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:2px;border-radius:6px;overflow:hidden}
 .bell-table th{text-align:left;color:var(--text-strong);font-weight:700;padding:4px;background:rgba(var(--ink),.06);border-bottom:1px solid var(--line)}
 .bell-table td{padding:2px 4px;border-bottom:1px solid rgba(var(--ink),.06);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
