@@ -452,7 +452,10 @@ aside.brief.contact{width:min(760px,100%);z-index:70}
 @media (prefers-reduced-motion:reduce){.update-bar button.upgrading{animation:none;opacity:.7}}
 .trust{display:inline-block;font:600 11px var(--body);border-radius:999px;padding:2px 8px;white-space:nowrap}
 .trust.t-ok{background:rgba(46,204,143,.2);color:var(--ok-text)}.trust.t-one{background:rgba(58,160,255,.18);color:var(--info-text)}.trust.t-bad{background:rgba(255,77,106,.18);color:var(--bad-text)}
-.seg-toggle{display:inline-flex;gap:4px;background:rgba(var(--ink),.04);border:1px solid var(--line);border-radius:10px;padding:3px;margin-bottom:10px}
+.seg-toggle-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.seg-toggle{display:inline-flex;gap:4px;background:rgba(var(--ink),.04);border:1px solid var(--line);border-radius:10px;padding:3px}
+.saved-reports-naming-inline{display:flex;gap:6px;align-items:center}
+.saved-reports-naming-inline input{background:var(--accent-soft);border:1px solid transparent;border-radius:7px;padding:6px 9px;font-size:13px;min-width:160px}
 .seg-extra{margin:-6px 0 10px}
 .seg-toggle button{background:none;border:0;color:var(--muted);font:600 12.5px var(--body);padding:6px 12px;border-radius:8px;cursor:pointer}
 .seg-toggle button[aria-pressed="true"]{background:rgba(46,196,166,.22);color:var(--text-strong)}

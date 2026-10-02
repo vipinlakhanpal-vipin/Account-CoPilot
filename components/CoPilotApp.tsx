@@ -1,5 +1,5 @@
 "use client";
-import { ask, paidFetch } from "@/components/Confirm";
+import { ask, paidFetch, notify } from "@/components/Confirm";
 import { rulesFor, regionOf } from "@/lib/icpDefinition.mjs";
 import { personaFit } from "@/lib/icp";
 import CostNote from "@/components/CostNote";
@@ -20,7 +20,7 @@ import { buildPeople, contributorOf, TRUST_ORDER, type Person, type Trust } from
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { withDefaults, icpMatch, opportunity, coupaFit, companyPasses, contactMatches, estimateSpend, whySelected, recommendedActions, revenueOf,
   type Criteria, type Score } from "@/lib/icp";
-import SavedReports from "@/components/SavedReports";
+import SavedReportsList, { SaveReportButton, type SavedReport } from "@/components/SavedReports";
 
 const HERO: Record<string, [string, string]> = {
   dashboard: ["Dashboard", "A live snapshot of UAE target accounts, S2P signals, ERP landscape and decision makers."],
@@ -141,12 +141,13 @@ function Bars({ entries, order, signal }: { entries: [string, number][]; order?:
 type ColDef = { h: string; cell: (r: Row) => React.ReactNode; wrap?: boolean; cls?: string; tip?: string };
 type FilterDef = { label: string; get: (r: Row) => string };
 
-function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "rows", tipW, empty, initial, onState }: {
+function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "rows", tipW, empty, initial, onState, toggleExtra }: {
   title: string; note?: React.ReactNode; tipW?: Weights; empty?: (q: string) => React.ReactNode; rows: Row[]; cols: ColDef[]; filters: FilterDef[]; search: (r: Row) => string; onRow?: (r: Row) => void; unit?: string;
   // initial: seeds the search box / dropdowns / custom filters once, when opening a saved report — pass a
   // changing `key` on the element to force a remount for a new seed to take effect (see tab === "reports").
   // onState: fires on every change, so a parent (Reports' "Save this report") can capture exactly what's set.
   initial?: { q?: string; fv?: string[]; cf?: CustomFilter[] }; onState?: (s: { q: string; fv: string[]; cf: CustomFilter[]; count: number }) => void;
+  toggleExtra?: React.ReactNode; // e.g. Reports' "Save this report", shown right next to the live filtered count
 }) {
   const [q, setQ] = useState(initial?.q || "");
   const [fv, setFv] = useState<string[]>(initial?.fv || filters.map(() => ""));
@@ -173,9 +174,12 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "
     <>
       <h2 className="with-count">{title} <span className="count">{displayed.length.toLocaleString()} {unit}{displayed.length !== rows.length ? ` of ${rows.length.toLocaleString()}` : ""}</span></h2>
       {note && (typeof note === "string" ? <p className="note">{note}</p> : note)}
-      <div className="seg-toggle" role="group" aria-label="Show all or filtered">
-        <button type="button" aria-pressed={showAll} onClick={() => setShowAll(true)}>All Accounts ({accountsN.toLocaleString()})</button>
-        <button type="button" aria-pressed={!showAll} onClick={() => setShowAll(false)}>Filtered results ({out.length.toLocaleString()})</button>
+      <div className="seg-toggle-row">
+        <div className="seg-toggle" role="group" aria-label="Show all or filtered">
+          <button type="button" aria-pressed={showAll} onClick={() => setShowAll(true)}>All Accounts ({accountsN.toLocaleString()})</button>
+          <button type="button" aria-pressed={!showAll} onClick={() => setShowAll(false)}>Filtered results ({out.length.toLocaleString()})</button>
+        </div>
+        {toggleExtra}
       </div>
       {isPeople && <p className="note seg-extra">All Contacts ({rows.length.toLocaleString()})</p>}
       <div className="filters">
@@ -246,6 +250,8 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
   const [reportTableState, setReportTableState] = useState<{ q: string; fv: string[]; cf: CustomFilter[]; count: number }>({ q: "", fv: [], cf: [], count: 0 });
   const [reportSeed, setReportSeed] = useState<{ q?: string; fv?: string[]; cf?: CustomFilter[] } | undefined>(undefined);
   const [reportKey, setReportKey] = useState(0);
+  const [savedReportItems, setSavedReportItems] = useState<SavedReport[]>([]);
+  useEffect(() => { fetch("/api/reports").then((r) => (r.ok ? r.json() : null)).then((j) => j && setSavedReportItems(j.items || [])).catch(() => {}); }, []);
   useEffect(() => {
     try { setCollapsed(localStorage.getItem("dp-collapsed") === "1"); } catch {}
     supabaseBrowser().from("settings").select("value").eq("key", "icp_definition").maybeSingle().then(({ data: row }) => setIcpDef(row?.value || null));
@@ -505,9 +511,11 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
         r_employees: a?.employee_range || "—", r_listing: a?.listing_status || "—", r_erp: a ? erpKey(a.erp) : "—", r_signal: p.account_s2p_signal || "NO SIGNAL" };
     });
     view = <>
-      <SavedReports criteria={criteria} tableState={reportTableState}
-        onOpen={(c, tf) => { setCriteria(c); setReportSeed(tf); setReportKey((k) => k + 1); setCollapsed(false); try { localStorage.setItem("dp-collapsed", "0"); } catch {} }} />
+      <SavedReportsList items={savedReportItems}
+        onOpen={(c, tf, name) => { setCriteria(c); setReportSeed(tf); setReportKey((k) => k + 1); notify(`Opened "${name}" — reapplying its filters.`, "ok"); }}
+        onDelete={setSavedReportItems} />
       <FilterTable key={reportKey} unit="contacts" title="Search / Filter results" note="One row per contact, with the account context alongside — a ready list to call or email. Narrow it with the search box, dropdowns or + Custom filter below, or the Discovery panel on the left — saving a report remembers whatever you've set, however you set it."
+        toggleExtra={<SaveReportButton criteria={criteria} tableState={reportTableState} onSaved={setSavedReportItems} />}
         rows={reportRows} initial={reportSeed} onState={setReportTableState}
         search={(p) => [p.company, p.full_name, p.title_verbatim, p.email, p.r_country].join(" ")}
         filters={[{ label: "ICP status", get: (p) => p.r_icp }, { label: "Country", get: (p) => p.r_country }, { label: "S2P signal", get: (p) => p.r_signal }]}

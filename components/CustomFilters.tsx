@@ -84,7 +84,7 @@ export function CustomFilterBar({ rows, cf }: { rows: Row[]; cf: ReturnType<type
   // is the same as typing, and near-1000 identical-looking options would just be noise.
   const values = useMemo(() => {
     const s = new Set(rows.map((r) => val(r, field)).filter(Boolean));
-    return s.size > 0 && s.size <= 500 && s.size < rows.length * 0.6 ? [...s].sort() : null;
+    return s.size > 0 && s.size <= 1500 && s.size < rows.length * 0.6 ? [...s].sort() : null;
   }, [rows, field]);
   const numeric = useMemo(() => { const v = rows.map((r) => val(r, field)).filter(Boolean).slice(0, 50); return v.length > 0 && v.every((x) => isFinite(Number(x))); }, [rows, field]);
   const needsValue = draft.op !== "empty" && draft.op !== "filled";

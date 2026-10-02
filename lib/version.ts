@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.70";
+export const APP_VERSION = "2.71";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,11 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.71", date: "2026-10-02", notes: "\"Save this report\" moved to sit right next to the Filtered results count, so what you're about to save is right there — the Saved reports box above now just lists and opens/deletes them. Fixed a real bug in v2.70's \"pick a real value\" feature: Title has 503 distinct values and the cap was exactly 500, so it silently fell back to a plain text box for the one field this was built for. Also: opening a saved report no longer force-opens the Discovery panel (an unrelated side effect) and now shows a confirmation toast.", changes: [
+      { what: "Split the Save button out from the saved-reports list: \"Save this report\" now sits next to \"Filtered results (N)\" in the table's own toggle row; \"Saved reports\" above is now just the list, with view/delete icons", where: "components/SavedReports.tsx (SaveReportButton, SavedReportsList), components/CoPilotApp.tsx (FilterTable toggleExtra)", why: "Requested — Save belongs next to the count it's about to save, not in a separate box" },
+      { what: "Fixed: the \"pick a real value\" list (v2.70) capped at 500 distinct values; Title has 503, so it always silently fell back to a plain text box — the one field this feature was built for. Raised to 1,500", where: "components/CustomFilters.tsx", why: "Reported — Title + is/is not showed a blank \"text\" box instead of the picker" },
+      { what: "Opening a saved report no longer force-opens the Discovery panel (it never affected these reports to begin with) and now shows a toast confirming it opened", where: "components/CoPilotApp.tsx (tab === \"reports\")", why: "Reported \"View doesn't work\" — the restore itself re-applies correctly; this removes a distracting unrelated side effect and gives clear feedback that something happened. If it still looks unchanged after this, it's worth re-testing and reporting back — the exact mechanism couldn't be reproduced locally to confirm" },
+    ] },
   { version: "2.70", date: "2026-10-02", notes: "Custom filter: picking \"is\"/\"is not\" on a field like Title only offered a plain text box to guess at, because a field with more than 40 distinct values (Title easily has hundreds) fell back to free text. It now offers a type-to-filter list of the real values actually in that field — type a few letters, see matching titles, pick one — for any field with up to 500 distinct values, as long as most rows don't just have their own unique one (name, email, company still get free text, since every suggestion there would be different).", changes: [
       { what: "The \"is\"/\"is not\" value field is now a type-to-filter input backed by the field's real values (HTML datalist) instead of a capped dropdown — raised from 40 to 500 distinct values, and only offered when values actually repeat across rows (not for a near-unique field like name/email/company, where every suggestion would be different anyway)", where: "components/CustomFilters.tsx (CustomFilterBar)", why: "Requested — picking \"Title is\" showed a blank text box instead of the real titles to choose from" },
     ] },
