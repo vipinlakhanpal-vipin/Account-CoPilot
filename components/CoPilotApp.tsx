@@ -118,22 +118,50 @@ function countBy(rows: Row[], fn: (r: Row) => string) {
   rows.forEach((r) => { const k = fn(r) || "Unknown"; m.set(k, (m.get(k) || 0) + 1); });
   return [...m.entries()].sort((a, b) => b[1] - a[1]);
 }
+const BarIcon = () => (
+  <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="9" width="3" height="5.5" rx="0.5" fill="currentColor" /><rect x="6.5" y="5" width="3" height="9.5" rx="0.5" fill="currentColor" /><rect x="11.5" y="1.5" width="3" height="13" rx="0.5" fill="currentColor" /></svg>
+);
+const PieIcon = () => (
+  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5a6.5 6.5 0 1 0 6.5 6.5H8V1.5Z" fill="currentColor" /><path d="M9.5 1.6A6.5 6.5 0 0 1 14.4 6.5H9.5V1.6Z" fill="currentColor" opacity="0.55" /></svg>
+);
+// Each chart picks its own bar/pie view independently (useState is per component instance).
 function Bars({ entries, order, signal }: { entries: [string, number][]; order?: (k: string) => number; signal?: boolean }) {
+  const [mode, setMode] = useState<"bar" | "pie">("bar");
   const list = order ? [...entries].sort((a, b) => order(a[0]) - order(b[0])) : entries;
   const max = Math.max(1, ...list.map((e) => e[1]));
+  const total = Math.max(1, list.reduce((s, e) => s + e[1], 0));
+  const colourOf = (k: string, idx: number) => { const sv = signal ? SIGVAR[k.split(" ")[0]] : undefined; return sv ? `var(${sv})` : PALETTE[idx % PALETTE.length]; };
+  let acc = 0;
+  const pieStops = list.map(([k, n], idx) => {
+    const from = (acc / total) * 100; acc += n; const to = (acc / total) * 100;
+    return `${colourOf(k, idx)} ${from.toFixed(2)}% ${to.toFixed(2)}%`;
+  }).join(", ");
   return (
-    <div className="bars">
-      {list.map(([k, n], idx) => {
-        const sv = signal ? SIGVAR[k.split(" ")[0]] : undefined;
-        const colour = sv ? `var(${sv})` : PALETTE[idx % PALETTE.length];
-        return (
-          <div key={k} className="bar sigbar" style={{ "--c": colour } as React.CSSProperties}>
-            <span className="lab" title={k}>{k}</span>
-            <span className="trk"><span className="fill" style={{ width: `${((n / max) * 100).toFixed(1)}%` }} /></span>
-            <span className="n">{n}</span>
+    <div className="bars-wrap">
+      <div className="chart-mode-toggle" role="group" aria-label="Chart type">
+        <button type="button" className={mode === "bar" ? "on" : ""} onClick={() => setMode("bar")} title="Bar chart" aria-label="Bar chart"><BarIcon /></button>
+        <button type="button" className={mode === "pie" ? "on" : ""} onClick={() => setMode("pie")} title="Pie chart" aria-label="Pie chart"><PieIcon /></button>
+      </div>
+      {mode === "bar" ? (
+        <div className="bars">
+          {list.map(([k, n], idx) => (
+            <div key={k} className="bar sigbar" style={{ "--c": colourOf(k, idx) } as React.CSSProperties}>
+              <span className="lab" title={k}>{k}</span>
+              <span className="trk"><span className="fill" style={{ width: `${((n / max) * 100).toFixed(1)}%` }} /></span>
+              <span className="n">{n}</span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="pie-wrap">
+          <div className="pie" style={{ background: `conic-gradient(${pieStops})` }} />
+          <div className="pie-legend">
+            {list.map(([k, n], idx) => (
+              <div key={k} className="pie-legend-row"><span className="sw" style={{ background: colourOf(k, idx) }} /><span className="lab" title={k}>{k}</span><b className="n">{n}</b></div>
+            ))}
           </div>
-        );
-      })}
+        </div>
+      )}
     </div>
   );
 }

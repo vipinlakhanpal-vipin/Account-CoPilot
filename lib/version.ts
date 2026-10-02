@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.98";
+export const APP_VERSION = "2.99";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.99", date: "2026-10-02", notes: "All 7 Dashboard bar charts (S2P signal, Existing platform, ERP landscape, Contacts by role, Contact trust, Accounts by origin, ICP status) shrunk to the approved compact size (Option A), and each one now has its own small bar/pie toggle — switch any single chart to a pie-plus-legend view without affecting the others, since it's just a different way to look at the same data.", changes: [
+      { what: "Shrunk .bars/.bar sizing to the approved compact mockup (thinner track, smaller label/number text, tighter spacing) across every chart that uses the shared Bars component", where: "app/globals.css (.bars-wrap, .bars, .bar)", why: "Requested — charts were taking up too much space" },
+      { what: "Added a per-chart bar/pie toggle (two small icon buttons above each chart) — pie renders as a CSS conic-gradient circle with a legend, using the same colors as the bars; each chart's choice is independent of the others", where: "components/CoPilotApp.tsx (Bars, BarIcon, PieIcon), app/globals.css (.chart-mode-toggle, .pie-wrap, .pie, .pie-legend)", why: "Requested — \"pie is just another way of representing the data\", wanted as an option per chart rather than a wholesale replacement" },
+    ] },
   { version: "2.98", date: "2026-10-02", notes: "Discovery panel's 3 stat tiles (Accounts matching / Contacts matching / Filters active) were forced into ALL CAPS by CSS even though the labels are already written in sentence case — removed the forced uppercase so they read as written.", changes: [
       { what: "Dropped text-transform: uppercase on the Discovery panel's stat tile labels", where: "app/globals.css (.dp-stat span)", why: "Requested — \"caps and small letter format\" instead of all caps" },
     ] },
