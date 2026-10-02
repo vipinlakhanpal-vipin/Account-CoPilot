@@ -40,18 +40,18 @@ export function SaveReportButton({ criteria, tableState, onSaved }:
 
   return naming ? (
     <div className="saved-reports-naming saved-reports-naming-inline">
-      <input type="text" placeholder="Name this report" value={name} onChange={(e) => setName(e.target.value)}
+      <input type="text" placeholder="Name this filter" value={name} onChange={(e) => setName(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && save()} autoFocus />
       <button type="button" className="btn tiny primary" disabled={busy || !name.trim()} onClick={save}>{busy ? "Saving…" : "Save"}</button>
       <button type="button" className="btn tiny ghost" onClick={() => { setNaming(false); setName(""); }}>Cancel</button>
     </div>
-  ) : <button type="button" className="btn tiny primary" onClick={() => setNaming(true)}>💾 Save this report ({tableState.count.toLocaleString()})</button>;
+  ) : <button type="button" className="btn tiny primary" onClick={() => setNaming(true)}>💾 Save this filter ({tableState.count.toLocaleString()})</button>;
 }
 
 export default function SavedReportsList({ items, onOpen, onDelete }:
   { items: SavedReport[]; onOpen: (c: Criteria, tf: TableFilters, name: string) => void; onDelete: (items: SavedReport[]) => void }) {
   async function del(it: SavedReport) {
-    if (!(await ask({ title: "Delete this saved report?", body: it.name, points: ["This can't be undone."], confirm: "Delete", tone: "danger" }))) return;
+    if (!(await ask({ title: "Delete this saved filter?", body: it.name, points: ["This can't be undone."], confirm: "Delete", tone: "danger" }))) return;
     try {
       const res = await fetch("/api/reports", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: it.id }) });
       const j = await res.json();
@@ -61,8 +61,8 @@ export default function SavedReportsList({ items, onOpen, onDelete }:
 
   return (
     <div className="saved-reports">
-      <div className="saved-reports-head"><h4>Saved reports</h4></div>
-      {items.length === 0 ? <p className="note">No saved reports yet — use &quot;Save this report&quot; next to the filtered count below.</p> : (
+      <div className="saved-reports-head"><h4>Saved filters</h4></div>
+      {items.length === 0 ? <p className="note">No saved filters yet — use &quot;Save this filter&quot; next to the filtered count below.</p> : (
         <div className="tablewrap">
           <table><thead><tr><th>Name</th><th>Created by</th><th>Created</th><th>Contacts</th><th></th></tr></thead>
             <tbody>{items.map((it) => (
@@ -72,9 +72,9 @@ export default function SavedReportsList({ items, onOpen, onDelete }:
                 <td className="muted">{fmtDateTime(it.created_at)}</td>
                 <td className="muted">{it.match_count}</td>
                 <td className="saved-reports-row-actions">
-                  <button type="button" className="btn icon" title="Open this report" aria-label="Open this report"
+                  <button type="button" className="btn icon" title="Open this filter" aria-label="Open this filter"
                     onClick={() => onOpen(it.criteria, it.table_filters || { q: "", fv: [], cf: [] }, it.name)}><ViewIcon /></button>
-                  <button type="button" className="btn icon danger" title="Delete this report" aria-label="Delete this report" onClick={() => del(it)}><DeleteIcon /></button>
+                  <button type="button" className="btn icon danger" title="Delete this filter" aria-label="Delete this filter" onClick={() => del(it)}><DeleteIcon /></button>
                 </td>
               </tr>
             ))}</tbody>

@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.72";
+export const APP_VERSION = "2.73";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.73", date: "2026-10-02", notes: "Renamed \"report\" to \"filter\" throughout the Reports page's save feature — \"Save this report\" → \"Save this filter\", \"Saved reports\" → \"Saved filters\", and the naming/delete prompts to match — since that's what it actually is: a named, portable copy of a filter combination.", changes: [
+      { what: "\"Save this report\", \"Saved reports\", \"Name this report\", and the open/delete button labels and confirmation all now say \"filter\" instead of \"report\"", where: "components/SavedReports.tsx, components/CoPilotApp.tsx (tab === \"reports\")", why: "Requested — the feature saves a filter, not a report; the wording should say so" },
+    ] },
   { version: "2.72", date: "2026-10-02", notes: "Saved reports' \"Created by\" column now shows the saver's name (from their profile) instead of their email, when they've set one. A report saved before this still shows the old email until it's deleted and saved again.", changes: [
       { what: "\"Created by\" is now the user's profile name (Profile menu → Name) if set, falling back to email if not", where: "app/api/reports (POST)", why: "Requested — show a name, not an email address" },
     ] },

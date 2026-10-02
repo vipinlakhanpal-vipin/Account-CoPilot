@@ -514,7 +514,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
       <SavedReportsList items={savedReportItems}
         onOpen={(c, tf, name) => { setCriteria(c); setReportSeed(tf); setReportKey((k) => k + 1); notify(`Opened "${name}" — reapplying its filters.`, "ok"); }}
         onDelete={setSavedReportItems} />
-      <FilterTable key={reportKey} unit="contacts" title="Search / Filter results" note="One row per contact, with the account context alongside — a ready list to call or email. Narrow it with the search box, dropdowns or + Custom filter below, or the Discovery panel on the left — saving a report remembers whatever you've set, however you set it."
+      <FilterTable key={reportKey} unit="contacts" title="Search / Filter results" note="One row per contact, with the account context alongside — a ready list to call or email. Narrow it with the search box, dropdowns or + Custom filter below, or the Discovery panel on the left — saving a filter remembers whatever you've set, however you set it."
         toggleExtra={<SaveReportButton criteria={criteria} tableState={reportTableState} onSaved={setSavedReportItems} />}
         rows={reportRows} initial={reportSeed} onState={setReportTableState}
         search={(p) => [p.company, p.full_name, p.title_verbatim, p.email, p.r_country].join(" ")}
