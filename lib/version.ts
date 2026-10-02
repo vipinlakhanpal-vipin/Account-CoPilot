@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.102";
+export const APP_VERSION = "3.01";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.01", date: "2026-10-02", notes: "Version numbering moves to v3.x from here. Fixed the Rank info-tip (and every other ⓘ tooltip) clipping off-screen when its column sits near the left edge of a wide table, like Pipeline's Rank column — it now always renders fully on screen. The Rank tooltip also explains ICP Match, Opportunity and Coupa Fit in one place now, instead of only showing the weighted-sum formula.", changes: [
+      { what: "Info-tip popups now render through a portal at a position computed from the trigger button's actual screen location, clamped to stay within the viewport — fixes popups getting clipped by a table's own horizontal scroll container (most visible on Pipeline's Rank column, near the table's left edge)", where: "components/InfoTip.tsx, app/globals.css (.infotip-pop)", why: "Reported — clicking the Rank column's ⓘ showed a popup cut off on the left, unreadable" },
+      { what: "Rank tooltip now leads with a plain-language one-line explanation of each of the three scores (ICP Match, Opportunity, Coupa Fit) before the weighted formula and example", where: "components/InfoTip.tsx (HELP.rank)", why: "Requested — a quick reckoner for what each percentage means, without having to open 3 separate tooltips or go to Learn Me" },
+    ] },
   { version: "2.102", date: "2026-10-02", notes: "Removed the Discovery panel's 3 stat tiles (Accounts matching / Contacts matching / Filters active) — \"Accounts matching\" was really a Pipeline count (ICP Match ≥ 70%, not Not-ICP, not an existing Coupa customer), not a plain filter match, and needed a paragraph to explain every time it came up. Nothing else in the app read these numbers, so removing them has no effect anywhere else.", changes: [
       { what: "Removed the dp-stats block (3 tiles) from the top of the Discovery panel, and the now-dead matches prop, activeFields()/FIELD_LABEL helpers and .dp-stats/.dp-stat/.dp-active-fields CSS that only existed to support it", where: "components/DiscoveryPanel.tsx, components/CoPilotApp.tsx, app/globals.css", why: "Requested — the \"Accounts matching\" number was actually a Pipeline-qualifying count dressed up as a simple filter match, which was confusing to explain and had no other consumer in the app" },
     ] },
