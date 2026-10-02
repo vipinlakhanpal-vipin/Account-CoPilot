@@ -7,7 +7,8 @@ import type { Criteria } from "@/lib/icp";
 // Dashboard → Reports: a saved search/filter, re-run live (not a frozen snapshot) whenever it's opened again.
 export const dynamic = "force-dynamic";
 
-export type SavedReport = { id: string; name: string; criteria: Criteria; created_by: string; created_at: string; match_count: number };
+type TableFilters = { q: string; fv: string[]; cf: { field: string; op: string; value: string }[] };
+export type SavedReport = { id: string; name: string; criteria: Criteria; table_filters?: TableFilters; created_by: string; created_at: string; match_count: number };
 
 async function getItems(db: ReturnType<typeof supabaseAdmin>): Promise<SavedReport[]> {
   const { data } = await db.from("settings").select("value").eq("key", "saved_reports").maybeSingle();
@@ -21,7 +22,9 @@ export async function GET() {
   return NextResponse.json({ items: await getItems(db) });
 }
 
-const Body = z.object({ action: z.literal("save"), name: z.string().min(1).max(80), criteria: z.record(z.string(), z.unknown()), match_count: z.number().int().min(0) });
+const Body = z.object({ action: z.literal("save"), name: z.string().min(1).max(80), criteria: z.record(z.string(), z.unknown()),
+  table_filters: z.object({ q: z.string(), fv: z.array(z.string()), cf: z.array(z.object({ field: z.string(), op: z.string(), value: z.string() })) }).optional(),
+  match_count: z.number().int().min(0) });
 
 export async function POST(req: Request) {
   const user = await requireUser();
@@ -30,8 +33,8 @@ export async function POST(req: Request) {
   if (!parsed.success) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   const b = parsed.data, db = supabaseAdmin();
   const items = await getItems(db);
-  const item: SavedReport = { id: crypto.randomUUID().slice(0, 8), name: b.name, criteria: b.criteria as Criteria, created_by: user.email || "",
-    created_at: new Date().toISOString(), match_count: b.match_count };
+  const item: SavedReport = { id: crypto.randomUUID().slice(0, 8), name: b.name, criteria: b.criteria as Criteria, table_filters: b.table_filters as TableFilters | undefined,
+    created_by: user.email || "", created_at: new Date().toISOString(), match_count: b.match_count };
   items.unshift(item);
   const { error } = await db.from("settings").upsert({ key: "saved_reports", value: { items: items.slice(0, 200) }, updated_at: new Date().toISOString() });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

@@ -50,9 +50,16 @@ function test(r: Row, f: CustomFilter) {
   }
 }
 
-export function useCustomFilters(rows: Row[], storeKey: string) {
-  const [list, setList] = useState<CustomFilter[]>([]);
-  useEffect(() => { try { const s = localStorage.getItem(`cf:${storeKey}`); if (s) setList(JSON.parse(s)); } catch {} }, [storeKey]);
+// seed overrides what's remembered in this browser — used when opening a saved report, so its exact custom
+// filter is restored instead of whatever was last left in this table (the caller forces a remount for a new
+// seed to take effect, since this only reads it once per mount, same as the localStorage read below).
+export function useCustomFilters(rows: Row[], storeKey: string, seed?: CustomFilter[]) {
+  const [list, setList] = useState<CustomFilter[]>(seed || []);
+  useEffect(() => {
+    if (seed) { try { localStorage.setItem(`cf:${storeKey}`, JSON.stringify(seed)); } catch {} return; }
+    try { const s = localStorage.getItem(`cf:${storeKey}`); if (s) setList(JSON.parse(s)); } catch {}
+    /* eslint-disable-next-line react-hooks/exhaustive-deps */
+  }, [storeKey]);
   const save = (l: CustomFilter[]) => { setList(l); try { localStorage.setItem(`cf:${storeKey}`, JSON.stringify(l)); } catch {} };
   // Fields that actually carry data in this table (first 300 rows), most-filled first.
   const fields = useMemo(() => {

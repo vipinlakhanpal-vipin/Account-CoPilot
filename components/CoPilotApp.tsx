@@ -4,7 +4,7 @@ import { rulesFor, regionOf } from "@/lib/icpDefinition.mjs";
 import { personaFit } from "@/lib/icp";
 import CostNote from "@/components/CostNote";
 import CompanyLogo from "@/components/CompanyLogo";
-import { useCustomFilters, CustomFilterBar } from "@/components/CustomFilters";
+import { useCustomFilters, CustomFilterBar, type CustomFilter } from "@/components/CustomFilters";
 import InfoTip, { type Weights } from "@/components/InfoTip";
 import { useMemo, useState, useEffect, useRef } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
@@ -141,17 +141,24 @@ function Bars({ entries, order, signal }: { entries: [string, number][]; order?:
 type ColDef = { h: string; cell: (r: Row) => React.ReactNode; wrap?: boolean; cls?: string; tip?: string };
 type FilterDef = { label: string; get: (r: Row) => string };
 
-function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "rows", tipW, empty }: {
+function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "rows", tipW, empty, initial, onState }: {
   title: string; note?: React.ReactNode; tipW?: Weights; empty?: (q: string) => React.ReactNode; rows: Row[]; cols: ColDef[]; filters: FilterDef[]; search: (r: Row) => string; onRow?: (r: Row) => void; unit?: string;
+  // initial: seeds the search box / dropdowns / custom filters once, when opening a saved report — pass a
+  // changing `key` on the element to force a remount for a new seed to take effect (see tab === "reports").
+  // onState: fires on every change, so a parent (Reports' "Save this report") can capture exactly what's set.
+  initial?: { q?: string; fv?: string[]; cf?: CustomFilter[] }; onState?: (s: { q: string; fv: string[]; cf: CustomFilter[]; count: number }) => void;
 }) {
-  const [q, setQ] = useState("");
-  const [fv, setFv] = useState<string[]>(filters.map(() => ""));
+  const [q, setQ] = useState(initial?.q || "");
+  const [fv, setFv] = useState<string[]>(initial?.fv || filters.map(() => ""));
   const [showAll, setShowAll] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const scrollH = (dx: number) => wrapRef.current?.scrollBy({ left: dx, behavior: "smooth" });
   const options = useMemo(() => filters.map((f) => [...new Set(rows.map(f.get).filter(Boolean))].sort()), [rows, filters]);
-  const cf = useCustomFilters(rows, title);
+  const cf = useCustomFilters(rows, title, initial?.cf);
   const out = rows.filter((r) => (!q || search(r).toLowerCase().includes(q.toLowerCase())) && filters.every((f, i) => !fv[i] || f.get(r) === fv[i]) && cf.test(r));
+  useEffect(() => { onState?.({ q, fv, cf: cf.list, count: out.length });
+    /* eslint-disable-next-line react-hooks/exhaustive-deps */
+  }, [q, fv, cf.list, out.length]);
   // "All <unit>" shows every row regardless of the filters above — the search box, dropdowns and custom filters
   // stay exactly as set, so switching back to "Filtered results" re-applies them instantly (nothing is cleared).
   const displayed = showAll ? rows : out;
@@ -233,6 +240,12 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
   const [savedMeta, setSavedMeta] = useState<{ by?: string; at?: string } | null>(null);
   const [teamCriteria, setTeamCriteria] = useState<Criteria | null>(null);
   const [collapsed, setCollapsed] = useState(false);
+  // Reports tab: the table's own search/dropdowns/custom filter live inside FilterTable, so this mirrors its
+  // live state (reported up via onState) for "Save this report" to use, and seeds it back in (via `initial` +
+  // bumping reportKey to force a remount) when a saved report is opened.
+  const [reportTableState, setReportTableState] = useState<{ q: string; fv: string[]; cf: CustomFilter[]; count: number }>({ q: "", fv: [], cf: [], count: 0 });
+  const [reportSeed, setReportSeed] = useState<{ q?: string; fv?: string[]; cf?: CustomFilter[] } | undefined>(undefined);
+  const [reportKey, setReportKey] = useState(0);
   useEffect(() => {
     try { setCollapsed(localStorage.getItem("dp-collapsed") === "1"); } catch {}
     supabaseBrowser().from("settings").select("value").eq("key", "icp_definition").maybeSingle().then(({ data: row }) => setIcpDef(row?.value || null));
@@ -492,10 +505,10 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
         r_employees: a?.employee_range || "—", r_listing: a?.listing_status || "—", r_erp: a ? erpKey(a.erp) : "—", r_signal: p.account_s2p_signal || "NO SIGNAL" };
     });
     view = <>
-      <SavedReports criteria={criteria} matchCount={reportRows.length}
-        onOpen={(c) => { setCriteria(c); setCollapsed(false); try { localStorage.setItem("dp-collapsed", "0"); } catch {} }} />
-      <FilterTable unit="contacts" title="Search / Filter results" note="One row per contact, with the account context alongside — a ready list to call or email. Driven by the Discovery panel's filters on the left (and the header search bar)."
-        rows={reportRows}
+      <SavedReports criteria={criteria} tableState={reportTableState}
+        onOpen={(c, tf) => { setCriteria(c); setReportSeed(tf); setReportKey((k) => k + 1); setCollapsed(false); try { localStorage.setItem("dp-collapsed", "0"); } catch {} }} />
+      <FilterTable key={reportKey} unit="contacts" title="Search / Filter results" note="One row per contact, with the account context alongside — a ready list to call or email. Driven by the Discovery panel's filters on the left (and the header search bar)."
+        rows={reportRows} initial={reportSeed} onState={setReportTableState}
         search={(p) => [p.company, p.full_name, p.title_verbatim, p.email, p.r_country].join(" ")}
         filters={[{ label: "ICP status", get: (p) => p.r_icp }, { label: "Country", get: (p) => p.r_country }, { label: "S2P signal", get: (p) => p.r_signal }]}
         cols={[{ h: "Company", cell: (p) => <b>{p.company}</b> }, { h: "Contact Name", cell: (p) => p.full_name }, { h: "Job Title", cell: (p) => p.title_verbatim, wrap: true },

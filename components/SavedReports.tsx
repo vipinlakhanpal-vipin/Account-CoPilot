@@ -2,12 +2,17 @@
 import { useEffect, useState } from "react";
 import { fmtDateTime } from "@/lib/dates";
 import type { Criteria } from "@/lib/icp";
+import type { CustomFilter } from "@/components/CustomFilters";
 
-type SavedReport = { id: string; name: string; criteria: Criteria; created_by: string; created_at: string; match_count: number };
+type TableFilters = { q: string; fv: string[]; cf: CustomFilter[] };
+type SavedReport = { id: string; name: string; criteria: Criteria; table_filters?: TableFilters; created_by: string; created_at: string; match_count: number };
 
 // Dashboard → Reports: save the current search/filter under a name, and revisit it later — re-run live against
-// current data (not a frozen snapshot), so a saved report's numbers stay current.
-export default function SavedReports({ criteria, matchCount, onOpen }: { criteria: Criteria; matchCount: number; onOpen: (c: Criteria) => void }) {
+// current data (not a frozen snapshot), so a saved report's numbers stay current. Captures both the Discovery
+// panel's criteria AND the table's own search box / dropdowns / custom filter (table_filters), since the table
+// often does all the narrowing on its own — a save that dropped that part would reopen as if nothing was filtered.
+export default function SavedReports({ criteria, tableState, onOpen }:
+  { criteria: Criteria; tableState: TableFilters & { count: number }; onOpen: (c: Criteria, tf: TableFilters) => void }) {
   const [items, setItems] = useState<SavedReport[]>([]);
   const [naming, setNaming] = useState(false);
   const [name, setName] = useState("");
@@ -21,7 +26,8 @@ export default function SavedReports({ criteria, matchCount, onOpen }: { criteri
     setBusy(true);
     try {
       const res = await fetch("/api/reports", { method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "save", name: name.trim(), criteria, match_count: matchCount }) });
+        body: JSON.stringify({ action: "save", name: name.trim(), criteria,
+          table_filters: { q: tableState.q, fv: tableState.fv, cf: tableState.cf }, match_count: tableState.count }) });
       const j = await res.json();
       if (res.ok) { setItems(j.items); setNaming(false); setName(""); }
     } catch { /* best-effort */ }
@@ -50,7 +56,7 @@ export default function SavedReports({ criteria, matchCount, onOpen }: { criteri
                 <td className="muted">{it.created_by}</td>
                 <td className="muted">{fmtDateTime(it.created_at)}</td>
                 <td className="muted">{it.match_count}</td>
-                <td><button type="button" className="btn tiny" onClick={() => onOpen(it.criteria)}>Open →</button></td>
+                <td><button type="button" className="btn tiny" onClick={() => onOpen(it.criteria, it.table_filters || { q: "", fv: [], cf: [] })}>Open →</button></td>
               </tr>
             ))}</tbody>
           </table>
