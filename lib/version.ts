@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.10";
+export const APP_VERSION = "3.11";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.11", date: "2026-10-02", notes: "Fixed: the Wizard's region row could wrap \"Which entities count\" onto its own line when the \"Activated by...\" status note competed for space on the same row — not specific to any role, just a layout bug that showed up whenever a row had both a long status note and little room (e.g. a Standard User's single-region view). The 4 size fields now hold their width and the status note wraps instead, since it's supplementary.", changes: [
+      { what: "Gave the region row's size-fields box a guaranteed base width (flex-basis 500px, min-width 320px) instead of an unlimited shrink-to-fit, so it no longer gets squeezed internally when the Activated-by note shares the row", where: "app/globals.css (.hw-region-fields)", why: "Reported — \"Which entities count\" wrapped to its own line on a Standard User's Kuwait-only region row" },
+    ] },
   { version: "3.10", date: "2026-10-02", notes: "Team page: Reset password and Delete are now two separate columns, each with its own header — Delete lines up in the same place on every row regardless of whether Reset password shows for that person.", changes: [
       { what: "Split the unlabeled combined actions cell into two columns, \"Reset password\" and \"Delete\", each with a header", where: "components/TeamSettings.tsx", why: "Requested — Delete buttons weren't aligned since the cell held 0, 1, or 2 buttons depending on the row, and the column had no title" },
     ] },
