@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.08";
+export const APP_VERSION = "3.09";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.09", date: "2026-10-02", notes: "Added an ⓘ to the All Accounts / Filtered results toggle, on any table where a company can have more than one row — ERP & Apps, S2P Signals, Sources, drill-downs — explaining why the two counts differ (e.g. ERP & Apps: 496 companies but 1,214 rows, since a company can run several applications). Built generically into the shared table component, so it covers every table like this, not just one.", changes: [
+      { what: "The All Accounts / Filtered results toggle shows an ⓘ whenever the table's distinct-company count differs from its row count — i.e. whenever a company can appear more than once (ERP & Apps, S2P Signals, Source evidence, and any drill-down list) — explaining that All Accounts counts companies while Filtered results counts rows", where: "components/CoPilotApp.tsx (FilterTable, multiPerCompany), components/InfoTip.tsx (HELP.accountsVsRows)", why: "Requested on ERP & Apps (\"All Accounts 496\" vs \"Filtered results 1,214\"), generalized since the same gap exists on Signals and Sources too" },
+    ] },
   { version: "3.08", date: "2026-10-02", notes: "Added an ⓘ next to Stakeholders' \"One row per person\" / \"All source rows\" toggle, explaining why the two counts differ (835 merged people vs. 1,093 raw rows before merging).", changes: [
       { what: "New ⓘ tooltip beside the Stakeholder view toggle explaining the two modes and why All source rows is a bigger number than One row per person", where: "components/CoPilotApp.tsx (tab === \"stakeholders\"), components/InfoTip.tsx (HELP.stakeholderView)", why: "Requested — \"what does one row per person 835 and all source rows 1093 [mean]\"" },
     ] },

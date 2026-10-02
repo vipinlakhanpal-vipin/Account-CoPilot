@@ -203,6 +203,7 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "
   const hasCompany = rows.some((r) => r.company_id);
   const isPeople = hasCompany && rows.some((r) => r.full_name);
   const accountsN = hasCompany ? new Set(rows.map((r) => r.company_id)).size : rows.length;
+  const multiPerCompany = hasCompany && accountsN !== rows.length;
   return (
     <>
       <h2 className="with-count">{title} <span className="count">{displayed.length.toLocaleString()} {unit}{displayed.length !== rows.length ? ` of ${rows.length.toLocaleString()}` : ""}</span></h2>
@@ -212,6 +213,7 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "
           <button type="button" aria-pressed={showAll} onClick={() => setShowAll(true)}>All Accounts ({accountsN.toLocaleString()})</button>
           <button type="button" aria-pressed={!showAll} onClick={() => setShowAll(false)}>{isPeople ? "Contacts results" : "Filtered results"} ({out.length.toLocaleString()})</button>
         </div>
+        {!isPeople && multiPerCompany && <InfoTip k="accountsVsRows" />}
         {toggleExtra}
       </div>
       {isPeople && <p className="note seg-extra">All Contacts ({rows.length.toLocaleString()})</p>}
