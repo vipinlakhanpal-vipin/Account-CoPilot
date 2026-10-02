@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.03";
+export const APP_VERSION = "3.04";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.04", date: "2026-10-02", notes: "Accounts gets a dedicated Exchange column (ADX/DFM/Nasdaq Dubai, with ticker), matching what Pipeline already has — it was only ever shown as small muted text under the company name before, easy to miss even though the Exchange filter worked.", changes: [
+      { what: "Added an Exchange column (with ⓘ) right after Company, showing exchange + ticker or a dash if private; removed the same info from its old spot as muted text under the company name to avoid showing it twice", where: "components/CoPilotApp.tsx (tab === \"accounts\")", why: "Requested — the Exchange filter existed but had no visible column to match it" },
+    ] },
   { version: "3.03", date: "2026-10-02", notes: "Source and Exchange now have explanatory ⓘ icons next to their filter dropdowns (on Accounts and Pipeline), instead of being merged into one dropdown — they answer different questions (where the data came from vs. which exchange it's listed on) and aren't mutually exclusive, so a merge would have recreated the same confusion. Pipeline also gets Source and Exchange as filters and columns, matching Accounts.", changes: [
       { what: "Added ⓘ icons to the Source and Exchange filter dropdowns (Accounts, Pipeline) explaining what each means, with a link to the full Sources tab", where: "components/InfoTip.tsx (HELP.source, HELP.exchange), components/CoPilotApp.tsx (FilterTable filters row), app/globals.css (.flt-wrap)", why: "Requested — a quick way to understand Source/Exchange without leaving the table" },
       { what: "Pipeline now has Source and Exchange as both filters and table columns, matching what Accounts already had", where: "components/CoPilotApp.tsx (tab === \"pipeline\")", why: "Requested — \"give two fields Exchange and Source and also create a filter, like you have in All Accounts\"" },
