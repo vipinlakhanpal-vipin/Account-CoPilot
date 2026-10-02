@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.58";
+export const APP_VERSION = "2.59";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.59", date: "2026-10-02", notes: "Bigger titles on the Home → About Account CoPilot tiles (Free Daily Search Engine job, Paid Search Engine Job, What each tab does, Tokens & cost, How it verifies, What \"ICP\" means) — they were the same size as the body text under them.", changes: [
+      { what: "About-tile titles went from 12.5px (same size as the body text) to 17px", where: "app/globals.css (.hw-about-card h4)", why: "Requested — titles weren't reading as titles" },
+    ] },
   { version: "2.58", date: "2026-10-02", notes: "Fixed: the Dashboard sub-tab row showed \"Dashboard\" twice — once as the main tab, again as its own first sub-tab. Relabeled that sub-tab \"Overview\", the same fix already applied to Accounts (\"All accounts\") for the identical reason.", changes: [
       { what: "The Dashboard group's first sub-tab (its own landing page, needed so the sub-tab row has something to highlight by default) now reads \"Overview\" instead of repeating \"Dashboard\"", where: "components/Header.tsx (SUB_LABEL)", why: "Reported — looked like two Dashboard tabs; this was an inconsistency (Accounts already got this treatment, Dashboard didn't when Reports was added in v2.48)" },
     ] },

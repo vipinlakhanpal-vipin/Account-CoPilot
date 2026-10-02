@@ -537,7 +537,7 @@ aside.brief.contact{width:min(760px,100%);z-index:70}
 .hw-about-card--sky .hw-icon-badge{color:var(--sky)}
 .hw-about-card--green{background:var(--sig-vs-bg)}
 .hw-about-card--green .hw-icon-badge{color:var(--sig-vs)}
-.hw-about-card h4{margin:0 0 6px;font-size:12.5px;font-family:var(--display);font-weight:600;color:var(--text);text-transform:none;letter-spacing:0}
+.hw-about-card h4{margin:0 0 6px;font-size:17px;font-family:var(--display);font-weight:600;color:var(--text);text-transform:none;letter-spacing:0}
 .hw-about-card p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.55}
 .hw-about-card ul{margin:0;padding-left:16px;font-size:12.5px;color:var(--muted);line-height:1.65}
 .hw-about-note{background:var(--surface);border-radius:8px;padding:9px 11px;margin:10px 0 0;font-size:11.5px;line-height:1.55;color:var(--text)}
