@@ -46,9 +46,13 @@ export async function GET() {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   const { data: acc, error: e2 } = await db.from("user_access").select("user_id,role,regions,updated_at,updated_by");
   const byId = new Map((acc || []).map((a) => [a.user_id, a]));
-  return NextResponse.json({ ready: !e2, users: data.users.map((u) => ({ id: u.id, email: u.email, name: u.user_metadata?.full_name || "", invited_by: u.user_metadata?.invited_by || "",
-    joined_from: u.user_metadata?.joined_from || "", created_at: u.created_at, last_sign_in: u.last_sign_in_at,
-    role: byId.get(u.id)?.role || (e2 ? "super_admin" : "standard"), regions: byId.get(u.id)?.regions || [] })) });
+  // invited_by is stored as the inviter's email (a stable id); shown here as their name when they have one set,
+  // resolved fresh each time so it stays correct even if the inviter's name changes later.
+  const nameByEmail = new Map(data.users.map((u) => [(u.email || "").toLowerCase(), u.user_metadata?.full_name || ""]));
+  return NextResponse.json({ ready: !e2, users: data.users.map((u) => { const invitedByEmail = u.user_metadata?.invited_by || "";
+    return { id: u.id, email: u.email, name: u.user_metadata?.full_name || "", invited_by: nameByEmail.get(invitedByEmail.toLowerCase()) || invitedByEmail,
+      joined_from: u.user_metadata?.joined_from || "", created_at: u.created_at, last_sign_in: u.last_sign_in_at,
+      role: byId.get(u.id)?.role || (e2 ? "super_admin" : "standard"), regions: byId.get(u.id)?.regions || [] }; }) });
 }
 
 // Invite a colleague with a role and region. mode "password" creates the account with a one-time temporary password (no email needed);
@@ -67,7 +71,7 @@ export async function POST(req: Request) {
     const { data, error } = await db.auth.admin.updateUserById(id, { password: temp });
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
     const origin = new URL(req.url).origin;
-    const draftEmail = draftInvite({ name: data.user.user_metadata?.full_name, email: data.user.email || "", temp, origin, invitedBy: g.me.email || "Your admin" });
+    const draftEmail = draftInvite({ name: data.user.user_metadata?.full_name, email: data.user.email || "", temp, origin, invitedBy: g.me.user_metadata?.full_name || g.me.email || "Your admin" });
     return NextResponse.json({ ok: true, tempPassword: temp, draftEmail, message: `New temporary password set for ${data.user.email}. Copy the email below and send it to them.` });
   }
 
@@ -90,7 +94,7 @@ export async function POST(req: Request) {
   // email instead of Supabase's own invite mail, which is otherwise unreachable from here.
   if (mode === "email") {
     const origin = new URL(req.url).origin;
-    const draftEmail = draftInvite({ name: cleanName, email, temp, origin, invitedBy: g.me.email || "Your admin" });
+    const draftEmail = draftInvite({ name: cleanName, email, temp, origin, invitedBy: g.me.user_metadata?.full_name || g.me.email || "Your admin" });
     return NextResponse.json({ ok: true, tempPassword: temp, draftEmail, message: `Account created for ${email} as ${what}. Copy the email below and send it to them.${warn}` });
   }
   return NextResponse.json({ ok: true, tempPassword: temp, message: `Account created for ${email} as ${what}.${warn}` });

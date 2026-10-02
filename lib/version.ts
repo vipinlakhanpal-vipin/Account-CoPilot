@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.76";
+export const APP_VERSION = "2.77";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.77", date: "2026-10-02", notes: "Team page's \"Invited by\" column now shows the inviter's name instead of email, when they have one set.", changes: [
+      { what: "\"Invited by\" resolved to the inviter's profile name at display time (falls back to email if they haven't set one)", where: "app/api/team (GET)", why: "Requested" },
+    ] },
   { version: "2.76", date: "2026-10-02", notes: "Custom filter's field list now only offers fields shown as columns in that table, not every raw field on the row — you could filter on data not visible anywhere in the results.", changes: [
       { what: "Custom filter field picker restricted to each table's own visible columns (via a new ColDef.field on each column), across Accounts, Pipeline, Stakeholders, Signals, ERP, Sources and Reports", where: "components/CoPilotApp.tsx, components/CustomFilters.tsx", why: "Requested — filtering on a field not shown as a column made results hard to verify" },
     ] },
