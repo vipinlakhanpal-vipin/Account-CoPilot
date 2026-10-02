@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.77";
+export const APP_VERSION = "2.78";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.78", date: "2026-10-02", notes: "Team's \"Change\" access button is now a compact pill, same size as the role badges, in blue.", changes: [
+      { what: "\"Change\" button restyled as a pill matching the role badges' size, in blue", where: "components/TeamSettings.tsx, app/globals.css (.btn-change)", why: "Requested" },
+    ] },
   { version: "2.77", date: "2026-10-02", notes: "Team page's \"Invited by\" column now shows the inviter's name instead of email, when they have one set.", changes: [
       { what: "\"Invited by\" resolved to the inviter's profile name at display time (falls back to email if they haven't set one)", where: "app/api/team (GET)", why: "Requested" },
     ] },

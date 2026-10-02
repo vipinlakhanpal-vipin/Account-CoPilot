@@ -168,7 +168,7 @@ export default function TeamSettings() {
                     <button type="button" className="btn primary" onClick={() => saveAccess(u)}>Save</button>
                     <button type="button" className="btn" onClick={() => setEdit((m) => { const n = { ...m }; delete n[u.id]; return n; })}>Cancel</button>
                   </div></div>
-                : <button type="button" className="btn" onClick={() => setEdit((m) => ({ ...m, [u.id]: { role: u.role, regions: u.regions } }))}>Change</button>}</td>
+                : <button type="button" className="btn-change" onClick={() => setEdit((m) => ({ ...m, [u.id]: { role: u.role, regions: u.regions } }))}>Change</button>}</td>
               <td className="muted">{u.invited_by || "—"}</td><td className="mono">{fmtDate(u.created_at)}</td>
               <td className="mono">{u.last_sign_in ? fmtDate(u.last_sign_in) : "Not yet"}</td>
               <td className="team-row-actions">
