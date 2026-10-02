@@ -1042,6 +1042,12 @@ th .infotip{margin-left:3px}.infotip-btn{width:15px;height:15px;font-size:10px}
 .cf-builder{flex-basis:100%;display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 12px;border-radius:12px;
   background:color-mix(in srgb, #5B4BC4 8%, var(--surface));border:1px solid color-mix(in srgb, #5B4BC4 35%, transparent)}
 .cf-builder select,.cf-builder input{font:500 13.5px var(--body);padding:7px 10px;border-radius:9px;border:1px solid rgba(var(--ink),.18);background:var(--surface);color:var(--text-strong);min-width:150px;max-width:280px}
+.cf-multipick{flex-basis:100%;display:flex;flex-direction:column;gap:6px;max-width:420px}
+.cf-multipick>input{font:500 13.5px var(--body);padding:7px 10px;border-radius:9px;border:1px solid rgba(var(--ink),.18);background:var(--surface);color:var(--text-strong)}
+.cf-multipick-list{display:flex;flex-direction:column;gap:2px;max-height:220px;overflow:auto;background:var(--surface);border:1px solid rgba(var(--ink),.12);border-radius:9px;padding:6px 8px}
+.cf-multipick-list label{display:flex;align-items:center;gap:8px;font:500 13px var(--body);color:var(--text-strong);padding:3px 2px;cursor:pointer}
+.cf-multipick-list input[type="checkbox"]{flex:none}
+.cf-multipick .note{margin:0}
 .cf-chips{flex-basis:100%;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .cf-chip{display:inline-flex;align-items:center;gap:5px;font:600 12.5px var(--body);padding:4px 6px 4px 10px;border-radius:999px;color:var(--text-strong);
   background:color-mix(in srgb, #5B4BC4 14%, var(--surface));border:1px solid color-mix(in srgb, #5B4BC4 40%, transparent)}

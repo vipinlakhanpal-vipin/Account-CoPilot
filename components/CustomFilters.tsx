@@ -4,9 +4,13 @@ import type { Row } from "@/lib/data";
 
 // Custom filters for any table: pick a field that exists in the rows, a condition and a value. Several filters combine (all must match).
 // Remembered per table in this browser.
-export type Op = "contains" | "is" | "not" | "starts" | "empty" | "filled" | "gte" | "lte";
+export type Op = "contains" | "is" | "not" | "starts" | "in" | "notin" | "empty" | "filled" | "gte" | "lte";
 export type CustomFilter = { field: string; op: Op; value: string };
-export const OPS: [Op, string][] = [["contains", "contains"], ["is", "is"], ["not", "is not"], ["starts", "starts with"], ["filled", "is known"], ["empty", "is unknown"], ["gte", "≥"], ["lte", "≤"]];
+export const OPS: [Op, string][] = [["contains", "contains"], ["is", "is"], ["not", "is not"], ["starts", "starts with"], ["in", "is any of"], ["notin", "is none of"],
+  ["filled", "is known"], ["empty", "is unknown"], ["gte", "≥"], ["lte", "≤"]];
+// "is any of" / "is none of" store several picked values in one CustomFilter.value, joined by this separator —
+// a real \t or \n could plausibly appear in a value (e.g. a notes field); this control character can't.
+const MULTI_SEP = "␟";
 // Curated for the header's filter builder, which has no loaded rows to detect real fields from (unlike a table's own
 // custom filter, which only offers fields that actually appear in that table's data) — every scalar field the
 // Accounts table itself reads off a company row.
@@ -40,6 +44,11 @@ function test(r: Row, f: CustomFilter) {
     case "is": return lv === x;
     case "not": return lv !== x;
     case "starts": return lv.startsWith(x);
+    case "in": case "notin": {
+      const picked = f.value.split(MULTI_SEP).map((p) => p.trim().toLowerCase()).filter(Boolean);
+      const hit = picked.includes(lv);
+      return f.op === "in" ? hit : !hit;
+    }
     case "empty": return !v.trim();
     case "filled": return !!v.trim();
     case "gte": case "lte": {
@@ -88,7 +97,15 @@ export function CustomFilterBar({ rows, cf }: { rows: Row[]; cf: ReturnType<type
   }, [rows, field]);
   const numeric = useMemo(() => { const v = rows.map((r) => val(r, field)).filter(Boolean).slice(0, 50); return v.length > 0 && v.every((x) => isFinite(Number(x))); }, [rows, field]);
   const needsValue = draft.op !== "empty" && draft.op !== "filled";
-  const add = () => { if (!field || (needsValue && !draft.value.trim())) return; cf.save([...cf.list, { ...draft, field }]); setDraft({ field, op: draft.op, value: "" }); setOpen(false); };
+  const isMulti = draft.op === "in" || draft.op === "notin";
+  const picked = useMemo(() => new Set(draft.value.split(MULTI_SEP).filter(Boolean)), [draft.value]);
+  const [pickFilter, setPickFilter] = useState("");
+  const togglePick = (v: string) => {
+    const next = new Set(picked);
+    if (next.has(v)) next.delete(v); else next.add(v);
+    setDraft({ ...draft, value: [...next].join(MULTI_SEP) });
+  };
+  const add = () => { if (!field || (needsValue && !draft.value.trim())) return; cf.save([...cf.list, { ...draft, field }]); setDraft({ field, op: draft.op, value: "" }); setPickFilter(""); setOpen(false); };
   return (
     <>
       <button type="button" className={`btn cf-add${cf.list.length ? " on" : ""}`} onClick={() => setOpen((x) => !x)}>+ Custom filter{cf.list.length ? ` (${cf.list.length})` : ""}</button>
@@ -97,10 +114,20 @@ export function CustomFilterBar({ rows, cf }: { rows: Row[]; cf: ReturnType<type
           <select aria-label="Field" value={field} onChange={(e) => setDraft({ ...draft, field: e.target.value, value: "" })}>
             {cf.fields.map((k) => <option key={k} value={k}>{labelOf(k)}</option>)}
           </select>
-          <select aria-label="Condition" value={draft.op} onChange={(e) => setDraft({ ...draft, op: e.target.value as Op })}>
-            {OPS.filter(([o]) => numeric || (o !== "gte" && o !== "lte")).map(([o, l]) => <option key={o} value={o}>{l}</option>)}
+          <select aria-label="Condition" value={draft.op} onChange={(e) => setDraft({ ...draft, op: e.target.value as Op, value: "" })}>
+            {OPS.filter(([o]) => (numeric || (o !== "gte" && o !== "lte")) && (values || (o !== "in" && o !== "notin"))).map(([o, l]) => <option key={o} value={o}>{l}</option>)}
           </select>
-          {needsValue && (values && (draft.op === "is" || draft.op === "not") ? (
+          {needsValue && isMulti && values ? (
+            <div className="cf-multipick">
+              <input aria-label="Search values" placeholder={`Search ${values.length} ${labelOf(field).toLowerCase()} values…`} value={pickFilter} onChange={(e) => setPickFilter(e.target.value)} />
+              <div className="cf-multipick-list">
+                {values.filter((v) => v.toLowerCase().includes(pickFilter.trim().toLowerCase())).map((v) => (
+                  <label key={v}><input type="checkbox" checked={picked.has(v)} onChange={() => togglePick(v)} />{v}</label>
+                ))}
+              </div>
+              {picked.size > 0 && <p className="note">{picked.size} picked</p>}
+            </div>
+          ) : needsValue && (values && (draft.op === "is" || draft.op === "not") ? (
             <>
               <input aria-label="Value" list={`cf-vals-${field}`} value={draft.value} placeholder={`Pick or type a ${labelOf(field).toLowerCase()}…`}
                 onChange={(e) => setDraft({ ...draft, value: e.target.value })} onKeyDown={(e) => { if (e.key === "Enter") add(); }} />
@@ -116,7 +143,8 @@ export function CustomFilterBar({ rows, cf }: { rows: Row[]; cf: ReturnType<type
       {cf.list.length > 0 && (
         <div className="cf-chips">
           {cf.list.map((f, i) => (
-            <span key={i} className="cf-chip">{labelOf(f.field)} <em>{OPS.find(([o]) => o === f.op)?.[1]}</em>{f.op !== "empty" && f.op !== "filled" ? ` "${f.value}"` : ""}
+            <span key={i} className="cf-chip">{labelOf(f.field)} <em>{OPS.find(([o]) => o === f.op)?.[1]}</em>
+              {f.op !== "empty" && f.op !== "filled" ? ` "${(f.op === "in" || f.op === "notin") ? f.value.split(MULTI_SEP).filter(Boolean).join(", ") : f.value}"` : ""}
               <button type="button" aria-label="Remove filter" onClick={() => cf.save(cf.list.filter((_, j) => j !== i))}>×</button></span>
           ))}
         </div>

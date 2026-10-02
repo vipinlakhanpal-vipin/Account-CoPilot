@@ -90,7 +90,9 @@ export default function GlobalSearchBar() {
               {ACCOUNT_FIELDS.map((k) => <option key={k} value={k}>{labelOf(k)}</option>)}
             </select>
             <select aria-label="Condition" value={draft.op} onChange={(e) => setDraft({ ...draft, op: e.target.value as Op })}>
-              {OPS.map(([o, l]) => <option key={o} value={o}>{l}</option>)}
+              {/* "is any of" / "is none of" need a real pick-list (like a table's own custom filter offers) to be usable — this
+                  builder has no loaded rows to draw one from, so those two are left out here rather than becoming a confusing free-text box. */}
+              {OPS.filter(([o]) => o !== "in" && o !== "notin").map(([o, l]) => <option key={o} value={o}>{l}</option>)}
             </select>
             {needsValue && <input aria-label="Value" value={draft.value} placeholder="text or a number" onChange={(e) => setDraft({ ...draft, value: e.target.value })}
               onKeyDown={(e) => { if (e.key === "Enter") addCondition(); }} />}
