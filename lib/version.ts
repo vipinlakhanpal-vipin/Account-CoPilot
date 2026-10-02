@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.65";
+export const APP_VERSION = "2.66";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.66", date: "2026-10-02", notes: "Fixed: on a contact-level table (Reports, Stakeholders), \"All Accounts (N)\" was showing the contact-row count mislabelled as an account count (e.g. 1,093 contacts shown as \"accounts\"). It now shows the true distinct company count (e.g. 225), with a new \"All Contacts (N)\" line underneath showing the real contact count alongside it.", changes: [
+      { what: "\"All Accounts\" now counts distinct companies (via company_id) on tables where each row is a sub-entity (contact, signal, source, app) rather than the row count itself; a table of people (has full_name alongside company_id) also shows \"All Contacts (N)\" underneath with the true row count", where: "components/CoPilotApp.tsx (FilterTable)", why: "Requested — the Reports page's \"All Accounts (1,093)\" was really a contact count; both the true account count and the true contact count are useful together" },
+    ] },
   { version: "2.65", date: "2026-10-02", notes: "Renamed the \"All Companies\" toggle (v2.63) to \"All Accounts\" on every table — matches the app's own terminology (the Accounts tab) better.", changes: [
       { what: "The All/Filtered toggle's \"All\" button now reads \"All Accounts\" instead of \"All Companies\"", where: "components/CoPilotApp.tsx (FilterTable)", why: "Requested — \"Accounts\" matches the app's own naming" },
     ] },

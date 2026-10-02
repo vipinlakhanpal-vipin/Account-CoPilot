@@ -155,14 +155,22 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "
   // "All <unit>" shows every row regardless of the filters above — the search box, dropdowns and custom filters
   // stay exactly as set, so switching back to "Filtered results" re-applies them instantly (nothing is cleared).
   const displayed = showAll ? rows : out;
+  // On a table whose rows are contacts/signals/sources/etc (one row per sub-entity, not per company), "All
+  // Accounts" means the distinct companies behind those rows, not the row count — e.g. Reports is one row per
+  // contact, so "All Accounts" is the 225 companies those 1,093 contacts belong to, shown alongside the true
+  // contact count, not the contact count mislabelled as an account count.
+  const hasCompany = rows.some((r) => r.company_id);
+  const isPeople = hasCompany && rows.some((r) => r.full_name);
+  const accountsN = hasCompany ? new Set(rows.map((r) => r.company_id)).size : rows.length;
   return (
     <>
       <h2 className="with-count">{title} <span className="count">{displayed.length.toLocaleString()} {unit}{displayed.length !== rows.length ? ` of ${rows.length.toLocaleString()}` : ""}</span></h2>
       {note && (typeof note === "string" ? <p className="note">{note}</p> : note)}
       <div className="seg-toggle" role="group" aria-label="Show all or filtered">
-        <button type="button" aria-pressed={showAll} onClick={() => setShowAll(true)}>All Accounts ({rows.length.toLocaleString()})</button>
+        <button type="button" aria-pressed={showAll} onClick={() => setShowAll(true)}>All Accounts ({accountsN.toLocaleString()})</button>
         <button type="button" aria-pressed={!showAll} onClick={() => setShowAll(false)}>Filtered results ({out.length.toLocaleString()})</button>
       </div>
+      {isPeople && <p className="note seg-extra">All Contacts ({rows.length.toLocaleString()})</p>}
       <div className="filters">
         <input type="search" className={`flt-search${q ? " on" : ""}`} placeholder={`Search ${title.toLowerCase()}…`} aria-label="Search" value={q} onChange={(e) => setQ(e.target.value)} />
         {filters.map((f, i) => (
