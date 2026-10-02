@@ -160,7 +160,7 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "
       <h2 className="with-count">{title} <span className="count">{displayed.length.toLocaleString()} {unit}{displayed.length !== rows.length ? ` of ${rows.length.toLocaleString()}` : ""}</span></h2>
       {note && (typeof note === "string" ? <p className="note">{note}</p> : note)}
       <div className="seg-toggle" role="group" aria-label="Show all or filtered">
-        <button type="button" aria-pressed={showAll} onClick={() => setShowAll(true)}>All Companies ({rows.length.toLocaleString()})</button>
+        <button type="button" aria-pressed={showAll} onClick={() => setShowAll(true)}>All Accounts ({rows.length.toLocaleString()})</button>
         <button type="button" aria-pressed={!showAll} onClick={() => setShowAll(false)}>Filtered results ({out.length.toLocaleString()})</button>
       </div>
       <div className="filters">

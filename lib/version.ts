@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.64";
+export const APP_VERSION = "2.65";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.65", date: "2026-10-02", notes: "Renamed the \"All Companies\" toggle (v2.63) to \"All Accounts\" on every table — matches the app's own terminology (the Accounts tab) better.", changes: [
+      { what: "The All/Filtered toggle's \"All\" button now reads \"All Accounts\" instead of \"All Companies\"", where: "components/CoPilotApp.tsx (FilterTable)", why: "Requested — \"Accounts\" matches the app's own naming" },
+    ] },
   { version: "2.64", date: "2026-10-02", notes: "Expanded the header's custom-filter field list (v2.62) from 13 to 34 — every scalar field the Accounts table itself reads off a company row: Industry, Country, Ownership, Exchange, Ticker, Parent company, S2P strong signals, Existing S2P detail, ERP status, ERP evidence, Known implementation partner, Coupa/Ariba opportunity type, Potential opportunity, Procurement model, Procurement/Digital transformation signals, Company website, Board phone, Subsidiaries, Lists, Account notes.", changes: [
       { what: "ACCOUNT_FIELDS grew from 13 to 34 fields, pulled from every a.<field> the Accounts table's own columns read", where: "components/CustomFilters.tsx (ACCOUNT_FIELDS, LABEL)", why: "Requested — fill out the header filter builder's field list beyond the original curated set" },
     ] },
