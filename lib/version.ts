@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.97";
+export const APP_VERSION = "2.98";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.98", date: "2026-10-02", notes: "Discovery panel's 3 stat tiles (Accounts matching / Contacts matching / Filters active) were forced into ALL CAPS by CSS even though the labels are already written in sentence case — removed the forced uppercase so they read as written.", changes: [
+      { what: "Dropped text-transform: uppercase on the Discovery panel's stat tile labels", where: "app/globals.css (.dp-stat span)", why: "Requested — \"caps and small letter format\" instead of all caps" },
+    ] },
   { version: "2.97", date: "2026-10-02", notes: "The version-history clock icon was noticeably smaller than the bell and suggestions bulb beside it — sized up to match (same button circle, matching svg weight).", changes: [
       { what: "History icon button resized to match the bell/bulb's circle size (34px base, 26px in the compact header row) and svg weight (17px base, 15px compact)", where: "app/globals.css (.history-btn)", why: "Requested — it looked smaller than the bell and bulb next to it" },
     ] },
