@@ -220,6 +220,8 @@ h2{font-family:var(--display);font-weight:600;font-size:16px;letter-spacing:.06e
 /* filters + tables */
 .filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;align-items:center}
 .filters select{flex:0 1 auto;max-width:210px}
+.flt-wrap{display:inline-flex;align-items:center;gap:2px;min-width:0}
+.flt-wrap .infotip{margin-left:0}.flt-wrap .infotip-btn{width:15px;height:15px;font-size:10px}
 .filters input,.filters select{font:13px var(--body);background:var(--sunken);color:var(--text);border:1px solid var(--line-2);border-radius:8px;padding:7px 10px;min-width:0}
 .filters input{flex:1 1 240px}
 .filters input:focus,.filters select:focus{outline:2px solid var(--teal-soft);border-color:var(--teal)}

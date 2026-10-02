@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.02";
+export const APP_VERSION = "3.03";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.03", date: "2026-10-02", notes: "Source and Exchange now have explanatory ⓘ icons next to their filter dropdowns (on Accounts and Pipeline), instead of being merged into one dropdown — they answer different questions (where the data came from vs. which exchange it's listed on) and aren't mutually exclusive, so a merge would have recreated the same confusion. Pipeline also gets Source and Exchange as filters and columns, matching Accounts.", changes: [
+      { what: "Added ⓘ icons to the Source and Exchange filter dropdowns (Accounts, Pipeline) explaining what each means, with a link to the full Sources tab", where: "components/InfoTip.tsx (HELP.source, HELP.exchange), components/CoPilotApp.tsx (FilterTable filters row), app/globals.css (.flt-wrap)", why: "Requested — a quick way to understand Source/Exchange without leaving the table" },
+      { what: "Pipeline now has Source and Exchange as both filters and table columns, matching what Accounts already had", where: "components/CoPilotApp.tsx (tab === \"pipeline\")", why: "Requested — \"give two fields Exchange and Source and also create a filter, like you have in All Accounts\"" },
+    ] },
   { version: "3.02", date: "2026-10-02", notes: "Accounts' \"Source\" filter now shows 3 simple, non-overlapping buckets — Vipin's XL – Stakeholders (235), Claude Sources (38), Claude + Seamless (223) — instead of the raw, overlapping list tags that didn't line up with any one number. The detailed 5-origin breakdown with reliability/cost notes stays intact on the Sources tab for anyone who wants the full picture. Also shrunk the header search bar slightly — it was squeezing the Setup tab against Master Book on narrower screens.", changes: [
       { what: "Added simpleOrigin() — a 3-bucket lens over the existing single-origin originOf() (Vipin's XL – Stakeholders = workbook + your confirmations; Claude Sources = Claude research + Claude discovery; Claude + Seamless = Seamless discovery), each company counted exactly once", where: "lib/sources.ts (simpleOrigin)", why: "Requested — a simpler, non-overlapping source view for everyday browsing, without touching the detailed Sources tab catalogue" },
       { what: "Accounts table's \"Source\" filter now uses simpleOrigin() instead of the raw, multi-tag lists field", where: "components/CoPilotApp.tsx (tab === \"accounts\")", why: "The previous \"Source\" (renamed from \"List\" last version) showed overlapping tags like \"Your profiling\"/\"Stakeholders\" that didn't match any single count a user expected" },

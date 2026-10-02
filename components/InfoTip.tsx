@@ -23,6 +23,14 @@ export const HELP = (w: Weights = { w_match: 50, w_opportunity: 30, w_fit: 20, m
   personaFit: { title: "Persona fit", section: "scores", text: <>How well a contact matches your buyer personas in Define ICP: <b>department 35 + seniority 35 + priority role 30 points</b> (only what you set counts). 100% = matches all; 50–99% = partly.</> },
   companyName: { title: "Company name (optional)", section: "engineset", text: <><b>Leave it blank</b> to find new companies in general (up to &quot;How many&quot;). <b>Type a name</b> (e.g. Almarai) to search for that one company: the next scheduled session checks it isn&apos;t already in the app, researches it, adds it to the region and verifies it at no API cost, then re-checks it weekly until an official revenue figure is found.</> },
   trust: { title: "Trust", section: "sources", text: <><b>Confirmed by 2+ sources</b>: two independent sources agree (or Claude verified it) · <b>Single source</b>: one source only · <b>Conflicting</b>: sources disagree or the person may have moved.</> },
+  source: { title: "Source", section: "sources", text: <>Where this company&apos;s data came from — every company has exactly one:
+      <ul className="infotip-list">
+        <li><b>Vipin&apos;s XL – Stakeholders</b> — your workbook, plus anything you&apos;ve personally confirmed (e.g. a named Coupa customer)</li>
+        <li><b>Claude Sources</b> — Claude found or researched it on its own, free session or paid</li>
+        <li><b>Claude + Seamless</b> — found via the free Seamless search, cleaned and deduped before import</li>
+      </ul>
+      The Sources tab has the full breakdown (who contributed, what evidence backs each fact, reliability and cost).</> },
+  exchange: { title: "Exchange", section: "icp", text: <>Which stock exchange the company is listed on (ADX, DFM, Nasdaq Dubai, a foreign exchange…), if any — most accounts are private and have no exchange. This is a listing fact about the company, separate from Source (where its data came from): a company can be both e.g. &quot;Vipin&apos;s XL&quot; and listed on DFM at the same time.</> },
 });
 
 // Popup renders through a portal at a viewport-computed position, so it always stays fully visible —

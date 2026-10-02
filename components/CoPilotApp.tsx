@@ -171,7 +171,7 @@ function Bars({ entries, order, signal }: { entries: [string, number][]; order?:
 // shown as a column at all and would be confusing to filter on sight-unseen). A column with no clean 1:1 field
 // (a computed score, a combined cell) just omits it.
 type ColDef = { h: string; cell: (r: Row) => React.ReactNode; wrap?: boolean; cls?: string; tip?: string; field?: string };
-type FilterDef = { label: string; get: (r: Row) => string };
+type FilterDef = { label: string; get: (r: Row) => string; tip?: string };
 
 function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "rows", tipW, empty, initial, onState, toggleExtra }: {
   title: string; note?: React.ReactNode; tipW?: Weights; empty?: (q: string) => React.ReactNode; rows: Row[]; cols: ColDef[]; filters: FilterDef[]; search: (r: Row) => string; onRow?: (r: Row) => void; unit?: string;
@@ -219,11 +219,14 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "
         <input type="search" className={`flt-search${q ? " on" : ""}`} placeholder={`Search ${title.toLowerCase()}…`} aria-label="Search" value={q}
           onChange={(e) => { setQ(e.target.value); if (e.target.value) setShowAll(false); }} />
         {filters.map((f, i) => (
-          <select key={f.label} aria-label={f.label} value={fv[i]} className={`flt f${(i % 8) + 1}${fv[i] ? " on" : ""}`}
-            onChange={(e) => { const v = e.target.value; setFv(fv.map((x, j) => (j === i ? v : x))); if (v) setShowAll(false); }}>
-            <option value="">{f.label}: all</option>
-            {options[i].map((o) => <option key={o}>{o}</option>)}
-          </select>
+          <span key={f.label} className="flt-wrap">
+            <select aria-label={f.label} value={fv[i]} className={`flt f${(i % 8) + 1}${fv[i] ? " on" : ""}`}
+              onChange={(e) => { const v = e.target.value; setFv(fv.map((x, j) => (j === i ? v : x))); if (v) setShowAll(false); }}>
+              <option value="">{f.label}: all</option>
+              {options[i].map((o) => <option key={o}>{o}</option>)}
+            </select>
+            {f.tip && <InfoTip k={f.tip} />}
+          </span>
         ))}
 
         <CustomFilterBar rows={rows} cf={cf} />
@@ -404,9 +407,9 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
     view = <FilterTable unit="companies" title="Accounts" empty={notFound} note="ICP = net revenue ≥ $250M and 100+ employees (stock listing not required). ✓ Verified: confirmed from an official source · ● Likely: your data / Seamless say ≥ $250M, not yet confirmed · ! Needs check: sources disagree about $250M · ? Unknown: no revenue figure yet · ✕ Not ICP: below $250M. Hover a status for the reason; select a row to open the account brief."
       rows={[...A].sort((a, b) => icpRank(a.icp_status) - icpRank(b.icp_status) || sigRank(a.s2p_signal_level) - sigRank(b.s2p_signal_level) || (bestRevenue(b).v || 0) - (bestRevenue(a).v || 0))}
       search={(a) => [a.company_name, a.industry, a.erp, a.existing_s2p_product, a.s2p_strong_signals].join(" ")}
-      filters={[{ label: "ICP status", get: (a) => a.icp_status }, { label: "Source", get: (a) => simpleOrigin(a) },
+      filters={[{ label: "ICP status", get: (a) => a.icp_status }, { label: "Source", get: (a) => simpleOrigin(a), tip: "source" },
         { label: "Signal", get: (a) => a.s2p_signal_level }, { label: "S2P Platform", get: (a) => a.existing_s2p_product }, { label: "Industry", get: (a) => a.industry },
-        { label: "Exchange", get: (a) => a.exchange }, { label: "Country", get: (a) => a.country }]}
+        { label: "Exchange", get: (a) => a.exchange, tip: "exchange" }, { label: "Country", get: (a) => a.country }]}
       cols={[{ h: "", cls: "logo-cell", cell: (a) => <CompanyLogo a={a} /> }, { h: "Company", field: "company_name", cell: (a) => <><b>{a.company_name}</b><div className="muted mono">{a.exchange} {a.ticker}</div></> },
         { h: "Industry", field: "industry", cell: (a) => a.industry },
         { h: "S2P Platform", field: "existing_s2p_product", cell: (a) => a.existing_s2p_product || <span className="muted">—</span> },
@@ -437,11 +440,14 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
         <p className="note">Every % = points earned ÷ points available. {pipe.exclude_not_icp ? "Not ICP accounts are left out. " : ""}Weights are set per region in Setup → Define ICP. Hover a score for its breakdown, click <InfoTip k="percent" w={pipe} /> for more, or read <a href="/guide#pipeline">Setup → Learn Me → Pipeline</a>.</p>
       </>}
       rows={ranked} search={(a) => [a.company_name, a.industry, a.erp, a.existing_s2p_product].join(" ")}
-      filters={[{ label: "ICP status", get: (a) => a.icp_status }, { label: "S2P", get: (a) => a.existing_s2p_product }, { label: "Industry", get: (a) => a.industry }, { label: "Country", get: (a) => a.country }]}
+      filters={[{ label: "ICP status", get: (a) => a.icp_status }, { label: "S2P", get: (a) => a.existing_s2p_product }, { label: "Industry", get: (a) => a.industry },
+        { label: "Source", get: (a) => simpleOrigin(a), tip: "source" }, { label: "Exchange", get: (a) => a.exchange, tip: "exchange" }, { label: "Country", get: (a) => a.country }]}
       cols={[{ h: "Rank", tip: "rank", cell: (a) => <b className="mono" title={`Rank ${scores[a.id].rank}% = ${pipe.w_match}% of ICP Match + ${pipe.w_opportunity}% of Opportunity + ${pipe.w_fit}% of Coupa Fit`}>{scores[a.id].rank}%</b> }, { h: "", cls: "logo-cell", cell: (a) => <CompanyLogo a={a} /> }, { h: "Company", cls: "co-cell", field: "company_name", cell: (a) => <><b>{a.company_name}</b><div className="muted clamp2" title={`${a.industry} · ${a.country}`}>{a.industry} · {a.country}</div></> },
         { h: "ICP match", tip: "icpMatch", cell: (a) => <ScoreChip s={scores[a.id].m} label="ICP Match" /> }, { h: "Opportunity", tip: "opportunity", cell: (a) => <ScoreChip s={scores[a.id].o} label="Opportunity" /> },
         { h: "Coupa fit", tip: "coupaFit", cell: (a) => <ScoreChip s={scores[a.id].f} label="Coupa Fit" /> }, { h: "ICP status", tip: "icpStatus", field: "icp_status", cell: (a) => <IcpTag s={a.icp_status} why={a.icp_fit_reason} /> },
         { h: "Revenue", field: "revenue_usd_m", cell: (a) => <span className="mono">{usd(bestRevenue(a).v)}</span> }, { h: "Existing S2P", field: "existing_s2p_product", cell: (a) => a.existing_s2p_product },
+        { h: "Exchange", field: "exchange", cell: (a) => a.exchange ? <span className="mono">{a.exchange} {a.ticker}</span> : <span className="muted">—</span> },
+        { h: "Source", tip: "source", cell: (a) => simpleOrigin(a) },
         { h: "Contacts", cell: (a) => <span className="mono">{(byCo[a.id] || []).length}</span> }]}
       onRow={openRow} />;
   } else if (tab === "stakeholders") {
