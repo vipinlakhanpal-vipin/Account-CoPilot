@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.11";
+export const APP_VERSION = "3.12";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.12", date: "2026-10-02", notes: "Dashboard's ICP status tiles (Verified/Likely/Needs check) and the matching \"Accounts by ICP status\" chart now exclude confirmed Coupa customers, same as Pipeline and Priority accounts — found 7 in Verified, 2 in Likely and 1 in Needs check that were being counted as prospects despite already being customers. Also fixed the version-history icon: it was rendering smaller than the bell and bulb next to it due to a CSS specificity conflict (a stronger, older rule was silently overriding the earlier size fix for bell/bulb but had no matching rule for history).", changes: [
+      { what: "ICP — Verified / ICP — Likely / ICP — Needs check Dashboard tiles and the Accounts-by-ICP-status chart now exclude confirmed Coupa customers (notCoupa filter)", where: "components/CoPilotApp.tsx (kpis, Accounts by ICP status Bars)", why: "Reported — Coupa customers (e.g. QNB, Majid Al Futtaim) were being counted as Verified/Likely/Needs-check prospects despite already being customers, which reads as misleading funnel numbers" },
+      { what: "Fixed history icon's circle actually rendering at 26px while bell/bulb rendered at 30px (a higher-specificity .navbar.has-sub .bell-btn rule was overriding the intended .version-scoped sizing, with no equivalent rule for history) — all three now consistently 30px in the compact header row", where: "app/globals.css (.navbar.has-sub .history-btn)", why: "Reported — the clock icon still looked smaller than bell and bulb after the earlier sizing fix" },
+    ] },
   { version: "3.11", date: "2026-10-02", notes: "Fixed: the Wizard's region row could wrap \"Which entities count\" onto its own line when the \"Activated by...\" status note competed for space on the same row — not specific to any role, just a layout bug that showed up whenever a row had both a long status note and little room (e.g. a Standard User's single-region view). The 4 size fields now hold their width and the status note wraps instead, since it's supplementary.", changes: [
       { what: "Gave the region row's size-fields box a guaranteed base width (flex-basis 500px, min-width 320px) instead of an unlimited shrink-to-fit, so it no longer gets squeezed internally when the Activated-by note shares the row", where: "app/globals.css (.hw-region-fields)", why: "Reported — \"Which entities count\" wrapped to its own line on a Standard User's Kuwait-only region row" },
     ] },

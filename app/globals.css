@@ -93,7 +93,6 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;padding:1
 .history-btn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;border:1px solid rgba(var(--ink),.15);background:rgba(var(--ink),.05);color:var(--text);cursor:pointer}
 .history-btn:hover{border-color:var(--teal);color:var(--text-strong)}
 .history-btn svg{width:17px;height:17px}
-.version .history-btn{width:26px;height:26px}.version .history-btn svg{width:15px;height:15px}
 .chip{font:600 10.5px var(--body);letter-spacing:.03em;color:#06231D;background:#BFF3E6;border-radius:999px;padding:2px 9px}
 nav.tabs{display:flex;gap:2px;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;flex:1 1 auto;min-width:0;justify-content:safe flex-end}
 .gsearch-group{display:flex;align-items:center;gap:6px;flex:1 1 340px;min-width:0}
@@ -682,9 +681,10 @@ aside.brief.contact{width:min(760px,100%);z-index:70}
 .subtabs .subtab{padding:9px 14px 8px}
 /* Master Book, bell and profile sit on the same row as the main tabs */
 .navbar.has-sub .nav-actions{align-self:flex-end;padding-bottom:4px}
-.navbar.has-sub .nav-actions .btn.dl{padding:6px 12px}.navbar.has-sub .avatar,.navbar.has-sub .bell-btn{width:30px;height:30px}
+.navbar.has-sub .nav-actions .btn.dl{padding:6px 12px}.navbar.has-sub .avatar,.navbar.has-sub .bell-btn,.navbar.has-sub .history-btn{width:30px;height:30px}
 .version .bell-btn{width:26px;height:26px}.version .bell-btn svg{width:14px;height:14px}.version .bell-dot{min-width:15px;height:15px;font-size:9.5px;top:-5px;right:-5px}
 .version .suggest-btn svg{width:18px;height:18px}
+.version .history-btn svg{width:16px;height:16px}
 .version .bell-pop{left:0;right:auto;top:34px}
 
 /* White text that sits on solid colour (same in both themes) */

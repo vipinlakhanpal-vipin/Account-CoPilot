@@ -582,10 +582,11 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
   } else {
     const top = A.filter((a) => sigRank(a.s2p_signal_level) <= 1 && !/coupa/i.test(str(a.existing_s2p_product))).sort((a, b) => sigRank(a.s2p_signal_level) - sigRank(b.s2p_signal_level));
     const ACT = ["Evaluation", "RFP / Tender", "Currently Implementing", "Replacement / Transformation"];
+    const notCoupa = (a: Row) => !/coupa/i.test(str(a.existing_s2p_product));
     const kpis: [string, Row[], Kind][] = [
-      ["Accounts (all lists)", A, "accounts"], ["ICP — Verified", A.filter((a) => a.icp_status === "ICP — Verified"), "accounts"],
-      ["ICP — Likely", A.filter((a) => a.icp_status === "ICP — Likely"), "accounts"],
-      ["ICP — Needs check", A.filter((a) => a.icp_status === "ICP — Needs check" || a.icp_status === "Unknown"), "accounts"],
+      ["Accounts (all lists)", A, "accounts"], ["ICP — Verified", A.filter((a) => a.icp_status === "ICP — Verified" && notCoupa(a)), "accounts"],
+      ["ICP — Likely", A.filter((a) => a.icp_status === "ICP — Likely" && notCoupa(a)), "accounts"],
+      ["ICP — Needs check", A.filter((a) => (a.icp_status === "ICP — Needs check" || a.icp_status === "Unknown") && notCoupa(a)), "accounts"],
       ["Strong / very strong", top, "accounts"], ["Contacts (people)", people, "contacts"],
       ["Confirmed by 2+ sources", people.filter((p) => p.trust === "Confirmed by 2+ sources"), "contacts"], ["Contacts with email", people.filter((p) => p.email), "contacts"],
       ["Signals logged", data.signals, "signals"], ["Conflicts retained", data.conflicts, "conflicts"],
@@ -635,7 +636,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
           <div className="panel"><h2>Contacts by role family</h2><Bars entries={countBy(people, (p) => famKey(p.role_family))} /></div>
           <div className="panel"><h2>Contact trust</h2><Bars entries={countBy(people, (p) => p.trust)} order={(k) => TRUST_ORDER.indexOf(k as Trust)} /></div>
           <div className="panel"><h2>Accounts by origin</h2><Bars entries={countBy(A, originName)} /></div>
-          <div className="panel"><h2>Accounts by ICP status</h2><Bars entries={countBy(A, (a) => a.icp_status || "Unknown")} order={(k) => icpRank(k)} /></div>
+          <div className="panel"><h2>Accounts by ICP status</h2><Bars entries={countBy(A.filter(notCoupa), (a) => a.icp_status || "Unknown")} order={(k) => icpRank(k)} /></div>
         </div>
         <div className="panel" style={{ marginTop: 16 }}>
           <h2 className="with-count">Priority accounts <span className="count">{top.length} {top.length === 1 ? "account" : "accounts"}</span></h2>
