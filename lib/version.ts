@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.93";
+export const APP_VERSION = "2.94";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.94", date: "2026-10-02", notes: "The \"Other Platforms\" dashboard tile (GEP/Jaggaer/Ivalua/Zycus) opens the same combined drill-down table as before, now with a Platform filter dropdown so you can isolate just the Zycus accounts, or just iValua, etc., instead of eyeballing the S2P column row by row.", changes: [
+      { what: "Added a \"Platform\" dropdown filter to the account drill-down table (used by all three Existing Customers tiles)", where: "components/CoPilotApp.tsx (DrillDown)", why: "Requested — the combined Other Platforms tile needed a way to distinguish which specific platform (GEP/Jaggaer/Ivalua/Zycus) each account runs" },
+    ] },
   { version: "2.93", date: "2026-10-02", notes: "New version-history icon next to the version number — the \"What's new\" window only ever showed up once, right when an update landed, with no way back to it afterward. The history icon opens anytime and lists the last 20 releases with changes.", changes: [
       { what: "Added a small clock icon next to the v2.xx badge, opening a \"Version history\" window listing the last 20 releases that had real changes (what/where/why each), always available — not just when an update is pending", where: "components/Header.tsx, app/globals.css (.history-btn)", why: "Requested — once upgraded, there was no way to see what the last update actually changed" },
     ] },
