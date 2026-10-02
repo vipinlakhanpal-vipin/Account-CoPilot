@@ -5,7 +5,7 @@ import DailyRunLocalTime from "@/components/DailyRunLocalTime";
 import { fmtDateTime } from "@/lib/dates";
 
 type Detail = { name: string; status: string; revenue?: string };
-type Entry = { at: string; summary: string; verified: number; new_companies: string[]; details?: Detail[] };
+type Entry = { at: string; summary: string; verified: number; new_companies: string[]; details?: Detail[]; region?: string };
 const statusTag = (s: string) => (/verified/i.test(s) ? "fact" : /likely/i.test(s) ? "likely" : /not icp/i.test(s) ? "conflict" : "unv");
 
 // Bell in the top bar: notifications from the scheduled engine runs (6am daily). Unread = newer than the last time you opened it.
@@ -48,36 +48,36 @@ export default function EngineBell() {
           </div>
           <p className="bell-resize-hint">Drag the bottom-right corner to expand ↘</p>
           {entries.length === 0 ? <p className="note">No runs yet. The engine runs every day at <DailyRunLocalTime /> and posts a summary here.</p>
-            : entries.slice(0, 8).map((e) => (
-              <div key={e.at} className={`bell-item${e.at > seen ? " new" : ""}`}>
-                <small>{fmtDateTime(e.at)}</small>
-                {e.details && e.details.length > 0 ? (() => {
-                  // One region's batch per entry (the engine logs each active region's work separately): split
-                  // its details into what got added today vs. what came off the verification queue, so the two
-                  // don't read as one undifferentiated list — matches the summary line's own "5 new + 20 from
-                  // the queue" breakdown.
-                  const region = e.summary.match(/^([^—]+)—/)?.[1]?.trim();
+            : (() => {
+              // Every active region logs its own entry for the same run (same day, often the same minute). Group
+              // them by day so all regions that ran together show as one Region | Company | New | Verified |
+              // Status | Revenue table, instead of a separate table per region repeating the same columns.
+              const shown = entries.slice(0, 8);
+              const days = new Map<string, Entry[]>();
+              for (const e of shown) { const d = new Date(e.at).toDateString(); (days.get(d) || days.set(d, []).get(d)!).push(e); }
+              return [...days.entries()].map(([day, group]) => {
+                const anyNew = group.some((e) => e.at > seen);
+                const rows = group.flatMap((e) => {
+                  const region = e.region || e.summary.match(/^([^—]+)—/)?.[1]?.trim() || "—";
                   const newSet = new Set(e.new_companies);
-                  const added = e.details.filter((d) => newSet.has(d.name));
-                  const verified = e.details.filter((d) => !newSet.has(d.name));
-                  const rows = (list: Detail[]) => list.slice(0, 12).map((d, i) => (
-                    <tr key={i}><td>{d.name}</td><td><span className={`tag ${statusTag(d.status)}`}>{d.status}</span></td><td className="muted">{d.revenue || "—"}</td>
-                      <td>{/^held/i.test(d.status) && <a className="job-link" href="/settings#engine-pending" onClick={() => setOpen(false)}>Activate →</a>}</td></tr>));
-                  return (<>
-                    {region && <p className="bell-region">{region}</p>}
-                    {added.length > 0 && (<>
-                      <p className="note bell-subhead">Added ({added.length})</p>
-                      <table className="bell-table"><thead><tr><th>Company</th><th>Status</th><th>Revenue</th><th></th></tr></thead><tbody>{rows(added)}</tbody></table></>)}
-                    {verified.length > 0 && (<>
-                      <p className="note bell-subhead">Verified ({verified.length})</p>
-                      <table className="bell-table"><thead><tr><th>Company</th><th>Status</th><th>Revenue</th><th></th></tr></thead><tbody>{rows(verified)}</tbody></table></>)}
-                    <p className="note bell-note">{e.summary}</p>
-                  </>);
-                })() : (<>
-                  <p>{e.summary}</p>
-                  {e.new_companies.length > 0 && <p className="note">New companies: {e.new_companies.slice(0, 8).join(", ")}{e.new_companies.length > 8 ? ` +${e.new_companies.length - 8} more` : ""}</p>}
-                </>)}
-              </div>))}
+                  return (e.details || []).map((d) => ({ region, ...d, isNew: newSet.has(d.name), isVerified: !/unknown/i.test(d.status) }));
+                });
+                return (
+                  <div key={day} className={`bell-item${anyNew ? " new" : ""}`}>
+                    <small>{fmtDateTime(group[0].at)}</small>
+                    {rows.length > 0 ? (
+                      <table className="bell-table"><thead><tr><th>Region</th><th>Company</th><th>New</th><th>Verified</th><th>Status</th><th>Revenue</th><th></th></tr></thead>
+                        <tbody>{rows.slice(0, 24).map((d, i) => (
+                          <tr key={i}><td className="muted">{d.region}</td><td>{d.name}</td><td>{d.isNew ? "✓" : ""}</td><td>{d.isVerified ? "✓" : ""}</td>
+                            <td><span className={`tag ${statusTag(d.status)}`}>{d.status}</span></td><td className="muted">{d.revenue || "—"}</td>
+                            <td>{/^held/i.test(d.status) && <a className="job-link" href="/settings#engine-pending" onClick={() => setOpen(false)}>Activate →</a>}</td></tr>
+                        ))}</tbody></table>
+                    ) : null}
+                    {group.map((e) => <p key={e.at + (e.region || "")} className="note bell-note">{e.summary}</p>)}
+                  </div>
+                );
+              });
+            })()}
           <Link href="/settings#engine" className="btn tiny" onClick={() => setOpen(false)}>Open engine settings</Link>
         </div>)}
     </div>
