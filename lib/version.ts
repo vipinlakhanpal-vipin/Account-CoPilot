@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.88";
+export const APP_VERSION = "2.89";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.89", date: "2026-10-02", notes: "Wizard's \"Activated by\" note moved from crowding the region name to the end of its row, in fine print.", changes: [
+      { what: "\"Activated by <name> on <date>\" moved from right after the region checkbox to a small, right-aligned note at the end of the row", where: "components/HomeWorkspace.tsx, app/globals.css (.hw-region-activated)", why: "Requested" },
+    ] },
   { version: "2.88", date: "2026-10-02", notes: "Bell's scheduled-run log rebuilt as one combined table per day: Region | Company | New | Verified | Status | Revenue — all regions that ran that day in one table, instead of a separate table per region.", changes: [
       { what: "Entries sharing a day are grouped into one table with columns Region, Company, New (✓ if discovered that run), Verified (✓ if a status beyond Unknown was reached), Status, Revenue — replaces the earlier two-table-per-region layout", where: "components/EngineBell.tsx", why: "Requested — a Region column in one shared table reads clearer than a separate heading+table pair per region" },
     ] },

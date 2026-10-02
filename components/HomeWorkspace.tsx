@@ -309,7 +309,6 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                         <label className="hw-region-name">
                           <input type="checkbox" checked={checked} onChange={() => toggleRegion(r.key)} />
                           {r.name} {nextPhase && <span className="hint">— not started yet</span>}
-                          {activatedBy && <span className="hint">— activated by {activatedBy}{activatedAt ? ` on ${fmtDate(activatedAt)}` : ""}</span>}
                         </label>
                         <div className="hw-region-fields">
                           <label>Min net rev<MoneyField value={s.revenue} onChange={(v) => setSize(r.key, { revenue: v })} /></label>
@@ -319,6 +318,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                           <label>Which entities count<select value={s.entity} onChange={(e) => setSize(r.key, { entity: e.target.value as Rules["entity_level"] })}>
                             {OPTIONS.entity.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
                         </div>
+                        {activatedBy && <span className="hw-region-activated">Activated by {activatedBy}{activatedAt ? ` on ${fmtDate(activatedAt)}` : ""}</span>}
                       </div>
                     );
                   })}

@@ -590,6 +590,7 @@ aside.brief.contact{width:min(760px,100%);z-index:70}
 .hw-region-fields input[type="number"]{width:60px}
 .hw-region-fields input[type="text"]{width:72px}
 .hw-region-fields select{min-width:135px}
+.hw-region-activated{flex:none;margin-left:auto;font-size:10.5px;color:var(--muted);white-space:nowrap}
 .hw-tag-sm{font-size:10px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;background:var(--sig-vs-bg);color:var(--sig-vs);border-radius:999px;padding:2px 7px;margin-left:2px}
 .hw-review-grid{display:flex;flex-direction:column;gap:8px}
 .hw-review-row{display:grid;grid-template-columns:170px 1fr;gap:18px;align-items:center;padding:13px 16px;border-radius:10px;font-size:13px}
