@@ -596,6 +596,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
       ["Signals logged", data.signals.filter(inScopeSignal), "signals"], ["Conflicts retained", data.conflicts, "conflicts"],
       ["Employment changes", data.history.filter((h) => /change/i.test(str(h.determination))), "history"],
       ["Possible new S2P projects", A.filter((a) => ACT.includes(a.s2p_platform_status)), "accounts"],
+      ["RFPs / tenders open", A.filter((a) => a.s2p_platform_status === "RFP / Tender" && notCoupa(a)), "accounts"],
     ];
     // Existing platform holders get a different sales lens than a prospect: not "should we target them" (ICP
     // status) but "what do we sell them next". Coupa customers are the agent's own install base (upsell / module
