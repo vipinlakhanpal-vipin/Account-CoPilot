@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.92";
+export const APP_VERSION = "2.93";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.93", date: "2026-10-02", notes: "New version-history icon next to the version number — the \"What's new\" window only ever showed up once, right when an update landed, with no way back to it afterward. The history icon opens anytime and lists the last 20 releases with changes.", changes: [
+      { what: "Added a small clock icon next to the v2.xx badge, opening a \"Version history\" window listing the last 20 releases that had real changes (what/where/why each), always available — not just when an update is pending", where: "components/Header.tsx, app/globals.css (.history-btn)", why: "Requested — once upgraded, there was no way to see what the last update actually changed" },
+    ] },
   { version: "2.92", date: "2026-10-02", notes: "Account brief now shows the Upsell/Cross-sell/Managed Services breakdown for existing-platform accounts, reusing the Coupa Fit scoring already computed for Pipeline — Source-to-Pay (core usage) reads as Upsell, other high-scoring value areas read as Cross-sell candidates, and Managed Services is offered to any existing-platform account regardless of score. Ariba/other-platform accounts get the Managed Services angle only (no Coupa module cross-sell, since those aren't Coupa customers).", changes: [
       { what: "New \"Expansion & Services Opportunity\" block in the account brief for existing Coupa customers (Upsell/Cross-sell/Managed Services, each with its reasoning) and \"Managed Services Opportunity\" for Ariba/GEP/Jaggaer/Ivalua/Zycus accounts", where: "components/CoPilotApp.tsx (Brief), app/globals.css (.tag.opp-*)", why: "Requested — the per-company breakdown from the Existing Customers dashboard mockup (v2.91 shipped the tile-level view only)" },
     ] },

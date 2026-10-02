@@ -10,7 +10,7 @@ import GlobalSearchBar from "@/components/GlobalSearchBar";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useNewVersionInfo } from "@/components/useVersion";
 import { notify } from "@/components/Confirm";
-import { APP_VERSION, TAGLINE } from "@/lib/version";
+import { APP_VERSION, TAGLINE, RELEASES, RELEASE_AUTHOR } from "@/lib/version";
 
 // Main tabs with sub-tabs underneath (Coupa-style). A main tab opens its first sub-tab (items[0]), which also
 // has to stay listed here so this group is found while standing on that page — hideLanding then drops it from
@@ -28,6 +28,9 @@ const SUB_LABEL: Record<string, string> = { Accounts: "All accounts" };
 const Spin = () => (
   <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9M13.5 2.5v3h-3" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
 );
+const HistoryIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7v5l3.5 2M21 12a9 9 0 1 1-3-6.7M21 4v5h-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+);
 
 const TAB_LABEL: Record<string, string> = { pipeline: "Pipeline", accounts: "Accounts", stakeholders: "Stakeholders", signals: "S2P Signals", erp: "ERP & Apps",
   conflicts: "Conflicts", sources: "Sources", reports: "Reports" };
@@ -38,6 +41,8 @@ const PAGE_LABEL: Record<string, string> = { "/research": "Research Queue", "/se
 export default function Header({ meta }: { meta: string }) {
   const { latest, releases, author } = useNewVersionInfo();
   const [showChanges, setShowChanges] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const history = RELEASES.filter((r) => r.changes?.length).slice(0, 20);
   // Open the "what's new" window once per new version (per browser session); the user can close it and reopen it from the banner.
   useEffect(() => {
     if (!latest || !releases.some((r) => r.changes?.length)) return;
@@ -45,10 +50,10 @@ export default function Header({ meta }: { meta: string }) {
     setShowChanges(true);
   }, [latest, releases]);
   useEffect(() => {
-    if (!showChanges) return;
-    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") setShowChanges(false); };
+    if (!showChanges && !showHistory) return;
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") { setShowChanges(false); setShowHistory(false); } };
     window.addEventListener("keydown", esc); return () => window.removeEventListener("keydown", esc);
-  }, [showChanges]);
+  }, [showChanges, showHistory]);
   // Sub-tabs sit right under the active main tab: the row is right-aligned so its last sub-tab ends beneath the active tab.
   const barRef = useRef<HTMLDivElement>(null);
   const subRef = useRef<HTMLDivElement>(null);
@@ -157,6 +162,34 @@ export default function Header({ meta }: { meta: string }) {
           </div>
         </div>
       )}
+      {showHistory && (
+        <div className="wn-backdrop" onClick={() => setShowHistory(false)}>
+          <div className="wn" role="dialog" aria-modal="true" aria-labelledby="vh-title" onClick={(e) => e.stopPropagation()}>
+            <div className="wn-head">
+              <div><p className="wn-kicker">Version history</p><h2 id="vh-title">What's changed, release by release</h2></div>
+              <button type="button" className="wn-close" onClick={() => setShowHistory(false)} aria-label="Close">×</button>
+            </div>
+            <div className="wn-body">
+              {history.map((r) => (
+                <section key={r.version}>
+                  <h3>v{r.version} · {r.date}</h3>
+                  <ol>
+                    {r.changes!.map((c, i) => (
+                      <li key={i}><p className="wn-what">{c.what}</p>
+                        <p className="wn-meta"><span className="wn-tag where">Where</span>{c.where}</p>
+                        <p className="wn-meta"><span className="wn-tag why">Why</span>{c.why}</p></li>
+                    ))}
+                  </ol>
+                </section>
+              ))}
+            </div>
+            <div className="wn-foot">
+              <span className="wn-by">Changes/upgrades were made by — <b>{RELEASE_AUTHOR}</b></span>
+              <span className="wn-actions"><button type="button" className="btn" onClick={() => setShowHistory(false)}>Close</button></span>
+            </div>
+          </div>
+        </div>
+      )}
       {upgraded && (
         <div className="update-bar done" role="status"><span>Updated to <b>Account CoPilot v{upgraded}</b> ✓</span></div>
       )}
@@ -171,6 +204,9 @@ export default function Header({ meta }: { meta: string }) {
                   <button type="button" className="refresh" onClick={() => window.location.reload()}
                     title={latest ? `Version v${latest} is available. Click to load it.` : "Reload the latest data"}>
                     <Spin />v{APP_VERSION}{latest && <span className="dot" aria-label={`New version v${latest} available`} />}
+                  </button>
+                  <button type="button" className="history-btn" onClick={() => setShowHistory(true)} title="See what changed in past updates" aria-label="Version history">
+                    <HistoryIcon />
                   </button>
                   <EngineBell />
                   <SuggestionsButton />
