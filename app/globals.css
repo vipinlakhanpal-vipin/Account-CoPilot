@@ -938,7 +938,7 @@ td.logo-cell{width:40px;padding-top:0;padding-bottom:0;text-align:center}
 .team-access{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
 .team-access label{display:flex;flex-direction:column;gap:6px;font:600 13px var(--body)}
 .team-all{align-self:center;font:600 13px var(--body);color:var(--muted);padding-bottom:8px}
-.team-edit{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:10px 0}
+.team-edit{display:flex;flex-direction:row;align-items:flex-end;gap:10px;flex-wrap:wrap;padding:6px 0}
 .team-edit-actions{display:flex;gap:8px}
 .role-tag{font:700 11.5px var(--body);padding:3px 10px;border-radius:999px;white-space:nowrap}
 .role-tag.super_admin{background:#5B4BC4;color:#FFFFFF}.role-tag.standard{background:#0B7A66;color:#FFFFFF}
@@ -991,8 +991,8 @@ td.logo-cell{width:40px;padding-top:0;padding-bottom:0;text-align:center}
 .team-form .f-how .input-frame{background:color-mix(in srgb, #E0A21B 11%, var(--surface));border-color:color-mix(in srgb, #E0A21B 38%, transparent)}
 .team-form .btn.primary{height:42px}
 .team-all{display:flex;align-items:center;padding:0 12px !important;color:var(--muted) !important}
-.team-edit .team-access{display:flex;flex-direction:column;gap:10px;align-items:flex-start}
-.team-edit .f-role,.team-edit .f-region{display:flex;flex-direction:column;gap:4px;font:600 12px var(--body);width:100%;max-width:220px}
+.team-edit .team-access{display:flex;flex-direction:row;gap:8px;align-items:flex-end;flex-wrap:wrap}
+.team-edit .f-role,.team-edit .f-region{display:flex;flex-direction:column;gap:4px;font:600 12px var(--body);width:auto;max-width:150px}
 .team-edit .input-frame{height:30px;border-radius:7px;font:600 12px var(--body);padding:0 9px}
 .team-edit .team-all{height:30px;padding:0 9px!important;font-size:12px!important}
 /* Password / PIN field with show-hide eye */

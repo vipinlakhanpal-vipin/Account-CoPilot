@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.04";
+export const APP_VERSION = "3.05";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.05", date: "2026-10-02", notes: "Team's \"Change access\" edit row now lays out Role and Region(s) side by side with Save/Cancel, all on one row, instead of stacking them vertically and making each row very tall.", changes: [
+      { what: "Change-access edit controls (Role, Region(s), Save, Cancel) now flex in a row instead of a column", where: "app/globals.css (.team-edit, .team-edit .team-access, .team-edit .f-role/.f-region)", why: "Requested — role and region should sit as two easy side-by-side fields saved in the same row" },
+    ] },
   { version: "3.04", date: "2026-10-02", notes: "Accounts gets a dedicated Exchange column (ADX/DFM/Nasdaq Dubai, with ticker), matching what Pipeline already has — it was only ever shown as small muted text under the company name before, easy to miss even though the Exchange filter worked.", changes: [
       { what: "Added an Exchange column (with ⓘ) right after Company, showing exchange + ticker or a dash if private; removed the same info from its old spot as muted text under the company name to avoid showing it twice", where: "components/CoPilotApp.tsx (tab === \"accounts\")", why: "Requested — the Exchange filter existed but had no visible column to match it" },
     ] },
