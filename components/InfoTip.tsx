@@ -31,6 +31,12 @@ export const HELP = (w: Weights = { w_match: 50, w_opportunity: 30, w_fit: 20, m
       </ul>
       The Sources tab has the full breakdown (who contributed, what evidence backs each fact, reliability and cost).</> },
   exchange: { title: "Exchange", section: "icp", text: <>Which stock exchange the company is listed on (ADX, DFM, Nasdaq Dubai, a foreign exchange…), if any — most accounts are private and have no exchange. This is a listing fact about the company, separate from Source (where its data came from): a company can be both e.g. &quot;Vipin&apos;s XL&quot; and listed on DFM at the same time.</> },
+  stakeholderView: { title: "One row per person vs. All source rows", section: "stakeholders", text: <>
+      <ul className="infotip-list">
+        <li><b>One row per person</b> — every distinct stakeholder, counted once, merged from every row that mentions them (your sheet&apos;s CoPilot/Claude in Copilot/Claude-Seamless rows, plus Claude checks). Ranked by Persona fit, then Trust.</li>
+        <li><b>All source rows</b> — every row exactly as it was imported or added, before merging. If 2 different sources each found the same person, that&apos;s 2 rows here — which is why this number is higher.</li>
+      </ul>
+      Nothing is ever deleted when rows are merged into one person — switch views any time to see the raw rows behind a merged record.</> },
 });
 
 // Popup renders through a portal at a viewport-computed position, so it always stays fully visible —

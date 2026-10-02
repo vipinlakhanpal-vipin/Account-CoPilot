@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.07";
+export const APP_VERSION = "3.08";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.08", date: "2026-10-02", notes: "Added an ⓘ next to Stakeholders' \"One row per person\" / \"All source rows\" toggle, explaining why the two counts differ (835 merged people vs. 1,093 raw rows before merging).", changes: [
+      { what: "New ⓘ tooltip beside the Stakeholder view toggle explaining the two modes and why All source rows is a bigger number than One row per person", where: "components/CoPilotApp.tsx (tab === \"stakeholders\"), components/InfoTip.tsx (HELP.stakeholderView)", why: "Requested — \"what does one row per person 835 and all source rows 1093 [mean]\"" },
+    ] },
   { version: "3.07", date: "2026-10-02", notes: "On a contact-level table (Stakeholders' \"One row per person\"), the \"Filtered results (835)\" button now reads \"Contacts results (835)\" — it was really counting contacts, and the generic word \"results\" didn't say so.", changes: [
       { what: "The All/Filtered toggle's second button reads \"Contacts results\" instead of \"Filtered results\" on any table whose rows are people (reusing the same isPeople check that already drives the \"All Contacts (N)\" line); unchanged everywhere else", where: "components/CoPilotApp.tsx (FilterTable)", why: "Requested — \"Filtered results 835 is contacts 835\"" },
     ] },

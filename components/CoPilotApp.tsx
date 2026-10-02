@@ -455,9 +455,12 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
   } else if (tab === "stakeholders") {
     const rows: Row[] = perPerson ? people : P;
     view = <>
-      <div className="seg-toggle" role="group" aria-label="Stakeholder view">
-        <button type="button" aria-pressed={perPerson} onClick={() => setPerPerson(true)}>One row per person ({people.length})</button>
-        <button type="button" aria-pressed={!perPerson} onClick={() => setPerPerson(false)}>All source rows ({P.length})</button>
+      <div className="seg-toggle-row">
+        <div className="seg-toggle" role="group" aria-label="Stakeholder view">
+          <button type="button" aria-pressed={perPerson} onClick={() => setPerPerson(true)}>One row per person ({people.length})</button>
+          <button type="button" aria-pressed={!perPerson} onClick={() => setPerPerson(false)}>All source rows ({P.length})</button>
+        </div>
+        <InfoTip k="stakeholderView" />
       </div>
       <FilterTable unit={perPerson ? "people" : "rows"} title="Stakeholders" note={perPerson
         ? "Ranked by Persona fit (your buyer personas in Setup → Define ICP), then trust. One row per person, merged from every source (your sheet's CoPilot, Claude in Copilot and Claude-Seamless rows, plus Claude checks). Trust shows how many independent sources agree; select a person to see what each source says. Emails are never guessed."
