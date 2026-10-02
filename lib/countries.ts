@@ -2,7 +2,7 @@
 export const COUNTRIES = [
   { code: "UAE", name: "UAE", flag: "🇦🇪" }, { code: "KSA", name: "Saudi Arabia", flag: "🇸🇦" }, { code: "Qatar", name: "Qatar", flag: "🇶🇦" },
   { code: "Kuwait", name: "Kuwait", flag: "🇰🇼" }, { code: "Oman", name: "Oman", flag: "🇴🇲" }, { code: "Bahrain", name: "Bahrain", flag: "🇧🇭" },
-  { code: "Egypt", name: "Egypt", flag: "🇪🇬" }, { code: "Europe", name: "Europe", flag: "🇪🇺" }, { code: "USA", name: "USA", flag: "🇺🇸" },
+  { code: "Egypt", name: "Egypt", flag: "🇪🇬" }, { code: "USA", name: "USA", flag: "🇺🇸" },
   { code: "UK", name: "United Kingdom", flag: "🇬🇧" }, { code: "Germany", name: "Germany", flag: "🇩🇪" }, { code: "Morocco", name: "Morocco", flag: "🇲🇦" },
   { code: "Kenya", name: "Kenya", flag: "🇰🇪" }, { code: "SouthAfrica", name: "South Africa", flag: "🇿🇦" },
 ] as const;
