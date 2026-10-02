@@ -3,7 +3,7 @@ import { useSearchParams } from "next/navigation";
 import { ALL, COUNTRIES, DEFAULT_COUNTRY as HOME } from "@/lib/countries";
 
 // Country tiles under the main nav. Selecting one filters the dashboard and every tab to that country (kept in ?country=).
-export default function CountryBar({ counts, allowed, showAll = true, home = HOME }: { counts: Record<string, number>; allowed?: string[]; showAll?: boolean; home?: string }) {
+export default function CountryBar({ counts, allowed, showAll = true, home = HOME, active = [] }: { counts: Record<string, number>; allowed?: string[]; showAll?: boolean; home?: string; active?: string[] }) {
   const params = useSearchParams();
   const DEFAULT_COUNTRY = home; // a Standard user's home region
   const current = params.get("country") || DEFAULT_COUNTRY;
@@ -14,11 +14,13 @@ export default function CountryBar({ counts, allowed, showAll = true, home = HOM
     const s = q.toString();
     window.history.pushState(null, "", s ? `/?${s}` : "/");
   };
-  // Super Admin: All + every market. Standard user: only their region(s). A market with zero accounts (nobody's
-  // researched it yet) is left off entirely, rather than shown as a "soon" placeholder — except the one you're
-  // on right now or your home region, so your own tile never vanishes out from under you.
+  // Super Admin: All + every market. Standard user: only their region(s). A market shows once it's Active in
+  // Define ICP (even with 0 accounts — the engine just hasn't run yet) or already has real accounts (covers one
+  // still "Paused" in ICP terms but already populated, like Qatar/Kuwait) — plus the one you're on now or home,
+  // so your own tile never vanishes out from under you.
   const tiles = [...(showAll ? [{ code: ALL, name: "All regions", flag: "🌍" }] : []),
-    ...COUNTRIES.filter((c) => !allowed || allowed.includes(c.code)).filter((c) => counts[c.code] || c.code === current || c.code === DEFAULT_COUNTRY)];
+    ...COUNTRIES.filter((c) => !allowed || allowed.includes(c.code))
+      .filter((c) => counts[c.code] || active.includes(c.code) || c.code === current || c.code === DEFAULT_COUNTRY)];
   return (
     <div className="countrybar" role="tablist" aria-label="Country">
       {tiles.map((c) => {

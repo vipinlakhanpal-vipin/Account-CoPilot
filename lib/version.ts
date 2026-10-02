@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.79";
+export const APP_VERSION = "2.80";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.80", date: "2026-10-02", notes: "v2.79 hid a region's tile purely by account count, which meant activating a region (Wizard or Define ICP) wouldn't show it until the engine actually found a company. A tile now shows as soon as its region is Active in Define ICP, even at 0 accounts, or once it has real accounts either way.", changes: [
+      { what: "Country bar reads each region's Define ICP status; a tile shows once Active (any account count) or once it has real accounts", where: "app/page.tsx, components/CountryBar.tsx", why: "Reported — activating a region should make it appear immediately, not only after the engine populates it" },
+    ] },
   { version: "2.79", date: "2026-10-02", notes: "Region tiles (Dashboard/Accounts/Data) with zero accounts no longer show a \"soon\" placeholder — they're left off the bar entirely until that region has real data, except your current/home region.", changes: [
       { what: "Empty-region \"soon\" tiles removed from the country bar; a region only appears once it has at least one account", where: "components/CountryBar.tsx", why: "Requested" },
     ] },

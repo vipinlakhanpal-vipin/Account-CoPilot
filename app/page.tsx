@@ -3,7 +3,8 @@ import CoPilotApp from "@/components/CoPilotApp";
 import CountryBar from "@/components/CountryBar";
 import { loadAllCached } from "@/lib/dataCache";
 import { getAccess, scopeData } from "@/lib/access";
-import { regionOf } from "@/lib/icpDefinition.mjs";
+import { regionOf, REGIONS } from "@/lib/icpDefinition.mjs";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -20,9 +21,14 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
   const home = access.isSuper ? "UAE" : access.regions[0] || "UAE";
   if (!access.isSuper && !access.regions.length) return (<div className="wrap"><section className="view"><div className="panel"><h2>No region assigned yet</h2>
     <p>Your Super Admin needs to assign you a region in Setup → Team before you can see accounts.</p></div></section></div>);
+  // A region's tile shows once it's Active in Define ICP (even with 0 accounts yet — the engine just hasn't run)
+  // or once it has real accounts (covers a region still "Paused" in ICP terms but already populated, like Qatar/Kuwait).
+  const { data: icpRow } = await supabaseAdmin().from("settings").select("value").eq("key", "icp_definition").maybeSingle();
+  const icpRegions = (icpRow?.value as { regions?: Record<string, { status?: string }> } | null)?.regions || {};
+  const active = REGIONS.map((r) => r.key).filter((k) => icpRegions[k]?.status === "active");
   return (
     <>
-      <CountryBar counts={counts} allowed={access.isSuper ? undefined : access.regions} showAll={access.isSuper} home={home} />
+      <CountryBar counts={counts} allowed={access.isSuper ? undefined : access.regions} showAll={access.isSuper} home={home} active={active} />
       <div className="wrap">
         {data.accounts.length === 0 ? (
           <section className="view"><div className="panel"><h2>No accounts yet</h2>
