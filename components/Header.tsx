@@ -12,15 +12,18 @@ import { useNewVersionInfo } from "@/components/useVersion";
 import { notify } from "@/components/Confirm";
 import { APP_VERSION, TAGLINE } from "@/lib/version";
 
-// Main tabs with sub-tabs underneath (Coupa-style). A main tab opens its first sub-tab.
-const GROUPS: { label: string; items: [string, string][] }[] = [
+// Main tabs with sub-tabs underneath (Coupa-style). A main tab opens its first sub-tab (items[0]), which also
+// has to stay listed here so this group is found while standing on that page — hideLanding then drops it from
+// what's actually shown, for a group (like Dashboard) where that first item is just the main tab's own page
+// and has no other siblings worth presenting it alongside, unlike Accounts' 5 genuinely distinct pages.
+const GROUPS: { label: string; items: [string, string][]; hideLanding?: boolean }[] = [
   { label: "Home", items: [["/home", "Home"]] },
-  { label: "Dashboard", items: [["/", "Dashboard"], ["/?tab=reports", "Reports"]] },
+  { label: "Dashboard", items: [["/", "Dashboard"], ["/?tab=reports", "Reports"]], hideLanding: true },
   { label: "Accounts", items: [["/?tab=accounts", "Accounts"], ["/?tab=pipeline", "Pipeline"], ["/?tab=stakeholders", "Stakeholders"], ["/?tab=signals", "S2P Signals"], ["/?tab=erp", "ERP & Apps"]] },
   { label: "Data", items: [["/?tab=sources", "Sources"], ["/?tab=conflicts", "Conflicts"], ["/research", "Research Queue"]] },
   { label: "Setup", items: [["/icp", "Define ICP"], ["/settings", "Settings"], ["/guide", "Learn Me"], ["/team", "Team"]] },
 ];
-const SUB_LABEL: Record<string, string> = { Accounts: "All accounts", Dashboard: "Overview" };
+const SUB_LABEL: Record<string, string> = { Accounts: "All accounts" };
 
 const Spin = () => (
   <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9M13.5 2.5v3h-3" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -197,7 +200,8 @@ export default function Header({ meta }: { meta: string }) {
             <nav className="subtabs" aria-label={`${g.label} sections`}>
               <div className="subtabs-row" ref={subRef} style={{ marginLeft: subOffset ?? 0, visibility: subOffset === null ? "hidden" : "visible" }}>
                 {g.items.length > 1
-                  ? g.items.map(([href, label]) => <Link key={href} href={href} prefetch className="subtab" aria-selected={label === current} onClick={(e) => go(e, href)}>{SUB_LABEL[label] || label}</Link>)
+                  ? (g.hideLanding ? g.items.filter(([, l]) => l !== g.label) : g.items)
+                      .map(([href, label]) => <Link key={href} href={href} prefetch className="subtab" aria-selected={label === current} onClick={(e) => go(e, href)}>{SUB_LABEL[label] || label}</Link>)
                   : <span className="subtab" aria-hidden="true" style={{ visibility: "hidden" }}>&nbsp;</span> /* keeps the bar's height so nothing jumps */}
               </div>
               {meta && <span className="subtabs-meta">{meta}</span>}

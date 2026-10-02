@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.59";
+export const APP_VERSION = "2.60";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.60", date: "2026-10-02", notes: "The v2.58 \"Overview\" relabel didn't actually fix anything — it still pointed at the exact same page as the main Dashboard tab, just under a different word. Removed that chip entirely: the Dashboard sub-tab row now shows only \"Reports\", since that's the one genuinely different page in that group (unlike Accounts, which has 5 real distinct pages worth listing alongside each other).", changes: [
+      { what: "Dashboard's sub-tab row now shows only \"Reports\" — the redundant landing-page chip (same destination as clicking the main \"Dashboard\" tab, previously labelled \"Dashboard\" then \"Overview\") is no longer shown at all; Accounts keeps its full 5-item row (\"All accounts\" included) since those are genuinely different pages", where: "components/Header.tsx (GROUPS.hideLanding)", why: "Reported — relabeling the duplicate to \"Overview\" didn't address that it was still functionally identical to the main tab, just a confusing second button that did nothing different" },
+    ] },
   { version: "2.59", date: "2026-10-02", notes: "Bigger titles on the Home → About Account CoPilot tiles (Free Daily Search Engine job, Paid Search Engine Job, What each tab does, Tokens & cost, How it verifies, What \"ICP\" means) — they were the same size as the body text under them.", changes: [
       { what: "About-tile titles went from 12.5px (same size as the body text) to 17px", where: "app/globals.css (.hw-about-card h4)", why: "Requested — titles weren't reading as titles" },
     ] },
