@@ -6,7 +6,7 @@ import type { Row } from "@/lib/data";
 // Remembered per table in this browser.
 type Op = "contains" | "is" | "not" | "starts" | "empty" | "filled" | "gte" | "lte";
 export type CustomFilter = { field: string; op: Op; value: string };
-const OPS: [Op, string][] = [["contains", "contains"], ["is", "is"], ["not", "is not"], ["starts", "starts with"], ["empty", "is empty"], ["filled", "is not empty"], ["gte", "≥"], ["lte", "≤"]];
+const OPS: [Op, string][] = [["contains", "contains"], ["is", "is"], ["not", "is not"], ["starts", "starts with"], ["filled", "is known"], ["empty", "is unknown"], ["gte", "≥"], ["lte", "≤"]];
 const HIDE = /^(id|company_id|run_id|entity_id|profile|__|person_key|best_id|rows|sources_json)$|_id$|^__/;
 const LABEL: Record<string, string> = {
   company_name: "Company", company: "Company", full_name: "Full name", title_verbatim: "Title", icp_status: "ICP status", icp_fit_reason: "ICP reason",
@@ -85,7 +85,6 @@ export function CustomFilterBar({ rows, cf }: { rows: Row[]; cf: ReturnType<type
             <span key={i} className="cf-chip">{labelOf(f.field)} <em>{OPS.find(([o]) => o === f.op)?.[1]}</em>{f.op !== "empty" && f.op !== "filled" ? ` "${f.value}"` : ""}
               <button type="button" aria-label="Remove filter" onClick={() => cf.save(cf.list.filter((_, j) => j !== i))}>×</button></span>
           ))}
-          <button type="button" className="cf-clear" onClick={() => cf.save([])}>Clear all</button>
         </div>
       )}
     </>

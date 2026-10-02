@@ -146,16 +146,23 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "
 }) {
   const [q, setQ] = useState("");
   const [fv, setFv] = useState<string[]>(filters.map(() => ""));
+  const [showAll, setShowAll] = useState(false);
   const options = useMemo(() => filters.map((f) => [...new Set(rows.map(f.get).filter(Boolean))].sort()), [rows, filters]);
   const cf = useCustomFilters(rows, title);
   const out = rows.filter((r) => (!q || search(r).toLowerCase().includes(q.toLowerCase())) && filters.every((f, i) => !fv[i] || f.get(r) === fv[i]) && cf.test(r));
+  // "All <unit>" shows every row regardless of the filters above — the search box, dropdowns and custom filters
+  // stay exactly as set, so switching back to "Filtered results" re-applies them instantly (nothing is cleared).
+  const displayed = showAll ? rows : out;
   return (
     <>
-      <h2 className="with-count">{title} <span className="count">{out.length.toLocaleString()} {unit}{out.length !== rows.length ? ` of ${rows.length.toLocaleString()}` : ""}</span></h2>
+      <h2 className="with-count">{title} <span className="count">{displayed.length.toLocaleString()} {unit}{displayed.length !== rows.length ? ` of ${rows.length.toLocaleString()}` : ""}</span></h2>
       {note && (typeof note === "string" ? <p className="note">{note}</p> : note)}
+      <div className="seg-toggle" role="group" aria-label="Show all or filtered">
+        <button type="button" aria-pressed={showAll} onClick={() => setShowAll(true)}>All {unit} ({rows.length.toLocaleString()})</button>
+        <button type="button" aria-pressed={!showAll} onClick={() => setShowAll(false)}>Filtered results ({out.length.toLocaleString()})</button>
+      </div>
       <div className="filters">
         <input type="search" className={`flt-search${q ? " on" : ""}`} placeholder={`Search ${title.toLowerCase()}…`} aria-label="Search" value={q} onChange={(e) => setQ(e.target.value)} />
-        {(q || fv.some(Boolean) || cf.list.length > 0) && <button type="button" className="btn clear" onClick={() => { setQ(""); setFv(filters.map(() => "")); cf.save([]); }}>Clear filters</button>}
         {filters.map((f, i) => (
           <select key={f.label} aria-label={f.label} value={fv[i]} className={`flt f${(i % 8) + 1}${fv[i] ? " on" : ""}`} onChange={(e) => setFv(fv.map((x, j) => (j === i ? e.target.value : x)))}>
             <option value="">{f.label}: all</option>
@@ -165,14 +172,14 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "
 
         <CustomFilterBar rows={rows} cf={cf} />
       </div>
-      <p className="filter-count">{out.length} of {rows.length} rows
-          {rows.some((r) => r.company_id) && <> · {new Set(out.map((r) => r.company_id)).size} {new Set(out.map((r) => r.company_id)).size === 1 ? "company" : "companies"}</>}</p>
+      <p className="filter-count">{showAll ? <>Showing all {rows.length.toLocaleString()} rows — {out.length.toLocaleString()} match the filters below</> : <>{out.length.toLocaleString()} of {rows.length.toLocaleString()} rows</>}
+          {rows.some((r) => r.company_id) && <> · {new Set(displayed.map((r) => r.company_id)).size} {new Set(displayed.map((r) => r.company_id)).size === 1 ? "company" : "companies"}</>}</p>
       {empty && q.trim().length >= 2 && out.length === 0 && empty(q.trim())}
       <div className="tablewrap">
         <table>
           <thead><tr><th className="num">#</th>{cols.map((c) => <th key={c.h} className={c.cls}>{c.h}{c.tip && <InfoTip k={c.tip} w={tipW} />}</th>)}</tr></thead>
           <tbody>
-            {out.map((r, i) => (
+            {displayed.map((r, i) => (
               <tr key={r.id || i} className={onRow ? "click" : undefined} tabIndex={onRow ? 0 : undefined}
                 onClick={(e) => { if (onRow && !(e.target as HTMLElement).closest("a")) onRow(r); }}
                 onKeyDown={(e) => { if (onRow && e.key === "Enter") onRow(r); }}>

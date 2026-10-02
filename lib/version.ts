@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.60";
+export const APP_VERSION = "2.61";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,11 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.61", date: "2026-10-02", notes: "Every table across the app (Accounts, Pipeline, Stakeholders, S2P signals, ERP, Sources, Reports — they all share one filter bar) gets: an \"All <unit>\" / \"Filtered results\" toggle that shows everything unfiltered without discarding your filter setup; the blanket \"Clear filters\" and \"Clear all\" buttons removed (each filter's own × or its \"all\" option is enough); and the custom filter's \"is empty\"/\"is not empty\" conditions relabelled \"is known\"/\"is unknown\" — e.g. \"Title is unknown\" to find gaps in the data.", changes: [
+      { what: "Added an \"All <unit> (N)\" / \"Filtered results (N)\" toggle above every table's filter row. Selecting \"All\" shows every row, but the search box, dropdown filters and custom filters stay exactly as set — switching back to \"Filtered results\" re-applies them instantly, nothing is cleared", where: "components/CoPilotApp.tsx (FilterTable)", why: "Requested — a way to see everything unfiltered without losing a filter setup you've built" },
+      { what: "Removed the blanket \"Clear filters\" button (search + dropdowns + custom filters at once) and the custom filter bar's \"Clear all\" — each dropdown already resets to \"all\" on its own and each custom-filter chip already has its own × to remove just that one", where: "components/CoPilotApp.tsx, components/CustomFilters.tsx", why: "Requested — each filter's own control is enough; a blanket clear button was redundant and, worse, destructive" },
+      { what: "Custom filter conditions \"is empty\" / \"is not empty\" relabelled \"is unknown\" / \"is known\" (same logic — a blank field vs. a filled one) — available for any field, in every table's custom filter, since they all share this one component", where: "components/CustomFilters.tsx (OPS)", why: "Requested — e.g. filter Title = known or unknown to find data gaps" },
+    ] },
   { version: "2.60", date: "2026-10-02", notes: "The v2.58 \"Overview\" relabel didn't actually fix anything — it still pointed at the exact same page as the main Dashboard tab, just under a different word. Removed that chip entirely: the Dashboard sub-tab row now shows only \"Reports\", since that's the one genuinely different page in that group (unlike Accounts, which has 5 real distinct pages worth listing alongside each other).", changes: [
       { what: "Dashboard's sub-tab row now shows only \"Reports\" — the redundant landing-page chip (same destination as clicking the main \"Dashboard\" tab, previously labelled \"Dashboard\" then \"Overview\") is no longer shown at all; Accounts keeps its full 5-item row (\"All accounts\" included) since those are genuinely different pages", where: "components/Header.tsx (GROUPS.hideLanding)", why: "Reported — relabeling the duplicate to \"Overview\" didn't address that it was still functionally identical to the main tab, just a confusing second button that did nothing different" },
     ] },
