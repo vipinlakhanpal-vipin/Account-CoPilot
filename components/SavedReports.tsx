@@ -1,11 +1,15 @@
 "use client";
 import { useEffect, useState } from "react";
 import { fmtDateTime } from "@/lib/dates";
+import { ask } from "@/components/Confirm";
 import type { Criteria } from "@/lib/icp";
 import type { CustomFilter } from "@/components/CustomFilters";
 
 type TableFilters = { q: string; fv: string[]; cf: CustomFilter[] };
 type SavedReport = { id: string; name: string; criteria: Criteria; table_filters?: TableFilters; created_by: string; created_at: string; match_count: number };
+
+const ViewIcon = () => <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 8s2.5-4.5 7-4.5S15 8 15 8s-2.5 4.5-7 4.5S1 8 1 8Z" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" /><circle cx="8" cy="8" r="2" fill="none" stroke="currentColor" strokeWidth="1.4" /></svg>;
+const DeleteIcon = () => <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M6 4.5V3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1.5M6.5 7.5v4.5M9.5 7.5v4.5M4 4.5l.6 8.4a1.2 1.2 0 0 0 1.2 1.1h4.4a1.2 1.2 0 0 0 1.2-1.1l.6-8.4" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>;
 
 // Dashboard → Reports: save the current search/filter under a name, and revisit it later — re-run live against
 // current data (not a frozen snapshot), so a saved report's numbers stay current. Captures both the Discovery
@@ -34,6 +38,15 @@ export default function SavedReports({ criteria, tableState, onOpen }:
     setBusy(false);
   }
 
+  async function del(it: SavedReport) {
+    if (!(await ask({ title: "Delete this saved report?", body: it.name, points: ["This can't be undone."], confirm: "Delete", tone: "danger" }))) return;
+    try {
+      const res = await fetch("/api/reports", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: it.id }) });
+      const j = await res.json();
+      if (res.ok) setItems(j.items);
+    } catch { /* best-effort */ }
+  }
+
   return (
     <div className="saved-reports">
       <div className="saved-reports-head">
@@ -56,7 +69,11 @@ export default function SavedReports({ criteria, tableState, onOpen }:
                 <td className="muted">{it.created_by}</td>
                 <td className="muted">{fmtDateTime(it.created_at)}</td>
                 <td className="muted">{it.match_count}</td>
-                <td><button type="button" className="btn tiny" onClick={() => onOpen(it.criteria, it.table_filters || { q: "", fv: [], cf: [] })}>Open →</button></td>
+                <td className="saved-reports-row-actions">
+                  <button type="button" className="btn icon" title="Open this report" aria-label="Open this report"
+                    onClick={() => onOpen(it.criteria, it.table_filters || { q: "", fv: [], cf: [] })}><ViewIcon /></button>
+                  <button type="button" className="btn icon danger" title="Delete this report" aria-label="Delete this report" onClick={() => del(it)}><DeleteIcon /></button>
+                </td>
               </tr>
             ))}</tbody>
           </table>

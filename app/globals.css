@@ -121,6 +121,11 @@ nav.tabs::-webkit-scrollbar{display:none}
 
 /* buttons */
 .btn{font:500 13px var(--body);border:1px solid var(--line-2);background:var(--surface-2);color:var(--text);padding:8px 14px;border-radius:8px;cursor:pointer;text-decoration:none;display:inline-block}
+.btn.icon{width:28px;height:28px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:50%}
+.btn.icon svg{width:15px;height:15px}
+.btn.icon:hover{border-color:var(--teal);color:var(--teal)}
+.btn.icon.danger{background:var(--surface-2);color:var(--text);border-color:var(--line-2)}
+.btn.icon.danger:hover{border-color:#B42318;color:#B42318}
 .btn:hover{border-color:var(--teal);color:var(--text-strong);text-decoration:none}
 .btn.primary{background:var(--teal);color:var(--accent-ink);border-color:var(--teal);font-weight:600}
 .btn.primary:hover{background:var(--accent-hover);color:var(--accent-ink)}
@@ -154,6 +159,7 @@ h2{font-family:var(--display);font-weight:600;font-size:16px;letter-spacing:.06e
 .saved-reports-head h4{margin:0;font-size:14px}
 .saved-reports-naming{display:flex;gap:6px;align-items:center}
 .saved-reports-naming input{background:var(--accent-soft);border:1px solid transparent;border-radius:7px;padding:6px 9px;font-size:13px;min-width:180px}
+.saved-reports-row-actions{display:flex;gap:6px}
 
 /* Conflicts tab + account-brief "Conflicts retained": grouped by company > person, candidates ranked and one
    suggested, with a Super-Admin "Review & resolve" picker that writes the chosen value back to the real record. */

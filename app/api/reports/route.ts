@@ -40,3 +40,15 @@ export async function POST(req: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ items });
 }
+
+export async function DELETE(req: Request) {
+  const user = await requireUser();
+  if (!user) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
+  const { id } = await req.json().catch(() => ({}));
+  if (typeof id !== "string") return NextResponse.json({ error: "Bad request." }, { status: 400 });
+  const db = supabaseAdmin();
+  const items = (await getItems(db)).filter((x) => x.id !== id);
+  const { error } = await db.from("settings").upsert({ key: "saved_reports", value: { items }, updated_at: new Date().toISOString() });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ items });
+}

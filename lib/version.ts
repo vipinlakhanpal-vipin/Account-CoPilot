@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.68";
+export const APP_VERSION = "2.69";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.69", date: "2026-10-02", notes: "Saved reports: replaced the \"Open →\" text button with a view icon, and added a delete icon per report — needed now that a report saved before v2.67 has no filter to restore and has to be deleted and redone.", changes: [
+      { what: "Each saved report row now has a view (eye) icon button, doing exactly what \"Open →\" did, and a delete (trash) icon button that removes it after a confirmation — permanent, can't be undone", where: "components/SavedReports.tsx; new DELETE on app/api/reports" , why: "Requested — icon buttons instead of text, and a way to remove a report saved before the v2.67 fix (which can't be retroactively repaired)" },
+    ] },
   { version: "2.68", date: "2026-10-02", notes: "Reports' description only credited the Discovery panel and the header search bar for narrowing results — it never mentioned the table's own search box, dropdowns or + Custom filter, which is often doing all the actual work (as in v2.67's fix). Reworded to credit all of it plainly, with no \"layers\" to understand.", changes: [
       { what: "Reports' intro text now reads \"Narrow it with the search box, dropdowns or + Custom filter below, or the Discovery panel on the left — saving a report remembers whatever you've set, however you set it\"", where: "components/CoPilotApp.tsx (tab === \"reports\")", why: "Reported — the old text implied only the Discovery panel/header search mattered, which was never true and was never documented anywhere" },
     ] },
