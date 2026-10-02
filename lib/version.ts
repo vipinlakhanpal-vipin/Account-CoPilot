@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.23";
+export const APP_VERSION = "3.24";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,12 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.24", date: "2026-10-02", notes: "Two additions answering \"how do I get the most from this AI Agent\": every account brief now has a Procurement & IT Maturity rating (Advanced / Developing / Basic / Unknown, with a plain-English reason and the 4 signals behind it — current platform, ERP, S2P signal strength, addressable spend), and the Home page leads with a bold banner answering the two questions anyone new to the app is likely to ask — who to target, and how ready they are.", changes: [
+      { what: "New procurementMaturity() — a plain-English maturity rating built from existing S2P platform, ERP family, S2P signal strength and addressable spend; previously this only existed as a single hidden 10-point line inside the ICP Match score tooltip", where: "lib/icp.ts (procurementMaturity)", why: "Requested — a colleague asked how to judge an account's procurement/IT readiness, and the honest answer was \"that's not really surfaced anywhere\"" },
+      { what: "New \"Procurement & IT maturity\" block in every account brief — level pill, reasoning, and a 4-field grid (platform/ERP/signal/spend)", where: "components/CoPilotApp.tsx (Brief)", why: "Make the maturity answer visible and loud, not buried in a tooltip" },
+      { what: "Bold gradient banner at the top of Home → About Account CoPilot (same gradient as the What's new / Version history windows) answering \"who should we target next\" (Pipeline) and \"how ready are they\" (the new maturity block) in plain language", where: "components/HomeWorkspace.tsx, app/globals.css (.hw-loud*)", why: "Requested — make the app's value loud and unmissable to anyone new reading the Home page" },
+      { what: "Account brief section in Learn Me updated to document the new Procurement & IT maturity block", where: "app/guide/page.tsx", why: "Keep Learn Me in sync with the feature, per the standing commitment to update it going forward" },
+    ] },
   { version: "3.23", date: "2026-10-02", notes: "Fixed v3.21's fix: the region row's fields box was set to flex-grow, so it expanded to swallow all the row's spare width (visible as dead space after \"Which entities count\"), which pushed the Activated-by status onto its own line even when there was clearly room beside it. Fields now render at exactly their natural width and never grow, so Status shares the same line whenever there's space, dropping to its own line only when the row is genuinely too narrow.", changes: [
       { what: "Region row's fields box set to flex:0 0 auto (no grow, no shrink, natural content width) instead of flex-growing to fill the row", where: "app/globals.css (.hw-region-fields)", why: "Reported — Activated-by status note dropped to its own line with visible empty space still beside the fields, on a normal-width Chrome window" },
     ] },

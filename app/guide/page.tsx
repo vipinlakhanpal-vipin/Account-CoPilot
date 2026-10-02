@@ -287,6 +287,7 @@ export default async function GuidePage() {
               <ul className="plain">
                 <li><b>Facts:</b> website, revenue with its source, listing, employees, ICP fit, ownership, parent, board phone, last researched, record dates, ICP status and reason, lists.</li>
                 <li><b>AI intelligence:</b> the three score cards with every part; <b>Why this account was selected</b> (criteria matched, spend estimate, technology, maturity, triggers); spend estimates (if turned on); <b>Recommended actions</b>: who to connect with, suggested messaging, discovery questions, pain points, Coupa use cases, next steps.</li>
+                <li><b>Procurement &amp; IT maturity:</b> one clear Advanced / Developing / Basic / Unknown rating with a plain-English reason, built from their current S2P platform, ERP, S2P signal strength and addressable spend — answers &quot;how ready is this account for an S2P implementation&quot; in one look instead of digging through score tooltips.</li>
                 <li><b>S2P intelligence, ERP & apps, transformation context, your profiling, opportunity notes, stakeholders, conflicts, evidence.</b></li>
                 <li><b>Draft pitch plan</b> and <b>Refresh research</b> call the paid API (amber cost note).</li>
               </ul></section>

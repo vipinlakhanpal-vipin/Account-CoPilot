@@ -182,6 +182,31 @@ const maturity = (a: Row) => {
   return { level: "Unknown", pts: 0.4 };
 };
 
+export type Maturity = { level: "Advanced" | "Developing" | "Basic" | "Unknown"; why: string; platform: string; erp: string; signal: string };
+/** Procurement & IT maturity: a plain-English read of how ready an account is for an S2P platform — built from
+ * what they already run (an S2P suite, their ERP) and how strong their buying signal is. Shown in the Brief so
+ * "how mature is this account" has one clear answer instead of being buried inside the ICP Match score. */
+export function procurementMaturity(a: Row): Maturity {
+  const platformRaw = s(a.existing_s2p_product);
+  const platform = platformRaw && !/unknown|no evidence/i.test(platformRaw) ? platformRaw : "";
+  const erp = erpFamily(a);
+  const sig = s(a.s2p_signal_level);
+  const hasSuite = /coupa|ariba|\bgep\b|jaggaer|ivalua|zycus|oracle procurement/i.test(platformRaw);
+  const erpModern = erp === "SAP" || erp === "Oracle" || erp === "Microsoft";
+  const sigStrong = /VERY STRONG|^STRONG/i.test(sig);
+  const noEvidence = /no evidence/i.test(platformRaw);
+  const nothingKnown = !platform && !erp && !sig;
+
+  if (hasSuite) return { level: "Advanced", platform: platformRaw, erp: erp || "Unknown", signal: sig || "No signal",
+    why: `Already runs a source-to-pay suite (${platformRaw}) — the question is expansion and services, not readiness.` };
+  if (nothingKnown) return { level: "Unknown", platform: "Unknown", erp: "Unknown", signal: "No signal",
+    why: "Not enough evidence yet on their procurement or IT setup to judge readiness — worth a closer look before prioritising." };
+  if (erpModern || sigStrong) return { level: "Developing", platform: platform || "None found (manual / in-house)", erp: erp || "Unknown", signal: sig || "No signal",
+    why: `${erpModern ? `Runs ${erp} as its core ERP` : "Shows a strong buying signal"}${sigStrong && erpModern ? ", with a strong S2P signal too" : ""}, but no dedicated source-to-pay suite yet — a realistic greenfield opportunity.` };
+  return { level: "Basic", platform: platform || (noEvidence ? "No evidence of any S2P platform" : "Unknown"), erp: erp || "Unknown", signal: sig || "No signal",
+    why: "No source-to-pay suite, modern ERP or strong buying signal evidenced — procurement likely still runs on manual or legacy tools." };
+}
+
 /** ICP Match: how well the account fits the criteria. Only criteria the user set are scored; unset ones are neutral. */
 export function icpMatch(a: Row, c: Criteria): Score {
   const k = c.company, parts: Part[] = [];

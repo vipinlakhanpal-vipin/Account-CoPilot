@@ -250,6 +250,17 @@ export default function HomeWorkspace({ access }: { access: Access }) {
             <p className="hw-lead hw-lead-justify">Account CoPilot is an <b>AI Agent</b> — it works on its own, not only when you ask. Every morning it looks for new
               companies fitting your ICP, checks their numbers against official sources, and updates your database. Nothing here is invented: every
               figure carries a source and a confidence label.</p>
+            <div className="hw-loud">
+              <p className="hw-loud-kicker">Put this agent to work</p>
+              <h3 className="hw-loud-h">Two questions this app answers for you, every single day</h3>
+              <div className="hw-loud-grid">
+                <div><p className="hw-loud-q">Who should we target next?</p>
+                  <p className="hw-loud-a">Open <b>Pipeline</b>. Every account is ranked by one number — fit, buying signals and Coupa fit combined. Top of the list is who to call first, no guesswork.</p></div>
+                <div><p className="hw-loud-q">How ready are they for an S2P platform?</p>
+                  <p className="hw-loud-a">Open any account&apos;s <b>brief</b> and check <b>Procurement &amp; IT maturity</b> — their current platform, ERP, signal strength and addressable spend laid out together, the readiness picture in one look.</p></div>
+              </div>
+              <p className="hw-loud-foot">Every figure above carries a source and a confidence label — nothing here is a guess.</p>
+            </div>
             <div className="hw-about-grid">
               <div className="hw-about-card hw-about-card--teal"><span className="hw-icon-badge"><Ico name="search" /></span><h4>Free Daily Search Engine job</h4>
                 <ul>

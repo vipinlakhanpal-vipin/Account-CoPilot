@@ -18,7 +18,7 @@ import { groupConflicts } from "@/lib/conflicts";
 import { SOURCES, indexSources, evidenceGroup, originName, simpleOrigin } from "@/lib/sources";
 import { buildPeople, contributorOf, TRUST_ORDER, type Person, type Trust } from "@/lib/people";
 import { supabaseBrowser } from "@/lib/supabase/browser";
-import { withDefaults, icpMatch, opportunity, coupaFit, companyPasses, contactMatches, estimateSpend, whySelected, recommendedActions, revenueOf,
+import { withDefaults, icpMatch, opportunity, coupaFit, companyPasses, contactMatches, estimateSpend, whySelected, recommendedActions, revenueOf, procurementMaturity,
   type Criteria, type Score } from "@/lib/icp";
 import SavedReportsList, { SaveReportButton, type SavedReport } from "@/components/SavedReports";
 
@@ -690,6 +690,7 @@ function Brief({ a, data, people, onClose, onContact, scores, criteria, isSuper 
   scores?: Scores; criteria: Criteria; isSuper: boolean }) {
   const router = useRouter();
   const spend = criteria.showSpend ? estimateSpend(a) : null;
+  const mat = procurementMaturity(a);
   const why = scores ? whySelected(a, criteria, scores.m, spend) : [];
   const rec = scores ? recommendedActions(a, people, scores.f) : null;
   const cs = [...people].sort((x, y) => str(x.contact_tier).localeCompare(str(y.contact_tier)));
@@ -775,6 +776,16 @@ function Brief({ a, data, people, onClose, onContact, scores, criteria, isSuper 
             </div>
             <p className="note">Scores and recommendations are rule-based on the evidence in this brief (no API cost). For a tailored write-up use Draft pitch plan below.</p>
           </div>}
+          <div className="block">
+            <div className="mat-head"><h4>Procurement &amp; IT maturity</h4><span className={`mat-pill mat-${mat.level.toLowerCase()}`}>{mat.level}</span></div>
+            <p className="note">{mat.why}</p>
+            <div className="mat-grid">
+              <div><small>Current S2P platform</small><b>{mat.platform}</b></div>
+              <div><small>ERP</small><b>{mat.erp}</b></div>
+              <div><small>S2P signal strength</small><b>{mat.signal}</b></div>
+              <div><small>Addressable spend</small><b>{spend ? usd(spend.total) : "Switch on in Discovery panel"}</b></div>
+            </div>
+          </div>
           <div className="block"><h4>S2P intelligence</h4><p>{a.s2p_strong_signals || "No S2P evidence found."}</p>
             {a.existing_s2p_detail && <p className="note">Detail: {a.existing_s2p_detail}</p>}
             <p className="note">Coupa: {a.coupa_opportunity_type || "No Evidence"} · Ariba: {a.ariba_opportunity_type || "No Evidence"}</p>
