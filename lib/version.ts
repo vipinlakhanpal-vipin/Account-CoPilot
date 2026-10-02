@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.86";
+export const APP_VERSION = "2.87";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.87", date: "2026-10-02", notes: "Dashboard title now shows which region you're viewing — \"Dashboard-UAE\", \"Dashboard-Kuwait\", etc. — instead of a bare \"Dashboard\" that gave no clue which region's data was on screen. Plain \"Dashboard\" when viewing All regions. The subtitle (previously always said \"UAE\" regardless of the region selected) now names the real one too.", changes: [
+      { what: "Dashboard heading reads \"Dashboard-<Region>\" (e.g. Dashboard-UAE, Dashboard-Kuwait) when a specific region is selected, plain \"Dashboard\" for All regions; the subtitle text now names the actual selected region instead of always saying UAE", where: "components/CoPilotApp.tsx", why: "Requested — make it obvious at a glance which region's dashboard you're looking at" },
+    ] },
   { version: "2.86", date: "2026-10-02", notes: "The country/region tile bar now wraps to a second row when there are too many to fit, instead of scrolling sideways with a hidden scrollbar — matters now that up to 13 regions can appear as they get populated.", changes: [
       { what: "Country bar wraps instead of horizontally scrolling", where: "app/globals.css (.countrybar)", why: "Requested — more regions are now active/populating, and a hidden-scrollbar overflow isn't discoverable" },
     ] },
