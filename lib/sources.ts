@@ -93,6 +93,18 @@ export function originOf(a: Row): "workbook" | "claude-research" | "seamless-dis
 }
 export const originName = (a: Row) => SOURCES.find((d) => d.key === originOf(a))?.name || "Other";
 
+/** A simpler 3-way lens on origin, for everyday browsing (e.g. the Accounts filter) — the full 5-origin
+ * breakdown above stays the source of truth for the Sources tab. Vipin's own input (workbook + anything
+ * he's personally confirmed) / Claude finding or researching a company on its own / the free Seamless search
+ * Claude runs and cleans before import. */
+export function simpleOrigin(a: Row): "Vipin's XL – Stakeholders" | "Claude Sources" | "Claude + Seamless" | "Other" {
+  const o = originOf(a);
+  if (o === "workbook" || o === "user-list") return "Vipin's XL – Stakeholders";
+  if (o === "claude-research" || o === "claude-discovery") return "Claude Sources";
+  if (o === "seamless-discovery") return "Claude + Seamless";
+  return "Other";
+}
+
 export type SourceIndex = Record<string, Row[]>; // key → companies
 export function indexSources(accounts: Row[], sources: Row[], contacts: Row[]): SourceIndex {
   const src: Record<string, Row[]> = {}, ppl: Record<string, Row[]> = {};

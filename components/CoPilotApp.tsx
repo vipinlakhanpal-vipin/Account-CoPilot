@@ -15,7 +15,7 @@ import { ALL, COUNTRIES, DEFAULT_COUNTRY, countryCode } from "@/lib/countries";
 import DiscoveryPanel from "@/components/DiscoveryPanel";
 import ConflictGroupsView from "@/components/ConflictsPanel";
 import { groupConflicts } from "@/lib/conflicts";
-import { SOURCES, indexSources, evidenceGroup, originName } from "@/lib/sources";
+import { SOURCES, indexSources, evidenceGroup, originName, simpleOrigin } from "@/lib/sources";
 import { buildPeople, contributorOf, TRUST_ORDER, type Person, type Trust } from "@/lib/people";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { withDefaults, icpMatch, opportunity, coupaFit, companyPasses, contactMatches, estimateSpend, whySelected, recommendedActions, revenueOf,
@@ -404,7 +404,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
     view = <FilterTable unit="companies" title="Accounts" empty={notFound} note="ICP = net revenue ≥ $250M and 100+ employees (stock listing not required). ✓ Verified: confirmed from an official source · ● Likely: your data / Seamless say ≥ $250M, not yet confirmed · ! Needs check: sources disagree about $250M · ? Unknown: no revenue figure yet · ✕ Not ICP: below $250M. Hover a status for the reason; select a row to open the account brief."
       rows={[...A].sort((a, b) => icpRank(a.icp_status) - icpRank(b.icp_status) || sigRank(a.s2p_signal_level) - sigRank(b.s2p_signal_level) || (bestRevenue(b).v || 0) - (bestRevenue(a).v || 0))}
       search={(a) => [a.company_name, a.industry, a.erp, a.existing_s2p_product, a.s2p_strong_signals].join(" ")}
-      filters={[{ label: "ICP status", get: (a) => a.icp_status }, { label: "Source", get: (a) => (a.lists || []).join(" + ") },
+      filters={[{ label: "ICP status", get: (a) => a.icp_status }, { label: "Source", get: (a) => simpleOrigin(a) },
         { label: "Signal", get: (a) => a.s2p_signal_level }, { label: "S2P Platform", get: (a) => a.existing_s2p_product }, { label: "Industry", get: (a) => a.industry },
         { label: "Exchange", get: (a) => a.exchange }, { label: "Country", get: (a) => a.country }]}
       cols={[{ h: "", cls: "logo-cell", cell: (a) => <CompanyLogo a={a} /> }, { h: "Company", field: "company_name", cell: (a) => <><b>{a.company_name}</b><div className="muted mono">{a.exchange} {a.ticker}</div></> },

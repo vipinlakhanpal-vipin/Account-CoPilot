@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.01";
+export const APP_VERSION = "3.02";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,11 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.02", date: "2026-10-02", notes: "Accounts' \"Source\" filter now shows 3 simple, non-overlapping buckets — Vipin's XL – Stakeholders, Claude Sources, Claude + Seamless — instead of the raw, overlapping list tags that didn't line up with any one number. The detailed 5-origin breakdown with reliability/cost notes stays intact on the Sources tab for anyone who wants the full picture. Also shrunk the header search bar slightly — it was squeezing the Setup tab against Master Book on narrower screens.", changes: [
+      { what: "Added simpleOrigin() — a 3-bucket lens over the existing single-origin originOf() (Vipin's XL – Stakeholders = workbook + your confirmations; Claude Sources = Claude research + Claude discovery; Claude + Seamless = Seamless discovery), each company counted exactly once", where: "lib/sources.ts (simpleOrigin)", why: "Requested — a simpler, non-overlapping source view for everyday browsing, without touching the detailed Sources tab catalogue" },
+      { what: "Accounts table's \"Source\" filter now uses simpleOrigin() instead of the raw, multi-tag lists field", where: "components/CoPilotApp.tsx (tab === \"accounts\")", why: "The previous \"Source\" (renamed from \"List\" last version) showed overlapping tags like \"Your profiling\"/\"Stakeholders\" that didn't match any single count a user expected" },
+      { what: "Header search bar's flex basis/max-width reduced (420→340px group, 380→300px input, max-width 460→360px)", where: "app/globals.css (.gsearch-group, .gsearch)", why: "Reported — the search bar was crowding the Setup tab against the Master Book button" },
+    ] },
   { version: "3.01", date: "2026-10-02", notes: "Version numbering moves to v3.x from here. Fixed the Rank info-tip (and every other ⓘ tooltip) clipping off-screen when its column sits near the left edge of a wide table, like Pipeline's Rank column — it now always renders fully on screen. The Rank tooltip also explains ICP Match, Opportunity and Coupa Fit in one place now, instead of only showing the weighted-sum formula.", changes: [
       { what: "Info-tip popups now render through a portal at a position computed from the trigger button's actual screen location, clamped to stay within the viewport — fixes popups getting clipped by a table's own horizontal scroll container (most visible on Pipeline's Rank column, near the table's left edge)", where: "components/InfoTip.tsx, app/globals.css (.infotip-pop)", why: "Reported — clicking the Rank column's ⓘ showed a popup cut off on the left, unreadable" },
       { what: "Rank tooltip now leads with a plain-language one-line explanation of each of the three scores (ICP Match, Opportunity, Coupa Fit) before the weighted formula and example", where: "components/InfoTip.tsx (HELP.rank)", why: "Requested — a quick reckoner for what each percentage means, without having to open 3 separate tooltips or go to Learn Me" },
