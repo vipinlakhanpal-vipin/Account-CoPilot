@@ -239,15 +239,6 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
     router.replace(`${pathname}?${next.toString()}`);
     /* eslint-disable-next-line react-hooks/exhaustive-deps */
   }, [params]);
-  // Header's "advanced filters" shortcut (?openFilters=1): just makes sure the Discovery panel is open.
-  useEffect(() => {
-    if (!params.get("openFilters")) return;
-    setCollapsed(false);
-    try { localStorage.setItem("dp-collapsed", "0"); } catch {}
-    const next = new URLSearchParams(params.toString()); next.delete("openFilters");
-    router.replace(`${pathname}?${next.toString()}`);
-    /* eslint-disable-next-line react-hooks/exhaustive-deps */
-  }, [params]);
   const toggle = () => setCollapsed((c) => { try { localStorage.setItem("dp-collapsed", c ? "0" : "1"); } catch {} return !c; });
   async function saveCriteria(c: Criteria) {
     if (!isSuper) return { ok: false, error: "Only a Super Admin can save the team's filters. Your changes still apply to your own view." };

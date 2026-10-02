@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.61";
+export const APP_VERSION = "2.62";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.62", date: "2026-10-02", notes: "The funnel icon in the header just navigated to Accounts and opened the Discovery panel — not an actual filter. It now opens a popover to build a real custom filter (field / condition / value, including the same \"is known\"/\"is unknown\" conditions from v2.61), the same logic as every table's own \"+ Custom filter\", then applies it directly to the Accounts table when you click Apply.", changes: [
+      { what: "The header's funnel button now opens a popover to build one or more conditions (field, condition — contains/is/is not/starts with/is known/is unknown/≥/≤ — and a value) using the same field-label and condition logic as every table's own custom filter bar, then applies them to the Accounts table on \"Apply to Accounts\"", where: "components/GlobalSearchBar.tsx; components/CustomFilters.tsx (OPS, ACCOUNT_FIELDS now exported)", why: "Reported — the funnel icon only forced-open the Discovery panel on Accounts, which wasn't an actual filter; it now builds and applies a real one" },
+      { what: "Removed the now-unused \"?openFilters=1\" deep-link handling, since nothing produces that link anymore", where: "components/CoPilotApp.tsx", why: "Dead code after the funnel button's behavior changed" },
+    ] },
   { version: "2.61", date: "2026-10-02", notes: "Every table across the app (Accounts, Pipeline, Stakeholders, S2P signals, ERP, Sources, Reports — they all share one filter bar) gets: an \"All <unit>\" / \"Filtered results\" toggle that shows everything unfiltered without discarding your filter setup; the blanket \"Clear filters\" and \"Clear all\" buttons removed (each filter's own × or its \"all\" option is enough); and the custom filter's \"is empty\"/\"is not empty\" conditions relabelled \"is known\"/\"is unknown\" — e.g. \"Title is unknown\" to find gaps in the data.", changes: [
       { what: "Added an \"All <unit> (N)\" / \"Filtered results (N)\" toggle above every table's filter row. Selecting \"All\" shows every row, but the search box, dropdown filters and custom filters stay exactly as set — switching back to \"Filtered results\" re-applies them instantly, nothing is cleared", where: "components/CoPilotApp.tsx (FilterTable)", why: "Requested — a way to see everything unfiltered without losing a filter setup you've built" },
       { what: "Removed the blanket \"Clear filters\" button (search + dropdowns + custom filters at once) and the custom filter bar's \"Clear all\" — each dropdown already resets to \"all\" on its own and each custom-filter chip already has its own × to remove just that one", where: "components/CoPilotApp.tsx, components/CustomFilters.tsx", why: "Requested — each filter's own control is enough; a blanket clear button was redundant and, worse, destructive" },

@@ -4,9 +4,13 @@ import type { Row } from "@/lib/data";
 
 // Custom filters for any table: pick a field that exists in the rows, a condition and a value. Several filters combine (all must match).
 // Remembered per table in this browser.
-type Op = "contains" | "is" | "not" | "starts" | "empty" | "filled" | "gte" | "lte";
+export type Op = "contains" | "is" | "not" | "starts" | "empty" | "filled" | "gte" | "lte";
 export type CustomFilter = { field: string; op: Op; value: string };
-const OPS: [Op, string][] = [["contains", "contains"], ["is", "is"], ["not", "is not"], ["starts", "starts with"], ["filled", "is known"], ["empty", "is unknown"], ["gte", "≥"], ["lte", "≤"]];
+export const OPS: [Op, string][] = [["contains", "contains"], ["is", "is"], ["not", "is not"], ["starts", "starts with"], ["filled", "is known"], ["empty", "is unknown"], ["gte", "≥"], ["lte", "≤"]];
+// Curated for the header's filter builder, which has no loaded rows to detect real fields from (unlike a table's own
+// custom filter, which only offers fields that actually appear in that table's data).
+export const ACCOUNT_FIELDS = ["company_name", "icp_status", "revenue_usd_m", "verified_revenue_usd_m", "verified_revenue_status",
+  "employee_range", "listing_status", "s2p_signal_level", "existing_s2p_product", "s2p_platform_status", "erp", "hq_city", "icp_fit_reason"];
 const HIDE = /^(id|company_id|run_id|entity_id|profile|__|person_key|best_id|rows|sources_json)$|_id$|^__/;
 const LABEL: Record<string, string> = {
   company_name: "Company", company: "Company", full_name: "Full name", title_verbatim: "Title", icp_status: "ICP status", icp_fit_reason: "ICP reason",

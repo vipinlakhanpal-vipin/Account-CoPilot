@@ -93,9 +93,12 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;padding:1
 .chip{font:600 10.5px var(--body);letter-spacing:.03em;color:#06231D;background:#BFF3E6;border-radius:999px;padding:2px 9px}
 nav.tabs{display:flex;gap:2px;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;flex:1 1 auto;min-width:0;justify-content:safe flex-end}
 .gsearch-group{display:flex;align-items:center;gap:6px;flex:1 1 420px;min-width:0}
+.gfilter-wrap{position:relative;flex:none}
 .gfilter-btn{flex:none;width:30px;height:30px;border-radius:50%;border:1.5px solid rgba(var(--ink),.15);background:rgba(var(--ink),.05);color:var(--text);cursor:pointer;display:grid;place-items:center}
 .gfilter-btn svg{width:15px;height:15px}
 .gfilter-btn:hover{border-color:var(--teal);color:var(--teal)}
+.gfilter-btn[aria-expanded="true"]{border-color:#6A5AE0;color:#6A5AE0;background:color-mix(in srgb, #5B4BC4 14%, transparent)}
+.gfilter-pop{position:absolute;left:0;top:calc(100% + 6px);width:min(340px,90vw);z-index:40;box-shadow:0 12px 30px rgba(0,0,0,.4)}
 .gsearch{position:relative;flex:1 1 380px;min-width:180px;max-width:460px;display:flex;align-items:center}
 .gsearch-ico{position:absolute;left:11px;width:13px;height:13px;color:var(--muted);pointer-events:none}
 .gsearch input{width:100%;box-sizing:border-box;padding:7px 10px 7px 30px;border-radius:999px;border:1px solid rgba(var(--ink),.15);background:rgba(var(--ink),.05);color:var(--text);font:13px var(--body)}
