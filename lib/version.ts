@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.63";
+export const APP_VERSION = "2.64";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.64", date: "2026-10-02", notes: "Expanded the header's custom-filter field list (v2.62) from 13 to 34 — every scalar field the Accounts table itself reads off a company row: Industry, Country, Ownership, Exchange, Ticker, Parent company, S2P strong signals, Existing S2P detail, ERP status, ERP evidence, Known implementation partner, Coupa/Ariba opportunity type, Potential opportunity, Procurement model, Procurement/Digital transformation signals, Company website, Board phone, Subsidiaries, Lists, Account notes.", changes: [
+      { what: "ACCOUNT_FIELDS grew from 13 to 34 fields, pulled from every a.<field> the Accounts table's own columns read", where: "components/CustomFilters.tsx (ACCOUNT_FIELDS, LABEL)", why: "Requested — fill out the header filter builder's field list beyond the original curated set" },
+    ] },
   { version: "2.63", date: "2026-10-02", notes: "Fixed: reaching a wide table's horizontal scrollbar meant scrolling down past every row first (1,093 rows, on a big table) since the scrollbar sat below all of them. Every table now scrolls inside a capped-height box near the top of the page, with the column headers staying put as you scroll down (they were already built to do this — they just never had a scrolling box to stick inside) and the horizontal scrollbar reachable immediately. Added explicit ← / → buttons above the table too. Also renamed the v2.61 \"All <unit>\" toggle to a fixed \"All Companies\" on every table, replacing the per-table wording (\"All contacts\", \"All accounts\", etc.).", changes: [
       { what: "Every table's scroll area is now capped at roughly 72% of the screen height (max 900px) and scrolls on both axes inside that box, instead of growing to the height of all its rows — the header row (already built with position:sticky, which had nothing to stick inside before) now stays visible while scrolling down, and the horizontal scrollbar sits at the bottom of that box, not below the last row", where: "app/globals.css (.tablewrap-tall)", why: "Reported — scrolling right on a long table meant scrolling past all 1,093 rows first to reach the horizontal scrollbar" },
       { what: "Added explicit ← and → buttons above every table that scroll it sideways by a fixed amount, so sideways scrolling doesn't depend on finding or dragging the scrollbar at all", where: "components/CoPilotApp.tsx (FilterTable)", why: "Requested — an explicit, discoverable way to reach the far right of a wide table" },

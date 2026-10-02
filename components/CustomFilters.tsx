@@ -8,14 +8,24 @@ export type Op = "contains" | "is" | "not" | "starts" | "empty" | "filled" | "gt
 export type CustomFilter = { field: string; op: Op; value: string };
 export const OPS: [Op, string][] = [["contains", "contains"], ["is", "is"], ["not", "is not"], ["starts", "starts with"], ["filled", "is known"], ["empty", "is unknown"], ["gte", "≥"], ["lte", "≤"]];
 // Curated for the header's filter builder, which has no loaded rows to detect real fields from (unlike a table's own
-// custom filter, which only offers fields that actually appear in that table's data).
-export const ACCOUNT_FIELDS = ["company_name", "icp_status", "revenue_usd_m", "verified_revenue_usd_m", "verified_revenue_status",
-  "employee_range", "listing_status", "s2p_signal_level", "existing_s2p_product", "s2p_platform_status", "erp", "hq_city", "icp_fit_reason"];
+// custom filter, which only offers fields that actually appear in that table's data) — every scalar field the
+// Accounts table itself reads off a company row.
+export const ACCOUNT_FIELDS = [
+  "company_name", "industry", "country", "icp_status", "icp_fit_reason",
+  "revenue_usd_m", "verified_revenue_usd_m", "verified_revenue_status",
+  "employee_range", "listing_status", "ownership", "exchange", "ticker", "parent_company",
+  "s2p_signal_level", "s2p_strong_signals", "existing_s2p_product", "existing_s2p_detail", "s2p_platform_status",
+  "erp", "erp_status", "erp_evidence", "known_implementation_partner",
+  "coupa_opportunity_type", "ariba_opportunity_type", "potential_opportunity",
+  "procurement_model", "procurement_transformation_signals", "digital_transformation_signals",
+  "hq_city", "company_website", "board_phone", "subsidiaries", "lists", "account_notes",
+];
 const HIDE = /^(id|company_id|run_id|entity_id|profile|__|person_key|best_id|rows|sources_json)$|_id$|^__/;
 const LABEL: Record<string, string> = {
   company_name: "Company", company: "Company", full_name: "Full name", title_verbatim: "Title", icp_status: "ICP status", icp_fit_reason: "ICP reason",
   revenue_usd_m: "Revenue (USD M, your data)", verified_revenue_usd_m: "Verified revenue (USD M)", verified_revenue_status: "Revenue evidence",
-  s2p_signal_level: "S2P signal", existing_s2p_product: "Existing S2P", s2p_platform_status: "S2P status", erp: "ERP", hq_city: "HQ city",
+  s2p_signal_level: "S2P signal", existing_s2p_product: "Existing S2P", s2p_platform_status: "S2P status", erp: "ERP", erp_status: "ERP status",
+  erp_evidence: "ERP evidence", hq_city: "HQ city",
   employee_range: "Employees", listing_status: "Listing", contact_tier: "Tier", role_family: "Role family", email_status: "Email status",
   linkedin_url: "LinkedIn", channel_state: "Channel", verification_status: "Verification", employment_status: "Employment", created_at: "Date added",
   updated_at: "Last updated", last_verified: "Last verified", account_s2p_signal: "Account S2P signal", source_type: "Source type", trust: "Trust",
