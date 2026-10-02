@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.69";
+export const APP_VERSION = "2.70";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.70", date: "2026-10-02", notes: "Custom filter: picking \"is\"/\"is not\" on a field like Title only offered a plain text box to guess at, because a field with more than 40 distinct values (Title easily has hundreds) fell back to free text. It now offers a type-to-filter list of the real values actually in that field — type a few letters, see matching titles, pick one — for any field with up to 500 distinct values, as long as most rows don't just have their own unique one (name, email, company still get free text, since every suggestion there would be different).", changes: [
+      { what: "The \"is\"/\"is not\" value field is now a type-to-filter input backed by the field's real values (HTML datalist) instead of a capped dropdown — raised from 40 to 500 distinct values, and only offered when values actually repeat across rows (not for a near-unique field like name/email/company, where every suggestion would be different anyway)", where: "components/CustomFilters.tsx (CustomFilterBar)", why: "Requested — picking \"Title is\" showed a blank text box instead of the real titles to choose from" },
+    ] },
   { version: "2.69", date: "2026-10-02", notes: "Saved reports: replaced the \"Open →\" text button with a view icon, and added a delete icon per report — needed now that a report saved before v2.67 has no filter to restore and has to be deleted and redone.", changes: [
       { what: "Each saved report row now has a view (eye) icon button, doing exactly what \"Open →\" did, and a delete (trash) icon button that removes it after a confirmation — permanent, can't be undone", where: "components/SavedReports.tsx; new DELETE on app/api/reports" , why: "Requested — icon buttons instead of text, and a way to remove a report saved before the v2.67 fix (which can't be retroactively repaired)" },
     ] },

@@ -78,7 +78,14 @@ export function CustomFilterBar({ rows, cf }: { rows: Row[]; cf: ReturnType<type
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<CustomFilter>({ field: "", op: "contains", value: "" });
   const field = draft.field || cf.fields[0] || "";
-  const values = useMemo(() => { const s = new Set(rows.map((r) => val(r, field)).filter(Boolean)); return s.size <= 40 ? [...s].sort() : null; }, [rows, field]);
+  // Real values seen in this field, to pick from instead of guessing/typing one — e.g. Title has hundreds of
+  // distinct values, too many for a plain dropdown, but still worth offering as type-to-filter suggestions.
+  // A field where almost every value is unique (name, email, company) gets no suggestions — picking from those
+  // is the same as typing, and near-1000 identical-looking options would just be noise.
+  const values = useMemo(() => {
+    const s = new Set(rows.map((r) => val(r, field)).filter(Boolean));
+    return s.size > 0 && s.size <= 500 && s.size < rows.length * 0.6 ? [...s].sort() : null;
+  }, [rows, field]);
   const numeric = useMemo(() => { const v = rows.map((r) => val(r, field)).filter(Boolean).slice(0, 50); return v.length > 0 && v.every((x) => isFinite(Number(x))); }, [rows, field]);
   const needsValue = draft.op !== "empty" && draft.op !== "filled";
   const add = () => { if (!field || (needsValue && !draft.value.trim())) return; cf.save([...cf.list, { ...draft, field }]); setDraft({ field, op: draft.op, value: "" }); setOpen(false); };
@@ -93,9 +100,15 @@ export function CustomFilterBar({ rows, cf }: { rows: Row[]; cf: ReturnType<type
           <select aria-label="Condition" value={draft.op} onChange={(e) => setDraft({ ...draft, op: e.target.value as Op })}>
             {OPS.filter(([o]) => numeric || (o !== "gte" && o !== "lte")).map(([o, l]) => <option key={o} value={o}>{l}</option>)}
           </select>
-          {needsValue && (values && (draft.op === "is" || draft.op === "not")
-            ? <select aria-label="Value" value={draft.value} onChange={(e) => setDraft({ ...draft, value: e.target.value })}><option value="">Choose…</option>{values.map((v) => <option key={v} value={v}>{v.length > 60 ? v.slice(0, 60) + "…" : v}</option>)}</select>
-            : <input aria-label="Value" value={draft.value} placeholder={numeric ? "a number" : "text"} onChange={(e) => setDraft({ ...draft, value: e.target.value })} onKeyDown={(e) => { if (e.key === "Enter") add(); }} />)}
+          {needsValue && (values && (draft.op === "is" || draft.op === "not") ? (
+            <>
+              <input aria-label="Value" list={`cf-vals-${field}`} value={draft.value} placeholder={`Pick or type a ${labelOf(field).toLowerCase()}…`}
+                onChange={(e) => setDraft({ ...draft, value: e.target.value })} onKeyDown={(e) => { if (e.key === "Enter") add(); }} />
+              <datalist id={`cf-vals-${field}`}>{values.map((v) => <option key={v} value={v} />)}</datalist>
+            </>
+          ) : (
+            <input aria-label="Value" value={draft.value} placeholder={numeric ? "a number" : "text"} onChange={(e) => setDraft({ ...draft, value: e.target.value })} onKeyDown={(e) => { if (e.key === "Enter") add(); }} />
+          ))}
           <button type="button" className="btn primary" onClick={add} disabled={!field || (needsValue && !draft.value.trim())}>Add filter</button>
           <button type="button" className="btn" onClick={() => setOpen(false)}>Cancel</button>
         </div>
