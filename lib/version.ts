@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.06";
+export const APP_VERSION = "3.07";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.07", date: "2026-10-02", notes: "On a contact-level table (Stakeholders' \"One row per person\"), the \"Filtered results (835)\" button now reads \"Contacts results (835)\" — it was really counting contacts, and the generic word \"results\" didn't say so.", changes: [
+      { what: "The All/Filtered toggle's second button reads \"Contacts results\" instead of \"Filtered results\" on any table whose rows are people (reusing the same isPeople check that already drives the \"All Contacts (N)\" line); unchanged everywhere else", where: "components/CoPilotApp.tsx (FilterTable)", why: "Requested — \"Filtered results 835 is contacts 835\"" },
+    ] },
   { version: "3.06", date: "2026-10-02", notes: "Stakeholders' \"All source rows\" view now uses the same 3-bucket Source (Vipin's XL – Stakeholders / Claude Sources / Claude + Seamless) as Accounts and Pipeline, instead of the per-row contributor (CoPilot/Claude in Copilot/Claude-Seamless/Claude check). The \"One row per person\" view's Trust + Sources (which contributors corroborate this specific person) is unchanged — that's a different, finer-grained concept this bucket doesn't replace.", changes: [
       { what: "\"All source rows\" Source filter and column now show the company's simpleOrigin() bucket (looked up via a new company-by-id map) instead of contributorOf()", where: "components/CoPilotApp.tsx (tab === \"stakeholders\", coById)", why: "Requested — match the Source treatment already shipped on Accounts and Pipeline" },
     ] },

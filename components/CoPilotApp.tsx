@@ -210,7 +210,7 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "
       <div className="seg-toggle-row">
         <div className="seg-toggle" role="group" aria-label="Show all or filtered">
           <button type="button" aria-pressed={showAll} onClick={() => setShowAll(true)}>All Accounts ({accountsN.toLocaleString()})</button>
-          <button type="button" aria-pressed={!showAll} onClick={() => setShowAll(false)}>Filtered results ({out.length.toLocaleString()})</button>
+          <button type="button" aria-pressed={!showAll} onClick={() => setShowAll(false)}>{isPeople ? "Contacts results" : "Filtered results"} ({out.length.toLocaleString()})</button>
         </div>
         {toggleExtra}
       </div>
