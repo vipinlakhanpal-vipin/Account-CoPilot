@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.81";
+export const APP_VERSION = "2.82";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.82", date: "2026-10-02", notes: "Added five new regions, each its own independent region (own currency, own thresholds, starts Paused): UK, Germany, Morocco, Kenya, South Africa. UK and Germany are split out of the old \"Europe\" bucket (which no longer silently applies one EUR rate to non-EUR countries like the UK).", changes: [
+      { what: "Added UK (GBP), Germany (EUR), Morocco (MAD), Kenya (KES), South Africa (ZAR) as full regions — own currency rate, own default $250M/100-employee thresholds, status Paused until activated in Define ICP or the Wizard", where: "lib/icpDefinition.mjs (REGIONS, ALIAS), lib/countries.ts" , why: "Requested — near-term target markets for Europe/East Africa/North Africa/Southern Africa, picked as the clearest opportunities in each (Suggested shortlist: largest enterprise bases, not every country in each region)" },
+      { what: "UK and Germany removed from the old \"Europe\" bucket's country list — a UK company now resolves to its own UK region instead of inheriting Europe's EUR rate", where: "lib/icpDefinition.mjs", why: "Fixes a real currency-accuracy gap: the old Europe bucket applied one EUR rate to UK/Switzerland/Norway too, none of which use EUR" },
+    ] },
   { version: "2.81", date: "2026-10-02", notes: "A region now records who activated it and when (via either the Wizard or Define ICP — same saved data), shown in both places. The Wizard also now pre-ticks every already-active region on load, not just the first one.", changes: [
       { what: "Saving a status change to Active stamps activated_by/activated_at on that region; shown in Define ICP under its status control and in the Wizard next to its checkbox", where: "app/api/icp (POST), components/IcpEditor.tsx, components/HomeWorkspace.tsx, lib/icpDefinition.d.mts" , why: "Requested — know which Super Admin activated a region, regardless of which route they used" },
       { what: "Wizard pre-ticks every region already Active on load (was only the first visible one)", where: "components/HomeWorkspace.tsx", why: "Requested — an already-active region should read as already ticked" },
