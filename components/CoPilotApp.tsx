@@ -507,7 +507,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
     view = <>
       <SavedReports criteria={criteria} tableState={reportTableState}
         onOpen={(c, tf) => { setCriteria(c); setReportSeed(tf); setReportKey((k) => k + 1); setCollapsed(false); try { localStorage.setItem("dp-collapsed", "0"); } catch {} }} />
-      <FilterTable key={reportKey} unit="contacts" title="Search / Filter results" note="One row per contact, with the account context alongside — a ready list to call or email. Driven by the Discovery panel's filters on the left (and the header search bar)."
+      <FilterTable key={reportKey} unit="contacts" title="Search / Filter results" note="One row per contact, with the account context alongside — a ready list to call or email. Narrow it with the search box, dropdowns or + Custom filter below, or the Discovery panel on the left — saving a report remembers whatever you've set, however you set it."
         rows={reportRows} initial={reportSeed} onState={setReportTableState}
         search={(p) => [p.company, p.full_name, p.title_verbatim, p.email, p.r_country].join(" ")}
         filters={[{ label: "ICP status", get: (p) => p.r_icp }, { label: "Country", get: (p) => p.r_country }, { label: "S2P signal", get: (p) => p.r_signal }]}

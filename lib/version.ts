@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.67";
+export const APP_VERSION = "2.68";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.68", date: "2026-10-02", notes: "Reports' description only credited the Discovery panel and the header search bar for narrowing results — it never mentioned the table's own search box, dropdowns or + Custom filter, which is often doing all the actual work (as in v2.67's fix). Reworded to credit all of it plainly, with no \"layers\" to understand.", changes: [
+      { what: "Reports' intro text now reads \"Narrow it with the search box, dropdowns or + Custom filter below, or the Discovery panel on the left — saving a report remembers whatever you've set, however you set it\"", where: "components/CoPilotApp.tsx (tab === \"reports\")", why: "Reported — the old text implied only the Discovery panel/header search mattered, which was never true and was never documented anywhere" },
+    ] },
   { version: "2.67", date: "2026-10-02", notes: "Fixed Reports' \"Save this report\": it only captured the Discovery panel's filters, not the search box, dropdowns or \"+ Custom filter\" conditions set directly on the table — so a report saved while filtering e.g. Role family = Finance showed the full 1,093 contacts instead of the filtered count, and \"Open →\" restored nothing (since the one thing that was actually filtering the data was never saved). Save now captures everything the table has set, live against current data when reopened.", changes: [
       { what: "FilterTable now reports its live search text, dropdown values, custom filters and matching row count up to its parent on every change (onState), and can be seeded with a saved state on open (initial, remounted via a changing key)", where: "components/CoPilotApp.tsx (FilterTable)", why: "The table's own filter state had no path back up to the Reports tab, so nothing it did could be saved or restored" },
       { what: "\"Save this report\" now stores the table's search/dropdowns/custom-filter conditions alongside the Discovery panel criteria, and the saved match count is the true filtered count, not the table's full unfiltered total", where: "components/SavedReports.tsx, app/api/reports/route.ts (table_filters)", why: "Reported — a report saved while a custom filter was active showed 1,093 contacts instead of the actual filtered number" },
