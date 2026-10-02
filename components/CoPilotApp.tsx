@@ -211,7 +211,7 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "
       <div className="seg-toggle-row">
         <div className="seg-toggle" role="group" aria-label="Show all or filtered">
           <button type="button" aria-pressed={showAll} onClick={() => setShowAll(true)}>All Accounts ({accountsN.toLocaleString()})</button>
-          <button type="button" aria-pressed={!showAll} onClick={() => setShowAll(false)}>{isPeople ? "Contacts results" : "Filtered results"} ({out.length.toLocaleString()})</button>
+          <button type="button" aria-pressed={!showAll} onClick={() => setShowAll(false)}>{isPeople ? "Contacts" : "Filtered results"} ({out.length.toLocaleString()})</button>
         </div>
         {!isPeople && multiPerCompany && <InfoTip k="accountsVsRows" />}
         {toggleExtra}
@@ -358,10 +358,10 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
     return data.contacts.filter((p) => ids.has(p.company_id) && (!contactSet || contactMatches(p, criteria, data.history, famKey))); }, [data, A, criteria, contactSet]);
   const people = useMemo(() => buildPeople(P), [P]);
   const coById = useMemo(() => Object.fromEntries(A.map((a) => [a.id, a])), [A]);
-  // S2P signals aren't scoped to A (they show across every region regardless of the country tab), so Coupa
-  // exclusion there needs a lookup built from the full account list, not the country/criteria-scoped one.
-  const allCoById = useMemo(() => Object.fromEntries(data.accounts.map((a) => [a.id, a])), [data.accounts]);
-  const notCoupaSignal = (s: Row) => !/coupa/i.test(str(allCoById[s.company_id]?.existing_s2p_product));
+  // Signals weren't previously scoped to the selected country/criteria at all. coById is built from A (which
+  // already reflects the country tab and Discovery Criteria), so a signal whose company isn't in coById is
+  // out of scope — the same check also excludes confirmed Coupa customers in one pass.
+  const inScopeSignal = (s: Row) => { const c = coById[s.company_id]; return !!c && !/coupa/i.test(str(c.existing_s2p_product)); };
   const [perPerson, setPerPerson] = useState(true);
   // Geography follows the country tile you selected (so KSA accounts aren't marked down for not being in the panel's default UAE).
   const scoreCriteria = useMemo<Criteria>(() => country === ALL ? criteria : { ...criteria, company: { ...criteria.company, countries: [country], regions: [] } }, [criteria, country]);
@@ -486,8 +486,8 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
         { h: "LinkedIn", field: "linkedin_url", cell: (p) => <Ext href={p.linkedin_url}>profile</Ext> }, { h: "S2P signal", field: "account_s2p_signal", cell: (p) => <Pill s={p.account_s2p_signal} /> }]}
       onRow={(p) => setContact(p.best_id || p.id)} /></>;
   } else if (tab === "signals") {
-    view = <FilterTable unit="signals" title="S2P signals" note="Every signal carries its evidence and source. Existing Coupa customers are excluded — see Existing Coupa Customers on the Dashboard instead."
-      rows={[...data.signals].filter(notCoupaSignal).sort((a, b) => sigRank(a.level) - sigRank(b.level))}
+    view = <FilterTable unit="signals" title="S2P signals" note="Every signal carries its evidence and source. Follows the country tab above; existing Coupa customers are excluded — see Existing Coupa Customers on the Dashboard instead."
+      rows={[...data.signals].filter(inScopeSignal).sort((a, b) => sigRank(a.level) - sigRank(b.level))}
       search={(s) => [s.company, s.signal, s.evidence, s.platform].join(" ")}
       filters={[{ label: "Level", get: (s) => s.level }, { label: "Category", get: (s) => s.category }, { label: "Platform", get: (s) => s.platform }]}
       cols={[{ h: "Company", field: "company", cell: (s) => <b>{s.company}</b> }, { h: "Level", field: "level", cell: (s) => <Pill s={s.level} /> }, { h: "Category", field: "category", cell: (s) => s.category },
@@ -593,7 +593,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
       ["ICP — Needs check", A.filter((a) => (a.icp_status === "ICP — Needs check" || a.icp_status === "Unknown") && notCoupa(a)), "accounts"],
       ["Strong / very strong", top, "accounts"], ["Contacts (people)", people, "contacts"],
       ["Confirmed by 2+ sources", people.filter((p) => p.trust === "Confirmed by 2+ sources" && notCoupa(coById[p.company_id])), "contacts"], ["Contacts with email", people.filter((p) => p.email), "contacts"],
-      ["Signals logged", data.signals.filter(notCoupaSignal), "signals"], ["Conflicts retained", data.conflicts, "conflicts"],
+      ["Signals logged", data.signals.filter(inScopeSignal), "signals"], ["Conflicts retained", data.conflicts, "conflicts"],
       ["Employment changes", data.history.filter((h) => /change/i.test(str(h.determination))), "history"],
       ["Possible new S2P projects", A.filter((a) => ACT.includes(a.s2p_platform_status)), "accounts"],
     ];

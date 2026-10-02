@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.13";
+export const APP_VERSION = "3.14";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.14", date: "2026-10-02", notes: "\"Signals logged\" (Dashboard tile and the S2P Signals tab) now follows the selected country tab, like the rest of the app — it previously always counted every region regardless of which country was selected. Same lookup also keeps the Coupa exclusion. Also shortened a contact table's \"Contacts results\" label to just \"Contacts\".", changes: [
+      { what: "Signals are now scoped to the selected country/Discovery Criteria (via the same company lookup used for the Coupa exclusion) in both the Dashboard tile and the S2P Signals tab", where: "components/CoPilotApp.tsx (inScopeSignal)", why: "Requested — \"Signals logged\" didn't change when switching the country tab, unlike everything else in the app" },
+      { what: "Contact-table toggle shortened from \"Contacts results (N)\" to \"Contacts (N)\"", where: "components/CoPilotApp.tsx (FilterTable)", why: "Requested" },
+    ] },
   { version: "3.13", date: "2026-10-02", notes: "Dashboard's \"Confirmed by 2+ sources\" contact tile and \"Signals logged\" tile now exclude confirmed Coupa customers too, with the drill-down table's counts now matching the tile exactly (the exclusion is applied at the tile's own count, not just inside the drill-down, so the two numbers can't disagree). The contacts drill-down also gets an S2P Platform column and filter. The S2P Signals tab (Data → S2P Signals) gets the same Coupa exclusion as its matching Dashboard tile, so they stay consistent with each other.", changes: [
       { what: "\"Confirmed by 2+ sources\" tile excludes contacts at confirmed Coupa-customer companies; its drill-down table gets an S2P Platform column + filter", where: "components/CoPilotApp.tsx (kpis, DrillDown contacts branch)", why: "Reported — Coupa-customer contacts were inflating this trust-tier count" },
       { what: "\"Signals logged\" tile and the S2P Signals tab both exclude signals belonging to confirmed Coupa customers, using a lookup built from the full account list (not the country-scoped one) since Signals was never scoped to the selected region to begin with", where: "components/CoPilotApp.tsx (allCoById, notCoupaSignal, kpis, tab === \"signals\")", why: "Reported — same Coupa leakage found in Signals logged; fixed in both places it appears so the tile and the tab always agree" },
