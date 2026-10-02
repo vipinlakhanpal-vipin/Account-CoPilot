@@ -90,9 +90,10 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;padding:1
 .refresh:hover{border-color:var(--teal);color:var(--text-strong)}
 .refresh svg{width:13px;height:13px}
 .refresh .dot{position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:var(--red);box-shadow:0 0 0 2px var(--surface)}
-.history-btn{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;border:1px solid rgba(var(--ink),.15);background:rgba(var(--ink),.05);color:var(--text);cursor:pointer}
+.history-btn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;border:1px solid rgba(var(--ink),.15);background:rgba(var(--ink),.05);color:var(--text);cursor:pointer}
 .history-btn:hover{border-color:var(--teal);color:var(--text-strong)}
-.history-btn svg{width:13px;height:13px}
+.history-btn svg{width:17px;height:17px}
+.version .history-btn{width:26px;height:26px}.version .history-btn svg{width:15px;height:15px}
 .chip{font:600 10.5px var(--body);letter-spacing:.03em;color:#06231D;background:#BFF3E6;border-radius:999px;padding:2px 9px}
 nav.tabs{display:flex;gap:2px;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;flex:1 1 auto;min-width:0;justify-content:safe flex-end}
 .gsearch-group{display:flex;align-items:center;gap:6px;flex:1 1 420px;min-width:0}
