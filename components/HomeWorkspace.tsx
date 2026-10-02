@@ -255,9 +255,9 @@ export default function HomeWorkspace({ access }: { access: Access }) {
               <h3 className="hw-loud-h">Two questions this app answers for you, every single day</h3>
               <div className="hw-loud-grid">
                 <div><p className="hw-loud-q">Who should we target next?</p>
-                  <p className="hw-loud-a">Open <b>Pipeline</b>. Every account is ranked by one number — fit, buying signals and Coupa fit combined. Top of the list is who to call first, no guesswork.</p></div>
+                  <p className="hw-loud-a">Go to <b>Accounts → Pipeline</b>. Every account is ranked by one number — fit, buying signals and Coupa fit combined. Top of the list is who to call first, no guesswork.</p></div>
                 <div><p className="hw-loud-q">How ready are they for an S2P platform?</p>
-                  <p className="hw-loud-a">Open any account&apos;s <b>brief</b> and check <b>Procurement &amp; IT maturity</b> — their current platform, ERP, signal strength and addressable spend laid out together, the readiness picture in one look.</p></div>
+                  <p className="hw-loud-a">Click any account in Pipeline or Accounts to open its brief. <b>Procurement &amp; IT maturity</b> is the first thing you&apos;ll see after the facts at the top — no scrolling to find it.</p></div>
               </div>
               <p className="hw-loud-foot">Every figure above carries a source and a confidence label — nothing here is a guess.</p>
             </div>

@@ -448,6 +448,7 @@ aside.brief.contact{width:min(760px,100%);z-index:70}
 .score-card li em{grid-column:1/-1;color:var(--muted);font-style:normal;font-size:11px}
 .spend-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
 .spend-grid div{background:rgba(var(--ink),.03);border:1px solid var(--line);border-radius:8px;padding:8px}.spend-grid small{display:block;color:var(--muted);font-size:11px}
+.mat-top{border-color:color-mix(in srgb, var(--teal) 35%, var(--line));box-shadow:0 0 0 1px color-mix(in srgb, var(--teal) 12%, transparent)}
 .mat-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .mat-pill{flex:none;font:700 11px var(--body);padding:3px 11px;border-radius:999px}
 .mat-pill.mat-advanced{background:color-mix(in srgb, #2ECC8F 18%, transparent);color:#0F6E56}

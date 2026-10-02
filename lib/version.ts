@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.25";
+export const APP_VERSION = "3.26";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.26", date: "2026-10-02", notes: "Moved Procurement & IT maturity to right after the account facts — the first thing visible when a brief opens, instead of buried after the long AI intelligence section. Reworded the Home page banner to name the exact click path (Accounts → Pipeline, then click any row) instead of a vague \"open Pipeline\".", changes: [
+      { what: "Procurement & IT maturity block moved from after the AI intelligence section to directly after the account facts grid, with a subtle teal accent so it reads as the headline block", where: "components/CoPilotApp.tsx (Brief), app/globals.css (.mat-top)", why: "Reported — the block existed but required scrolling past the entire AI intelligence section (scores, spend grid, recommended actions) to find, undermining the Home page's promise that it's easy to find" },
+      { what: "Home banner's second answer now says exactly where to click (Accounts → Pipeline, click any row) and confirms the maturity block is the first thing after the facts, instead of a generic \"open the brief\"", where: "components/HomeWorkspace.tsx", why: "Reported — someone new to the app wouldn't know where \"Pipeline\" or \"the brief\" actually are" },
+    ] },
   { version: "3.25", date: "2026-10-02", notes: "Discovery panel: the Undo/Save-default controls for step 2 (Filter your view) moved up to sit right after step 2, instead of after step 3 (Discover, the paid web search) — they were acting on step 2's changes but appeared below an unrelated paid action, which read as confusing. Renamed \"Share as team default\" to \"Save Default\" and \"Undo my changes\" to \"Undo Changes\", and gave both buttons distinct colors (teal for Save, amber for Undo) instead of two identical plain pills.", changes: [
       { what: "Moved the dirty-state banner and its two buttons from after step 3 (Discover) to directly after step 2 (Filter your view), so they sit next to the thing they act on", where: "components/DiscoveryPanel.tsx", why: "Reported — the save/undo controls appeared after the unrelated paid \"Search the web\" button, reading as if it belonged to step 3" },
       { what: "Renamed \"Share as team default\" → \"Save Default\" (teal, matches other primary actions) and \"Undo my changes\" → \"Undo Changes\" (amber, matches this panel's existing amber accent)", where: "components/DiscoveryPanel.tsx, app/globals.css (.dp-save, .dp-undo)", why: "Requested — shorter labels, and color to tell the two actions apart at a glance" },

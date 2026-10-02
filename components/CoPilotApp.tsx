@@ -752,6 +752,16 @@ function Brief({ a, data, people, onClose, onContact, scores, criteria, isSuper 
             <Fact l="ICP status"><IcpTag s={a.icp_status} why={a.icp_fit_reason} />{a.icp_fit_reason && <div className="note">{a.icp_fit_reason}</div>}</Fact>
             <Fact l="Lists">{(a.lists || []).join(", ")}</Fact>
           </div>
+          <div className="block mat-top">
+            <div className="mat-head"><h4>Procurement &amp; IT maturity</h4><span className={`mat-pill mat-${mat.level.toLowerCase()}`}>{mat.level}</span></div>
+            <p className="note">{mat.why}</p>
+            <div className="mat-grid">
+              <div><small>Current S2P platform</small><b>{mat.platform}</b></div>
+              <div><small>ERP</small><b>{mat.erp}</b></div>
+              <div><small>S2P signal strength</small><b>{mat.signal}</b></div>
+              <div><small>Addressable spend</small><b>{spend ? usd(spend.total) : "Switch on in Discovery panel"}</b></div>
+            </div>
+          </div>
           {scores && rec && <div className="block ai-block"><h4>AI intelligence</h4>
             <div className="score-cards">
               {([["ICP Match", scores.m], ["Opportunity", scores.o], ["Coupa Fit", scores.f]] as [string, Score][]).map(([l, sc]) => (
@@ -776,16 +786,6 @@ function Brief({ a, data, people, onClose, onContact, scores, criteria, isSuper 
             </div>
             <p className="note">Scores and recommendations are rule-based on the evidence in this brief (no API cost). For a tailored write-up use Draft pitch plan below.</p>
           </div>}
-          <div className="block">
-            <div className="mat-head"><h4>Procurement &amp; IT maturity</h4><span className={`mat-pill mat-${mat.level.toLowerCase()}`}>{mat.level}</span></div>
-            <p className="note">{mat.why}</p>
-            <div className="mat-grid">
-              <div><small>Current S2P platform</small><b>{mat.platform}</b></div>
-              <div><small>ERP</small><b>{mat.erp}</b></div>
-              <div><small>S2P signal strength</small><b>{mat.signal}</b></div>
-              <div><small>Addressable spend</small><b>{spend ? usd(spend.total) : "Switch on in Discovery panel"}</b></div>
-            </div>
-          </div>
           <div className="block"><h4>S2P intelligence</h4><p>{a.s2p_strong_signals || "No S2P evidence found."}</p>
             {a.existing_s2p_detail && <p className="note">Detail: {a.existing_s2p_detail}</p>}
             <p className="note">Coupa: {a.coupa_opportunity_type || "No Evidence"} · Ariba: {a.ariba_opportunity_type || "No Evidence"}</p>
