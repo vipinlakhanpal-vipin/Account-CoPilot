@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.22";
+export const APP_VERSION = "3.23";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.23", date: "2026-10-02", notes: "Fixed v3.21's fix: the region row's fields box was set to flex-grow, so it expanded to swallow all the row's spare width (visible as dead space after \"Which entities count\"), which pushed the Activated-by status onto its own line even when there was clearly room beside it. Fields now render at exactly their natural width and never grow, so Status shares the same line whenever there's space, dropping to its own line only when the row is genuinely too narrow.", changes: [
+      { what: "Region row's fields box set to flex:0 0 auto (no grow, no shrink, natural content width) instead of flex-growing to fill the row", where: "app/globals.css (.hw-region-fields)", why: "Reported — Activated-by status note dropped to its own line with visible empty space still beside the fields, on a normal-width Chrome window" },
+    ] },
   { version: "3.22", date: "2026-10-02", notes: "Team page's Joined and Last sign-in columns now show date and time, not just date — shrunk their font slightly so the wider text still fits cleanly.", changes: [
       { what: "Joined/Last sign-in switched from fmtDate to fmtDateTime; added a compact 10.5px no-wrap style for those two columns to fit the extra text", where: "components/TeamSettings.tsx, app/globals.css (.team-dt)", why: "Requested — add time of joining and last login, shrink font if needed to fit" },
     ] },
