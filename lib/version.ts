@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.95";
+export const APP_VERSION = "2.96";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.96", date: "2026-10-02", notes: "Every KPI tile across the app (Dashboard counts, Existing Customers — Expansion & Services, and anywhere else .kpi is used) shrunk to roughly half its size — smaller padding, smaller number and label text, tighter grid — so they take up much less vertical space, per the approved mockup (Option A: same card style, just compact).", changes: [
+      { what: "Resized the shared .kpi tile (grid min-width 160→104px, padding 14/16px→7/9px, corner radius 10→7px, top border 3→2px, label 12→9.5px, number 26→17px, subtitle 11.5→9px) and the hover \"View →\" link to match; mobile override updated too", where: "app/globals.css (.kpis, .kpi, .kpi-go)", why: "Requested — KPI tiles were taking up too much space; approved via mockup (Option A over a slimmer inline-stat alternative)" },
+    ] },
   { version: "2.95", date: "2026-10-02", notes: "Wizard's region row now has column headers for every field, including the region name (\"Region\") and the activation note (\"Status\") — matching the Min net rev/Min employees/Stock listing/Which entities count headers already there. Status now also shows the activation time, not just the date.", changes: [
       { what: "Added \"Region\" and \"Status\" headers above the region checkbox and the activation note, matching the existing field headers; the activation note now shows date and time (fmtDateTime) instead of date only", where: "components/HomeWorkspace.tsx, app/globals.css (.hw-region-head, .hw-region-name-col, .hw-region-status-col)", why: "Requested — the region name and activation note were the only two fields in the row without a header" },
     ] },
