@@ -20,7 +20,7 @@ const GROUPS: { label: string; items: [string, string][] }[] = [
   { label: "Data", items: [["/?tab=sources", "Sources"], ["/?tab=conflicts", "Conflicts"], ["/research", "Research Queue"]] },
   { label: "Setup", items: [["/icp", "Define ICP"], ["/settings", "Settings"], ["/guide", "Learn Me"], ["/team", "Team"]] },
 ];
-const SUB_LABEL: Record<string, string> = { Accounts: "All accounts" };
+const SUB_LABEL: Record<string, string> = { Accounts: "All accounts", Dashboard: "Overview" };
 
 const Spin = () => (
   <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9M13.5 2.5v3h-3" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>

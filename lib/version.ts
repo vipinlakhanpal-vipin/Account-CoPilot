@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.57";
+export const APP_VERSION = "2.58";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.58", date: "2026-10-02", notes: "Fixed: the Dashboard sub-tab row showed \"Dashboard\" twice — once as the main tab, again as its own first sub-tab. Relabeled that sub-tab \"Overview\", the same fix already applied to Accounts (\"All accounts\") for the identical reason.", changes: [
+      { what: "The Dashboard group's first sub-tab (its own landing page, needed so the sub-tab row has something to highlight by default) now reads \"Overview\" instead of repeating \"Dashboard\"", where: "components/Header.tsx (SUB_LABEL)", why: "Reported — looked like two Dashboard tabs; this was an inconsistency (Accounts already got this treatment, Dashboard didn't when Reports was added in v2.48)" },
+    ] },
   { version: "2.57", date: "2026-10-01", notes: "Login page now shows the same tagline as the main header — \"AI Autonomous Agent for Account Intelligence\" — in place of the older \"B2B procurement intelligence\" line, with the current version number next to it.", changes: [
       { what: "Replaced the login page's tagline (\"B2B procurement intelligence\") with \"AI Autonomous Agent for Account Intelligence\", the same TAGLINE now shared with the header, shown with the current app version", where: "app/login/page.tsx; TAGLINE moved to lib/version.ts so Header and the login page read one shared constant", why: "Requested — keep the login page's tagline consistent with the header's, and keep showing the version there" },
     ] },
