@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { REGIONS, OPTIONS, normalizeDefinition, type Definition, type Rules } from "@/lib/icpDefinition.mjs";
 import type { Access } from "@/lib/access";
 import { ask, notify } from "@/components/Confirm";
+import { fmtDate } from "@/lib/dates";
 
 // Home workspace: a left rail with two destinations — About Account CoPilot (always free to read) and Setup Wizard
 // (reads and writes the exact settings.icp_definition record Setup → Define ICP uses, so there's no separate config to
@@ -112,9 +113,12 @@ export default function HomeWorkspace({ access }: { access: Access }) {
         const d = normalizeDefinition(j.regions ? { regions: j.regions, version: j.version } : j);
         if (cancelled) return;
         setDef(d);
-        const first = visibleRegions[0]?.key;
+        // Pre-tick every region already Active in Define ICP (however it got activated — Wizard or Define ICP
+        // itself, same saved data either way), not just the first one, so "already active" reads as already ticked.
+        const alreadyActive = visibleRegions.map((r) => r.key).filter((k) => d.regions[k]?.status === "active");
+        const first = alreadyActive[0] || visibleRegions[0]?.key;
         if (first) {
-          setRegions([first]);
+          setRegions(alreadyActive.length ? alreadyActive : [first]);
           const r = d.regions[first];
           if (r) {
             setDraft({ discoverPerDay: r.engine.discover_per_day || 5, verifyPerDay: r.engine.verify_per_day || 25 });
@@ -298,11 +302,14 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                     const nextPhase = def.regions[r.key]?.status === "next";
                     const checked = regions.includes(r.key);
                     const s = sizeFor(r.key);
+                    const activatedBy = def.regions[r.key]?.status === "active" ? def.regions[r.key]?.activated_by : null;
+                    const activatedAt = def.regions[r.key]?.activated_at;
                     return (
                       <div key={r.key} className={`hw-region-row ${checked ? "on" : ""}`}>
                         <label className="hw-region-name">
                           <input type="checkbox" checked={checked} onChange={() => toggleRegion(r.key)} />
                           {r.name} {nextPhase && <span className="hint">— not started yet</span>}
+                          {activatedBy && <span className="hint">— activated by {activatedBy}{activatedAt ? ` on ${fmtDate(activatedAt)}` : ""}</span>}
                         </label>
                         <div className="hw-region-fields">
                           <label>Min net rev<MoneyField value={s.revenue} onChange={(v) => setSize(r.key, { revenue: v })} /></label>

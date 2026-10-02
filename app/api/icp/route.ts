@@ -82,6 +82,13 @@ export async function POST(req: Request) {
   // A Standard user's save can only change their own region(s): every other region is taken from the saved definition.
   const regions = Object.fromEntries(REGIONS.map(({ key }) => [key, canSeeRegion(access, key) && body.definition!.regions[key] ? body.definition!.regions[key] : current.regions[key]]));
   const next = normalizeDefinition({ ...current, regions });
+  // Stamp who activated a region and when, the moment it actually transitions into Active (not on every save while
+  // it stays Active) — shown in Define ICP and used to pre-tick the Setup Wizard regardless of who flipped it.
+  const activatedBy = (user.user_metadata?.full_name as string) || user.email || "unknown", activatedAt = new Date().toISOString();
+  for (const { key } of REGIONS) {
+    const was = current.regions[key]?.status, now = next.regions[key]?.status;
+    if (now === "active" && was !== "active" && next.regions[key]) Object.assign(next.regions[key], { activated_by: activatedBy, activated_at: activatedAt });
+  }
   const problems = REGIONS.filter(({ key }) => canSeeRegion(access, key)).flatMap(({ key }) => validateRules(key, next.regions[key] as Rules));
 
   // Impact: status of every company under the new rules vs now.
@@ -103,7 +110,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: !problems.length, problems, impact, changed, changes }, { status: problems.length && body.action === "save" ? 422 : 200 });
   }
 
-  const by = (user.user_metadata?.name as string) || user.email || "unknown";
+  const by = activatedBy;
   const at = new Date().toISOString();
   const saved: Definition = { ...next, version: (current.version || 1) + 1, updated_at: at, updated_by: by,
     history: [{ at, by, summary: changes.length ? changes.join(" | ") : "Saved with no changes" }, ...(current.history || [])].slice(0, 50) };

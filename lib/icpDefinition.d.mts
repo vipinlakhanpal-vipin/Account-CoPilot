@@ -17,6 +17,8 @@ export type Rules = {
   personas: { departments: string[]; seniority: string[]; roles: string[]; max_per_account: number };
   engine: { discover_per_day: number; verify_per_day: number };
   notes: string;
+  activated_by?: string;
+  activated_at?: string;
 };
 export type Definition = { version: number; regions: Record<string, Rules>; history: { at: string; by: string; summary: string }[]; updated_at: string | null; updated_by: string | null };
 export const REGIONS: { key: string; name: string; countries: string[]; currency: { code: string; per_usd: number } }[];

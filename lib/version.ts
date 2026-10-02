@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.80";
+export const APP_VERSION = "2.81";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,11 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.81", date: "2026-10-02", notes: "A region now records who activated it and when (via either the Wizard or Define ICP — same saved data), shown in both places. The Wizard also now pre-ticks every already-active region on load, not just the first one.", changes: [
+      { what: "Saving a status change to Active stamps activated_by/activated_at on that region; shown in Define ICP under its status control and in the Wizard next to its checkbox", where: "app/api/icp (POST), components/IcpEditor.tsx, components/HomeWorkspace.tsx, lib/icpDefinition.d.mts" , why: "Requested — know which Super Admin activated a region, regardless of which route they used" },
+      { what: "Wizard pre-ticks every region already Active on load (was only the first visible one)", where: "components/HomeWorkspace.tsx", why: "Requested — an already-active region should read as already ticked" },
+      { what: "Fixed: the Define ICP history \"by\" line was reading a metadata field (user_metadata.name) that's never actually set (the real field is full_name) and always silently fell back to email", where: "app/api/icp (POST)", why: "Found while wiring the same name lookup for activation stamps" },
+    ] },
   { version: "2.80", date: "2026-10-02", notes: "v2.79 hid a region's tile purely by account count, which meant activating a region (Wizard or Define ICP) wouldn't show it until the engine actually found a company. A tile now shows as soon as its region is Active in Define ICP, even at 0 accounts, or once it has real accounts either way.", changes: [
       { what: "Country bar reads each region's Define ICP status; a tile shows once Active (any account count) or once it has real accounts", where: "app/page.tsx, components/CountryBar.tsx", why: "Reported — activating a region should make it appear immediately, not only after the engine populates it" },
     ] },
