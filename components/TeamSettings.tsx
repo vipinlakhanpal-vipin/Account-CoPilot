@@ -156,7 +156,7 @@ export default function TeamSettings() {
         </div>
       )}
       <div className="tablewrap" style={{ marginTop: 12 }}><table>
-        <thead><tr><th className="num">#</th><th>Name</th><th>Email</th><th>Role</th><th>Region(s)</th><th>Change access</th><th>Invited by</th><th>Joined</th><th>Last sign-in</th><th></th></tr></thead>
+        <thead><tr><th className="num">#</th><th>Name</th><th>Email</th><th>Role</th><th>Region(s)</th><th>Change access</th><th>Invited by</th><th>Joined</th><th>Last sign-in</th><th>Reset password</th><th>Delete</th></tr></thead>
         <tbody>{users.map((u, i) => {
           const x = edit[u.id];
           return (
@@ -173,6 +173,8 @@ export default function TeamSettings() {
               <td className="mono">{u.last_sign_in ? fmtDate(u.last_sign_in) : "Not yet"}</td>
               <td className="team-row-actions">
                 {!u.last_sign_in && <button type="button" className="btn tiny" onClick={() => resetPassword(u)} title="They haven't signed in yet — set a fresh one-time password to share with them">Reset password</button>}
+              </td>
+              <td className="team-row-actions">
                 {u.email.toLowerCase() !== myEmail.toLowerCase() && <button type="button" className="btn tiny danger" onClick={() => deleteUser(u)}>Delete</button>}
               </td></tr>);
         })}</tbody></table></div>
