@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.100";
+export const APP_VERSION = "2.101";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,11 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.101", date: "2026-10-02", notes: "Accounts table's \"List\" filter renamed \"Source\". Fixed a confusing interaction: picking a dropdown filter or typing a search while on \"All Accounts\" computed the match count but didn't actually show it, since \"All Accounts\" is designed to ignore filters until you switch to \"Filtered results\" — now picking a real filter value or typing a search switches you there automatically. Also shrunk every table's filter dropdown pills (across the whole app) so long labels like \"S2P Platform\" and \"ICP status\" show in full instead of truncating to \"S2P…\".", changes: [
+      { what: "Accounts table's \"List\" filter label renamed \"Source\"", where: "components/CoPilotApp.tsx (tab === \"accounts\")", why: "Requested" },
+      { what: "Typing in the search box or picking a non-blank dropdown filter value now switches the table out of \"All Accounts\" into \"Filtered results\" automatically", where: "components/CoPilotApp.tsx (FilterTable)", why: "Reported — picking \"S2P Platform: Coupa\" while on \"All Accounts\" computed the right match count (shown in the filter-count line) but didn't change what the table displayed, which read as the filter being broken" },
+      { what: "Filter dropdown pills: font 12.5px→11px, max-width 160px→190px, across every table in the app (one shared .filters select rule)", where: "app/globals.css (.filters select)", why: "Requested — labels like \"S2P Platform\" and \"ICP status\" were truncating to \"S2P…\"/\"ICP …\"" },
+    ] },
   { version: "2.100", date: "2026-10-02", notes: "Priority accounts (Dashboard) now excludes confirmed Coupa customers, matching Pipeline — they're not a new-business target, and they already have their own tile (Existing Coupa Customers). Also moved the Accounts table's S2P platform column next to Industry (was far to the right, past ICP/Opportunity/Coupa Fit scores) and renamed it \"S2P Platform\" throughout, so you can see what each account runs without scrolling.", changes: [
       { what: "Priority accounts list now excludes confirmed Coupa customers, same exclusion as Pipeline", where: "components/CoPilotApp.tsx (top)", why: "Requested — showing them there added nothing since they're already surfaced under Existing Coupa Customers with the relevant upsell/cross-sell angle" },
       { what: "Renamed the Accounts table's \"Existing S2P\" column and \"S2P\" filter to \"S2P Platform\", and moved the column from near the end (after the score columns) to right after Industry", where: "components/CoPilotApp.tsx (tab === \"accounts\")", why: "Requested — see which platform (Ariba/Coupa/GEP/etc) each of the 484 accounts runs without scrolling past half the table" },

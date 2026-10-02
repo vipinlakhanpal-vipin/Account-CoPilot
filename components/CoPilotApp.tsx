@@ -216,9 +216,11 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "
       </div>
       {isPeople && <p className="note seg-extra">All Contacts ({rows.length.toLocaleString()})</p>}
       <div className="filters">
-        <input type="search" className={`flt-search${q ? " on" : ""}`} placeholder={`Search ${title.toLowerCase()}…`} aria-label="Search" value={q} onChange={(e) => setQ(e.target.value)} />
+        <input type="search" className={`flt-search${q ? " on" : ""}`} placeholder={`Search ${title.toLowerCase()}…`} aria-label="Search" value={q}
+          onChange={(e) => { setQ(e.target.value); if (e.target.value) setShowAll(false); }} />
         {filters.map((f, i) => (
-          <select key={f.label} aria-label={f.label} value={fv[i]} className={`flt f${(i % 8) + 1}${fv[i] ? " on" : ""}`} onChange={(e) => setFv(fv.map((x, j) => (j === i ? e.target.value : x)))}>
+          <select key={f.label} aria-label={f.label} value={fv[i]} className={`flt f${(i % 8) + 1}${fv[i] ? " on" : ""}`}
+            onChange={(e) => { const v = e.target.value; setFv(fv.map((x, j) => (j === i ? v : x))); if (v) setShowAll(false); }}>
             <option value="">{f.label}: all</option>
             {options[i].map((o) => <option key={o}>{o}</option>)}
           </select>
@@ -402,7 +404,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
     view = <FilterTable unit="companies" title="Accounts" empty={notFound} note="ICP = net revenue ≥ $250M and 100+ employees (stock listing not required). ✓ Verified: confirmed from an official source · ● Likely: your data / Seamless say ≥ $250M, not yet confirmed · ! Needs check: sources disagree about $250M · ? Unknown: no revenue figure yet · ✕ Not ICP: below $250M. Hover a status for the reason; select a row to open the account brief."
       rows={[...A].sort((a, b) => icpRank(a.icp_status) - icpRank(b.icp_status) || sigRank(a.s2p_signal_level) - sigRank(b.s2p_signal_level) || (bestRevenue(b).v || 0) - (bestRevenue(a).v || 0))}
       search={(a) => [a.company_name, a.industry, a.erp, a.existing_s2p_product, a.s2p_strong_signals].join(" ")}
-      filters={[{ label: "ICP status", get: (a) => a.icp_status }, { label: "List", get: (a) => (a.lists || []).join(" + ") },
+      filters={[{ label: "ICP status", get: (a) => a.icp_status }, { label: "Source", get: (a) => (a.lists || []).join(" + ") },
         { label: "Signal", get: (a) => a.s2p_signal_level }, { label: "S2P Platform", get: (a) => a.existing_s2p_product }, { label: "Industry", get: (a) => a.industry },
         { label: "Exchange", get: (a) => a.exchange }, { label: "Country", get: (a) => a.country }]}
       cols={[{ h: "", cls: "logo-cell", cell: (a) => <CompanyLogo a={a} /> }, { h: "Company", field: "company_name", cell: (a) => <><b>{a.company_name}</b><div className="muted mono">{a.exchange} {a.ticker}</div></> },
