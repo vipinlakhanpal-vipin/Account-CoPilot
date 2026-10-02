@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.71";
+export const APP_VERSION = "2.72";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.72", date: "2026-10-02", notes: "Saved reports' \"Created by\" column now shows the saver's name (from their profile) instead of their email, when they've set one. A report saved before this still shows the old email until it's deleted and saved again.", changes: [
+      { what: "\"Created by\" is now the user's profile name (Profile menu → Name) if set, falling back to email if not", where: "app/api/reports (POST)", why: "Requested — show a name, not an email address" },
+    ] },
   { version: "2.71", date: "2026-10-02", notes: "\"Save this report\" moved to sit right next to the Filtered results count, so what you're about to save is right there — the Saved reports box above now just lists and opens/deletes them. Fixed a real bug in v2.70's \"pick a real value\" feature: Title has 503 distinct values and the cap was exactly 500, so it silently fell back to a plain text box for the one field this was built for. Also: opening a saved report no longer force-opens the Discovery panel (an unrelated side effect) and now shows a confirmation toast.", changes: [
       { what: "Split the Save button out from the saved-reports list: \"Save this report\" now sits next to \"Filtered results (N)\" in the table's own toggle row; \"Saved reports\" above is now just the list, with view/delete icons", where: "components/SavedReports.tsx (SaveReportButton, SavedReportsList), components/CoPilotApp.tsx (FilterTable toggleExtra)", why: "Requested — Save belongs next to the count it's about to save, not in a separate box" },
       { what: "Fixed: the \"pick a real value\" list (v2.70) capped at 500 distinct values; Title has 503, so it always silently fell back to a plain text box — the one field this feature was built for. Raised to 1,500", where: "components/CustomFilters.tsx", why: "Reported — Title + is/is not showed a blank \"text\" box instead of the picker" },

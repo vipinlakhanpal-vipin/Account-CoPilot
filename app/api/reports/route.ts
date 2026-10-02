@@ -34,7 +34,7 @@ export async function POST(req: Request) {
   const b = parsed.data, db = supabaseAdmin();
   const items = await getItems(db);
   const item: SavedReport = { id: crypto.randomUUID().slice(0, 8), name: b.name, criteria: b.criteria as Criteria, table_filters: b.table_filters as TableFilters | undefined,
-    created_by: user.email || "", created_at: new Date().toISOString(), match_count: b.match_count };
+    created_by: user.user_metadata?.full_name || user.email || "", created_at: new Date().toISOString(), match_count: b.match_count };
   items.unshift(item);
   const { error } = await db.from("settings").upsert({ key: "saved_reports", value: { items: items.slice(0, 200) }, updated_at: new Date().toISOString() });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
