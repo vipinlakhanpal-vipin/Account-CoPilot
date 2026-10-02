@@ -358,6 +358,10 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
     return data.contacts.filter((p) => ids.has(p.company_id) && (!contactSet || contactMatches(p, criteria, data.history, famKey))); }, [data, A, criteria, contactSet]);
   const people = useMemo(() => buildPeople(P), [P]);
   const coById = useMemo(() => Object.fromEntries(A.map((a) => [a.id, a])), [A]);
+  // S2P signals aren't scoped to A (they show across every region regardless of the country tab), so Coupa
+  // exclusion there needs a lookup built from the full account list, not the country/criteria-scoped one.
+  const allCoById = useMemo(() => Object.fromEntries(data.accounts.map((a) => [a.id, a])), [data.accounts]);
+  const notCoupaSignal = (s: Row) => !/coupa/i.test(str(allCoById[s.company_id]?.existing_s2p_product));
   const [perPerson, setPerPerson] = useState(true);
   // Geography follows the country tile you selected (so KSA accounts aren't marked down for not being in the panel's default UAE).
   const scoreCriteria = useMemo<Criteria>(() => country === ALL ? criteria : { ...criteria, company: { ...criteria.company, countries: [country], regions: [] } }, [criteria, country]);
@@ -482,8 +486,8 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
         { h: "LinkedIn", field: "linkedin_url", cell: (p) => <Ext href={p.linkedin_url}>profile</Ext> }, { h: "S2P signal", field: "account_s2p_signal", cell: (p) => <Pill s={p.account_s2p_signal} /> }]}
       onRow={(p) => setContact(p.best_id || p.id)} /></>;
   } else if (tab === "signals") {
-    view = <FilterTable unit="signals" title="S2P signals" note="Every signal carries its evidence and source."
-      rows={[...data.signals].sort((a, b) => sigRank(a.level) - sigRank(b.level))}
+    view = <FilterTable unit="signals" title="S2P signals" note="Every signal carries its evidence and source. Existing Coupa customers are excluded — see Existing Coupa Customers on the Dashboard instead."
+      rows={[...data.signals].filter(notCoupaSignal).sort((a, b) => sigRank(a.level) - sigRank(b.level))}
       search={(s) => [s.company, s.signal, s.evidence, s.platform].join(" ")}
       filters={[{ label: "Level", get: (s) => s.level }, { label: "Category", get: (s) => s.category }, { label: "Platform", get: (s) => s.platform }]}
       cols={[{ h: "Company", field: "company", cell: (s) => <b>{s.company}</b> }, { h: "Level", field: "level", cell: (s) => <Pill s={s.level} /> }, { h: "Category", field: "category", cell: (s) => s.category },
@@ -588,8 +592,8 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
       ["ICP — Likely", A.filter((a) => a.icp_status === "ICP — Likely" && notCoupa(a)), "accounts"],
       ["ICP — Needs check", A.filter((a) => (a.icp_status === "ICP — Needs check" || a.icp_status === "Unknown") && notCoupa(a)), "accounts"],
       ["Strong / very strong", top, "accounts"], ["Contacts (people)", people, "contacts"],
-      ["Confirmed by 2+ sources", people.filter((p) => p.trust === "Confirmed by 2+ sources"), "contacts"], ["Contacts with email", people.filter((p) => p.email), "contacts"],
-      ["Signals logged", data.signals, "signals"], ["Conflicts retained", data.conflicts, "conflicts"],
+      ["Confirmed by 2+ sources", people.filter((p) => p.trust === "Confirmed by 2+ sources" && notCoupa(coById[p.company_id])), "contacts"], ["Contacts with email", people.filter((p) => p.email), "contacts"],
+      ["Signals logged", data.signals.filter(notCoupaSignal), "signals"], ["Conflicts retained", data.conflicts, "conflicts"],
       ["Employment changes", data.history.filter((h) => /change/i.test(str(h.determination))), "history"],
       ["Possible new S2P projects", A.filter((a) => ACT.includes(a.s2p_platform_status)), "accounts"],
     ];
@@ -667,7 +671,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
         ? <div className="panel"><h2>No {COUNTRIES.find((c) => c.code === country)?.name || country} accounts yet</h2>
             <p>This market is next on the roadmap. Add companies from the Research Queue (choose the country there), or pick another country above.</p></div>
         : view}</section>
-      {drill && <DrillDown d={drill} byCo={byCo} onClose={() => setDrill(null)} onAccount={setOpen} onContact={setContact} />}
+      {drill && <DrillDown d={drill} byCo={byCo} coById={coById} onClose={() => setDrill(null)} onAccount={setOpen} onContact={setContact} />}
       {open && A.find((x) => x.id === open) && <Brief a={A.find((x) => x.id === open)!} data={data} people={byCo[open] || []} onClose={() => setOpen(null)} onContact={setContact}
         scores={scores[open]} criteria={criteria} isSuper={isSuper} />}
       {contact && (() => { const p = P.find((x) => x.id === contact); return p ? <ContactCard p={p} data={data} onClose={() => setContact(null)} onAccount={(id) => { setContact(null); setOpen(id); }} /> : null; })()}
@@ -884,7 +888,7 @@ function Profile({ profile }: { profile: Record<string, Record<string, unknown>>
 
 type Kind = "accounts" | "contacts" | "signals" | "conflicts" | "history";
 
-function DrillDown({ d, byCo, onClose, onAccount, onContact }: { d: { title: string; kind: Kind; rows: Row[] }; byCo: Record<string, Row[]>;
+function DrillDown({ d, byCo, coById, onClose, onAccount, onContact }: { d: { title: string; kind: Kind; rows: Row[] }; byCo: Record<string, Row[]>; coById: Record<string, Row>;
   onClose: () => void; onAccount: (id: string) => void; onContact: (id: string) => void }) {
   let table: React.ReactNode;
   if (d.kind === "accounts") {
@@ -896,10 +900,12 @@ function DrillDown({ d, byCo, onClose, onAccount, onContact }: { d: { title: str
         { h: "S2P", cell: (a) => a.existing_s2p_product }, { h: "ERP", cell: (a) => a.erp }, { h: "Contacts", cell: (a) => <span className="mono">{(byCo[a.id] || []).length}</span> }]}
       onRow={(a) => onAccount(a.id)} />;
   } else if (d.kind === "contacts") {
+    const s2p = (p: Row) => coById[p.company_id]?.existing_s2p_product || "";
     table = <FilterTable unit="contacts" title={d.title} rows={d.rows} search={(p) => [p.company, p.full_name, p.title_verbatim, p.email].join(" ")}
-      filters={[{ label: "Tier", get: (p) => p.contact_tier }, { label: "Role family", get: (p) => famKey(p.role_family) }, { label: "Channel", get: (p) => p.channel_state }]}
+      filters={[{ label: "Tier", get: (p) => p.contact_tier }, { label: "Role family", get: (p) => famKey(p.role_family) }, { label: "Channel", get: (p) => p.channel_state }, { label: "S2P Platform", get: (p) => s2p(p) }]}
       cols={[{ h: "Name", cell: (p) => <b>{p.full_name}</b> }, { h: "Company", cell: (p) => p.company }, { h: "Title", cell: (p) => p.title_verbatim, wrap: true },
-        { h: "Email", cell: (p) => <span className="mono">{p.email}</span> }, { h: "Channel", cell: (p) => p.channel_state }]}
+        { h: "Email", cell: (p) => <span className="mono">{p.email}</span> }, { h: "Channel", cell: (p) => p.channel_state },
+        { h: "S2P Platform", cell: (p) => s2p(p) || <span className="muted">—</span> }]}
       onRow={(p) => onContact(p.id)} />;
   } else if (d.kind === "signals") {
     table = <FilterTable unit="signals" title={d.title} rows={[...d.rows].sort((a, b) => sigRank(a.level) - sigRank(b.level))} search={(s) => [s.company, s.signal, s.evidence].join(" ")}

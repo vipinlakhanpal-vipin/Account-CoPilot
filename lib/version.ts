@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.12";
+export const APP_VERSION = "3.13";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.13", date: "2026-10-02", notes: "Dashboard's \"Confirmed by 2+ sources\" contact tile and \"Signals logged\" tile now exclude confirmed Coupa customers too, with the drill-down table's counts now matching the tile exactly (the exclusion is applied at the tile's own count, not just inside the drill-down, so the two numbers can't disagree). The contacts drill-down also gets an S2P Platform column and filter. The S2P Signals tab (Data → S2P Signals) gets the same Coupa exclusion as its matching Dashboard tile, so they stay consistent with each other.", changes: [
+      { what: "\"Confirmed by 2+ sources\" tile excludes contacts at confirmed Coupa-customer companies; its drill-down table gets an S2P Platform column + filter", where: "components/CoPilotApp.tsx (kpis, DrillDown contacts branch)", why: "Reported — Coupa-customer contacts were inflating this trust-tier count" },
+      { what: "\"Signals logged\" tile and the S2P Signals tab both exclude signals belonging to confirmed Coupa customers, using a lookup built from the full account list (not the country-scoped one) since Signals was never scoped to the selected region to begin with", where: "components/CoPilotApp.tsx (allCoById, notCoupaSignal, kpis, tab === \"signals\")", why: "Reported — same Coupa leakage found in Signals logged; fixed in both places it appears so the tile and the tab always agree" },
+    ] },
   { version: "3.12", date: "2026-10-02", notes: "Dashboard's ICP status tiles (Verified/Likely/Needs check) and the matching \"Accounts by ICP status\" chart now exclude confirmed Coupa customers, same as Pipeline and Priority accounts — found 7 in Verified, 2 in Likely and 1 in Needs check that were being counted as prospects despite already being customers. Also fixed the version-history icon: it was rendering smaller than the bell and bulb next to it due to a CSS specificity conflict (a stronger, older rule was silently overriding the earlier size fix for bell/bulb but had no matching rule for history).", changes: [
       { what: "ICP — Verified / ICP — Likely / ICP — Needs check Dashboard tiles and the Accounts-by-ICP-status chart now exclude confirmed Coupa customers (notCoupa filter)", where: "components/CoPilotApp.tsx (kpis, Accounts by ICP status Bars)", why: "Reported — Coupa customers (e.g. QNB, Majid Al Futtaim) were being counted as Verified/Likely/Needs-check prospects despite already being customers, which reads as misleading funnel numbers" },
       { what: "Fixed history icon's circle actually rendering at 26px while bell/bulb rendered at 30px (a higher-specificity .navbar.has-sub .bell-btn rule was overriding the intended .version-scoped sizing, with no equivalent rule for history) — all three now consistently 30px in the compact header row", where: "app/globals.css (.navbar.has-sub .history-btn)", why: "Reported — the clock icon still looked smaller than bell and bulb after the earlier sizing fix" },
