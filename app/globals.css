@@ -248,6 +248,7 @@ th.num,td.num{width:1%;text-align:right;color:var(--faint);padding-right:6px}
 .tag{display:inline-block;font-size:11px;padding:1px 8px;border-radius:5px;background:var(--surface-2);border:1px solid var(--line);color:var(--muted);margin:1px 3px 1px 0}
 .tag.fact{color:var(--sig-vs);background:var(--sig-vs-bg);border-color:transparent}.tag.likely{color:var(--sig-m);background:var(--sig-m-bg);border-color:transparent}.tag.unv{color:var(--faint)}
 .mono{font-family:var(--mono);font-size:12px}
+.team-dt{font-size:10.5px;white-space:nowrap}
 .muted{color:var(--muted)}
 .note{font-size:12px;color:var(--muted)}
 

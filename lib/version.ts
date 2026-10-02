@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.21";
+export const APP_VERSION = "3.22";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.22", date: "2026-10-02", notes: "Team page's Joined and Last sign-in columns now show date and time, not just date — shrunk their font slightly so the wider text still fits cleanly.", changes: [
+      { what: "Joined/Last sign-in switched from fmtDate to fmtDateTime; added a compact 10.5px no-wrap style for those two columns to fit the extra text", where: "components/TeamSettings.tsx, app/globals.css (.team-dt)", why: "Requested — add time of joining and last login, shrink font if needed to fit" },
+    ] },
   { version: "3.21", date: "2026-10-02", notes: "Fixed two layout bugs that showed up at narrower browser widths (reported on Safari): the Wizard's region row could still wrap \"Which entities count\" onto its own line under width pressure, and the Setup tab could crowd up against the Master Book button. Both are now sized deterministically so they hold their layout regardless of window width or browser engine, instead of relying on width-based wrapping that different browsers calculate slightly differently.", changes: [
       { what: "Region row's size-fields box no longer shrinks below its natural content width (flex-shrink:0, sized to content instead of a guessed pixel floor) — if the row is ever too narrow for everything, the Activated-by status note wraps to its own line instead, never the fields themselves", where: "app/globals.css (.hw-region-fields)", why: "Reported — v3.11's fix used an estimated 320px floor that was too low; Safari's narrower window hit that floor and still wrapped internally, Chrome's wider one didn't" },
       { what: "Header search bar no longer competes with the tabs row for extra space (flex-grow 1→0, default width 340→260px) — tabs always get space first; added a small fixed margin between tabs and the Master Book/avatar cluster", where: "app/globals.css (.gsearch-group, nav.tabs)", why: "Reported — Setup sometimes crowded against Master Book; removing the tug-of-war for space between search and tabs prevents it rather than patching one specific width" },
