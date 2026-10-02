@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.89";
+export const APP_VERSION = "2.90";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.90", date: "2026-10-02", notes: "Team's \"Change access\" edit controls (Role, Region, Save, Cancel) shrunk to the same compact size as the Super Admin/Change pills.", changes: [
+      { what: "Role/Region dropdowns and Save/Cancel buttons in the inline edit row resized to match the compact pill sizing", where: "components/TeamSettings.tsx, app/globals.css (.team-edit)", why: "Requested" },
+    ] },
   { version: "2.89", date: "2026-10-02", notes: "Wizard's \"Activated by\" note moved from crowding the region name to the end of its row, in fine print.", changes: [
       { what: "\"Activated by <name> on <date>\" moved from right after the region checkbox to a small, right-aligned note at the end of the row", where: "components/HomeWorkspace.tsx, app/globals.css (.hw-region-activated)", why: "Requested" },
     ] },

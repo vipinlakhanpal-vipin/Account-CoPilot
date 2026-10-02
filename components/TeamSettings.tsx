@@ -165,8 +165,8 @@ export default function TeamSettings() {
               <td>{u.role === "super_admin" ? "All regions" : u.regions.join(", ") || "Not set"}</td>
               <td>{x ? <div className="team-edit"><AccessPicker role={x.role} regions={x.regions} onChange={(r, g) => setEdit((m) => ({ ...m, [u.id]: { role: r, regions: g } }))} />
                   <div className="team-edit-actions">
-                    <button type="button" className="btn primary" onClick={() => saveAccess(u)}>Save</button>
-                    <button type="button" className="btn" onClick={() => setEdit((m) => { const n = { ...m }; delete n[u.id]; return n; })}>Cancel</button>
+                    <button type="button" className="btn tiny primary" onClick={() => saveAccess(u)}>Save</button>
+                    <button type="button" className="btn tiny" onClick={() => setEdit((m) => { const n = { ...m }; delete n[u.id]; return n; })}>Cancel</button>
                   </div></div>
                 : <button type="button" className="btn-change" onClick={() => setEdit((m) => ({ ...m, [u.id]: { role: u.role, regions: u.regions } }))}>Change</button>}</td>
               <td className="muted">{u.invited_by || "—"}</td><td className="mono">{fmtDate(u.created_at)}</td>

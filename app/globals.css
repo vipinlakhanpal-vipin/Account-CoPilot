@@ -974,6 +974,8 @@ td.logo-cell{width:40px;padding-top:0;padding-bottom:0;text-align:center}
 .team-all{display:flex;align-items:center;padding:0 12px !important;color:var(--muted) !important}
 .team-edit .team-access{display:flex;flex-direction:column;gap:10px;align-items:flex-start}
 .team-edit .f-role,.team-edit .f-region{display:flex;flex-direction:column;gap:4px;font:600 12px var(--body);width:100%;max-width:220px}
+.team-edit .input-frame{height:30px;border-radius:7px;font:600 12px var(--body);padding:0 9px}
+.team-edit .team-all{height:30px;padding:0 9px!important;font-size:12px!important}
 /* Password / PIN field with show-hide eye */
 .secret{position:relative;display:flex;align-items:center;width:100%}
 .secret input{width:100%;padding-right:42px !important;box-sizing:border-box}
