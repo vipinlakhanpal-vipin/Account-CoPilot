@@ -151,6 +151,18 @@ export default function DiscoveryPanel({ criteria: applied, onApply, onSave, sav
         </div>
       )}
 
+      <div className="dp-foot dp-foot-step2">
+        {!dirty ? <p className="dp-state">✓ Showing the <b>team&apos;s filters</b>{savedMeta?.at && <> (saved {fmtDate(savedMeta.at)}{savedMeta.by && ` by ${savedMeta.by}`})</>}</p>
+          : <>
+            <p className="dp-state changed">You changed {changed || "some"} filter{changed === 1 ? "" : "s"} — only you see this view.</p>
+            <div className="dp-acts">
+              <button type="button" className="btn dp-undo" onClick={() => { onChange(base); setSaveRes(null); }}>Undo Changes</button>
+              {isSuper && <button type="button" className="btn primary dp-save" title="Makes these filters everyone's starting view" onClick={async () => { setSaveRes(null); setSaveRes(await onSave(criteria)); }}>Save Default</button>}
+            </div>
+          </>}
+        {saveRes && (saveRes.ok ? <p className="dp-note ok">✓ Shared. Everyone now starts from these filters.</p> : <p className="dp-note bad">Couldn&apos;t share: {saveRes.error}</p>)}
+      </div>
+
       <div className="dp-research dp-step s3" id="dp-research">
         <p className="dp-step-h"><span className="dp-n">3</span>Discover</p>
         <p className="dp-step-sub">{where ? <>Adds companies not yet in the app, in <b>{where}</b> ({applied.company.countries.length ? "the countries ticked in step 2" : `the ${country} tile you are viewing`}). Same ICP rules: group HQs only; no government bodies, single sites or foreign branches.</> : "Tick a country in step 2 first."}</p>
@@ -159,17 +171,6 @@ export default function DiscoveryPanel({ criteria: applied, onApply, onSave, sav
         <button type="button" className="btn primary dp-go" disabled={!researchTargets.length} onClick={() => onResearch(limit, profile)}>Search the web{where ? ` — ${where}` : ""}</button>
         <p className="dp-cost">Uses the Anthropic API ≈ {profile ? "$0.50–1.00 per search + $0.55 per company researched" : "$0.50–1.00 per search"}{researchTargets.length > 1 ? ` × ${researchTargets.length} countries` : ""} · asks for your PIN</p>
         {researchMsg && <p className="dp-saved">{researchMsg}</p>}
-      </div>
-      <div className="dp-foot">
-        {!dirty ? <p className="dp-state">✓ Showing the <b>team&apos;s filters</b>{savedMeta?.at && <> (saved {fmtDate(savedMeta.at)}{savedMeta.by && ` by ${savedMeta.by}`})</>}</p>
-          : <>
-            <p className="dp-state changed">You changed {changed || "some"} filter{changed === 1 ? "" : "s"} — only you see this view.</p>
-            <div className="dp-acts">
-              <button type="button" className="btn" onClick={() => { onChange(base); setSaveRes(null); }}>Undo my changes</button>
-              {isSuper && <button type="button" className="btn" title="Makes these filters everyone's starting view" onClick={async () => { setSaveRes(null); setSaveRes(await onSave(criteria)); }}>Share as team default</button>}
-            </div>
-          </>}
-        {saveRes && (saveRes.ok ? <p className="dp-note ok">✓ Shared. Everyone now starts from these filters.</p> : <p className="dp-note bad">Couldn&apos;t share: {saveRes.error}</p>)}
       </div>
     </aside>
   );

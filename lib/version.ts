@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.24";
+export const APP_VERSION = "3.25";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.25", date: "2026-10-02", notes: "Discovery panel: the Undo/Save-default controls for step 2 (Filter your view) moved up to sit right after step 2, instead of after step 3 (Discover, the paid web search) — they were acting on step 2's changes but appeared below an unrelated paid action, which read as confusing. Renamed \"Share as team default\" to \"Save Default\" and \"Undo my changes\" to \"Undo Changes\", and gave both buttons distinct colors (teal for Save, amber for Undo) instead of two identical plain pills.", changes: [
+      { what: "Moved the dirty-state banner and its two buttons from after step 3 (Discover) to directly after step 2 (Filter your view), so they sit next to the thing they act on", where: "components/DiscoveryPanel.tsx", why: "Reported — the save/undo controls appeared after the unrelated paid \"Search the web\" button, reading as if it belonged to step 3" },
+      { what: "Renamed \"Share as team default\" → \"Save Default\" (teal, matches other primary actions) and \"Undo my changes\" → \"Undo Changes\" (amber, matches this panel's existing amber accent)", where: "components/DiscoveryPanel.tsx, app/globals.css (.dp-save, .dp-undo)", why: "Requested — shorter labels, and color to tell the two actions apart at a glance" },
+    ] },
   { version: "3.24", date: "2026-10-02", notes: "Two additions answering \"how do I get the most from this AI Agent\": every account brief now has a Procurement & IT Maturity rating (Advanced / Developing / Basic / Unknown, with a plain-English reason and the 4 signals behind it — current platform, ERP, S2P signal strength, addressable spend), and the Home page leads with a bold banner answering the two questions anyone new to the app is likely to ask — who to target, and how ready they are.", changes: [
       { what: "New procurementMaturity() — a plain-English maturity rating built from existing S2P platform, ERP family, S2P signal strength and addressable spend; previously this only existed as a single hidden 10-point line inside the ICP Match score tooltip", where: "lib/icp.ts (procurementMaturity)", why: "Requested — a colleague asked how to judge an account's procurement/IT readiness, and the honest answer was \"that's not really surfaced anywhere\"" },
       { what: "New \"Procurement & IT maturity\" block in every account brief — level pill, reasoning, and a 4-field grid (platform/ERP/signal/spend)", where: "components/CoPilotApp.tsx (Brief)", why: "Make the maturity answer visible and loud, not buried in a tooltip" },

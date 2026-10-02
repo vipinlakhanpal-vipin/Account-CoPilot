@@ -431,6 +431,9 @@ aside.brief.contact{width:min(760px,100%);z-index:70}
 .dp-yn{display:flex;gap:6px}.dp-yn button{flex:1;font:600 12px var(--body);padding:6px;border-radius:8px;cursor:pointer;background:rgba(var(--ink),.04);color:var(--text);border:1px solid rgba(var(--ink),.14)}
 .dp-yn button.on{background:rgba(46,196,166,.25);border-color:rgba(46,196,166,.7)}
 .dp-foot{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 14px;border-top:1px solid var(--line)}
+.dp-foot-step2{border-top:none;border-bottom:1px solid var(--line);margin-bottom:4px}
+.dp-undo{color:#8A5A00;background:color-mix(in srgb, #E0A21B 14%, var(--surface));border-color:color-mix(in srgb, #E0A21B 50%, transparent)}
+.dp-undo:hover{background:color-mix(in srgb, #E0A21B 22%, var(--surface))}
 .dp-saved{font-size:11.5px;color:var(--teal)}.dp-link{font-size:12px;margin-left:auto}
 @media (max-width:1100px){.app-shell,.app-shell.dp-closed{grid-template-columns:1fr}.dp{position:static;max-height:none}.dp-collapsed{flex-direction:row}.dp-vert{writing-mode:horizontal-tb;transform:none}}
 /* scores */
