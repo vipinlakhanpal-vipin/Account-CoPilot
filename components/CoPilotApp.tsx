@@ -746,6 +746,39 @@ function Brief({ a, data, people, onClose, onContact, scores, criteria, isSuper 
           {a.profile?.["HubSpot"] && <HubSpotBlock hs={a.profile["HubSpot"]} />}
           {a.profile && <Profile profile={a.profile} />}
           <div className="block"><h4>Opportunity observations</h4><p>{a.potential_opportunity || "—"}</p>{a.account_notes && <p className="note">{a.account_notes}</p>}</div>
+          {(() => {
+            const prod = str(a.existing_s2p_product);
+            const isCoupa = /coupa/i.test(prod);
+            const isOtherPlatform = !isCoupa && /ariba|oracle procurement|ivalua|jaggaer|\bgep\b|zycus/i.test(prod);
+            if (!isCoupa && !isOtherPlatform) return null;
+            // Reuses the Coupa Fit scoring already computed for Pipeline ranking (lib/icp.ts coupaFit) — just
+            // surfaced here as a to-do list instead of a buried score. Source-to-Pay (their core usage) reads as
+            // Upsell; the other value areas that still score well read as Cross-sell candidates — a suggestion to
+            // explore, not a confirmed gap, since the app doesn't track which modules an account already owns.
+            // Managed Services is offered unconditionally to any existing-platform account, Coupa or not.
+            const parts = scores?.f.parts || [];
+            const core = parts.find((p) => p.label === "Source-to-Pay");
+            const crossSell = parts.filter((p) => p.label !== "Source-to-Pay" && p.label !== "Your platform focus" && p.score >= p.max * 0.75);
+            return (
+              <div className="block">
+                <h4>{isCoupa ? "Expansion & Services Opportunity" : "Managed Services Opportunity"}</h4>
+                {isCoupa ? (
+                  <>
+                    <p className="note">Existing Coupa customer — not a new-business pitch. Upsell and cross-sell reasoning reuses the same Coupa Fit scoring used for Pipeline ranking; Managed Services is offered to any existing-platform account regardless of score.</p>
+                    {core && <p className="opp-line"><span className="tag opp-upsell">Upsell</span> <b>Expand core Source-to-Pay usage</b><br /><span className="note">{core.why}</span></p>}
+                    {crossSell.map((p) => (
+                      <p key={p.label} className="opp-line"><span className="tag opp-cross">Cross-sell</span> <b>{p.label}</b><br /><span className="note">{p.why} — worth checking whether this module is already in place.</span></p>
+                    ))}
+                    <p className="opp-line"><span className="tag opp-mgd">Managed Services</span> <b>Ongoing admin &amp; optimisation</b><br />
+                      <span className="note">Keep the Coupa estate tuned as the business changes — new entities, categories, suppliers and process changes.</span></p>
+                  </>
+                ) : (
+                  <p className="opp-line"><span className="tag opp-mgd">Managed Services</span> <b>Runs {a.existing_s2p_product} today</b><br />
+                    <span className="note">SCP can offer managed services on the existing estate regardless of platform. This account also remains a Coupa-displacement prospect in Pipeline — not excluded like a Coupa customer would be.</span></p>
+                )}
+              </div>
+            );
+          })()}
           <div className="block"><h4>Stakeholders ({cs.length}) · select a person for their contact card</h4>
             <div className="tablewrap"><table><thead><tr><th className="num">#</th><th>Name</th><th>Title (verbatim)</th><th>Tier</th><th>Channel</th><th>Email</th><th>Phone</th><th>LinkedIn</th></tr></thead>
               <tbody>{cs.map((p, i) => (
