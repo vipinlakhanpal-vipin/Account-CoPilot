@@ -5,6 +5,7 @@ export const COUNTRIES = [
   { code: "Egypt", name: "Egypt", flag: "🇪🇬" }, { code: "USA", name: "USA", flag: "🇺🇸" },
   { code: "UK", name: "United Kingdom", flag: "🇬🇧" }, { code: "Germany", name: "Germany", flag: "🇩🇪" }, { code: "Morocco", name: "Morocco", flag: "🇲🇦" },
   { code: "Kenya", name: "Kenya", flag: "🇰🇪" }, { code: "SouthAfrica", name: "South Africa", flag: "🇿🇦" },
+  { code: "Unknown", name: "Unknown", flag: "❓" }, // a country matching no defined region — surfaced here, never silently folded into UAE
 ] as const;
 export const ALL = "All";
 export const DEFAULT_COUNTRY = "UAE";

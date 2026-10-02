@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.83";
+export const APP_VERSION = "2.84";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.84", date: "2026-10-02", notes: "Fixed: a company whose country matched no defined region silently fell back to UAE's own rules and tile — now falls back to a visible \"Unknown\" bucket instead, so it surfaces for review instead of being misclassified as UAE.", changes: [
+      { what: "regionOf() and rulesFor() now fall back to \"Unknown\" (generic baseline rules, its own tile — Super Admin only) instead of UAE for a country matching no defined region", where: "lib/icpDefinition.mjs, lib/countries.ts" , why: "Reported — an unrecognized country should never be silently folded into a real region's specific rules" },
+    ] },
   { version: "2.83", date: "2026-10-02", notes: "Removed the \"Europe\" catch-all region (France/Netherlands/Switzerland/etc.) now that UK and Germany are their own regions — confirmed zero companies were tagged under it first.", changes: [
       { what: "\"Europe\" region removed from the region list and country tiles", where: "lib/icpDefinition.mjs, lib/countries.ts", why: "Requested — no longer needed once UK/Germany were split out; verified no existing data referenced it" },
     ] },
