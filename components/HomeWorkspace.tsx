@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { REGIONS, OPTIONS, normalizeDefinition, type Definition, type Rules } from "@/lib/icpDefinition.mjs";
 import type { Access } from "@/lib/access";
 import { ask, notify } from "@/components/Confirm";
-import { fmtDate } from "@/lib/dates";
+import { fmtDateTime } from "@/lib/dates";
 
 // Home workspace: a left rail with two destinations — About Account CoPilot (always free to read) and Setup Wizard
 // (reads and writes the exact settings.icp_definition record Setup → Define ICP uses, so there's no separate config to
@@ -306,10 +306,13 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                     const activatedAt = def.regions[r.key]?.activated_at;
                     return (
                       <div key={r.key} className={`hw-region-row ${checked ? "on" : ""}`}>
-                        <label className="hw-region-name">
-                          <input type="checkbox" checked={checked} onChange={() => toggleRegion(r.key)} />
-                          {r.name} {nextPhase && <span className="hint">— not started yet</span>}
-                        </label>
+                        <div className="hw-region-name-col">
+                          <span className="hw-region-head">Region</span>
+                          <label className="hw-region-name">
+                            <input type="checkbox" checked={checked} onChange={() => toggleRegion(r.key)} />
+                            {r.name} {nextPhase && <span className="hint">— not started yet</span>}
+                          </label>
+                        </div>
                         <div className="hw-region-fields">
                           <label>Min net rev<MoneyField value={s.revenue} onChange={(v) => setSize(r.key, { revenue: v })} /></label>
                           <label>Min employees<input type="number" min={0} value={s.employees} onChange={(e) => setSize(r.key, { employees: Number(e.target.value) || 0 })} /></label>
@@ -318,7 +321,12 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                           <label>Which entities count<select value={s.entity} onChange={(e) => setSize(r.key, { entity: e.target.value as Rules["entity_level"] })}>
                             {OPTIONS.entity.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
                         </div>
-                        {activatedBy && <span className="hw-region-activated">Activated by {activatedBy}{activatedAt ? ` on ${fmtDate(activatedAt)}` : ""}</span>}
+                        {activatedBy && (
+                          <div className="hw-region-status-col">
+                            <span className="hw-region-head">Status</span>
+                            <span className="hw-region-activated">Activated by {activatedBy}{activatedAt ? ` on ${fmtDateTime(activatedAt)}` : ""}</span>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
