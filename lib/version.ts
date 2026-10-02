@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.75";
+export const APP_VERSION = "2.76";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.76", date: "2026-10-02", notes: "Custom filter's field list now only offers fields shown as columns in that table, not every raw field on the row — you could filter on data not visible anywhere in the results.", changes: [
+      { what: "Custom filter field picker restricted to each table's own visible columns (via a new ColDef.field on each column), across Accounts, Pipeline, Stakeholders, Signals, ERP, Sources and Reports", where: "components/CoPilotApp.tsx, components/CustomFilters.tsx", why: "Requested — filtering on a field not shown as a column made results hard to verify" },
+    ] },
   { version: "2.75", date: "2026-10-02", notes: "Custom filter chips are now clickable — click one (e.g. \"Title contains Finance\") to reopen the builder pre-filled with that condition, change anything, and Save filter updates it in place instead of adding a duplicate. The × still removes it outright.", changes: [
       { what: "Clicking a custom filter chip's text reopens the builder pre-filled with that condition (field, condition, value); the button then reads \"Save filter\" and updates that one condition in place. The × stays a direct, one-click remove", where: "components/CustomFilters.tsx (CustomFilterBar)", why: "Requested — editing a filter meant removing the chip and rebuilding it from scratch" },
     ] },

@@ -138,7 +138,11 @@ function Bars({ entries, order, signal }: { entries: [string, number][]; order?:
   );
 }
 
-type ColDef = { h: string; cell: (r: Row) => React.ReactNode; wrap?: boolean; cls?: string; tip?: string };
+// field: the raw row key this column shows, when there's a clean one — restricts the custom filter's field list
+// to what's actually visible in the table, instead of every property on the row object (most of which aren't
+// shown as a column at all and would be confusing to filter on sight-unseen). A column with no clean 1:1 field
+// (a computed score, a combined cell) just omits it.
+type ColDef = { h: string; cell: (r: Row) => React.ReactNode; wrap?: boolean; cls?: string; tip?: string; field?: string };
 type FilterDef = { label: string; get: (r: Row) => string };
 
 function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "rows", tipW, empty, initial, onState, toggleExtra }: {
@@ -155,7 +159,8 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "
   const wrapRef = useRef<HTMLDivElement>(null);
   const scrollH = (dx: number) => wrapRef.current?.scrollBy({ left: dx, behavior: "smooth" });
   const options = useMemo(() => filters.map((f) => [...new Set(rows.map(f.get).filter(Boolean))].sort()), [rows, filters]);
-  const cf = useCustomFilters(rows, title, initial?.cf);
+  const visibleFields = useMemo(() => cols.map((c) => c.field).filter((f): f is string => !!f), [cols]);
+  const cf = useCustomFilters(rows, title, initial?.cf, visibleFields);
   const out = rows.filter((r) => (!q || search(r).toLowerCase().includes(q.toLowerCase())) && filters.every((f, i) => !fv[i] || f.get(r) === fv[i]) && cf.test(r));
   useEffect(() => { onState?.({ q, fv, cf: cf.list, count: out.length });
     /* eslint-disable-next-line react-hooks/exhaustive-deps */
@@ -368,15 +373,15 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
       filters={[{ label: "ICP status", get: (a) => a.icp_status }, { label: "List", get: (a) => (a.lists || []).join(" + ") },
         { label: "Signal", get: (a) => a.s2p_signal_level }, { label: "S2P", get: (a) => a.existing_s2p_product }, { label: "Industry", get: (a) => a.industry },
         { label: "Exchange", get: (a) => a.exchange }, { label: "Country", get: (a) => a.country }]}
-      cols={[{ h: "", cls: "logo-cell", cell: (a) => <CompanyLogo a={a} /> }, { h: "Company", cell: (a) => <><b>{a.company_name}</b><div className="muted mono">{a.exchange} {a.ticker}</div></> },
-        { h: "Industry", cell: (a) => a.industry }, { h: "Revenue", cell: (a) => { const r = bestRevenue(a); return r.v ? <><span className="mono">{usd(r.v)}</span>{r.src && <div className="rev-src">{r.src}</div>}</> : <span className="muted">—</span>; } },
-        { h: "ICP status", tip: "icpStatus", cell: (a) => <><IcpTag s={a.icp_status} why={a.icp_fit_reason} /><div className="muted mono rec-since">since {statusSince(a) || "—"}</div></> },
+      cols={[{ h: "", cls: "logo-cell", cell: (a) => <CompanyLogo a={a} /> }, { h: "Company", field: "company_name", cell: (a) => <><b>{a.company_name}</b><div className="muted mono">{a.exchange} {a.ticker}</div></> },
+        { h: "Industry", field: "industry", cell: (a) => a.industry }, { h: "Revenue", field: "revenue_usd_m", cell: (a) => { const r = bestRevenue(a); return r.v ? <><span className="mono">{usd(r.v)}</span>{r.src && <div className="rev-src">{r.src}</div>}</> : <span className="muted">—</span>; } },
+        { h: "ICP status", tip: "icpStatus", field: "icp_status", cell: (a) => <><IcpTag s={a.icp_status} why={a.icp_fit_reason} /><div className="muted mono rec-since">since {statusSince(a) || "—"}</div></> },
         { h: "ICP match", tip: "icpMatch", cell: (a) => scores[a.id] && <ScoreChip s={scores[a.id].m} label="ICP Match" /> },
         { h: "Opportunity", tip: "opportunity", cell: (a) => scores[a.id] && <ScoreChip s={scores[a.id].o} label="Opportunity" /> },
         { h: "Coupa fit", tip: "coupaFit", cell: (a) => scores[a.id] && <ScoreChip s={scores[a.id].f} label="Coupa Fit" /> },
-        { h: "Updated", cell: (a) => <Dates a={a} /> }, { h: "Lists", cell: (a) => <span className="muted">{(a.lists || []).join(", ")}</span> },
-        { h: "Signal", cell: (a) => <Pill s={a.s2p_signal_level} /> }, { h: "Existing S2P", cell: (a) => a.existing_s2p_product },
-        { h: "S2P status", cell: (a) => a.s2p_platform_status }, { h: "ERP", cell: (a) => a.erp }, { h: "Contacts", cell: (a) => <span className="mono">{(byCo[a.id] || []).length}</span> }]}
+        { h: "Updated", field: "updated_at", cell: (a) => <Dates a={a} /> }, { h: "Lists", field: "lists", cell: (a) => <span className="muted">{(a.lists || []).join(", ")}</span> },
+        { h: "Signal", field: "s2p_signal_level", cell: (a) => <Pill s={a.s2p_signal_level} /> }, { h: "Existing S2P", field: "existing_s2p_product", cell: (a) => a.existing_s2p_product },
+        { h: "S2P status", field: "s2p_platform_status", cell: (a) => a.s2p_platform_status }, { h: "ERP", field: "erp", cell: (a) => a.erp }, { h: "Contacts", cell: (a) => <span className="mono">{(byCo[a.id] || []).length}</span> }]}
       onRow={openRow} />;
   } else if (tab === "pipeline") {
     const ranked = A.filter((a) => inPipe(a, scores[a.id])).sort((a, b) => scores[b.id].rank - scores[a.id].rank);
@@ -397,10 +402,10 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
       </>}
       rows={ranked} search={(a) => [a.company_name, a.industry, a.erp, a.existing_s2p_product].join(" ")}
       filters={[{ label: "ICP status", get: (a) => a.icp_status }, { label: "S2P", get: (a) => a.existing_s2p_product }, { label: "Industry", get: (a) => a.industry }, { label: "Country", get: (a) => a.country }]}
-      cols={[{ h: "Rank", tip: "rank", cell: (a) => <b className="mono" title={`Rank ${scores[a.id].rank}% = ${pipe.w_match}% of ICP Match + ${pipe.w_opportunity}% of Opportunity + ${pipe.w_fit}% of Coupa Fit`}>{scores[a.id].rank}%</b> }, { h: "", cls: "logo-cell", cell: (a) => <CompanyLogo a={a} /> }, { h: "Company", cls: "co-cell", cell: (a) => <><b>{a.company_name}</b><div className="muted clamp2" title={`${a.industry} · ${a.country}`}>{a.industry} · {a.country}</div></> },
+      cols={[{ h: "Rank", tip: "rank", cell: (a) => <b className="mono" title={`Rank ${scores[a.id].rank}% = ${pipe.w_match}% of ICP Match + ${pipe.w_opportunity}% of Opportunity + ${pipe.w_fit}% of Coupa Fit`}>{scores[a.id].rank}%</b> }, { h: "", cls: "logo-cell", cell: (a) => <CompanyLogo a={a} /> }, { h: "Company", cls: "co-cell", field: "company_name", cell: (a) => <><b>{a.company_name}</b><div className="muted clamp2" title={`${a.industry} · ${a.country}`}>{a.industry} · {a.country}</div></> },
         { h: "ICP match", tip: "icpMatch", cell: (a) => <ScoreChip s={scores[a.id].m} label="ICP Match" /> }, { h: "Opportunity", tip: "opportunity", cell: (a) => <ScoreChip s={scores[a.id].o} label="Opportunity" /> },
-        { h: "Coupa fit", tip: "coupaFit", cell: (a) => <ScoreChip s={scores[a.id].f} label="Coupa Fit" /> }, { h: "ICP status", tip: "icpStatus", cell: (a) => <IcpTag s={a.icp_status} why={a.icp_fit_reason} /> },
-        { h: "Revenue", cell: (a) => <span className="mono">{usd(bestRevenue(a).v)}</span> }, { h: "Existing S2P", cell: (a) => a.existing_s2p_product },
+        { h: "Coupa fit", tip: "coupaFit", cell: (a) => <ScoreChip s={scores[a.id].f} label="Coupa Fit" /> }, { h: "ICP status", tip: "icpStatus", field: "icp_status", cell: (a) => <IcpTag s={a.icp_status} why={a.icp_fit_reason} /> },
+        { h: "Revenue", field: "revenue_usd_m", cell: (a) => <span className="mono">{usd(bestRevenue(a).v)}</span> }, { h: "Existing S2P", field: "existing_s2p_product", cell: (a) => a.existing_s2p_product },
         { h: "Contacts", cell: (a) => <span className="mono">{(byCo[a.id] || []).length}</span> }]}
       onRow={openRow} />;
   } else if (tab === "stakeholders") {
@@ -417,31 +422,31 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
       search={(p) => [p.company, p.full_name, p.title_verbatim, p.email, p.notes_contact].join(" ")}
       filters={[...(perPerson ? [{ label: "Trust", get: (p: Row) => p.trust }, { label: "Sources", get: (p: Row) => (p.sources || []).join(" + ") }] : [{ label: "Source", get: (p: Row) => contributorOf(p) }]),
         { label: "Persona fit", get: (p) => p.__pf?.label }, { label: "Tier", get: (p) => p.contact_tier }, { label: "Role family", get: (p) => famKey(p.role_family) }, { label: "Email status", get: (p) => p.email_status }]}
-      cols={[{ h: "Company", cell: (p) => p.company }, { h: "Full name", cell: (p) => <b>{p.full_name}</b> }, { h: "Title (verbatim)", cell: (p) => p.title_verbatim, wrap: true },
+      cols={[{ h: "Company", field: "company", cell: (p) => p.company }, { h: "Full name", field: "full_name", cell: (p) => <b>{p.full_name}</b> }, { h: "Title (verbatim)", field: "title_verbatim", cell: (p) => p.title_verbatim, wrap: true },
         { h: "Persona fit", tip: "personaFit", cell: (p) => p.__pf?.label === "No personas set" ? <span className="muted">—</span>
           : <span className={`pf ${p.__pf.score >= 99 ? "hi" : p.__pf.score >= 50 ? "mid" : "lo"}`} title={p.__pf.why}>{p.__pf.score}%<small>{p.__pf.label}</small></span> },
-        ...(perPerson ? [{ h: "Trust", tip: "trust", cell: (p: Row) => <><TrustTag t={p.trust} why={p.trust_reason} /><div className="muted">{(p.sources || []).join(" + ")}</div></> }]
+        ...(perPerson ? [{ h: "Trust", tip: "trust", field: "trust", cell: (p: Row) => <><TrustTag t={p.trust} why={p.trust_reason} /><div className="muted">{(p.sources || []).join(" + ")}</div></> }]
           : [{ h: "Source", cell: (p: Row) => <>{contributorOf(p)}<div className="muted">{p.record_status}</div></> }]),
-        { h: "Role family", cell: (p) => p.role_family }, { h: "Tier", cell: (p) => p.contact_tier },
-        { h: "Email", cell: (p) => <span className="mono">{p.email}</span> }, { h: "Email status", cell: (p) => p.email_status },
-        { h: "Phone", cell: (p) => <><span className="mono">{p.phone}</span> <span className="muted">{p.phone_type}</span></> },
-        { h: "LinkedIn", cell: (p) => <Ext href={p.linkedin_url}>profile</Ext> }, { h: "S2P signal", cell: (p) => <Pill s={p.account_s2p_signal} /> }]}
+        { h: "Role family", field: "role_family", cell: (p) => p.role_family }, { h: "Tier", field: "contact_tier", cell: (p) => p.contact_tier },
+        { h: "Email", field: "email", cell: (p) => <span className="mono">{p.email}</span> }, { h: "Email status", field: "email_status", cell: (p) => p.email_status },
+        { h: "Phone", field: "phone", cell: (p) => <><span className="mono">{p.phone}</span> <span className="muted">{p.phone_type}</span></> },
+        { h: "LinkedIn", field: "linkedin_url", cell: (p) => <Ext href={p.linkedin_url}>profile</Ext> }, { h: "S2P signal", field: "account_s2p_signal", cell: (p) => <Pill s={p.account_s2p_signal} /> }]}
       onRow={(p) => setContact(p.best_id || p.id)} /></>;
   } else if (tab === "signals") {
     view = <FilterTable unit="signals" title="S2P signals" note="Every signal carries its evidence and source."
       rows={[...data.signals].sort((a, b) => sigRank(a.level) - sigRank(b.level))}
       search={(s) => [s.company, s.signal, s.evidence, s.platform].join(" ")}
       filters={[{ label: "Level", get: (s) => s.level }, { label: "Category", get: (s) => s.category }, { label: "Platform", get: (s) => s.platform }]}
-      cols={[{ h: "Company", cell: (s) => <b>{s.company}</b> }, { h: "Level", cell: (s) => <Pill s={s.level} /> }, { h: "Category", cell: (s) => s.category },
-        { h: "Platform", cell: (s) => s.platform }, { h: "Signal", cell: (s) => s.signal, wrap: true }, { h: "Evidence", cell: (s) => s.evidence, wrap: true },
-        { h: "Date", cell: (s) => <span className="mono">{s.date}</span> }, { h: "Source", cell: (s) => <Ext href={s.source_url}>source</Ext> }]}
+      cols={[{ h: "Company", field: "company", cell: (s) => <b>{s.company}</b> }, { h: "Level", field: "level", cell: (s) => <Pill s={s.level} /> }, { h: "Category", field: "category", cell: (s) => s.category },
+        { h: "Platform", field: "platform", cell: (s) => s.platform }, { h: "Signal", field: "signal", cell: (s) => s.signal, wrap: true }, { h: "Evidence", field: "evidence", cell: (s) => s.evidence, wrap: true },
+        { h: "Date", field: "date", cell: (s) => <span className="mono">{s.date}</span> }, { h: "Source", cell: (s) => <Ext href={s.source_url}>source</Ext> }]}
       onRow={openRow} />;
   } else if (tab === "erp") {
     view = <FilterTable title="ERP & third-party apps" note="FACT = directly sourced · LIKELY = several indirect signals · UNVERIFIED = one weak source, such as technographics."
       rows={data.apps} search={(r) => [r.company, r.name, r.category, r.evidence].join(" ")}
       filters={[{ label: "Category", get: (r) => r.category }, { label: "Status", get: (r) => r.status }]}
-      cols={[{ h: "Company", cell: (r) => <b>{r.company}</b> }, { h: "Application", cell: (r) => r.name }, { h: "Category", cell: (r) => r.category },
-        { h: "Status", cell: (r) => <StatusTag s={r.status} /> }, { h: "Evidence", cell: (r) => r.evidence, wrap: true }, { h: "Source", cell: (r) => <Ext href={r.source_url}>source</Ext> }]}
+      cols={[{ h: "Company", field: "company", cell: (r) => <b>{r.company}</b> }, { h: "Application", field: "name", cell: (r) => r.name }, { h: "Category", field: "category", cell: (r) => r.category },
+        { h: "Status", field: "status", cell: (r) => <StatusTag s={r.status} /> }, { h: "Evidence", field: "evidence", cell: (r) => r.evidence, wrap: true }, { h: "Source", cell: (r) => <Ext href={r.source_url}>source</Ext> }]}
       onRow={openRow} />;
   } else if (tab === "conflicts") {
     view = <ConflictGroupsView groups={groupConflicts(data.conflicts)} isSuper={isSuper} onResolved={() => router.refresh()} />;
@@ -498,9 +503,9 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
       <FilterTable unit="sources" title="Source evidence" note="The audit trail behind every fact: one row per source used, with what was found and how confident we are." rows={data.sources}
       search={(s) => [s.company, s.source, s.information_found, s.url].join(" ")}
       filters={[{ label: "Source group", get: (s) => evidenceGroup(s) }, { label: "Tier", get: (s) => s.source_tier }, { label: "Type", get: (s) => s.source_type }, { label: "Confidence", get: (s) => s.confidence }]}
-      cols={[{ h: "Company", cell: (s) => s.company }, { h: "Source", cell: (s) => s.source }, { h: "Type", cell: (s) => s.source_type }, { h: "Tier", cell: (s) => s.source_tier },
-        { h: "Information found", cell: (s) => s.information_found, wrap: true }, { h: "Published", cell: (s) => <span className="mono">{s.date_published}</span> },
-        { h: "Confidence", cell: (s) => s.confidence }, { h: "URL", cell: (s) => <Ext href={s.url}>open</Ext> }]}
+      cols={[{ h: "Company", field: "company", cell: (s) => s.company }, { h: "Source", field: "source", cell: (s) => s.source }, { h: "Type", field: "source_type", cell: (s) => s.source_type }, { h: "Tier", field: "source_tier", cell: (s) => s.source_tier },
+        { h: "Information found", field: "information_found", cell: (s) => s.information_found, wrap: true }, { h: "Published", field: "date_published", cell: (s) => <span className="mono">{s.date_published}</span> },
+        { h: "Confidence", field: "confidence", cell: (s) => s.confidence }, { h: "URL", cell: (s) => <Ext href={s.url}>open</Ext> }]}
       onRow={openRow} /></>;
   } else if (tab === "reports") {
     const fmtM = (n: number | null) => n === null ? "—" : n >= 1000 ? `$${(n / 1000).toFixed(2).replace(/\.?0+$/, "")}B` : `$${Math.round(n)}M`;
@@ -519,10 +524,10 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
         rows={reportRows} initial={reportSeed} onState={setReportTableState}
         search={(p) => [p.company, p.full_name, p.title_verbatim, p.email, p.r_country].join(" ")}
         filters={[{ label: "ICP status", get: (p) => p.r_icp }, { label: "Country", get: (p) => p.r_country }, { label: "S2P signal", get: (p) => p.r_signal }]}
-        cols={[{ h: "Company", cell: (p) => <b>{p.company}</b> }, { h: "Contact Name", cell: (p) => p.full_name }, { h: "Job Title", cell: (p) => p.title_verbatim, wrap: true },
-          { h: "Email", cell: (p) => <span className="mono">{p.email}</span> }, { h: "Phone", cell: (p) => <span className="mono">{p.phone}</span> },
-          { h: "Country", cell: (p) => p.r_country }, { h: "ICP Status", cell: (p) => p.r_icp }, { h: "Revenue", cell: (p) => p.r_revenue },
-          { h: "Employees", cell: (p) => p.r_employees }, { h: "S2P Signal", cell: (p) => <Pill s={p.r_signal} /> }, { h: "ERP", cell: (p) => p.r_erp }]}
+        cols={[{ h: "Company", field: "company", cell: (p) => <b>{p.company}</b> }, { h: "Contact Name", field: "full_name", cell: (p) => p.full_name }, { h: "Job Title", field: "title_verbatim", cell: (p) => p.title_verbatim, wrap: true },
+          { h: "Email", field: "email", cell: (p) => <span className="mono">{p.email}</span> }, { h: "Phone", field: "phone", cell: (p) => <span className="mono">{p.phone}</span> },
+          { h: "Country", field: "r_country", cell: (p) => p.r_country }, { h: "ICP Status", field: "r_icp", cell: (p) => p.r_icp }, { h: "Revenue", field: "r_revenue", cell: (p) => p.r_revenue },
+          { h: "Employees", field: "r_employees", cell: (p) => p.r_employees }, { h: "S2P Signal", field: "r_signal", cell: (p) => <Pill s={p.r_signal} /> }, { h: "ERP", field: "r_erp", cell: (p) => p.r_erp }]}
         onRow={(p) => setContact(p.best_id || p.id)} />
     </>;
   } else {

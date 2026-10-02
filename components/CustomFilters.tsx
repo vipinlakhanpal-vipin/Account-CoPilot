@@ -62,7 +62,10 @@ function test(r: Row, f: CustomFilter) {
 // seed overrides what's remembered in this browser — used when opening a saved report, so its exact custom
 // filter is restored instead of whatever was last left in this table (the caller forces a remount for a new
 // seed to take effect, since this only reads it once per mount, same as the localStorage read below).
-export function useCustomFilters(rows: Row[], storeKey: string, seed?: CustomFilter[]) {
+// visibleFields: the raw keys the table's own columns actually show (from ColDef.field) — when given, the field
+// picker offers only those, so you can't build a filter on data you can't see in the results next to it. Falls
+// back to every field on the row when a table passes none (keeps old behavior rather than offering nothing).
+export function useCustomFilters(rows: Row[], storeKey: string, seed?: CustomFilter[], visibleFields?: string[]) {
   const [list, setList] = useState<CustomFilter[]>(seed || []);
   useEffect(() => {
     if (seed) { try { localStorage.setItem(`cf:${storeKey}`, JSON.stringify(seed)); } catch {} return; }
@@ -72,13 +75,14 @@ export function useCustomFilters(rows: Row[], storeKey: string, seed?: CustomFil
   const save = (l: CustomFilter[]) => { setList(l); try { localStorage.setItem(`cf:${storeKey}`, JSON.stringify(l)); } catch {} };
   // Fields that actually carry data in this table (first 300 rows), most-filled first.
   const fields = useMemo(() => {
+    const allow = visibleFields && visibleFields.length ? new Set(visibleFields) : null;
     const count = new Map<string, number>();
     for (const r of rows.slice(0, 300)) for (const [k, v] of Object.entries(r)) {
-      if (HIDE.test(k) || (v !== null && typeof v === "object" && !Array.isArray(v))) continue;
+      if (HIDE.test(k) || (v !== null && typeof v === "object" && !Array.isArray(v)) || (allow && !allow.has(k))) continue;
       if (val(r, k).trim()) count.set(k, (count.get(k) || 0) + 1);
     }
     return [...count.entries()].sort((a, b) => b[1] - a[1]).map(([k]) => k);
-  }, [rows]);
+  }, [rows, visibleFields]);
   const test_ = (r: Row) => list.every((f) => test(r, f));
   return { list, save, fields, test: test_ };
 }
