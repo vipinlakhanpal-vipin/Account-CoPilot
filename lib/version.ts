@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.16";
+export const APP_VERSION = "3.17";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.17", date: "2026-10-02", notes: "History icon's outer ring now has the same teal glow as the bell, instead of plain grey.", changes: [
+      { what: "History icon border/glow colored teal, matching the bell icon's ring treatment", where: "app/globals.css (.history-btn)", why: "Requested" },
+    ] },
   { version: "3.16", date: "2026-10-02", notes: "Added the scripts for free manual RFP/tender discovery batches (same resumable pattern as the platform-discovery batch): export the queue, web-search each company this session, write findings, apply the FACT-confirmed ones. Feeds the new RFPs / tenders open tile automatically once findings are applied.", changes: [
       { what: "New scripts/export_rfp_queue.mjs and scripts/apply_rfp_findings.mjs — same queue/apply/resumable pattern as the platform-discovery scripts, scoped to all ICP-target, non-Coupa accounts", where: "scripts/export_rfp_queue.mjs, scripts/apply_rfp_findings.mjs", why: "Requested — a repeatable, no-API-cost process to find open RFPs/tenders, run as manual batches rather than wired into the paid daily engine" },
     ] },
