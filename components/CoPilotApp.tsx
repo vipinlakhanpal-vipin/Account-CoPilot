@@ -643,7 +643,6 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
   return (
     <div className={`app-shell${collapsed ? " dp-closed" : ""}`}>
     <DiscoveryPanel criteria={criteria} onApply={setCriteria} onSave={saveCriteria} savedMeta={savedMeta} teamCriteria={teamCriteria} collapsed={collapsed} onToggle={toggle}
-      matches={{ accounts: A.filter((a) => inPipe(a, scores[a.id])).length, contacts: people.length }}
       country={country} researchTargets={researchTargets} onResearch={researchMore} researchMsg={researchMsg} isSuper={isSuper} />
     <div className="app-main">
       <Hero title={tab === "dashboard" && country !== ALL ? `Dashboard-${COUNTRIES.find((c) => c.code === country)?.name || country}` : (HERO[tab] || HERO.dashboard)[0]}

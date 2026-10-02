@@ -8,20 +8,6 @@ const LABEL: Record<string, string> = { banking_financial: "Banking & financial"
   healthcare_pharma: "Healthcare & pharma", hospitality: "Hospitality & leisure", logistics_shipping: "Logistics & aviation", mining_resources: "Metals & mining",
   professional_services: "Professional services", retail_lifestyle: "Retail, food & consumer", tech_ai: "Technology & telecom", utilities: "Utilities" };
 
-// Human name for each criteria field, so the summary can say which filters are active, not just how many.
-const FIELD_LABEL: Record<string, string> = {
-  name: "Company name", website: "Website", hq: "HQ", industries: "Industries", countries: "Countries", regions: "Regions", ownership: "Ownership",
-  revenue: "Revenue", employees: "Employees", erp: "ERP", procurement: "Procurement", integration: "Integration", triggers: "Triggers", financial: "Financial",
-  icpStatus: "ICP status", listing: "Listing status", signal: "S2P signal",
-  firstName: "First name", lastName: "Last name", title: "Title", email: "Email", phone: "Phone", linkedin: "LinkedIn",
-  seniority: "Seniority", departments: "Departments", roles: "Roles", intelligence: "Intelligence", engagement: "Engagement",
-};
-function activeFields(c: Criteria): string[] {
-  const on = (v: unknown) => (Array.isArray(v) ? v.length > 0 : !!v);
-  return [...Object.entries(c.company).filter(([, v]) => on(v)).map(([k]) => FIELD_LABEL[k] || k),
-    ...Object.entries(c.contact).filter(([, v]) => on(v)).map(([k]) => FIELD_LABEL[k] || k)];
-}
-
 function Chips({ label, options, value, onChange, disabled = [] }: { label: string; options: readonly string[]; value: string[]; onChange: (v: string[]) => void; disabled?: string[] }) {
   return (
     <fieldset className="dp-field">
@@ -47,9 +33,9 @@ function Section({ title, children, open = false }: { title: string; children: R
 // Left-side "Account Discovery Criteria" panel. Criteria filter and rank every view; Save stores them for the whole team.
 export type SaveResult = { ok: boolean; error?: string; by?: string; at?: string };
 // Criteria edits are a draft until Refresh (apply) or Save (apply + store for the team). Reset asks first.
-export default function DiscoveryPanel({ criteria: applied, onApply, onSave, savedMeta, teamCriteria, collapsed, onToggle, matches, country, researchTargets = [], onResearch, researchMsg, isSuper = true }: {
+export default function DiscoveryPanel({ criteria: applied, onApply, onSave, savedMeta, teamCriteria, collapsed, onToggle, country, researchTargets = [], onResearch, researchMsg, isSuper = true }: {
   criteria: Criteria; onApply: (c: Criteria) => void; onSave: (c: Criteria) => Promise<SaveResult>; savedMeta: { by?: string; at?: string } | null; teamCriteria: Criteria | null;
-  collapsed: boolean; onToggle: () => void; matches: { accounts: number; contacts: number }; country: string; researchTargets?: string[];
+  collapsed: boolean; onToggle: () => void; country: string; researchTargets?: string[];
   onResearch: (limit: number, profile: boolean) => void; researchMsg: string; isSuper?: boolean;
 }) {
   // Three jobs: 1 search the app, 2 filter your view (instant, only for you; Undo / Share as team default), 3 find new companies on the web (paid).
@@ -85,12 +71,6 @@ export default function DiscoveryPanel({ criteria: applied, onApply, onSave, sav
       <div className="dp-head">
         <h2>Account Discovery Criteria</h2>
         <button type="button" className="dp-toggle-sm" onClick={onToggle} aria-expanded="true" title="Collapse panel">«</button>
-      </div>
-      <div className="dp-stats">
-        <div className="dp-stat"><b>{matches.accounts}</b><span>Accounts matching</span></div>
-        <div className="dp-stat"><b>{matches.contacts}</b><span>Contacts matching</span></div>
-        <div className="dp-stat"><b>{n}</b><span>Filters active</span>
-          {n > 0 && <em className="dp-active-fields">{activeFields(criteria).join(" · ")}</em>}</div>
       </div>
       <div className="dp-step s1">
         <p className="dp-step-h"><span className="dp-n">1</span>Search</p>

@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.101";
+export const APP_VERSION = "2.102";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.102", date: "2026-10-02", notes: "Removed the Discovery panel's 3 stat tiles (Accounts matching / Contacts matching / Filters active) — \"Accounts matching\" was really a Pipeline count (ICP Match ≥ 70%, not Not-ICP, not an existing Coupa customer), not a plain filter match, and needed a paragraph to explain every time it came up. Nothing else in the app read these numbers, so removing them has no effect anywhere else.", changes: [
+      { what: "Removed the dp-stats block (3 tiles) from the top of the Discovery panel, and the now-dead matches prop, activeFields()/FIELD_LABEL helpers and .dp-stats/.dp-stat/.dp-active-fields CSS that only existed to support it", where: "components/DiscoveryPanel.tsx, components/CoPilotApp.tsx, app/globals.css", why: "Requested — the \"Accounts matching\" number was actually a Pipeline-qualifying count dressed up as a simple filter match, which was confusing to explain and had no other consumer in the app" },
+    ] },
   { version: "2.101", date: "2026-10-02", notes: "Accounts table's \"List\" filter renamed \"Source\". Fixed a confusing interaction: picking a dropdown filter or typing a search while on \"All Accounts\" computed the match count but didn't actually show it, since \"All Accounts\" is designed to ignore filters until you switch to \"Filtered results\" — now picking a real filter value or typing a search switches you there automatically. Also shrunk every table's filter dropdown pills (across the whole app) so long labels like \"S2P Platform\" and \"ICP status\" show in full instead of truncating to \"S2P…\".", changes: [
       { what: "Accounts table's \"List\" filter label renamed \"Source\"", where: "components/CoPilotApp.tsx (tab === \"accounts\")", why: "Requested" },
       { what: "Typing in the search box or picking a non-blank dropdown filter value now switches the table out of \"All Accounts\" into \"Filtered results\" automatically", where: "components/CoPilotApp.tsx (FilterTable)", why: "Reported — picking \"S2P Platform: Coupa\" while on \"All Accounts\" computed the right match count (shown in the filter-count line) but didn't change what the table displayed, which read as the filter being broken" },
