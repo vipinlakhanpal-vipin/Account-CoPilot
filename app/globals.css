@@ -201,6 +201,13 @@ h2{font-family:var(--display);font-weight:600;font-size:16px;letter-spacing:.06e
 .filters input{flex:1 1 240px}
 .filters input:focus,.filters select:focus{outline:2px solid var(--teal-soft);border-color:var(--teal)}
 .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+/* A wide table's horizontal scrollbar otherwise sits below every row — past hundreds or thousands of them.
+   Capping the height turns it into its own scroll box near the top of the page, with the sticky header (see
+   th{position:sticky}) finally doing something, so both scrollbars stay reachable without paging down first. */
+.tablewrap-tall{max-height:min(72vh,900px);overflow-y:auto}
+.tablewrap-head{display:flex;align-items:center;gap:6px;margin:6px 0 4px}
+.tablewrap-head .note{margin:0}
+.tablewrap-head .btn{font-family:var(--mono)}
 table{border-collapse:collapse;width:100%;font-size:12.5px}
 th{position:sticky;top:0;background:var(--th-bg);color:var(--th-text);text-align:left;font:600 10.5px var(--body);letter-spacing:.08em;text-transform:uppercase;padding:10px 12px;white-space:nowrap;border-bottom:1px solid var(--line)}
 td{padding:9px 12px;border-top:1px solid var(--line);vertical-align:top}

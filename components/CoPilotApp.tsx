@@ -6,7 +6,7 @@ import CostNote from "@/components/CostNote";
 import CompanyLogo from "@/components/CompanyLogo";
 import { useCustomFilters, CustomFilterBar } from "@/components/CustomFilters";
 import InfoTip, { type Weights } from "@/components/InfoTip";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { parseGlobalQuery } from "@/lib/globalSearch";
 import Hero from "@/components/Hero";
@@ -147,6 +147,8 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "
   const [q, setQ] = useState("");
   const [fv, setFv] = useState<string[]>(filters.map(() => ""));
   const [showAll, setShowAll] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const scrollH = (dx: number) => wrapRef.current?.scrollBy({ left: dx, behavior: "smooth" });
   const options = useMemo(() => filters.map((f) => [...new Set(rows.map(f.get).filter(Boolean))].sort()), [rows, filters]);
   const cf = useCustomFilters(rows, title);
   const out = rows.filter((r) => (!q || search(r).toLowerCase().includes(q.toLowerCase())) && filters.every((f, i) => !fv[i] || f.get(r) === fv[i]) && cf.test(r));
@@ -158,7 +160,7 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "
       <h2 className="with-count">{title} <span className="count">{displayed.length.toLocaleString()} {unit}{displayed.length !== rows.length ? ` of ${rows.length.toLocaleString()}` : ""}</span></h2>
       {note && (typeof note === "string" ? <p className="note">{note}</p> : note)}
       <div className="seg-toggle" role="group" aria-label="Show all or filtered">
-        <button type="button" aria-pressed={showAll} onClick={() => setShowAll(true)}>All {unit} ({rows.length.toLocaleString()})</button>
+        <button type="button" aria-pressed={showAll} onClick={() => setShowAll(true)}>All Companies ({rows.length.toLocaleString()})</button>
         <button type="button" aria-pressed={!showAll} onClick={() => setShowAll(false)}>Filtered results ({out.length.toLocaleString()})</button>
       </div>
       <div className="filters">
@@ -175,7 +177,12 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "
       <p className="filter-count">{showAll ? <>Showing all {rows.length.toLocaleString()} rows — {out.length.toLocaleString()} match the filters below</> : <>{out.length.toLocaleString()} of {rows.length.toLocaleString()} rows</>}
           {rows.some((r) => r.company_id) && <> · {new Set(displayed.map((r) => r.company_id)).size} {new Set(displayed.map((r) => r.company_id)).size === 1 ? "company" : "companies"}</>}</p>
       {empty && q.trim().length >= 2 && out.length === 0 && empty(q.trim())}
-      <div className="tablewrap">
+      <div className="tablewrap-head">
+        <span className="note">{cols.length + 1} columns — scroll sideways, or use the arrows:</span>
+        <button type="button" className="btn tiny" aria-label="Scroll table left" onClick={() => scrollH(-320)}>← </button>
+        <button type="button" className="btn tiny" aria-label="Scroll table right" onClick={() => scrollH(320)}> →</button>
+      </div>
+      <div className="tablewrap tablewrap-tall" ref={wrapRef}>
         <table>
           <thead><tr><th className="num">#</th>{cols.map((c) => <th key={c.h} className={c.cls}>{c.h}{c.tip && <InfoTip k={c.tip} w={tipW} />}</th>)}</tr></thead>
           <tbody>

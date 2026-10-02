@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.62";
+export const APP_VERSION = "2.63";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,11 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.63", date: "2026-10-02", notes: "Fixed: reaching a wide table's horizontal scrollbar meant scrolling down past every row first (1,093 rows, on a big table) since the scrollbar sat below all of them. Every table now scrolls inside a capped-height box near the top of the page, with the column headers staying put as you scroll down (they were already built to do this — they just never had a scrolling box to stick inside) and the horizontal scrollbar reachable immediately. Added explicit ← / → buttons above the table too. Also renamed the v2.61 \"All <unit>\" toggle to a fixed \"All Companies\" on every table, replacing the per-table wording (\"All contacts\", \"All accounts\", etc.).", changes: [
+      { what: "Every table's scroll area is now capped at roughly 72% of the screen height (max 900px) and scrolls on both axes inside that box, instead of growing to the height of all its rows — the header row (already built with position:sticky, which had nothing to stick inside before) now stays visible while scrolling down, and the horizontal scrollbar sits at the bottom of that box, not below the last row", where: "app/globals.css (.tablewrap-tall)", why: "Reported — scrolling right on a long table meant scrolling past all 1,093 rows first to reach the horizontal scrollbar" },
+      { what: "Added explicit ← and → buttons above every table that scroll it sideways by a fixed amount, so sideways scrolling doesn't depend on finding or dragging the scrollbar at all", where: "components/CoPilotApp.tsx (FilterTable)", why: "Requested — an explicit, discoverable way to reach the far right of a wide table" },
+      { what: "The \"All <unit>\" / \"Filtered results\" toggle (v2.61) now always reads \"All Companies\", not a different word per table (\"All contacts\", \"All accounts\"...)", where: "components/CoPilotApp.tsx (FilterTable)", why: "Requested — one consistent label across every table" },
+    ] },
   { version: "2.62", date: "2026-10-02", notes: "The funnel icon in the header just navigated to Accounts and opened the Discovery panel — not an actual filter. It now opens a popover to build a real custom filter (field / condition / value, including the same \"is known\"/\"is unknown\" conditions from v2.61), the same logic as every table's own \"+ Custom filter\", then applies it directly to the Accounts table when you click Apply.", changes: [
       { what: "The header's funnel button now opens a popover to build one or more conditions (field, condition — contains/is/is not/starts with/is known/is unknown/≥/≤ — and a value) using the same field-label and condition logic as every table's own custom filter bar, then applies them to the Accounts table on \"Apply to Accounts\"", where: "components/GlobalSearchBar.tsx; components/CustomFilters.tsx (OPS, ACCOUNT_FIELDS now exported)", why: "Reported — the funnel icon only forced-open the Discovery panel on Accounts, which wasn't an actual filter; it now builds and applies a real one" },
       { what: "Removed the now-unused \"?openFilters=1\" deep-link handling, since nothing produces that link anymore", where: "components/CoPilotApp.tsx", why: "Dead code after the funnel button's behavior changed" },
