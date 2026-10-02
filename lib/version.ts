@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.85";
+export const APP_VERSION = "2.86";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.86", date: "2026-10-02", notes: "The country/region tile bar now wraps to a second row when there are too many to fit, instead of scrolling sideways with a hidden scrollbar — matters now that up to 13 regions can appear as they get populated.", changes: [
+      { what: "Country bar wraps instead of horizontally scrolling", where: "app/globals.css (.countrybar)", why: "Requested — more regions are now active/populating, and a hidden-scrollbar overflow isn't discoverable" },
+    ] },
   { version: "2.85", date: "2026-10-02", notes: "Bell's scheduled-run log now splits each region's batch into two clear tables — \"Added\" (today's new discoveries) and \"Verified\" (from the queue) — with the region named as a heading, instead of one undifferentiated table.", changes: [
       { what: "Each run entry now shows a region heading and two separate tables (Added / Verified) instead of one combined list — relevant now that UAE, KSA, Qatar and Kuwait each run independently", where: "components/EngineBell.tsx", why: "Requested — with multiple regions active, a single flat table no longer showed which companies came from where or which were new vs. verified" },
     ] },
