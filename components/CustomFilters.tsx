@@ -86,6 +86,9 @@ export function useCustomFilters(rows: Row[], storeKey: string, seed?: CustomFil
 export function CustomFilterBar({ rows, cf }: { rows: Row[]; cf: ReturnType<typeof useCustomFilters> }) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<CustomFilter>({ field: "", op: "contains", value: "" });
+  // Set when a chip was clicked to edit it (not just toggled open fresh) — "Add filter" then replaces that one
+  // condition in place instead of appending a duplicate.
+  const [editIndex, setEditIndex] = useState<number | null>(null);
   const field = draft.field || cf.fields[0] || "";
   // Real values seen in this field, to pick from instead of guessing/typing one — e.g. Title has hundreds of
   // distinct values, too many for a plain dropdown, but still worth offering as type-to-filter suggestions.
@@ -105,10 +108,18 @@ export function CustomFilterBar({ rows, cf }: { rows: Row[]; cf: ReturnType<type
     if (next.has(v)) next.delete(v); else next.add(v);
     setDraft({ ...draft, value: [...next].join(MULTI_SEP) });
   };
-  const add = () => { if (!field || (needsValue && !draft.value.trim())) return; cf.save([...cf.list, { ...draft, field }]); setDraft({ field, op: draft.op, value: "" }); setPickFilter(""); setOpen(false); };
+  const add = () => {
+    if (!field || (needsValue && !draft.value.trim())) return;
+    const next = { ...draft, field };
+    cf.save(editIndex !== null ? cf.list.map((f, i) => (i === editIndex ? next : f)) : [...cf.list, next]);
+    setDraft({ field, op: draft.op, value: "" }); setEditIndex(null); setPickFilter(""); setOpen(false);
+  };
+  const cancel = () => { setOpen(false); setEditIndex(null); };
+  const editChip = (i: number) => { setDraft(cf.list[i]); setEditIndex(i); setPickFilter(""); setOpen(true); };
   return (
     <>
-      <button type="button" className={`btn cf-add${cf.list.length ? " on" : ""}`} onClick={() => setOpen((x) => !x)}>+ Custom filter{cf.list.length ? ` (${cf.list.length})` : ""}</button>
+      <button type="button" className={`btn cf-add${cf.list.length ? " on" : ""}`}
+        onClick={() => { setOpen((x) => !x); setEditIndex(null); setDraft({ field: "", op: "contains", value: "" }); }}>+ Custom filter{cf.list.length ? ` (${cf.list.length})` : ""}</button>
       {open && (
         <div className="cf-builder" role="group" aria-label="Add a custom filter">
           <select aria-label="Field" value={field} onChange={(e) => setDraft({ ...draft, field: e.target.value, value: "" })}>
@@ -136,16 +147,17 @@ export function CustomFilterBar({ rows, cf }: { rows: Row[]; cf: ReturnType<type
           ) : (
             <input aria-label="Value" value={draft.value} placeholder={numeric ? "a number" : "text"} onChange={(e) => setDraft({ ...draft, value: e.target.value })} onKeyDown={(e) => { if (e.key === "Enter") add(); }} />
           ))}
-          <button type="button" className="btn primary" onClick={add} disabled={!field || (needsValue && !draft.value.trim())}>Add filter</button>
-          <button type="button" className="btn" onClick={() => setOpen(false)}>Cancel</button>
+          <button type="button" className="btn primary" onClick={add} disabled={!field || (needsValue && !draft.value.trim())}>{editIndex !== null ? "Save filter" : "Add filter"}</button>
+          <button type="button" className="btn" onClick={cancel}>Cancel</button>
         </div>
       )}
       {cf.list.length > 0 && (
         <div className="cf-chips">
           {cf.list.map((f, i) => (
-            <span key={i} className="cf-chip">{labelOf(f.field)} <em>{OPS.find(([o]) => o === f.op)?.[1]}</em>
-              {f.op !== "empty" && f.op !== "filled" ? ` "${(f.op === "in" || f.op === "notin") ? f.value.split(MULTI_SEP).filter(Boolean).join(", ") : f.value}"` : ""}
-              <button type="button" aria-label="Remove filter" onClick={() => cf.save(cf.list.filter((_, j) => j !== i))}>×</button></span>
+            <span key={i} className={`cf-chip${editIndex === i ? " editing" : ""}`}>
+              <button type="button" className="cf-chip-body" onClick={() => editChip(i)} title="Click to edit this filter">{labelOf(f.field)} <em>{OPS.find(([o]) => o === f.op)?.[1]}</em>
+                {f.op !== "empty" && f.op !== "filled" ? ` "${(f.op === "in" || f.op === "notin") ? f.value.split(MULTI_SEP).filter(Boolean).join(", ") : f.value}"` : ""}</button>
+              <button type="button" className="cf-chip-remove" aria-label="Remove filter" onClick={() => { cf.save(cf.list.filter((_, j) => j !== i)); if (editIndex === i) cancel(); }}>×</button></span>
           ))}
         </div>
       )}
