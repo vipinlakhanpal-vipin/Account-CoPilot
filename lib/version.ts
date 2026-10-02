@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.17";
+export const APP_VERSION = "3.18";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.18", date: "2026-10-02", notes: "Fixed Team page's Delete button rendering below Reset password instead of beside it, for a user with both — the cell had display:flex set directly on the <td> itself, which overrides a table cell's required table-cell display and can break it out of normal row layout. Removed, since each cell holds only one button now anyway.", changes: [
+      { what: "Removed display:flex from .team-row-actions (a <td>) — table cells should not have their display overridden; white-space:nowrap keeps the button from wrapping instead", where: "app/globals.css (.team-row-actions)", why: "Reported — Delete appeared below Reset password instead of in its own column, on a row where both buttons show" },
+    ] },
   { version: "3.17", date: "2026-10-02", notes: "History icon's outer ring now has the same teal glow as the bell, instead of plain grey.", changes: [
       { what: "History icon border/glow colored teal, matching the bell icon's ring treatment", where: "app/globals.css (.history-btn)", why: "Requested" },
     ] },
