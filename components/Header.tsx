@@ -42,7 +42,7 @@ export default function Header({ meta }: { meta: string }) {
   const { latest, releases, author } = useNewVersionInfo();
   const [showChanges, setShowChanges] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
-  const history = RELEASES.filter((r) => r.changes?.length).slice(0, 20);
+  const history = RELEASES.filter((r) => r.changes?.length).slice(0, 60);
   // Open the "what's new" window once per new version (per browser session); the user can close it and reopen it from the banner.
   useEffect(() => {
     if (!latest || !releases.some((r) => r.changes?.length)) return;
@@ -166,7 +166,7 @@ export default function Header({ meta }: { meta: string }) {
         <div className="wn-backdrop" onClick={() => setShowHistory(false)}>
           <div className="wn" role="dialog" aria-modal="true" aria-labelledby="vh-title" onClick={(e) => e.stopPropagation()}>
             <div className="wn-head">
-              <div><p className="wn-kicker">Version history</p><h2 id="vh-title">What's changed, release by release</h2></div>
+              <div><p className="wn-kicker">Version History for last 60 Upgrades</p><h2 id="vh-title">What's changed, release by release</h2></div>
               <button type="button" className="wn-close" onClick={() => setShowHistory(false)} aria-label="Close">×</button>
             </div>
             <div className="wn-body">

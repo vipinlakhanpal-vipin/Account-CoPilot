@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.19";
+export const APP_VERSION = "3.20";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.20", date: "2026-10-02", notes: "Version history window now says \"Version History for last 60 Upgrades\" and actually shows 60 releases instead of 20, so the label matches what's really there.", changes: [
+      { what: "History popup kicker reads \"Version History for last 60 Upgrades\"; the list itself now shows the last 60 releases with changes instead of 20", where: "components/Header.tsx", why: "Requested" },
+    ] },
   { version: "3.19", date: "2026-10-02", notes: "Fixed a real access-control gap: the bell's \"Scheduled runs\" log showed every region's activity to every signed-in user, regardless of role — a Standard User scoped to one region could see company names, revenue and status from every other region. The /api/engine log endpoint now scopes entries to the signed-in user's regions, same as every other page and API already does.", changes: [
       { what: "Added scopeLog() to /api/engine's GET handler — filters scheduled-run log entries (and the summary's embedded log) to the signed-in user's own region(s) unless they're a Super Admin, matching each entry's region field (or, for older entries without one, the region parsed from the summary line)", where: "app/api/engine/route.ts (scopeLog)", why: "Reported — a Standard User (Kuwait-only) opened the bell's Scheduled runs and saw UAE/KSA/Qatar activity too, which the rest of the app already correctly hides from them" },
     ] },
