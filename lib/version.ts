@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.99";
+export const APP_VERSION = "2.100";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.100", date: "2026-10-02", notes: "Priority accounts (Dashboard) now excludes confirmed Coupa customers, matching Pipeline — they're not a new-business target, and they already have their own tile (Existing Coupa Customers). Also moved the Accounts table's S2P platform column next to Industry (was far to the right, past ICP/Opportunity/Coupa Fit scores) and renamed it \"S2P Platform\" throughout, so you can see what each account runs without scrolling.", changes: [
+      { what: "Priority accounts list now excludes confirmed Coupa customers, same exclusion as Pipeline", where: "components/CoPilotApp.tsx (top)", why: "Requested — showing them there added nothing since they're already surfaced under Existing Coupa Customers with the relevant upsell/cross-sell angle" },
+      { what: "Renamed the Accounts table's \"Existing S2P\" column and \"S2P\" filter to \"S2P Platform\", and moved the column from near the end (after the score columns) to right after Industry", where: "components/CoPilotApp.tsx (tab === \"accounts\")", why: "Requested — see which platform (Ariba/Coupa/GEP/etc) each of the 484 accounts runs without scrolling past half the table" },
+    ] },
   { version: "2.99", date: "2026-10-02", notes: "All 7 Dashboard bar charts (S2P signal, Existing platform, ERP landscape, Contacts by role, Contact trust, Accounts by origin, ICP status) shrunk to the approved compact size (Option A), and each one now has its own small bar/pie toggle — switch any single chart to a pie-plus-legend view without affecting the others, since it's just a different way to look at the same data.", changes: [
       { what: "Shrunk .bars/.bar sizing to the approved compact mockup (thinner track, smaller label/number text, tighter spacing) across every chart that uses the shared Bars component", where: "app/globals.css (.bars-wrap, .bars, .bar)", why: "Requested — charts were taking up too much space" },
       { what: "Added a per-chart bar/pie toggle (two small icon buttons above each chart) — pie renders as a CSS conic-gradient circle with a legend, using the same colors as the bars; each chart's choice is independent of the others", where: "components/CoPilotApp.tsx (Bars, BarIcon, PieIcon), app/globals.css (.chart-mode-toggle, .pie-wrap, .pie, .pie-legend)", why: "Requested — \"pie is just another way of representing the data\", wanted as an option per chart rather than a wholesale replacement" },

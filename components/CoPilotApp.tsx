@@ -403,16 +403,18 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
       rows={[...A].sort((a, b) => icpRank(a.icp_status) - icpRank(b.icp_status) || sigRank(a.s2p_signal_level) - sigRank(b.s2p_signal_level) || (bestRevenue(b).v || 0) - (bestRevenue(a).v || 0))}
       search={(a) => [a.company_name, a.industry, a.erp, a.existing_s2p_product, a.s2p_strong_signals].join(" ")}
       filters={[{ label: "ICP status", get: (a) => a.icp_status }, { label: "List", get: (a) => (a.lists || []).join(" + ") },
-        { label: "Signal", get: (a) => a.s2p_signal_level }, { label: "S2P", get: (a) => a.existing_s2p_product }, { label: "Industry", get: (a) => a.industry },
+        { label: "Signal", get: (a) => a.s2p_signal_level }, { label: "S2P Platform", get: (a) => a.existing_s2p_product }, { label: "Industry", get: (a) => a.industry },
         { label: "Exchange", get: (a) => a.exchange }, { label: "Country", get: (a) => a.country }]}
       cols={[{ h: "", cls: "logo-cell", cell: (a) => <CompanyLogo a={a} /> }, { h: "Company", field: "company_name", cell: (a) => <><b>{a.company_name}</b><div className="muted mono">{a.exchange} {a.ticker}</div></> },
-        { h: "Industry", field: "industry", cell: (a) => a.industry }, { h: "Revenue", field: "revenue_usd_m", cell: (a) => { const r = bestRevenue(a); return r.v ? <><span className="mono">{usd(r.v)}</span>{r.src && <div className="rev-src">{r.src}</div>}</> : <span className="muted">—</span>; } },
+        { h: "Industry", field: "industry", cell: (a) => a.industry },
+        { h: "S2P Platform", field: "existing_s2p_product", cell: (a) => a.existing_s2p_product || <span className="muted">—</span> },
+        { h: "Revenue", field: "revenue_usd_m", cell: (a) => { const r = bestRevenue(a); return r.v ? <><span className="mono">{usd(r.v)}</span>{r.src && <div className="rev-src">{r.src}</div>}</> : <span className="muted">—</span>; } },
         { h: "ICP status", tip: "icpStatus", field: "icp_status", cell: (a) => <><IcpTag s={a.icp_status} why={a.icp_fit_reason} /><div className="muted mono rec-since">since {statusSince(a) || "—"}</div></> },
         { h: "ICP match", tip: "icpMatch", cell: (a) => scores[a.id] && <ScoreChip s={scores[a.id].m} label="ICP Match" /> },
         { h: "Opportunity", tip: "opportunity", cell: (a) => scores[a.id] && <ScoreChip s={scores[a.id].o} label="Opportunity" /> },
         { h: "Coupa fit", tip: "coupaFit", cell: (a) => scores[a.id] && <ScoreChip s={scores[a.id].f} label="Coupa Fit" /> },
         { h: "Updated", field: "updated_at", cell: (a) => <Dates a={a} /> }, { h: "Lists", field: "lists", cell: (a) => <span className="muted">{(a.lists || []).join(", ")}</span> },
-        { h: "Signal", field: "s2p_signal_level", cell: (a) => <Pill s={a.s2p_signal_level} /> }, { h: "Existing S2P", field: "existing_s2p_product", cell: (a) => a.existing_s2p_product },
+        { h: "Signal", field: "s2p_signal_level", cell: (a) => <Pill s={a.s2p_signal_level} /> },
         { h: "S2P status", field: "s2p_platform_status", cell: (a) => a.s2p_platform_status }, { h: "ERP", field: "erp", cell: (a) => a.erp }, { h: "Contacts", cell: (a) => <span className="mono">{(byCo[a.id] || []).length}</span> }]}
       onRow={openRow} />;
   } else if (tab === "pipeline") {
@@ -563,7 +565,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
         onRow={(p) => setContact(p.best_id || p.id)} />
     </>;
   } else {
-    const top = A.filter((a) => sigRank(a.s2p_signal_level) <= 1).sort((a, b) => sigRank(a.s2p_signal_level) - sigRank(b.s2p_signal_level));
+    const top = A.filter((a) => sigRank(a.s2p_signal_level) <= 1 && !/coupa/i.test(str(a.existing_s2p_product))).sort((a, b) => sigRank(a.s2p_signal_level) - sigRank(b.s2p_signal_level));
     const ACT = ["Evaluation", "RFP / Tender", "Currently Implementing", "Replacement / Transformation"];
     const kpis: [string, Row[], Kind][] = [
       ["Accounts (all lists)", A, "accounts"], ["ICP — Verified", A.filter((a) => a.icp_status === "ICP — Verified"), "accounts"],
