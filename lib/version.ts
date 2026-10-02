@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "2.90";
+export const APP_VERSION = "2.91";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "2.91", date: "2026-10-02", notes: "New Dashboard section, \"Existing Customers — Expansion & Services\": Existing Coupa Customers, Ariba Customers, and Other Platforms (GEP/Jaggaer/Ivalua/Zycus), separate from the ICP-status tiles — those are for prospects still being evaluated, this is for accounts that already run a platform, where the question is what to sell them next. Existing Coupa customers also now leave Pipeline, since they're not a new-business target; Ariba and the other platforms stay (still a Coupa-displacement prospect, plus their own managed-services angle).", changes: [
+      { what: "Added a Dashboard panel with 3 tiles — Existing Coupa Customers, Ariba Customers, Other Platforms — each opening the usual drill-down list; removed the old \"Coupa accounts\"/\"SAP Ariba accounts\" tiles from the generic KPI row since this replaces them with a clearer purpose", where: "components/CoPilotApp.tsx", why: "Requested — existing customers need a different sales lens (upsell/cross-sell/managed services) than ICP status, which is for prospects" },
+      { what: "Pipeline (inPipe) now excludes existing Coupa customers; Ariba and the other platforms are unaffected and stay ranked", where: "components/CoPilotApp.tsx (inPipe)", why: "Requested — an existing Coupa customer isn't a new-business target; Ariba/other-platform accounts remain live Coupa-displacement prospects" },
+    ] },
   { version: "2.90", date: "2026-10-02", notes: "Team's \"Change access\" edit controls (Role, Region, Save, Cancel) shrunk to the same compact size as the Super Admin/Change pills.", changes: [
       { what: "Role/Region dropdowns and Save/Cancel buttons in the inline edit row resized to match the compact pill sizing", where: "components/TeamSettings.tsx, app/globals.css (.team-edit)", why: "Requested" },
     ] },

@@ -245,7 +245,11 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
   const [icpDef, setIcpDef] = useState<unknown>(null);
   const regionRules = useMemo(() => rulesFor(icpDef, country === "All" ? "UAE" : country), [icpDef, country]);
   const pipe = regionRules.pipeline, focus = regionRules.focus, personas = regionRules.personas;
-  const inPipe = (a: Row, sc?: Scores) => !!sc && sc.m.total >= pipe.min_match && (!pipe.exclude_not_icp || a.icp_status !== "Not ICP");
+  // An existing Coupa customer isn't a new-business target — it moves to the Dashboard's "Existing Customers"
+  // section (upsell / cross-sell / managed services) instead of competing for a Pipeline slot. Ariba and other
+  // platforms stay in Pipeline: they're still a live Coupa-displacement prospect, on top of their own managed-
+  // services angle.
+  const inPipe = (a: Row, sc?: Scores) => !!sc && sc.m.total >= pipe.min_match && (!pipe.exclude_not_icp || a.icp_status !== "Not ICP") && !/coupa/i.test(str(a.existing_s2p_product));
   const [savedMeta, setSavedMeta] = useState<{ by?: string; at?: string } | null>(null);
   const [teamCriteria, setTeamCriteria] = useState<Criteria | null>(null);
   const [collapsed, setCollapsed] = useState(false);
@@ -537,13 +541,20 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
       ["Accounts (all lists)", A, "accounts"], ["ICP — Verified", A.filter((a) => a.icp_status === "ICP — Verified"), "accounts"],
       ["ICP — Likely", A.filter((a) => a.icp_status === "ICP — Likely"), "accounts"],
       ["ICP — Needs check", A.filter((a) => a.icp_status === "ICP — Needs check" || a.icp_status === "Unknown"), "accounts"],
-      ["Strong / very strong", top, "accounts"], ["Coupa accounts", A.filter((a) => /coupa/i.test(str(a.existing_s2p_product))), "accounts"],
-      ["SAP Ariba accounts", A.filter((a) => /ariba/i.test(str(a.existing_s2p_product))), "accounts"], ["Contacts (people)", people, "contacts"],
+      ["Strong / very strong", top, "accounts"], ["Contacts (people)", people, "contacts"],
       ["Confirmed by 2+ sources", people.filter((p) => p.trust === "Confirmed by 2+ sources"), "contacts"], ["Contacts with email", people.filter((p) => p.email), "contacts"],
       ["Signals logged", data.signals, "signals"], ["Conflicts retained", data.conflicts, "conflicts"],
       ["Employment changes", data.history.filter((h) => /change/i.test(str(h.determination))), "history"],
       ["Possible new S2P projects", A.filter((a) => ACT.includes(a.s2p_platform_status)), "accounts"],
     ];
+    // Existing platform holders get a different sales lens than a prospect: not "should we target them" (ICP
+    // status) but "what do we sell them next". Coupa customers are the agent's own install base (upsell / module
+    // cross-sell / managed services) and come out of Pipeline — see inPipe — since they're not a new-business
+    // target. Ariba and the other platforms stay in Pipeline (still a Coupa-displacement prospect) and additionally
+    // get a managed-services angle, since SCP can service any S2P platform's implementation, not only Coupa's.
+    const coupaCustomers = A.filter((a) => /coupa/i.test(str(a.existing_s2p_product)));
+    const aribaCustomers = A.filter((a) => /ariba/i.test(str(a.existing_s2p_product)));
+    const otherPlatformCustomers = A.filter((a) => /oracle procurement|ivalua|jaggaer|\bgep\b|zycus/i.test(str(a.existing_s2p_product)));
 
     view = (
       <>
@@ -551,6 +562,27 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
           <button type="button" key={l} className={`kpi c${(i % 8) + 1}`} onClick={() => setDrill({ title: l, kind, rows })} title={`Show the ${rows.length.toLocaleString()} records`}>
             <small>{l}</small><b>{rows.length.toLocaleString()}</b><span className="kpi-go" aria-hidden="true">View →</span>
           </button>))}</div>
+        <div className="panel" style={{ marginTop: 16 }}>
+          <h2>Existing Customers — Expansion &amp; Services</h2>
+          <p className="note">Separate from ICP status above (that's for prospects still being evaluated) — these already run an S2P platform, so the question is what to sell them next, not whether to pursue them.</p>
+          <div className="kpis">
+            <button type="button" className="kpi" style={{ "--k": "#2ECC8F" } as React.CSSProperties}
+              onClick={() => setDrill({ title: "Existing Coupa Customers", kind: "accounts", rows: coupaCustomers })} title={`Show the ${coupaCustomers.length.toLocaleString()} records`}>
+              <small>Existing Coupa Customers</small><b>{coupaCustomers.length.toLocaleString()}</b>
+              <em>Upsell, cross-sell &amp; managed services opportunities</em><span className="kpi-go" aria-hidden="true">View →</span>
+            </button>
+            <button type="button" className="kpi" style={{ "--k": "#7CC4FF" } as React.CSSProperties}
+              onClick={() => setDrill({ title: "Ariba Customers", kind: "accounts", rows: aribaCustomers })} title={`Show the ${aribaCustomers.length.toLocaleString()} records`}>
+              <small>Ariba Customers</small><b>{aribaCustomers.length.toLocaleString()}</b>
+              <em>Managed services opportunity — still a Coupa prospect</em><span className="kpi-go" aria-hidden="true">View →</span>
+            </button>
+            <button type="button" className="kpi" style={{ "--k": "#F2C46B" } as React.CSSProperties}
+              onClick={() => setDrill({ title: "Other Platform Customers", kind: "accounts", rows: otherPlatformCustomers })} title={`Show the ${otherPlatformCustomers.length.toLocaleString()} records`}>
+              <small>Other Platforms</small><b>{otherPlatformCustomers.length.toLocaleString()}</b>
+              <em>GEP, Jaggaer, Ivalua, Zycus — managed services opportunity, still a Coupa prospect</em><span className="kpi-go" aria-hidden="true">View →</span>
+            </button>
+          </div>
+        </div>
         <div className="grid2">
           <div className="panel"><h2>Accounts by S2P signal</h2><Bars entries={countBy(A, (a) => a.s2p_signal_level)} order={sigRank} signal /></div>
           <div className="panel"><h2>Existing S2P platform</h2><Bars entries={countBy(A, (a) => a.existing_s2p_product)} /></div>
