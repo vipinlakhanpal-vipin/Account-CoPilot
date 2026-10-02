@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.18";
+export const APP_VERSION = "3.19";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.19", date: "2026-10-02", notes: "Fixed a real access-control gap: the bell's \"Scheduled runs\" log showed every region's activity to every signed-in user, regardless of role — a Standard User scoped to one region could see company names, revenue and status from every other region. The /api/engine log endpoint now scopes entries to the signed-in user's regions, same as every other page and API already does.", changes: [
+      { what: "Added scopeLog() to /api/engine's GET handler — filters scheduled-run log entries (and the summary's embedded log) to the signed-in user's own region(s) unless they're a Super Admin, matching each entry's region field (or, for older entries without one, the region parsed from the summary line)", where: "app/api/engine/route.ts (scopeLog)", why: "Reported — a Standard User (Kuwait-only) opened the bell's Scheduled runs and saw UAE/KSA/Qatar activity too, which the rest of the app already correctly hides from them" },
+    ] },
   { version: "3.18", date: "2026-10-02", notes: "Fixed Team page's Delete button rendering below Reset password instead of beside it, for a user with both — the cell had display:flex set directly on the <td> itself, which overrides a table cell's required table-cell display and can break it out of normal row layout. Removed, since each cell holds only one button now anyway.", changes: [
       { what: "Removed display:flex from .team-row-actions (a <td>) — table cells should not have their display overridden; white-space:nowrap keeps the button from wrapping instead", where: "app/globals.css (.team-row-actions)", why: "Reported — Delete appeared below Reset password instead of in its own column, on a row where both buttons show" },
     ] },

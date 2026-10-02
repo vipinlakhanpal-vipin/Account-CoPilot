@@ -80,13 +80,28 @@ async function summary(db: ReturnType<typeof supabaseAdmin>) {
     pin: await pinSetting().then((p) => ({ set: !!p.hash, ask_super: !!p.ask_super, set_by: p.set_by || "", set_at: p.set_at || "" })) };
 }
 
+type LogEntry = { region?: string; summary: string };
+// A Standard User must only see scheduled-run activity for their own region(s) — the raw log mixes every
+// active region into one list, so this is the one place that needs its own scoping (everything else reads
+// from scopeData()). Falls back to parsing the region out of the summary line for older entries saved before
+// the `region` field existed, same as the bell's own client-side grouping does.
+function scopeLog<T extends LogEntry>(entries: T[], access: Awaited<ReturnType<typeof getAccess>>): T[] {
+  if (access.isSuper) return entries;
+  return entries.filter((e) => { const region = e.region || e.summary.match(/^([^—]+)—/)?.[1]?.trim(); return !!region && canSeeRegion(access, region); });
+}
+
 export async function GET(req: Request) {
-  if (!(await requireUser())) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
+  const user = await requireUser();
+  if (!user) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
   const db = supabaseAdmin();
+  const access = await getAccess(user);
   // ?only=log → just the scheduled-run notifications (for the bell in the top bar).
-  if (new URL(req.url).searchParams.get("only") === "log")
-    return NextResponse.json(await getSetting(db, "engine_log", { entries: [] }), { headers: { "Cache-Control": "no-store" } });
-  return NextResponse.json({ ...(await summary(db)), log: (await getSetting<{ entries: unknown[] }>(db, "engine_log", { entries: [] })).entries });
+  if (new URL(req.url).searchParams.get("only") === "log") {
+    const log = await getSetting<{ entries: LogEntry[] }>(db, "engine_log", { entries: [] });
+    return NextResponse.json({ entries: scopeLog(log.entries, access) }, { headers: { "Cache-Control": "no-store" } });
+  }
+  const log = await getSetting<{ entries: LogEntry[] }>(db, "engine_log", { entries: [] });
+  return NextResponse.json({ ...(await summary(db)), log: scopeLog(log.entries, access) });
 }
 
 const Body = z.discriminatedUnion("action", [
