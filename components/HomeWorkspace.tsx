@@ -246,7 +246,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
       <div className="hw-content">
         {section === "about" ? (
           <div>
-            <h3 className="hw-h">About Account CoPilot</h3>
+            <h3 className="hw-h">About Account CoPilot — Your Account Intelligence Partner</h3>
             <p className="hw-lead hw-lead-justify">Account CoPilot is an <b>AI Agent</b> — it works on its own, not only when you ask. Every morning it looks for new
               companies fitting your ICP, checks their numbers against official sources, and updates your database. Nothing here is invented: every
               figure carries a source and a confidence label.</p>
