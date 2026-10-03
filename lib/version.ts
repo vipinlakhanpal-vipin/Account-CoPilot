@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.28";
+export const APP_VERSION = "3.29";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.29", date: "2026-10-03", notes: "Fixed the field-count stat lines on Home (added in 3.28): they were squeezed into a narrow inline-flex box that broke the number across 3 lines. Now a normal paragraph with an accent border, and reworded in plain sentences instead of the \"X fields / company\" shorthand.", changes: [
+      { what: "Rebuilt .hw-about-stat from display:inline-flex to a normal block paragraph with a left accent border, and reworded all three stat lines (Free/Paid/Verification) from \"19 fields / company\" shorthand into plain sentences (\"Fills in 19 pieces of information on every company...\")", where: "components/HomeWorkspace.tsx, app/globals.css (.hw-about-stat)", why: "Reported with a screenshot — inline-flex on a paragraph with wrapping prose squeezed the text into two narrow constrained columns, breaking \"39 more fields\" across 3 lines; the shorthand phrasing was also reported as confusing on its own" },
+    ] },
   { version: "3.28", date: "2026-10-03", notes: "Home page's Free/Paid research tiles now state exactly how many fields each one enriches, so it's obvious at a glance how much data free search adds versus paid, and what verification does and doesn't add.", changes: [
       { what: "Added a field-count stat to each of the Free, Paid and Verification tiles on Home → About: Free enriches 19 fields per company (5 on discovery, 14 on the revenue check); Paid adds 39 more company fields plus a 27-field profile per contact; Verification adds no new fields, just a confidence label and a ~180-day re-check", where: "components/HomeWorkspace.tsx (.hw-about-stat), app/globals.css", why: "Requested — so anyone reading the Home page understands in concrete terms how much data free search enriches versus paid, not just a bullet list of field names" },
     ] },
