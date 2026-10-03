@@ -30,6 +30,43 @@ function Section({ title, children, open = false }: { title: string; children: R
   return <details className="dp-sec" open={open}><summary>{title}</summary><div className="dp-body">{children}</div></details>;
 }
 
+type ChipField = { key: string; label: string; scope: "company" | "contact"; options?: readonly string[]; summarize?: (v: string[]) => string };
+const CHIP_FIELDS: ChipField[] = [
+  { key: "name", label: "Name", scope: "company" }, { key: "website", label: "Website", scope: "company" }, { key: "hq", label: "HQ", scope: "company" },
+  { key: "countries", label: "Country", scope: "company", options: OPTIONS.regions }, { key: "regions", label: "Operating in", scope: "company", options: OPTIONS.regions },
+  { key: "industries", label: "Industry", scope: "company", options: OPTIONS.industries, summarize: (v) => v.map((x) => LABEL[x] || x).join(", ") },
+  { key: "ownership", label: "Ownership", scope: "company", options: OPTIONS.ownership },
+  { key: "revenue", label: "Revenue", scope: "company", options: OPTIONS.revenue,
+    summarize: (v) => JSON.stringify([...v].sort()) === JSON.stringify(["$1B-$5B", "$250M-$500M", "$500M-$1B", "$5B+"]) ? "≥ $250M" : v.join(", ") },
+  { key: "employees", label: "Employees", scope: "company", options: OPTIONS.employees },
+  { key: "erp", label: "ERP", scope: "company", options: OPTIONS.erp }, { key: "procurement", label: "Procurement platform", scope: "company", options: OPTIONS.procurement },
+  { key: "integration", label: "Integration platform", scope: "company", options: OPTIONS.integration },
+  { key: "triggers", label: "Trigger", scope: "company", options: OPTIONS.triggers }, { key: "financial", label: "Financial", scope: "company", options: OPTIONS.financial },
+  { key: "icpStatus", label: "ICP status", scope: "company", options: OPTIONS.icpStatus }, { key: "listing", label: "Listing", scope: "company", options: OPTIONS.listing },
+  { key: "signal", label: "Signal", scope: "company", options: OPTIONS.signal },
+  { key: "firstName", label: "First name", scope: "contact" }, { key: "lastName", label: "Last name", scope: "contact" }, { key: "title", label: "Title", scope: "contact" },
+  { key: "email", label: "Email", scope: "contact" }, { key: "phone", label: "Phone", scope: "contact" }, { key: "linkedin", label: "LinkedIn", scope: "contact" },
+  { key: "seniority", label: "Seniority", scope: "contact", options: OPTIONS.seniority }, { key: "departments", label: "Department", scope: "contact", options: OPTIONS.departments },
+  { key: "roles", label: "Buying role", scope: "contact", options: OPTIONS.roles }, { key: "intelligence", label: "Buying signal", scope: "contact", options: OPTIONS.intelligence },
+  { key: "engagement", label: "Engagement", scope: "contact", options: OPTIONS.engagement },
+];
+/** Every criterion currently filtering the view, as one chip each — array fields only show when they exclude at
+ * least one option (selecting every option filters nothing, so it isn't shown as active). */
+function activeChips(criteria: Criteria): { key: string; text: string; clear: () => Criteria }[] {
+  const chips: { key: string; text: string; clear: () => Criteria }[] = [];
+  for (const f of CHIP_FIELDS) {
+    const scope = f.scope === "company" ? criteria.company : criteria.contact;
+    const v = scope[f.key as keyof typeof scope];
+    if (f.options) {
+      const arr = v as string[];
+      if (arr.length > 0 && arr.length < f.options.length) chips.push({ key: `${f.scope}.${f.key}`, text: `${f.label}: ${f.summarize ? f.summarize(arr) : arr.join(", ")}`,
+        clear: () => ({ ...criteria, [f.scope]: { ...scope, [f.key]: [] } }) });
+    } else if (v) chips.push({ key: `${f.scope}.${f.key}`, text: `${f.label}: ${v}`, clear: () => ({ ...criteria, [f.scope]: { ...scope, [f.key]: "" } }) });
+  }
+  if (criteria.showSpend) chips.push({ key: "showSpend", text: "Spend estimates: on", clear: () => ({ ...criteria, showSpend: false }) });
+  return chips;
+}
+
 // Left-side "Account Discovery Criteria" panel. Criteria filter and rank every view; Save stores them for the whole team.
 export type SaveResult = { ok: boolean; error?: string; by?: string; at?: string };
 // Criteria edits are a draft until Refresh (apply) or Save (apply + store for the team). Reset asks first.
@@ -43,6 +80,7 @@ export default function DiscoveryPanel({ criteria: applied, onApply, onSave, sav
   const base = teamCriteria || DEFAULT_CRITERIA;
   const dirty = JSON.stringify(criteria) !== JSON.stringify(base);
   const [saveRes, setSaveRes] = useState<SaveResult | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
   const [tab, setTab] = useState<"company" | "contact">("company");
   const [limit, setLimit] = useState(5);
   const [profile, setProfile] = useState(false);
@@ -79,12 +117,33 @@ export default function DiscoveryPanel({ criteria: applied, onApply, onSave, sav
       </div>
       <p className="dp-step-h s2h"><span className="dp-n">2</span>Filter your view</p>
       <p className="dp-step-sub s2sub">Changes apply straight away and only for you.</p>
-      <div className="dp-tabs" role="tablist">
-        <button type="button" role="tab" aria-selected={tab === "company"} onClick={() => setTab("company")}>Company</button>
-        <button type="button" role="tab" aria-selected={tab === "contact"} onClick={() => setTab("contact")}>Contact</button>
-      </div>
+      {(() => {
+        const chips = activeChips(criteria);
+        return (
+          <div className="dp-chiprow">
+            {chips.length > 0 ? (
+              <div className="dp-chiprow-list">
+                {chips.map((c) => (
+                  <span key={c.key} className="dp-crit-chip">{c.text}
+                    <button type="button" aria-label={`Remove ${c.text}`} onClick={() => onChange(c.clear())}>×</button></span>
+                ))}
+              </div>
+            ) : <p className="dp-note">No filters set — showing every company and contact.</p>}
+            <button type="button" className="btn tiny dp-edit-toggle" onClick={() => setEditOpen((o) => !o)} aria-expanded={editOpen}>
+              {editOpen ? "Hide filter editor" : "Edit criteria"}
+            </button>
+          </div>
+        );
+      })()}
 
-      {tab === "company" ? (
+      {editOpen && (
+        <div className="dp-tabs" role="tablist">
+          <button type="button" role="tab" aria-selected={tab === "company"} onClick={() => setTab("company")}>Company</button>
+          <button type="button" role="tab" aria-selected={tab === "contact"} onClick={() => setTab("contact")}>Contact</button>
+        </div>
+      )}
+
+      {!editOpen ? null : tab === "company" ? (
         <div className="dp-scroll">
           <Section title="Company attributes" open>
             <Text label="Company name" value={co.name} onChange={(v) => setCo("name", v)} />

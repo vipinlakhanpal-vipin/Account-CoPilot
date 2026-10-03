@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.30";
+export const APP_VERSION = "3.31";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.31", date: "2026-10-04", notes: "Discovery panel's Filter your view step now opens with a row of removable chips showing every criterion currently filtering your view (e.g. \"Country: UAE\", \"Revenue: ≥ $250M\"), instead of a wall of sections to open and check. An \"Edit criteria\" button reveals the full Company/Contact editor only when you actually want to change something.", changes: [
+      { what: "Added a chip summary row above step 2 (activeChips() over all 28 company + contact fields) showing every active filter as a removable pill; clicking × resets just that one field. The Company/Contact tabs and section editor are now hidden behind a new \"Edit criteria\" toggle instead of always being expanded", where: "components/DiscoveryPanel.tsx, app/globals.css (.dp-chiprow, .dp-crit-chip)", why: "Requested after comparing two mockups — chips over collapsed sections, since everything active is visible in one glance with nothing to expand just to check what's on" },
+    ] },
   { version: "3.30", date: "2026-10-03", notes: "Scheduled-runs bell: when one entry still covers more than one region (older data, from before ENGINE.md required one log call per region), each company's real region is now resolved from its own company record and shown as its own section with new/checked/Verified counts — instead of one combined heading naming every region together.", changes: [
       { what: "Added enrichRegions() to /api/engine: for any log entry whose region is more than one name joined together and whose rows don't already carry their own region, looks up each company's real country from the companies table and attaches it per row, read-only and computed fresh on every request (no stored data is changed)", where: "app/api/engine/route.ts", why: "Reported again with a screenshot — the v3.27 fix stopped mislabeling every row, but a multi-region entry with no per-row region still fell back to one combined heading; resolving the real region from the company record splits it into one section per region instead, and fixes any future entry shaped the same way without needing a data migration" },
       { what: "EngineBell now splits a multi-region entry into one section per region whenever its rows carry a resolved region, each with its own \"X new, Y checked: Z Verified\" line and table; scopeLog filters row by row instead of hiding a whole mixed-region entry from a Standard User", where: "components/EngineBell.tsx, app/api/engine/route.ts (scopeLog)", why: "Matches the request directly: countries as their own field, with new/verified shown under each one, growing to more sections as more regions come online" },
