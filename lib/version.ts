@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.31";
+export const APP_VERSION = "3.32";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.32", date: "2026-10-04", notes: "Fixed every \"Cost impact\" link (and the other Settings deep links — Discovery engine, Pending region activation, Invite a colleague) landing at the top of Settings instead of the section they name.", changes: [
+      { what: "Added ScrollToHash, mounted on the Settings page: retries scrolling to the URL's #id for up to 2 seconds after mount (and again on a hash change while already on the page), instead of relying on the browser's one-shot native hash scroll", where: "components/ScrollToHash.tsx, app/settings/page.tsx", why: "Reported — every Cost impact note already linked to the correct #costs id (it matched CostInfo's id exactly), but Settings shows a loading.tsx skeleton first, so the browser's native hash scroll fired before the real #costs element existed in the DOM and landed at the top instead; the same root cause affected the engine, pending-activation and team invite deep links too" },
+    ] },
   { version: "3.31", date: "2026-10-04", notes: "Discovery panel's Filter your view step now opens with a row of removable chips showing every criterion currently filtering your view (e.g. \"Country: UAE\", \"Revenue: ≥ $250M\"), instead of a wall of sections to open and check. An \"Edit criteria\" button reveals the full Company/Contact editor only when you actually want to change something.", changes: [
       { what: "Added a chip summary row above step 2 (activeChips() over all 28 company + contact fields) showing every active filter as a removable pill; clicking × resets just that one field. The Company/Contact tabs and section editor are now hidden behind a new \"Edit criteria\" toggle instead of always being expanded", where: "components/DiscoveryPanel.tsx, app/globals.css (.dp-chiprow, .dp-crit-chip)", why: "Requested after comparing two mockups — chips over collapsed sections, since everything active is visible in one glance with nothing to expand just to check what's on" },
     ] },

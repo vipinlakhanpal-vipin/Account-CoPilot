@@ -3,6 +3,7 @@ import TierSettings from "@/components/TierSettings";
 import Hero from "@/components/Hero";
 import CostInfo from "@/components/CostInfo";
 import EngineSettings from "@/components/EngineSettings";
+import ScrollToHash from "@/components/ScrollToHash";
 import { supabaseServer } from "@/lib/supabase/server";
 import { getAccess, ROLE_LABEL } from "@/lib/access";
 
@@ -15,6 +16,7 @@ export default async function SettingsPage() {
   const { data } = await sb.from("settings").select("value").eq("key", "contact_tiers").maybeSingle();
   return (
     <>
+      <ScrollToHash />
       <div className="wrap"><Hero title="Settings" text="Discovery & refresh engine, API credit and PIN, contact tiers, and what uses the Anthropic API key. Team, roles and regions are in Setup → Team." />
         {access.isSuper ? <><EngineSettings /><TierSettings initial={(data?.value as Tier[]) || []} /></>
           : <section className="panel" style={{ marginTop: 16 }}><h2>Your access</h2>
