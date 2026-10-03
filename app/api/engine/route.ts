@@ -80,14 +80,38 @@ async function summary(db: ReturnType<typeof supabaseAdmin>) {
     pin: await pinSetting().then((p) => ({ set: !!p.hash, ask_super: !!p.ask_super, set_by: p.set_by || "", set_at: p.set_at || "" })) };
 }
 
-type LogEntry = { region?: string; summary: string };
+type LogDetail = { name: string; status?: string; revenue?: string; region?: string };
+type LogEntry = { region?: string; summary: string; details?: LogDetail[] };
+
+// Older log entries (before ENGINE.md required one `log` call per region) can have several regions joined into
+// one entry, with no per-row region to tell which company belongs to which. Rather than guess, resolve each
+// row's real region from the company record itself — read-only, computed fresh on every request, so it never
+// needs the stored log data to be migrated and it also fixes any future entry shaped the same way.
+async function enrichRegions(db: ReturnType<typeof supabaseAdmin>, entries: LogEntry[]): Promise<LogEntry[]> {
+  const needsIt = entries.filter((e) => (e.region || "").split(",").map((r) => r.trim()).filter(Boolean).length > 1 && (e.details || []).some((d) => !d.region));
+  const names = [...new Set(needsIt.flatMap((e) => (e.details || []).map((d) => d.name)))];
+  if (!names.length) return entries;
+  const { data } = await db.from("companies").select("company_name,country").in("company_name", names);
+  const byName = new Map((data || []).map((c) => [c.company_name, c.country]));
+  const set = new Set(needsIt);
+  return entries.map((e) => (set.has(e) ? { ...e, details: (e.details || []).map((d) => ({ ...d, region: d.region || byName.get(d.name) })) } : e));
+}
+
 // A Standard User must only see scheduled-run activity for their own region(s) — the raw log mixes every
 // active region into one list, so this is the one place that needs its own scoping (everything else reads
-// from scopeData()). Falls back to parsing the region out of the summary line for older entries saved before
-// the `region` field existed, same as the bell's own client-side grouping does.
+// from scopeData()). When an entry's rows each carry their own region (after enrichRegions above), filter
+// row by row so a mixed-region entry still shows a Standard User their own companies instead of being hidden
+// entirely; otherwise falls back to the entry's own region, or the one parsed from its summary line.
 function scopeLog<T extends LogEntry>(entries: T[], access: Awaited<ReturnType<typeof getAccess>>): T[] {
   if (access.isSuper) return entries;
-  return entries.filter((e) => { const region = e.region || e.summary.match(/^([^—]+)—/)?.[1]?.trim(); return !!region && canSeeRegion(access, region); });
+  return entries.flatMap((e) => {
+    if ((e.details || []).some((d) => d.region)) {
+      const details = (e.details || []).filter((d) => d.region && canSeeRegion(access, d.region));
+      return details.length ? [{ ...e, details }] : [];
+    }
+    const region = e.region || e.summary.match(/^([^—]+)—/)?.[1]?.trim();
+    return region && canSeeRegion(access, region) ? [e] : [];
+  });
 }
 
 export async function GET(req: Request) {
@@ -98,10 +122,12 @@ export async function GET(req: Request) {
   // ?only=log → just the scheduled-run notifications (for the bell in the top bar).
   if (new URL(req.url).searchParams.get("only") === "log") {
     const log = await getSetting<{ entries: LogEntry[] }>(db, "engine_log", { entries: [] });
-    return NextResponse.json({ entries: scopeLog(log.entries, access) }, { headers: { "Cache-Control": "no-store" } });
+    const entries = await enrichRegions(db, log.entries);
+    return NextResponse.json({ entries: scopeLog(entries, access) }, { headers: { "Cache-Control": "no-store" } });
   }
   const log = await getSetting<{ entries: LogEntry[] }>(db, "engine_log", { entries: [] });
-  return NextResponse.json({ ...(await summary(db)), log: scopeLog(log.entries, access) });
+  const entries = await enrichRegions(db, log.entries);
+  return NextResponse.json({ ...(await summary(db)), log: scopeLog(entries, access) });
 }
 
 const Body = z.discriminatedUnion("action", [

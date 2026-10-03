@@ -4,7 +4,7 @@ import Link from "next/link";
 import DailyRunLocalTime from "@/components/DailyRunLocalTime";
 import { fmtDateTime } from "@/lib/dates";
 
-type Detail = { name: string; status: string; revenue?: string };
+type Detail = { name: string; status: string; revenue?: string; region?: string };
 type Entry = { at: string; summary: string; verified: number; new_companies: string[]; details?: Detail[]; region?: string };
 const statusTag = (s: string) => (/verified/i.test(s) ? "fact" : /likely/i.test(s) ? "likely" : /not icp/i.test(s) ? "conflict" : "unv");
 
@@ -57,37 +57,42 @@ export default function EngineBell() {
               for (const e of shown) { const d = new Date(e.at).toDateString(); (days.get(d) || days.set(d, []).get(d)!).push(e); }
               return [...days.entries()].map(([day, group]) => {
                 const anyNew = group.some((e) => e.at > seen);
-                // A region field can itself be a joined list from an older entry ("UAE, KSA") — split those back
-                // into one section per named region so old data still renders cleanly.
-                const sections = group.flatMap((e) => {
-                  const regionField = e.region || e.summary.match(/^([^—]+)—/)?.[1]?.trim() || "—";
-                  const regions = regionField.split(",").map((r) => r.trim()).filter(Boolean);
-                  const newSet = new Set(e.new_companies);
-                  const rows = (e.details || []).map((d) => ({ ...d, isNew: newSet.has(d.name), isVerified: !/unknown/i.test(d.status) }));
-                  if (regions.length <= 1) return [{ region: regionField, summary: e.summary, rows }];
-                  // More than one region joined together with no per-row region to split by — show the rows once,
-                  // under a heading naming all of them, rather than guessing which row belongs to which.
-                  return [{ region: regions.join(" + "), summary: e.summary, rows }];
-                });
                 return (
                   <div key={day} className={`bell-item${anyNew ? " new" : ""}`}>
                     <small>{fmtDateTime(group[0].at)}</small>
-                    {sections.map((s, si) => {
-                      const verifiedCt = s.rows.filter((d) => /verified/i.test(d.status)).length;
-                      const newCt = s.rows.filter((d) => d.isNew).length;
+                    {group.map((e, ei) => {
+                      const regionField = e.region || e.summary.match(/^([^—]+)—/)?.[1]?.trim() || "—";
+                      const regions = regionField.split(",").map((r) => r.trim()).filter(Boolean);
+                      const newSet = new Set(e.new_companies);
+                      const rows = (e.details || []).map((d) => ({ ...d, isNew: newSet.has(d.name), isVerified: !/unknown/i.test(d.status) }));
+                      // More than one region in this entry: if each row already carries its own real region
+                      // (resolved server-side from the company record), split into one section per region.
+                      // Otherwise there's nothing to split by — show the rows once under a heading naming them all.
+                      const canSplit = regions.length > 1 && rows.some((d) => d.region);
+                      const sections = canSplit
+                        ? regions.map((r) => ({ region: r, rows: rows.filter((d) => d.region === r) })).filter((s) => s.rows.length > 0)
+                        : [{ region: regions.length <= 1 ? regionField : regions.join(" + "), rows }];
                       return (
-                        <div key={si} className="bell-region">
-                          <div className="bell-region-head"><b>{s.region}</b>
-                            {s.rows.length > 0 && <span className="muted"> — {newCt} new, {s.rows.length} checked: {verifiedCt} Verified</span>}</div>
-                          {s.rows.length > 0 && (
-                            <table className="bell-table"><thead><tr><th>Company</th><th>New</th><th>Verified</th><th>Status</th><th>Revenue</th><th></th></tr></thead>
-                              <tbody>{s.rows.slice(0, 24).map((d, i) => (
-                                <tr key={i}><td>{d.name}</td><td>{d.isNew ? "✓" : ""}</td><td>{d.isVerified ? "✓" : ""}</td>
-                                  <td><span className={`tag ${statusTag(d.status)}`}>{d.status}</span></td><td className="muted">{d.revenue || "—"}</td>
-                                  <td>{/^held/i.test(d.status) && <a className="job-link" href="/settings#engine-pending" onClick={() => setOpen(false)}>Activate →</a>}</td></tr>
-                              ))}</tbody></table>
-                          )}
-                          <p className="note bell-note">{s.summary}</p>
+                        <div key={ei}>
+                          {sections.map((s, si) => {
+                            const verifiedCt = s.rows.filter((d) => /verified/i.test(d.status)).length;
+                            const newCt = s.rows.filter((d) => d.isNew).length;
+                            return (
+                              <div key={si} className="bell-region">
+                                <div className="bell-region-head"><b>{s.region}</b>
+                                  {s.rows.length > 0 && <span className="muted"> — {newCt} new, {s.rows.length} checked: {verifiedCt} Verified</span>}</div>
+                                {s.rows.length > 0 && (
+                                  <table className="bell-table"><thead><tr><th>Company</th><th>New</th><th>Verified</th><th>Status</th><th>Revenue</th><th></th></tr></thead>
+                                    <tbody>{s.rows.slice(0, 24).map((d, i) => (
+                                      <tr key={i}><td>{d.name}</td><td>{d.isNew ? "✓" : ""}</td><td>{d.isVerified ? "✓" : ""}</td>
+                                        <td><span className={`tag ${statusTag(d.status)}`}>{d.status}</span></td><td className="muted">{d.revenue || "—"}</td>
+                                        <td>{/^held/i.test(d.status) && <a className="job-link" href="/settings#engine-pending" onClick={() => setOpen(false)}>Activate →</a>}</td></tr>
+                                    ))}</tbody></table>
+                                )}
+                              </div>
+                            );
+                          })}
+                          <p className="note bell-note">{e.summary}</p>
                         </div>
                       );
                     })}
