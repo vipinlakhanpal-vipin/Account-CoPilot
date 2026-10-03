@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.35";
+export const APP_VERSION = "3.36";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,11 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.36", date: "2026-10-04", notes: "Fixed hovering the active About pill making its text unreadable (white text on a background the hover rule had lightened underneath it), darkened the purple accent further, and carried purple through to the \"Companies tracked\" / \"Active regions\" tiles on Home — one dark, one light.", changes: [
+      { what: "Scoped the hover background rule on both nav pills to :not(.on), so hovering the already-active pill no longer overrides its background to a lighter tint while the active state's white text color stays — which made the text unreadable", where: "app/globals.css (.hw-nav-pill--teal, .hw-nav-pill-row)", why: "Reported — a CSS specificity bug: the :hover rule came after .on in source order with equal specificity, so on an active+hovered pill it won the background property but not color, producing white text on a near-white background" },
+      { what: "Darkened --purple further (#6F5CE0 to #5847C9 dark mode, #4A3B96 to #3D2F82 light mode)", where: "app/globals.css" , why: "Requested — still read as too light next to teal" },
+      { what: "The \"Companies tracked\" and \"Active regions\" stat tiles on Home now use purple instead of teal/green — one a deeper purple tint, the other the lighter --purple-soft", where: "app/globals.css (.metric-tile)", why: "Requested — carry the new purple accent into these tiles too, one dark and one light" },
+    ] },
   { version: "3.35", date: "2026-10-04", notes: "Home's About / Setup Wizard buttons are now a single horizontal segmented toggle (About / Wizard side by side) instead of two stacked list buttons, with Wizard in a new purple accent so it's distinguishable from About's teal at a glance.", changes: [
       { what: "Replaced the two stacked .hw-rail-item buttons with a .hw-nav-toggle segmented pill pair (About teal, Wizard purple), labels shortened to \"About\" and \"Wizard\"; added --purple/--purple-soft theme tokens sized to match teal's density in both light and dark mode", where: "components/HomeWorkspace.tsx, app/globals.css (.hw-nav-toggle, .hw-nav-pill*, --purple)", why: "Reported — both buttons were the same teal at rest, making it hard to tell Wizard apart from About; compared 3 mockup colors and a stacked-vs-toggle layout before building, caught \"Setup Wizard\" wrapping to 2 lines in a visual check and shortened the label instead of shipping a lopsided pill" },
     ] },
