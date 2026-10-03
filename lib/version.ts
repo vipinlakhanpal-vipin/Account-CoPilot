@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.34";
+export const APP_VERSION = "3.35";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.35", date: "2026-10-04", notes: "Home's About / Setup Wizard buttons are now a single horizontal segmented toggle (About / Wizard side by side) instead of two stacked list buttons, with Wizard in a new purple accent so it's distinguishable from About's teal at a glance.", changes: [
+      { what: "Replaced the two stacked .hw-rail-item buttons with a .hw-nav-toggle segmented pill pair (About teal, Wizard purple), labels shortened to \"About\" and \"Wizard\"; added --purple/--purple-soft theme tokens sized to match teal's density in both light and dark mode", where: "components/HomeWorkspace.tsx, app/globals.css (.hw-nav-toggle, .hw-nav-pill*, --purple)", why: "Reported — both buttons were the same teal at rest, making it hard to tell Wizard apart from About; compared 3 mockup colors and a stacked-vs-toggle layout before building, caught \"Setup Wizard\" wrapping to 2 lines in a visual check and shortened the label instead of shipping a lopsided pill" },
+    ] },
   { version: "3.34", date: "2026-10-04", notes: "Fixed the Wizard's region row wrapping \"Activated by...\" onto its own second line; the name now shows as first name only (\"Vipin\" instead of \"Vipin Sharma\"); UAE's row now shows its activation status too, which it never had recorded before.", changes: [
       { what: "Changed .hw-region-row from flex-wrap:wrap to nowrap, with overflow-x:auto on the row list and flex-shrink:0 on the name column, so the status note always stays on the same row as the fields instead of wrapping to a second line when the text is long", where: "app/globals.css (.hw-region-row, .hw-region-list, .hw-region-name-col)", why: "Reported with a screenshot — \"Activated by Vipin Sharma on 02/10/26 | 10:24 AM\" was long enough to overflow the row, and flex-wrap:wrap pushed it onto its own line; the fix keeps everything on one row and scrolls horizontally only if a row ever still doesn't fit" },
       { what: "\"Activated by\" now shows first name only, in both the Setup Wizard region list and Define ICP's per-region status line", where: "components/HomeWorkspace.tsx, components/IcpEditor.tsx", why: "Requested — \"Vipin Sharma\" shortened to \"Vipin\" everywhere this note appears" },
