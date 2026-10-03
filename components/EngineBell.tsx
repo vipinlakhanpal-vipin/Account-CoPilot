@@ -7,6 +7,10 @@ import { fmtDateTime } from "@/lib/dates";
 type Detail = { name: string; status: string; revenue?: string; region?: string };
 type Entry = { at: string; summary: string; verified: number; new_companies: string[]; details?: Detail[]; region?: string };
 const statusTag = (s: string) => (/verified/i.test(s) ? "fact" : /likely/i.test(s) ? "likely" : /not icp/i.test(s) ? "conflict" : "unv");
+// A scheduled session can spell the same company slightly differently between its new_companies list and its
+// details rows (e.g. an apostrophe present in one but not the other) — normalize before matching so a one-character
+// difference doesn't silently drop that row's "New" flag and undercount the region's new-company total.
+const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "");
 
 // Bell in the top bar: notifications from the scheduled engine runs (6am daily). Unread = newer than the last time you opened it.
 export default function EngineBell() {
@@ -63,8 +67,8 @@ export default function EngineBell() {
                     {group.map((e, ei) => {
                       const regionField = e.region || e.summary.match(/^([^—]+)—/)?.[1]?.trim() || "—";
                       const regions = regionField.split(",").map((r) => r.trim()).filter(Boolean);
-                      const newSet = new Set(e.new_companies);
-                      const rows = (e.details || []).map((d) => ({ ...d, isNew: newSet.has(d.name), isVerified: !/unknown/i.test(d.status) }));
+                      const newSet = new Set(e.new_companies.map(norm));
+                      const rows = (e.details || []).map((d) => ({ ...d, isNew: newSet.has(norm(d.name)), isVerified: !/unknown/i.test(d.status) }));
                       // More than one region in this entry: if each row already carries its own real region
                       // (resolved server-side from the company record), split into one section per region.
                       // Otherwise there's nothing to split by — show the rows once under a heading naming them all.

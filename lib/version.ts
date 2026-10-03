@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.38";
+export const APP_VERSION = "3.39";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.39", date: "2026-10-04", notes: "Fixed the bell's \"New\" count silently undercounting when a scheduled session spelled a company slightly differently between its two report lists (e.g. KSA's Oct 3 entry showed 24 new even though all 25 companies really were new — \"Ma'aden\" vs \"Maaden\").", changes: [
+      { what: "Normalize company names (lowercase, strip punctuation) before matching a details row against the new_companies list, so a one-character spelling difference (an apostrophe, a space) no longer drops that row's \"New\" flag", where: "components/EngineBell.tsx (norm())", why: "Reported — KSA's logged entry had \"Saudi Arabian Mining Company (Ma'aden)\" in its details row but \"...(Maaden)\" (no apostrophe) in new_companies; exact-string matching silently failed on that one row, undercounting new-company totals by 1" },
+      { what: "ENGINE.md now tells the scheduled session to spell each company identically across the new-company list and its run_details.json row", where: "ENGINE.md (step 3.2)", why: "Prevents this same mismatch recurring for future runs, not just papering over it client-side" },
+    ] },
   { version: "3.38", date: "2026-10-04", notes: "Capped the daily engine's discovery padding: a region with a near-empty queue can no longer discover up to its full verify_per_day in new companies (the 5x-over-quota deviation flagged on 2026-10-03 for KSA and Qatar) — it's now capped at 2x discover_per_day, falling short of the verify target instead of overdiscovering to hit it.", changes: [
       { what: "Added an explicit 2x discover_per_day ceiling on new-company discovery, and required the day's summary to say plainly when the verify target wasn't reached because of it, instead of silently padding discovery up to verify_per_day", where: "ENGINE.md (step 4, points 1 and 2)", why: "Requested, following the KSA/Qatar incident where a near-empty queue led to discovering 25 new companies in one day (5x the configured 5/day) with no cap stopping it; a young region now grows at a bounded, predictable pace instead of manufacturing a full day's work" },
     ] },

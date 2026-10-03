@@ -85,6 +85,8 @@ typed in) — see "Multi-name discover jobs" under step 2.
    — the 4th argument is which routine you are (the daily 6am one, or the instant job runner — your own opening instructions say which); the 5th argument is that single region
    (e.g. "UAE") — never a list like "UAE, KSA". Each call reads `run_details.json` and automatically keeps only the rows whose `region` matches this call's region, so the summary,
    table and new-company count you pass must describe that region alone, not the whole run.
+   **Spell every company name identically in the new-company list (3rd argument) and its `run_details.json` row** — even a spelling difference as small as an apostrophe
+   ("Ma'aden" vs "Maaden") stops the app from matching the two and silently drops that company's "New" flag in the bell.
 Do not commit or push anything and do not change app code.
 
 ## 4. Default daily work (always, after any queued jobs)
