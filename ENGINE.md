@@ -76,12 +76,15 @@ typed in) — see "Multi-name discover jobs" under step 2.
 `node scripts/engine_client.mjs finish <id> done "<N verified: X Verified, Y Likely, Z Needs check, W Not ICP; M new companies added>"`
 (or `finish <id> error "<reason>"`). Claim the next job if time allows. Then ALWAYS, at the very end:
 1. Write `data/verification/run_details.json`: one row per company you checked or added this run (queued jobs and the daily batch together), in this exact shape:
-   `[{"name":"<company>","status":"<ICP — Verified|ICP — Likely|ICP — Needs check|Not ICP|Unknown|Held (<region>)>","revenue":"<e.g. $51.8B, ~$625.6M (estimate), Below $250M, or '' if none found>"}]`
-   This becomes the small table shown in the bell and in Settings → Scheduled run history — keep `revenue` short (one figure, no sentences).
-2. `node scripts/engine_client.mjs log "<one-line summary>" <verified_count> "<new company names separated by ;>" <daily|instant> [region]`
-   — the 4th argument is which routine you are (the daily 6am one, or the instant job runner — your own opening instructions say which); the optional 5th argument
-   is the region(s) this run actually worked (e.g. "UAE", or "UAE, KSA" if more than one region's `active` list was worked this run) — omit it if none applies.
-   This reads `run_details.json` automatically and posts the summary, the table, the region and which kind of run it was as the notification under the bell.
+   `[{"name":"<company>","status":"<ICP — Verified|ICP — Likely|ICP — Needs check|Not ICP|Unknown|Held (<region>)>","region":"<its own real region, e.g. UAE>","revenue":"<e.g. $51.8B, ~$625.6M (estimate), Below $250M, or '' if none found>"}]`
+   This becomes the small table shown in the bell and in Settings → Scheduled run history — keep `revenue` short (one figure, no sentences). **Always include each row's own `region`** — the app
+   groups the bell notification by it, so a row with the wrong or missing region shows up under the wrong heading or gets dropped from every region's table.
+2. **Call `log` once per region you worked this run — never combine multiple regions into one call.** If this run touched more than one region (e.g. the daily batch
+   ran UAE, KSA, Qatar and Kuwait), run this command separately for EACH one, right after the other:
+   `node scripts/engine_client.mjs log "<one-line summary for just this region>" <this region's verified_count> "<this region's new company names separated by ;>" <daily|instant> <region>`
+   — the 4th argument is which routine you are (the daily 6am one, or the instant job runner — your own opening instructions say which); the 5th argument is that single region
+   (e.g. "UAE") — never a list like "UAE, KSA". Each call reads `run_details.json` and automatically keeps only the rows whose `region` matches this call's region, so the summary,
+   table and new-company count you pass must describe that region alone, not the whole run.
 Do not commit or push anything and do not change app code.
 
 ## 4. Default daily work (always, after any queued jobs)
@@ -97,6 +100,9 @@ For **each region in `active`** of `icp_rules.json` (default: UAE, find 5, verif
    `node scripts/engine_client.mjs queue <region> <verify_per_day minus new>`. Submit every ~10 with `node scripts/engine_client.mjs submit`.
 3. **Watch list**: `node scripts/engine_client.mjs watch` writes the requested companies that are due for a weekly re-check (any region, until an official
    figure is found) to `data/verification/revenue_queue.json`; verify each and submit.
-4. Notify (step 3b) once for the whole run, in this form (one clause per active region):
+4. Notify (step 3b) separately for EACH active region worked this run — one `log` call per region, each covering only that region's own companies and rows
+   (never combine regions into one call or one comma-joined region). Each region's own summary, in this form:
    `"UAE — Added 5 new: A; B; C; D; E. Checked 25 (5 new + 20 from the queue): X Verified, Y Likely, Z Needs check, W Not ICP, U Unknown"`
-   (counts are the ICP status of the checked companies after the check; mention any duplicates skipped).
+   (counts are the ICP status of the checked companies after the check; mention any duplicates skipped). If a region's planned count can't be reached normally
+   (e.g. its queue is empty) and you pad it with extra new companies to still hit the day's target, say so plainly in that region's own summary and flag it as
+   over quota — the user reviews these.

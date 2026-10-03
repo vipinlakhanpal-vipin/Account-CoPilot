@@ -98,7 +98,9 @@ else if (cmd === "queue") {
 }
 else if (cmd === "log") {
   const detailsFile = "data/verification/run_details.json";
-  const details = fs.existsSync(detailsFile) ? JSON.parse(fs.readFileSync(detailsFile, "utf8")) : [];
+  const allDetails = fs.existsSync(detailsFile) ? JSON.parse(fs.readFileSync(detailsFile, "utf8")) : [];
+  // Only rows for this call's own region go into its notification — a row with no region field (older files) is kept either way.
+  const details = e ? allDetails.filter((r) => !r.region || r.region === e) : allDetails;
   console.log(JSON.stringify(await call({ action: "log", summary: a || "", verified: Number(b) || 0, new_companies: String(c || "").split(";").map((x) => x.trim()).filter(Boolean), details, source: d === "instant" ? "instant" : "daily", region: e || "" })));
 }
 else console.log("usage: claim | icp | names | watch [slug] | queue <region> <limit> | submit [dir] | add <file> | hold <file> | finish <id> done|error <result> | log <summary> <verified> <names;…> <daily|instant> [region] | uploads | add_upload <file.json> <filename> | upload_done <id> done|error <summary>");

@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.26";
+export const APP_VERSION = "3.27";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.27", date: "2026-10-03", notes: "Scheduled-runs bell: when a daily run covers more than one region, each region now shows as its own labelled section (new/checked/Verified counts, then its own company table) instead of one combined Region column — and the runbook now logs one notification per region instead of combining them, so this stays correct going forward.", changes: [
+      { what: "Bell popup groups each day's entries by region into separate labelled sections (e.g. \"UAE — 5 new, 25 checked: 5 Verified\") each with its own company table, instead of one flat table with a Region column that showed every region joined together on every row", where: "components/EngineBell.tsx, app/globals.css (.bell-region)", why: "Reported with a screenshot — a multi-region daily run (UAE, KSA, Qatar, Kuwait) had logged as one combined entry, so every row showed \"UAE, KSA, Qatar, Kuwait\" instead of the one region it actually belonged to; grouping by region makes the per-region breakdown readable at a glance" },
+      { what: "ENGINE.md now requires one log call per region (never a joined region string) and each run_details.json row to carry its own region, so a multi-region run always produces one clean entry per region", where: "ENGINE.md, scripts/engine_client.mjs", why: "Root cause of the mixed-region row: the runbook previously allowed logging the whole run as one combined entry with one comma-joined region; fixing the instruction (not just the display) stops it from recurring" },
+    ] },
   { version: "3.26", date: "2026-10-02", notes: "Moved Procurement & IT maturity to right after the account facts — the first thing visible when a brief opens, instead of buried after the long AI intelligence section. Reworded the Home page banner to name the exact click path (Accounts → Pipeline, then click any row) instead of a vague \"open Pipeline\".", changes: [
       { what: "Procurement & IT maturity block moved from after the AI intelligence section to directly after the account facts grid, with a subtle teal accent so it reads as the headline block", where: "components/CoPilotApp.tsx (Brief), app/globals.css (.mat-top)", why: "Reported — the block existed but required scrolling past the entire AI intelligence section (scores, spend grid, recommended actions) to find, undermining the Home page's promise that it's easy to find" },
       { what: "Home banner's second answer now says exactly where to click (Accounts → Pipeline, click any row) and confirms the maturity block is the first thing after the facts, instead of a generic \"open the brief\"", where: "components/HomeWorkspace.tsx", why: "Reported — someone new to the app wouldn't know where \"Pipeline\" or \"the brief\" actually are" },
