@@ -269,6 +269,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                   <li>Checks each company&apos;s <b>revenue figure</b> and sets its ICP status — Verified, Likely, Needs check, Not ICP, or Unknown.</li>
                   <li>That&apos;s the full scope — no contacts, S2P signals, ERP status, ownership or opportunity notes. Those only come from paid research (see the tile on the right).</li>
                 </ul>
+                <p className="hw-about-stat"><b>19 fields</b>&nbsp;enriched per company — 5 on discovery (name, website, country, industry, HQ city), 14 on the revenue check (status, listing, exchange, ticker, figure, year, type, source + link, confidence, fit, fit reason, employees, checked date).</p>
                 <p className="hw-about-note">Keeps working after it&apos;s added: every company — free or paid — gets its revenue and ICP status automatically re-checked roughly every 180 days, so it can climb the ladder on its own over time (e.g. Likely → Verified) with no further action from you.</p></div>
               <div className="hw-about-card hw-about-card--gold"><span className="hw-icon-badge"><Ico name="coin" /></span><h4>Paid Search Engine Job</h4>
                 <ul>
@@ -278,6 +279,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                   <li><b>Buying triggers</b> and <b>opportunity classification</b> — transformation signals, implementation/consulting partners, Coupa/Ariba opportunity type.</li>
                   <li>Board phone number, plus the full source/evidence trail behind every finding above.</li>
                 </ul>
+                <p className="hw-about-stat"><b>39 more fields</b>&nbsp;on the company itself, plus a full&nbsp;<b>27-field profile</b>&nbsp;for every contact it finds (title, email, phone, LinkedIn, seniority, department and more) — none of that exists until paid research runs.</p>
                 <p className="hw-about-note">What keeps updating, and what doesn&apos;t: revenue/ICP status keeps re-checking for free, same as any company. But this richer profile is a snapshot from when you ran it — it does not refresh itself; you&apos;d need to run paid research on that company again to update it.</p></div>
             </div>
             <div className="hw-about-grid">
@@ -291,7 +293,8 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                   first, and a PIN can gate all of them.</p></div>
               <div className="hw-about-card hw-about-card--sky"><span className="hw-icon-badge"><Ico name="search" /></span><h4>How it verifies</h4>
                 <p><b>Find</b> candidates → <b>Check</b> official sources → <b>Verify</b> with a Fact / Likely / Unverified / Unknown label and a
-                  source link → <b>Re-check</b> anything short of Verified on a schedule.</p></div>
+                  source link → <b>Re-check</b> anything short of Verified on a schedule.</p>
+                <p className="hw-about-stat">Adds no new fields — it labels every one already found with&nbsp;<b>1 of 4</b>&nbsp;confidence levels and re-checks revenue roughly every&nbsp;<b>180 days</b>, so nothing is ever just a guess.</p></div>
               <div className="hw-about-card hw-about-card--green"><span className="hw-icon-badge"><Ico name="target" /></span><h4>What &quot;ICP&quot; means</h4>
                 <p>Net revenue ≥ $250M and ≥ 100 employees by default, no stock listing required — set per region in <b>Setup → Define ICP</b>, the
                   one rule set everything else reads.</p></div>

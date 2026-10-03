@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.27";
+export const APP_VERSION = "3.28";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.28", date: "2026-10-03", notes: "Home page's Free/Paid research tiles now state exactly how many fields each one enriches, so it's obvious at a glance how much data free search adds versus paid, and what verification does and doesn't add.", changes: [
+      { what: "Added a field-count stat to each of the Free, Paid and Verification tiles on Home → About: Free enriches 19 fields per company (5 on discovery, 14 on the revenue check); Paid adds 39 more company fields plus a 27-field profile per contact; Verification adds no new fields, just a confidence label and a ~180-day re-check", where: "components/HomeWorkspace.tsx (.hw-about-stat), app/globals.css", why: "Requested — so anyone reading the Home page understands in concrete terms how much data free search enriches versus paid, not just a bullet list of field names" },
+    ] },
   { version: "3.27", date: "2026-10-03", notes: "Scheduled-runs bell: when a daily run covers more than one region, each region now shows as its own labelled section (new/checked/Verified counts, then its own company table) instead of one combined Region column — and the runbook now logs one notification per region instead of combining them, so this stays correct going forward.", changes: [
       { what: "Bell popup groups each day's entries by region into separate labelled sections (e.g. \"UAE — 5 new, 25 checked: 5 Verified\") each with its own company table, instead of one flat table with a Region column that showed every region joined together on every row", where: "components/EngineBell.tsx, app/globals.css (.bell-region)", why: "Reported with a screenshot — a multi-region daily run (UAE, KSA, Qatar, Kuwait) had logged as one combined entry, so every row showed \"UAE, KSA, Qatar, Kuwait\" instead of the one region it actually belonged to; grouping by region makes the per-region breakdown readable at a glance" },
       { what: "ENGINE.md now requires one log call per region (never a joined region string) and each run_details.json row to carry its own region, so a multi-region run always produces one clean entry per region", where: "ENGINE.md, scripts/engine_client.mjs", why: "Root cause of the mixed-region row: the runbook previously allowed logging the whole run as one combined entry with one comma-joined region; fixing the instruction (not just the display) stops it from recurring" },
