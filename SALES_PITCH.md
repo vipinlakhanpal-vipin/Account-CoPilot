@@ -25,8 +25,9 @@ Finding the right accounts is half the job; knowing how *ready* each one is for 
 
 ## Free vs. paid
 
-- **Free** — the daily run, and anything queued for it to pick up, run on the Claude plan. No Anthropic API key is touched.
-- **Paid** — on-demand deep research (Research Queue, Research more, Draft pitch, paid Refresh) uses the Anthropic API key. Each shows its estimated cost before you confirm, and a PIN can be required before anything is spent.
+- **Free** — the daily run, and anything queued for it to pick up, run on the Claude plan. No Anthropic API key is touched. Enriches **19 fields per company**: 5 on discovery (name, website, country, industry, HQ city) and 14 on the revenue check (status, listing, exchange, ticker, revenue figure, year, type, source + link, confidence, ICP fit, fit reason, employees, checked date).
+- **Paid** — on-demand deep research (Research Queue, Research more, Draft pitch, paid Refresh) uses the Anthropic API key. Each shows its estimated cost before you confirm, and a PIN can be required before anything is spent. Adds **39 more company fields** (ownership, ERP, S2P/Coupa/Ariba signal, buying triggers, opportunity type, board phone and more) plus a full **27-field profile for every contact** found (title, email, phone, LinkedIn, seniority, department and more) — none of that exists until paid research runs.
+- **Verification** runs on every company, free or paid, and adds no new fields of its own — it labels every field already found with one of 4 confidence levels (Fact / Likely / Unverified / Unknown) and re-checks revenue roughly every 180 days, so nothing is ever just a guess.
 
 ## The 5 tabs
 
