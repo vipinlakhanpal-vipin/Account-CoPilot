@@ -338,7 +338,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                         {activatedBy && (
                           <div className="hw-region-status-col">
                             <span className="hw-region-head">Status</span>
-                            <span className="hw-region-activated">Activated by {activatedBy}{activatedAt ? ` on ${fmtDateTime(activatedAt)}` : ""}</span>
+                            <span className="hw-region-activated">Activated by {activatedBy.split(" ")[0]}{activatedAt ? ` on ${fmtDateTime(activatedAt)}` : ""}</span>
                           </div>
                         )}
                       </div>

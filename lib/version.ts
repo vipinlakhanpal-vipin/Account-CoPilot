@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.33";
+export const APP_VERSION = "3.34";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,11 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.34", date: "2026-10-04", notes: "Fixed the Wizard's region row wrapping \"Activated by...\" onto its own second line; the name now shows as first name only (\"Vipin\" instead of \"Vipin Sharma\"); UAE's row now shows its activation status too, which it never had recorded before.", changes: [
+      { what: "Changed .hw-region-row from flex-wrap:wrap to nowrap, with overflow-x:auto on the row list and flex-shrink:0 on the name column, so the status note always stays on the same row as the fields instead of wrapping to a second line when the text is long", where: "app/globals.css (.hw-region-row, .hw-region-list, .hw-region-name-col)", why: "Reported with a screenshot — \"Activated by Vipin Sharma on 02/10/26 | 10:24 AM\" was long enough to overflow the row, and flex-wrap:wrap pushed it onto its own line; the fix keeps everything on one row and scrolls horizontally only if a row ever still doesn't fit" },
+      { what: "\"Activated by\" now shows first name only, in both the Setup Wizard region list and Define ICP's per-region status line", where: "components/HomeWorkspace.tsx, components/IcpEditor.tsx", why: "Requested — \"Vipin Sharma\" shortened to \"Vipin\" everywhere this note appears" },
+      { what: "Backfilled UAE's activated_by to \"Vipin Sharma\" in the ICP definition (activated_at left unset — the original date predates this field and isn't known)", where: "settings.icp_definition (one-time data fix, not a code change)", why: "UAE was activated before this tracking field existed, so its row showed no status at all while KSA/Qatar/Kuwait (activated together on 2026-10-02) all did; confirmed via the live data before fixing" },
+    ] },
   { version: "3.33", date: "2026-10-04", notes: "Home page's About section title now reads \"About Account CoPilot — Your Account Intelligence Partner\", reusing the app's existing tagline instead of a new, narrower phrase.", changes: [
       { what: "Updated the About section heading on Home", where: "components/HomeWorkspace.tsx", why: "Requested — \"Your ICP Partner\" was considered but narrows the pitch to just targeting; \"Account Intelligence Partner\" matches the TAGLINE already shown on the header and login page" },
     ] },

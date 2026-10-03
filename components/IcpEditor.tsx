@@ -194,7 +194,7 @@ export default function IcpEditor({ initial, counts, isSuper, allowed, roleLabel
           <h3>1 · Region & daily run <Uses items={["Daily run"]} /></h3>
           <p className="icp-explain">Controls only the daily run for <b>{region}</b>. Its rules below apply whatever you choose.</p>
           <StatusChoice region={region} value={r.status} accounts={counts[region] || 0} onChange={(v) => set((x) => { x.status = v; if (v === "active" && !x.engine.discover_per_day && !x.engine.verify_per_day) x.engine = { discover_per_day: 5, verify_per_day: 25 }; })} />
-          {r.status === "active" && r.activated_by && <p className="note">Activated by {r.activated_by}{r.activated_at ? ` on ${when(r.activated_at)}` : ""}.</p>}
+          {r.status === "active" && r.activated_by && <p className="note">Activated by {r.activated_by.split(" ")[0]}{r.activated_at ? ` on ${when(r.activated_at)}` : ""}.</p>}
           <div className={`icp-daily${r.status === "active" ? "" : " off"}`}>
             <div className="icp-row">
               <Num label="New companies to find per day" value={r.engine.discover_per_day} onChange={(v) => set((x) => { x.engine.discover_per_day = v || 0; })} help="Added to Accounts each morning (0–50)." />

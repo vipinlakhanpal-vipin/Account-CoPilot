@@ -629,11 +629,11 @@ aside.brief.contact{width:min(760px,100%);z-index:70}
 .hw-checkrow{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--text);margin-bottom:9px;cursor:pointer}
 .hw-checkrow input{accent-color:var(--teal);width:15px;height:15px;flex-shrink:0}
 /* One small "tile" per region, merging its checkbox with its own size rule — light-filled when checked. */
-.hw-region-list{display:flex;flex-direction:column;gap:7px;margin:10px 0}
-.hw-region-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:8px 12px;border-radius:10px;background:var(--surface-2);border:1px solid var(--line);transition:background .15s}
+.hw-region-list{display:flex;flex-direction:column;gap:7px;margin:10px 0;overflow-x:auto}
+.hw-region-row{display:flex;flex-wrap:nowrap;align-items:center;gap:8px 16px;padding:8px 12px;border-radius:10px;background:var(--surface-2);border:1px solid var(--line);transition:background .15s}
 .hw-region-row.on{background:var(--accent-soft);border-color:transparent}
 .hw-region-head{font:700 9px var(--body);letter-spacing:.03em;text-transform:uppercase;color:var(--muted)}
-.hw-region-name-col{display:flex;flex-direction:column;gap:2px;min-width:150px}
+.hw-region-name-col{display:flex;flex-direction:column;gap:2px;min-width:150px;flex-shrink:0}
 .hw-region-name{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;color:var(--text);cursor:pointer}
 .hw-region-name input{accent-color:var(--teal);width:14px;height:14px;flex-shrink:0}
 .hw-region-fields{display:flex;flex-wrap:wrap;gap:6px 10px;flex:0 0 auto;min-width:0}
