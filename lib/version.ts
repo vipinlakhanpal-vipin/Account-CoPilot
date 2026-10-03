@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.39";
+export const APP_VERSION = "3.40";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.40", date: "2026-10-04", notes: "Removed the About tab from Home — the page already lands on About by default, so the tab was redundant. Setup Wizard is now a single, standalone purple CTA card (icon, title, \"Set up in about 5 minutes\"), with a \"← Back to About\" link appearing once it's open.", changes: [
+      { what: "Replaced the two-pill About/Wizard toggle with one full-width Setup Wizard button (icon badge, title, subtitle, chevron) and a Back to About link shown only while the Wizard is open; removed the now-unused .hw-nav-toggle/.hw-nav-pill* CSS", where: "components/HomeWorkspace.tsx, app/globals.css (.hw-wizard-cta, .hw-back-link)", why: "Requested — Home already lands on About by default, so a dedicated About tab was redundant; removing it lets Setup Wizard stand out on its own as the one deliberate action on the page" },
+    ] },
   { version: "3.39", date: "2026-10-04", notes: "Fixed the bell's \"New\" count silently undercounting when a scheduled session spelled a company slightly differently between its two report lists (e.g. KSA's Oct 3 entry showed 24 new even though all 25 companies really were new — \"Ma'aden\" vs \"Maaden\").", changes: [
       { what: "Normalize company names (lowercase, strip punctuation) before matching a details row against the new_companies list, so a one-character spelling difference (an apostrophe, a space) no longer drops that row's \"New\" flag", where: "components/EngineBell.tsx (norm())", why: "Reported — KSA's logged entry had \"Saudi Arabian Mining Company (Ma'aden)\" in its details row but \"...(Maaden)\" (no apostrophe) in new_companies; exact-string matching silently failed on that one row, undercounting new-company totals by 1" },
       { what: "ENGINE.md now tells the scheduled session to spell each company identically across the new-company list and its run_details.json row", where: "ENGINE.md (step 3.2)", why: "Prevents this same mismatch recurring for future runs, not just papering over it client-side" },

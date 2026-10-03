@@ -218,18 +218,18 @@ export default function HomeWorkspace({ access }: { access: Access }) {
   return (
     <section className="panel hw">
       <nav className="hw-rail">
-        <div className="hw-nav-toggle" role="tablist">
-          <button type="button" className={`hw-nav-pill hw-nav-pill--teal${section === "about" ? " on" : ""}`} role="tab" aria-current={section === "about"} aria-selected={section === "about"} onClick={() => { setSection("about"); setExpanded(false); }}>
-            <span className="hw-nav-pill-icon"><Ico name="book" /></span>About</button>
-          <div className={`hw-nav-pill-row hw-nav-pill--purple${section === "wizard" ? " on" : ""}`}>
-            <button type="button" className="hw-nav-pill" role="tab" aria-current={section === "wizard"} aria-selected={section === "wizard"} onClick={toggleWizard} title="Setup Wizard">
-              <span className="hw-nav-pill-icon"><Ico name="wand" /></span>Wizard</button>
-            <button type="button" className="hw-chevron" aria-expanded={expanded} aria-label={expanded ? "Collapse the 6 steps" : "Expand the 6 steps"} onClick={toggleWizard}>
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" style={{ transition: "transform .18s ease", transform: expanded ? "none" : "rotate(-90deg)" }}>
-                <path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            </button>
-          </div>
-        </div>
+        <button type="button" className={`hw-wizard-cta${section === "wizard" ? " on" : ""}`} aria-expanded={expanded} onClick={toggleWizard}>
+          <span className="hw-wizard-cta-icon"><Ico name="wand" /></span>
+          <span className="hw-wizard-cta-text">
+            <span className="hw-wizard-cta-title">Setup Wizard</span>
+            <span className="hw-wizard-cta-sub">Set up in about 5 minutes</span>
+          </span>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" style={{ transition: "transform .18s ease", transform: expanded ? "none" : "rotate(-90deg)" }}>
+            <path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        </button>
+        {section === "wizard" && (
+          <button type="button" className="hw-back-link" onClick={() => { setSection("about"); setExpanded(false); }}>&larr; Back to About</button>
+        )}
         {expanded && (
           <ol className="hw-steps">
             {STEPS.map((s, i) => (
