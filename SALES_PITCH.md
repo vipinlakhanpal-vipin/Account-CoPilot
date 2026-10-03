@@ -15,6 +15,10 @@ Every company goes through the same research loop:
 3. **Verify** — labels every fact by how solid it is: Fact (official source), Likely (credible estimate), Unverified, or Unknown — always with the source link.
 4. **Re-check** — anything short of Fact is revisited on a schedule, so a growing company's status improves automatically over time.
 
+## Procurement & IT maturity — the other question people ask
+
+Finding the right accounts is half the job; knowing how *ready* each one is for a Source-to-Pay implementation is the other half. Every account's brief now opens straight into a **Procurement & IT maturity** rating — Advanced, Developing, Basic or Unknown — built from four things that actually predict readiness: whether they already run a competing S2P suite (Coupa, Ariba, GEP, Jaggaer, Ivalua, Zycus), their core ERP (SAP, Oracle, Microsoft…), the strength of any buying signal found, and their addressable spend. Each rating comes with a plain-English reason, not just a label. This is the question colleagues ask most ("is this account mature enough to pitch?") and now the app answers it before anyone has to dig.
+
 ## ICP — what decides targeting
 
 "ICP" (Ideal Customer Profile) is the set of rules that decides which companies are worth tracking: revenue floor, employee count, industries, and which departments to target for contacts. It's set per region — UAE, KSA, Qatar and the rest can each carry different thresholds. Change it once for a region, and the daily run, in-app research, and the account ranking all pick it up automatically — there's no separate copy to fall out of sync.
@@ -36,6 +40,6 @@ Every company goes through the same research loop:
 
 ## The 30-second pitch
 
-"It's an AI agent that runs itself every morning — finds companies that fit our target profile, checks their real financials against official sources, and never guesses. Everything it tells you has a source and a confidence label attached. You set the targeting rules once per region, and it just keeps working."
+"It's an AI agent that runs itself every morning — finds companies that fit our target profile, checks their real financials against official sources, and never guesses. For every account it also tells you how procurement-and-IT-mature they are and why, so you know who's actually ready for an S2P conversation. Everything it tells you has a source and a confidence label attached. You set the targeting rules once per region, and it just keeps working."
 
 **Where to start someone new:** Home tab → Setup Wizard. It walks through region, company size, targeting, data sources and daily pace in about five minutes, and shows exactly what to expect once it's running.
