@@ -680,6 +680,7 @@ aside.brief.contact{width:min(760px,100%);z-index:70}
 .bell-table .tag{font-size:9px;padding:0 5px;line-height:14px;margin:0}
 .bell-region{margin-top:6px;padding-top:6px;border-top:1px dashed var(--line)}.bell-region:first-of-type{margin-top:2px;padding-top:0;border-top:none}
 .bell-region-head{font-size:12px}.bell-region-head b{color:var(--teal)}
+.bell-region-time{font-size:10.5px}
 /* Suggestions button (header) */
 .suggest-pop{width:380px;height:480px}
 .suggest-form{border-bottom:1px solid var(--line);padding-bottom:10px;display:flex;flex-direction:column;gap:6px}

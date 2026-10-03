@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.36";
+export const APP_VERSION = "3.37";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.37", date: "2026-10-04", notes: "Scheduled-runs bell: each region's own section now shows its exact date and time, not just one shared timestamp for the whole day.", changes: [
+      { what: "Added each entry's own date+time next to its region name in the bell popup (e.g. \"KSA · 10/3/26, 6:32 AM\"), in addition to the existing day-level heading", where: "components/EngineBell.tsx (.bell-region-head), app/globals.css (.bell-region-time)", why: "Requested — so each region's activity is independently timestamped, not just grouped under one shared day header" },
+    ] },
   { version: "3.36", date: "2026-10-04", notes: "Fixed hovering the active About pill making its text unreadable (white text on a background the hover rule had lightened underneath it), darkened the purple accent further, and carried purple through to the \"Companies tracked\" / \"Active regions\" tiles on Home — one dark, one light.", changes: [
       { what: "Scoped the hover background rule on both nav pills to :not(.on), so hovering the already-active pill no longer overrides its background to a lighter tint while the active state's white text color stays — which made the text unreadable", where: "app/globals.css (.hw-nav-pill--teal, .hw-nav-pill-row)", why: "Reported — a CSS specificity bug: the :hover rule came after .on in source order with equal specificity, so on an active+hovered pill it won the background property but not color, producing white text on a near-white background" },
       { what: "Darkened --purple further (#6F5CE0 to #5847C9 dark mode, #4A3B96 to #3D2F82 light mode)", where: "app/globals.css" , why: "Requested — still read as too light next to teal" },

@@ -80,6 +80,7 @@ export default function EngineBell() {
                             return (
                               <div key={si} className="bell-region">
                                 <div className="bell-region-head"><b>{s.region}</b>
+                                  <span className="muted bell-region-time"> · {fmtDateTime(e.at)}</span>
                                   {s.rows.length > 0 && <span className="muted"> — {newCt} new, {s.rows.length} checked: {verifiedCt} Verified</span>}</div>
                                 {s.rows.length > 0 && (
                                   <table className="bell-table"><thead><tr><th>Company</th><th>New</th><th>Verified</th><th>Status</th><th>Revenue</th><th></th></tr></thead>
