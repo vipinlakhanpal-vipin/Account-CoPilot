@@ -96,8 +96,15 @@ For **each region in `active`** of `icp_rules.json` (default: UAE, find 5, verif
    "Al Shafar General Contracting (ASGC)" = "ASGC Construction LLC"), or the parent group of a company already in the app ("Khansaheb Group" when
    "Khansaheb Civil Engineering LLC" is in). Add them with `node scripts/engine_client.mjs add data/verification/new_companies.json`.
    If it prints SKIPPED lines (the app found a duplicate), find replacements and add again until the day's number is actually added.
+   **Never discover more than `2 × discover_per_day` new companies in one region in one day** (10 by default) — even if the queue below is short and
+   `verify_per_day` won't be reached as a result. A young region with few existing accounts grows by `discover_per_day` each day; padding discovery all
+   the way up to `verify_per_day` to manufacture a full day's work is exactly the 5x-over-quota deviation the user flagged on 2026-10-03 and asked to
+   have capped, not a target to hit.
 2. **Verify `verify_per_day` companies**: first the ones you just added (use the returned slugs), then the rest from
    `node scripts/engine_client.mjs queue <region> <verify_per_day minus new>`. Submit every ~10 with `node scripts/engine_client.mjs submit`.
+   **If the queue returns fewer than needed and the discovery cap above means you can't make up the difference, verify however many you actually
+   have and say so plainly in this region's own summary** (e.g. "queue nearly empty — found 10 new (the 2x cap), verified 13 total; short of the
+   25 target until more days of discovery build up the queue"). Never invent companies or exceed the cap to hit the verify number.
 3. **Watch list**: `node scripts/engine_client.mjs watch` writes the requested companies that are due for a weekly re-check (any region, until an official
    figure is found) to `data/verification/revenue_queue.json`; verify each and submit.
 4. Notify (step 3b) separately for EACH active region worked this run — one `log` call per region, each covering only that region's own companies and rows

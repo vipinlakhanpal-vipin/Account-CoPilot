@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.37";
+export const APP_VERSION = "3.38";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.38", date: "2026-10-04", notes: "Capped the daily engine's discovery padding: a region with a near-empty queue can no longer discover up to its full verify_per_day in new companies (the 5x-over-quota deviation flagged on 2026-10-03 for KSA and Qatar) — it's now capped at 2x discover_per_day, falling short of the verify target instead of overdiscovering to hit it.", changes: [
+      { what: "Added an explicit 2x discover_per_day ceiling on new-company discovery, and required the day's summary to say plainly when the verify target wasn't reached because of it, instead of silently padding discovery up to verify_per_day", where: "ENGINE.md (step 4, points 1 and 2)", why: "Requested, following the KSA/Qatar incident where a near-empty queue led to discovering 25 new companies in one day (5x the configured 5/day) with no cap stopping it; a young region now grows at a bounded, predictable pace instead of manufacturing a full day's work" },
+    ] },
   { version: "3.37", date: "2026-10-04", notes: "Scheduled-runs bell: each region's own section now shows its exact date and time, not just one shared timestamp for the whole day.", changes: [
       { what: "Added each entry's own date+time next to its region name in the bell popup (e.g. \"KSA · 10/3/26, 6:32 AM\"), in addition to the existing day-level heading", where: "components/EngineBell.tsx (.bell-region-head), app/globals.css (.bell-region-time)", why: "Requested — so each region's activity is independently timestamped, not just grouped under one shared day header" },
     ] },
