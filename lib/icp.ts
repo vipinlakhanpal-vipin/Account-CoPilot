@@ -112,7 +112,10 @@ const TRIGGER_RE: Record<string, RegExp> = {
   "Digital Transformation": /digital transformation|digitali[sz]ation|ai strategy|cloud migration/i,
   "Cost Optimization Program": /cost (optimi[sz]ation|reduction|efficiency)|savings programme|opex reduction/i,
   "Supplier Consolidation": /supplier consolidation|vendor consolidation|supplier rationali[sz]ation/i,
-  "Merger & Acquisition Activity": /acqui|merger|merged|takeover/i,
+  // "merged(?!\s+from)" excludes the app's own "Merged from "X"" bookkeeping note (scripts/merge_companies.mjs,
+  // written into account_notes whenever two duplicate records of the same company are combined) — that's never a
+  // real-world acquisition signal, just two database rows becoming one, and it was matching as a false positive.
+  "Merger & Acquisition Activity": /acqui|merger|merged(?!\s+from)|takeover/i,
   "IPO Preparation": /\bipo\b|intention to float|listing plan/i,
   "ESG Program": /\besg\b|sustainab|net zero|decarboni/i,
   "Supply Chain Modernization": /supply chain (moderni|transformation|digital)|warehouse automation|logistics transformation/i,

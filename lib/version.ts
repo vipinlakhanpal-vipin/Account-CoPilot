@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.43";
+export const APP_VERSION = "3.44";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.44", date: "2026-10-05", notes: "Fixed the \"Merger & Acquisition Activity\" trigger false-matching the app's own internal \"Merged from...\" duplicate-record note as if it were a real acquisition signal.", changes: [
+      { what: "Excluded the literal phrase \"merged from\" from the M&A trigger regex (merged(?!\\s+from)) — that exact phrase is only ever written by scripts/merge_companies.mjs into account_notes when two duplicate company records are combined, never a real-world signal", where: "lib/icp.ts (TRIGGER_RE)", why: "Found while reviewing the M&A trigger list for an email — 3 of 26 matches (ASGC Construction, Khansaheb Civil Engineering, Al Faraa Construction) were false positives from this bookkeeping text, not genuine acquisition activity; verified against live data that the fix drops exactly those 3 and keeps all 23 genuine ones" },
+    ] },
   { version: "3.43", date: "2026-10-05", notes: "First step of the Dashboard → Mission Control consolidation: Reports is renamed Mission Control, and Scheduled run history moves there from Settings (same data as the bell, now a standing table instead of a popup). Settings links out to it instead of duplicating it.", changes: [
       { what: "Extracted the Scheduled run history table into its own component (ScheduledRunHistory, self-fetching /api/engine?only=log) and render it in Dashboard's Reports tab below the saved-filter table; removed it from EngineSettings, replaced with a one-line link to its new home", where: "components/ScheduledRunHistory.tsx (new), components/EngineSettings.tsx, components/CoPilotApp.tsx (reports tab)", why: "Point 2 of the requested consolidation: Settings' free job queue and Dashboard's paid Discover are the same underlying action split across two places; moving the read-only run history first is the lowest-risk slice before merging the two search actions themselves" },
       { what: "Renamed the \"Reports\" nav item and page title to \"Mission Control\" (URL still /?tab=reports, kept stable so existing bookmarks/links don't break)", where: "components/Header.tsx, components/CoPilotApp.tsx (HERO)", why: "User-chosen name for the expanded hub, picked from a few options" },
