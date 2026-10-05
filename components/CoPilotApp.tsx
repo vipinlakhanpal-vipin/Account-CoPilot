@@ -178,16 +178,21 @@ const REGION_METRICS: { name: string; color: string; pred: (a: Row) => boolean }
 ];
 function RegionCompareChart({ accounts, onDrill }: { accounts: Row[]; onDrill: (title: string, rows: Row[]) => void }) {
   const [orient, setOrient] = useState<"h" | "v">("h");
+  const [selected, setSelected] = useState<string[] | null>(null); // null = not yet touched, defaults to "every region"
   const byRegion = new Map<string, Row[]>();
   for (const a of accounts) { const r = regionOf(a.country); (byRegion.get(r) || byRegion.set(r, []).get(r)!).push(a); }
-  const regionData = [...byRegion.entries()].map(([region, rows]) => ({
+  const allRegionData = [...byRegion.entries()].map(([region, rows]) => ({
     region, total: rows.length,
     metrics: REGION_METRICS.map((m) => { const mrows = rows.filter(m.pred); return { ...m, rows: mrows, count: mrows.length }; }),
   })).filter((r) => r.total > 0).sort((a, b) => b.total - a.total);
+  if (allRegionData.length === 0) return null;
+  const active = selected ?? allRegionData.map((r) => r.region);
+  const toggleRegion = (region: string) => setSelected((cur) => { const base = cur ?? allRegionData.map((r) => r.region);
+    return base.includes(region) ? base.filter((r) => r !== region) : [...base, region]; });
+  const regionData = allRegionData.filter((r) => active.includes(r.region));
   const max = Math.max(1, ...regionData.flatMap((r) => r.metrics.map((m) => m.count)));
-  if (regionData.length === 0) return null;
   return (
-    <div className="panel region-compare" style={{ marginBottom: 16 }}>
+    <div className="panel region-compare" style={{ marginTop: 16 }}>
       <div className="region-compare-head">
         <h2>Regions at a glance</h2>
         <div className="chart-mode-toggle" role="group" aria-label="Chart orientation">
@@ -197,39 +202,42 @@ function RegionCompareChart({ accounts, onDrill }: { accounts: Row[]; onDrill: (
           </button>
         </div>
       </div>
+      <div className="region-compare-filter" role="group" aria-label="Regions to show">
+        {allRegionData.map((r) => (
+          <label key={r.region} className="region-compare-check">
+            <input type="checkbox" checked={active.includes(r.region)} onChange={() => toggleRegion(r.region)} />
+            {r.region} <span className="muted">({r.total})</span>
+          </label>
+        ))}
+      </div>
       <div className="region-compare-legend">{REGION_METRICS.map((m) => <span key={m.name} className="region-compare-legend-item"><span className="sw" style={{ background: m.color }} />{m.name}</span>)}</div>
-      {orient === "h" ? (
-        <div className="region-compare-h">
+      {regionData.length === 0 ? <p className="note">Tick a region above to see its chart.</p> : (
+        <div className={`region-compare-grid ${orient}`}>
           {regionData.map((r) => (
-            <div key={r.region} className="region-compare-group">
+            <div key={r.region} className="region-compare-card">
               <div className="region-compare-label">{r.region} <span className="muted">— {r.total} accounts</span></div>
-              <div className="bars">
-                {r.metrics.map((m) => (
-                  <button type="button" key={m.name} className="bar sigbar region-compare-row" style={{ "--c": m.color } as React.CSSProperties}
-                    disabled={m.count === 0} title={`${m.name} — ${r.region}: ${m.count}`} onClick={() => onDrill(`${m.name} — ${r.region}`, m.rows)}>
-                    <span className="lab">{m.name}</span>
-                    <span className="trk"><span className="fill" style={{ width: `${(m.count / max) * 100}%` }} /></span>
-                    <span className="n">{m.count}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="region-compare-v">
-          {regionData.map((r) => (
-            <div key={r.region} className="region-compare-vgroup">
-              <div className="region-compare-vbars">
-                {r.metrics.map((m) => (
-                  <button type="button" key={m.name} className="region-compare-vbar" disabled={m.count === 0}
-                    title={`${m.name} — ${r.region}: ${m.count}`} onClick={() => onDrill(`${m.name} — ${r.region}`, m.rows)}>
-                    <span className="region-compare-vn">{m.count}</span>
-                    <span className="region-compare-vfill" style={{ height: `${(m.count / max) * 100}%`, background: m.color }} />
-                  </button>
-                ))}
-              </div>
-              <div className="region-compare-vlabel">{r.region}<span className="muted"> ({r.total})</span></div>
+              {orient === "h" ? (
+                <div className="bars">
+                  {r.metrics.map((m) => (
+                    <button type="button" key={m.name} className="bar sigbar region-compare-row" style={{ "--c": m.color } as React.CSSProperties}
+                      disabled={m.count === 0} title={`${m.name} — ${r.region}: ${m.count}`} onClick={() => onDrill(`${m.name} — ${r.region}`, m.rows)}>
+                      <span className="lab">{m.name}</span>
+                      <span className="trk"><span className="fill" style={{ width: `${(m.count / max) * 100}%` }} /></span>
+                      <span className="n">{m.count}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="region-compare-vbars">
+                  {r.metrics.map((m) => (
+                    <button type="button" key={m.name} className="region-compare-vbar" disabled={m.count === 0}
+                      title={`${m.name} — ${r.region}: ${m.count}`} onClick={() => onDrill(`${m.name} — ${r.region}`, m.rows)}>
+                      <span className="region-compare-vn">{m.count}</span>
+                      <span className="region-compare-vfill" style={{ height: `${(m.count / max) * 100}%`, background: m.color }} />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -681,11 +689,11 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
 
     view = (
       <>
-        <RegionCompareChart accounts={data.accounts} onDrill={(title, rows) => setDrill({ title, kind: "accounts", rows })} />
         <div className="kpis">{kpis.map(([l, rows, kind], i) => (
           <button type="button" key={l} className={`kpi c${(i % 8) + 1}`} onClick={() => setDrill({ title: l, kind, rows })} title={`Show the ${rows.length.toLocaleString()} records`}>
             <small>{l}</small><b>{rows.length.toLocaleString()}</b><span className="kpi-go" aria-hidden="true">View →</span>
           </button>))}</div>
+        <RegionCompareChart accounts={data.accounts} onDrill={(title, rows) => setDrill({ title, kind: "accounts", rows })} />
         <div className="panel" style={{ marginTop: 16 }}>
           <h2>Existing Customers — Expansion &amp; Services</h2>
           <p className="note">Separate from ICP status above (that's for prospects still being evaluated) — these already run an S2P platform, so the question is what to sell them next, not whether to pursue them.</p>

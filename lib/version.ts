@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.41";
+export const APP_VERSION = "3.42";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.42", date: "2026-10-05", notes: "Regions at a glance chart now sits below the KPI tiles (not above), with a tick-box region filter so you choose which regions show — ticking 2 shows 2 side by side, 4 shows 4 side by side — and smaller text throughout so it reads as compact, not a big block.", changes: [
+      { what: "Moved RegionCompareChart below the KPI tiles; replaced the single long list of region groups with a responsive grid of per-region cards (checkbox-filterable, defaults to all regions with data) and reduced font sizes across labels, bars and the legend", where: "components/CoPilotApp.tsx (RegionCompareChart), app/globals.css (.region-compare-filter, .region-compare-grid, .region-compare-card)", why: "Reported — the chart appeared above the tiles and read as one big block; moving it below, adding a region tick-box filter, and arranging ticked regions as side-by-side cards (wrapping to a new row only once more are ticked than fit) fixes both" },
+    ] },
   { version: "3.41", date: "2026-10-05", notes: "Dashboard: added a \"Regions at a glance\" chart comparing every region in one place (ICP Verified, ICP Likely, Strong S2P signal, Coupa customers, Ariba customers), with a horizontal/vertical toggle, instead of needing to switch country tabs to compare regions one at a time.", changes: [
       { what: "Added RegionCompareChart: grouped bars (one group per region with accounts) for 5 metrics, orientation toggle (horizontal default, vertical available), each bar clickable to drill into those exact accounts, consistent with the existing KPI tiles", where: "components/CoPilotApp.tsx (RegionCompareChart, REGION_METRICS), app/globals.css (.region-compare-*)", why: "Requested — compare all regions' ICP Verified/Likely, signal strength, and existing Coupa/Ariba customer counts in one chart instead of multiple separate ones crowding the Dashboard" },
     ] },
