@@ -207,6 +207,26 @@ h2{font-family:var(--display);font-weight:600;font-size:16px;letter-spacing:.06e
 .bar.top .fill{background:linear-gradient(90deg,var(--teal-2),var(--teal))}
 .bar.sigbar .fill{background:linear-gradient(90deg,color-mix(in srgb, var(--c) 70%, var(--bg)),var(--c));box-shadow:0 0 10px color-mix(in srgb, var(--c) 40%, transparent)}
 .bar.sigbar .n{color:var(--c)}
+.region-compare-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.region-compare-head h2{margin:0}
+.region-compare-legend{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px;font-size:11px;color:var(--muted)}
+.region-compare-legend-item{display:flex;align-items:center;gap:5px}
+.region-compare-legend-item .sw{width:9px;height:9px;border-radius:2px;display:inline-block;flex-shrink:0}
+.region-compare-h{display:flex;flex-direction:column;gap:18px}
+.region-compare-group{display:flex;flex-direction:column;gap:5px}
+.region-compare-label{font:700 12.5px var(--body);color:var(--text-strong)}
+.region-compare-row{background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;text-align:left;width:100%;cursor:pointer}
+.region-compare-row:disabled{cursor:default;opacity:.35}
+.region-compare-row:hover:not(:disabled) .fill{filter:brightness(1.15)}
+.region-compare-v{display:flex;gap:26px;align-items:flex-end;overflow-x:auto;padding:4px 2px 2px}
+.region-compare-vgroup{display:flex;flex-direction:column;align-items:center;gap:8px;flex-shrink:0}
+.region-compare-vbars{display:flex;align-items:flex-end;gap:5px;height:130px}
+.region-compare-vbar{all:unset;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;cursor:pointer;width:18px;height:100%}
+.region-compare-vbar:disabled{cursor:default;opacity:.35}
+.region-compare-vbar:hover:not(:disabled) .region-compare-vfill{filter:brightness(1.15)}
+.region-compare-vn{font-family:var(--mono);font-size:9.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.region-compare-vfill{display:block;width:18px;border-radius:3px 3px 0 0;min-height:2px;transition:height .2s}
+.region-compare-vlabel{font:700 11.5px var(--body);color:var(--text-strong);white-space:nowrap}
 .bar .n{font-family:var(--mono);font-size:9.5px;text-align:right;font-variant-numeric:tabular-nums}
 .pie-wrap{display:flex;align-items:center;gap:16px}
 .pie{width:84px;height:84px;border-radius:50%;flex:none}

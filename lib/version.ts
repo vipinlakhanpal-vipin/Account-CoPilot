@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.40";
+export const APP_VERSION = "3.41";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.41", date: "2026-10-05", notes: "Dashboard: added a \"Regions at a glance\" chart comparing every region in one place (ICP Verified, ICP Likely, Strong S2P signal, Coupa customers, Ariba customers), with a horizontal/vertical toggle, instead of needing to switch country tabs to compare regions one at a time.", changes: [
+      { what: "Added RegionCompareChart: grouped bars (one group per region with accounts) for 5 metrics, orientation toggle (horizontal default, vertical available), each bar clickable to drill into those exact accounts, consistent with the existing KPI tiles", where: "components/CoPilotApp.tsx (RegionCompareChart, REGION_METRICS), app/globals.css (.region-compare-*)", why: "Requested — compare all regions' ICP Verified/Likely, signal strength, and existing Coupa/Ariba customer counts in one chart instead of multiple separate ones crowding the Dashboard" },
+    ] },
   { version: "3.40", date: "2026-10-04", notes: "Removed the About tab from Home — the page already lands on About by default, so the tab was redundant. Setup Wizard is now a single, standalone purple CTA card (icon, title, \"Set up in about 5 minutes\"), with a \"← Back to About\" link appearing once it's open.", changes: [
       { what: "Replaced the two-pill About/Wizard toggle with one full-width Setup Wizard button (icon badge, title, subtitle, chevron) and a Back to About link shown only while the Wizard is open; removed the now-unused .hw-nav-toggle/.hw-nav-pill* CSS", where: "components/HomeWorkspace.tsx, app/globals.css (.hw-wizard-cta, .hw-back-link)", why: "Requested — Home already lands on About by default, so a dedicated About tab was redundant; removing it lets Setup Wizard stand out on its own as the one deliberate action on the page" },
     ] },
