@@ -18,7 +18,7 @@ import { APP_VERSION, TAGLINE, RELEASES, RELEASE_AUTHOR } from "@/lib/version";
 // and has no other siblings worth presenting it alongside, unlike Accounts' 5 genuinely distinct pages.
 const GROUPS: { label: string; items: [string, string][]; hideLanding?: boolean }[] = [
   { label: "Home", items: [["/home", "Home"]] },
-  { label: "Dashboard", items: [["/", "Dashboard"], ["/?tab=reports", "Reports"]], hideLanding: true },
+  { label: "Dashboard", items: [["/", "Dashboard"], ["/?tab=reports", "Mission Control"]], hideLanding: true },
   { label: "Accounts", items: [["/?tab=accounts", "Accounts"], ["/?tab=pipeline", "Pipeline"], ["/?tab=stakeholders", "Stakeholders"], ["/?tab=signals", "S2P Signals"], ["/?tab=erp", "ERP & Apps"]] },
   { label: "Data", items: [["/?tab=sources", "Sources"], ["/?tab=conflicts", "Conflicts"], ["/research", "Research Queue"]] },
   { label: "Setup", items: [["/icp", "Define ICP"], ["/settings", "Settings"], ["/guide", "Learn Me"], ["/team", "Team"]] },
@@ -33,7 +33,7 @@ const HistoryIcon = () => (
 );
 
 const TAB_LABEL: Record<string, string> = { pipeline: "Pipeline", accounts: "Accounts", stakeholders: "Stakeholders", signals: "S2P Signals", erp: "ERP & Apps",
-  conflicts: "Conflicts", sources: "Sources", reports: "Reports" };
+  conflicts: "Conflicts", sources: "Sources", reports: "Mission Control" };
 
 const PAGE_LABEL: Record<string, string> = { "/research": "Research Queue", "/settings": "Settings", "/guide": "Learn Me", "/icp": "Define ICP", "/team": "Team", "/home": "Home" };
 

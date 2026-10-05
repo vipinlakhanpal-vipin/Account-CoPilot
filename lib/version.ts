@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.42";
+export const APP_VERSION = "3.43";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.43", date: "2026-10-05", notes: "First step of the Dashboard → Mission Control consolidation: Reports is renamed Mission Control, and Scheduled run history moves there from Settings (same data as the bell, now a standing table instead of a popup). Settings links out to it instead of duplicating it.", changes: [
+      { what: "Extracted the Scheduled run history table into its own component (ScheduledRunHistory, self-fetching /api/engine?only=log) and render it in Dashboard's Reports tab below the saved-filter table; removed it from EngineSettings, replaced with a one-line link to its new home", where: "components/ScheduledRunHistory.tsx (new), components/EngineSettings.tsx, components/CoPilotApp.tsx (reports tab)", why: "Point 2 of the requested consolidation: Settings' free job queue and Dashboard's paid Discover are the same underlying action split across two places; moving the read-only run history first is the lowest-risk slice before merging the two search actions themselves" },
+      { what: "Renamed the \"Reports\" nav item and page title to \"Mission Control\" (URL still /?tab=reports, kept stable so existing bookmarks/links don't break)", where: "components/Header.tsx, components/CoPilotApp.tsx (HERO)", why: "User-chosen name for the expanded hub, picked from a few options" },
+    ] },
   { version: "3.42", date: "2026-10-05", notes: "Regions at a glance chart now sits below the KPI tiles (not above), with a tick-box region filter so you choose which regions show — ticking 2 shows 2 side by side, 4 shows 4 side by side — and smaller text throughout so it reads as compact, not a big block.", changes: [
       { what: "Moved RegionCompareChart below the KPI tiles; replaced the single long list of region groups with a responsive grid of per-region cards (checkbox-filterable, defaults to all regions with data) and reduced font sizes across labels, bars and the legend", where: "components/CoPilotApp.tsx (RegionCompareChart), app/globals.css (.region-compare-filter, .region-compare-grid, .region-compare-card)", why: "Reported — the chart appeared above the tiles and read as one big block; moving it below, adding a region tick-box filter, and arranging ticked regions as side-by-side cards (wrapping to a new row only once more are ticked than fit) fixes both" },
     ] },

@@ -21,10 +21,11 @@ import { supabaseBrowser } from "@/lib/supabase/browser";
 import { withDefaults, icpMatch, opportunity, coupaFit, companyPasses, contactMatches, estimateSpend, whySelected, recommendedActions, revenueOf, procurementMaturity,
   type Criteria, type Score } from "@/lib/icp";
 import SavedReportsList, { SaveReportButton, type SavedReport } from "@/components/SavedReports";
+import ScheduledRunHistory from "@/components/ScheduledRunHistory";
 
 const HERO: Record<string, [string, string]> = {
   dashboard: ["Dashboard", "A live snapshot of UAE target accounts, S2P signals, ERP landscape and decision makers."],
-  reports: ["Reports", "Search or filter, then see a ready-to-work contact list — who to call or email, and the account context behind each one. Save it under a name to revisit later."],
+  reports: ["Mission Control", "Search or filter, then see a ready-to-work contact list — who to call or email, and the account context behind each one. Save it under a name to revisit later. Below it: the engine's own scheduled run history."],
   accounts: ["Accounts", "Every account with ICP status, S2P platform and signal strength. Select one to open its brief."],
   stakeholders: ["Stakeholders", "Company and contact details for campaign planning. Emails are never pattern-guessed."],
   signals: ["S2P Signals", "Evidence-based Source-to-Pay, Coupa and SAP Ariba signals, strongest first."],
@@ -662,6 +663,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
           { h: "Country", field: "r_country", cell: (p) => p.r_country }, { h: "ICP Status", field: "r_icp", cell: (p) => p.r_icp }, { h: "Revenue", field: "r_revenue", cell: (p) => p.r_revenue },
           { h: "Employees", field: "r_employees", cell: (p) => p.r_employees }, { h: "S2P Signal", field: "r_signal", cell: (p) => <Pill s={p.r_signal} /> }, { h: "ERP", field: "r_erp", cell: (p) => p.r_erp }]}
         onRow={(p) => setContact(p.best_id || p.id)} />
+      <ScheduledRunHistory />
     </>;
   } else {
     const top = A.filter((a) => sigRank(a.s2p_signal_level) <= 1 && !/coupa/i.test(str(a.existing_s2p_product))).sort((a, b) => sigRank(a.s2p_signal_level) - sigRank(b.s2p_signal_level));
