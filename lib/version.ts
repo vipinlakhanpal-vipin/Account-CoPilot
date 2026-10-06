@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.47";
+export const APP_VERSION = "3.48";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.48", date: "2026-10-06", notes: "Pipeline and Accounts' \"+ Custom filter\" can now search ICP Match, Opportunity, Coupa Fit and (Pipeline only) Rank by number, e.g. \"ICP Match % ≥ 90\" — these were computed scores never attached to each row, so the filter builder couldn't see them to offer as a field.", changes: [
+      { what: "Attached icp_match_pct, opportunity_pct, coupa_fit_pct (and rank_pct on Pipeline) as real properties on each row passed to FilterTable, and gave the matching ICP match/Opportunity/Coupa fit/Rank columns a field so the custom-filter builder (which only offers columns with a field) picks them up, with friendly labels (\"ICP Match %\" etc.)", where: "components/CoPilotApp.tsx (Accounts, Pipeline), components/CustomFilters.tsx (LABEL)", why: "Reported — wanted to filter Pipeline for ICP Match ≥ 90% and couldn't, since these scores lived only in a separate scores map, never as a field on the row itself; the existing ≥/≤ custom-filter operators already supported this, they just had nothing to point at" },
+    ] },
   { version: "3.47", date: "2026-10-06", notes: "Entity field now matches the real ICP distinction: Regional HQ, Branch (of another Middle East company), or Foreign Branch (of a company headquartered outside the Middle East) — not just a flat HQ-vs-Branch split. Needs a second small database migration (see below).", changes: [
       { what: "Split \"Branch\" into \"Branch\" (regional) and \"Foreign Branch\" everywhere entity_type is defined, written or displayed — the worker API, paid research schema and prompt, ENGINE.md's discover/company instructions, the InfoTip, and the bell/Accounts/Pipeline displays (bell shows it as \"Foreign\")", where: "supabase/migrations/0006_entity_type_foreign_branch.sql, app/api/engine/worker/route.ts, app/api/engine/route.ts, lib/research/schema.ts, lib/research/prompts.ts, ENGINE.md, components/InfoTip.tsx, components/EngineBell.tsx, components/ScheduledRunHistory.tsx", why: "Corrected — the original 2-value field (v3.46) collapsed two meaningfully different signals (a branch of a Gulf neighbor vs. a branch of a multinational HQ'd outside the region) into one \"Branch\" bucket; the real ICP criteria always distinguished them" },
     ] },

@@ -493,7 +493,8 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
   let view: React.ReactNode = null;
   if (tab === "accounts") {
     view = <FilterTable unit="companies" title="Accounts" empty={notFound} note="ICP = net revenue ≥ $250M and 100+ employees (stock listing not required). ✓ Verified: confirmed from an official source · ● Likely: your data / Seamless say ≥ $250M, not yet confirmed · ! Needs check: sources disagree about $250M · ? Unknown: no revenue figure yet · ✕ Not ICP: below $250M. Hover a status for the reason; select a row to open the account brief."
-      rows={[...A].sort((a, b) => icpRank(a.icp_status) - icpRank(b.icp_status) || sigRank(a.s2p_signal_level) - sigRank(b.s2p_signal_level) || (bestRevenue(b).v || 0) - (bestRevenue(a).v || 0))}
+      rows={[...A].sort((a, b) => icpRank(a.icp_status) - icpRank(b.icp_status) || sigRank(a.s2p_signal_level) - sigRank(b.s2p_signal_level) || (bestRevenue(b).v || 0) - (bestRevenue(a).v || 0))
+        .map((a) => ({ ...a, icp_match_pct: scores[a.id]?.m.total ?? null, opportunity_pct: scores[a.id]?.o.total ?? null, coupa_fit_pct: scores[a.id]?.f.total ?? null }))}
       search={(a) => [a.company_name, a.industry, a.erp, a.existing_s2p_product, a.s2p_strong_signals].join(" ")}
       filters={[{ label: "ICP status", get: (a) => a.icp_status }, { label: "Source", get: (a) => simpleOrigin(a), tip: "source" },
         { label: "Signal", get: (a) => a.s2p_signal_level }, { label: "S2P Platform", get: (a) => a.existing_s2p_product }, { label: "Industry", get: (a) => a.industry },
@@ -505,9 +506,9 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
         { h: "S2P Platform", field: "existing_s2p_product", cell: (a) => a.existing_s2p_product || <span className="muted">—</span> },
         { h: "Revenue", field: "revenue_usd_m", cell: (a) => { const r = bestRevenue(a); return r.v ? <><span className="mono">{usd(r.v)}</span>{r.src && <div className="rev-src">{r.src}</div>}</> : <span className="muted">—</span>; } },
         { h: "ICP status", tip: "icpStatus", field: "icp_status", cell: (a) => <><IcpTag s={a.icp_status} why={a.icp_fit_reason} /><div className="muted mono rec-since">since {statusSince(a) || "—"}</div></> },
-        { h: "ICP match", tip: "icpMatch", cell: (a) => scores[a.id] && <ScoreChip s={scores[a.id].m} label="ICP Match" /> },
-        { h: "Opportunity", tip: "opportunity", cell: (a) => scores[a.id] && <ScoreChip s={scores[a.id].o} label="Opportunity" /> },
-        { h: "Coupa fit", tip: "coupaFit", cell: (a) => scores[a.id] && <ScoreChip s={scores[a.id].f} label="Coupa Fit" /> },
+        { h: "ICP match", tip: "icpMatch", field: "icp_match_pct", cell: (a) => scores[a.id] && <ScoreChip s={scores[a.id].m} label="ICP Match" /> },
+        { h: "Opportunity", tip: "opportunity", field: "opportunity_pct", cell: (a) => scores[a.id] && <ScoreChip s={scores[a.id].o} label="Opportunity" /> },
+        { h: "Coupa fit", tip: "coupaFit", field: "coupa_fit_pct", cell: (a) => scores[a.id] && <ScoreChip s={scores[a.id].f} label="Coupa Fit" /> },
         { h: "Updated", field: "updated_at", cell: (a) => <Dates a={a} /> }, { h: "Lists", field: "lists", cell: (a) => <span className="muted">{(a.lists || []).join(", ")}</span> },
         { h: "Signal", field: "s2p_signal_level", cell: (a) => <Pill s={a.s2p_signal_level} /> },
         { h: "S2P status", field: "s2p_platform_status", cell: (a) => a.s2p_platform_status }, { h: "ERP", field: "erp", cell: (a) => a.erp }, { h: "Contacts", cell: (a) => <span className="mono">{(byCo[a.id] || []).length}</span> }]}
@@ -529,12 +530,13 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
         </div>
         <p className="note">Every % = points earned ÷ points available. {pipe.exclude_not_icp ? "Not ICP accounts are left out. " : ""}Weights are set per region in Setup → Define ICP. Hover a score for its breakdown, click <InfoTip k="percent" w={pipe} /> for more, or read <a href="/guide#pipeline">Setup → Learn Me → Pipeline</a>.</p>
       </>}
-      rows={ranked} search={(a) => [a.company_name, a.industry, a.erp, a.existing_s2p_product].join(" ")}
+      rows={ranked.map((a) => ({ ...a, icp_match_pct: scores[a.id].m.total, opportunity_pct: scores[a.id].o.total, coupa_fit_pct: scores[a.id].f.total, rank_pct: scores[a.id].rank }))}
+      search={(a) => [a.company_name, a.industry, a.erp, a.existing_s2p_product].join(" ")}
       filters={[{ label: "ICP status", get: (a) => a.icp_status }, { label: "S2P", get: (a) => a.existing_s2p_product }, { label: "Industry", get: (a) => a.industry },
         { label: "Source", get: (a) => simpleOrigin(a), tip: "source" }, { label: "Exchange", get: (a) => a.exchange, tip: "exchange" }, { label: "Entity", get: (a) => a.entity_type || "Unknown", tip: "entityType" }, { label: "Country", get: (a) => a.country }]}
-      cols={[{ h: "Rank", tip: "rank", cell: (a) => <b className="mono" title={`Rank ${scores[a.id].rank}% = ${pipe.w_match}% of ICP Match + ${pipe.w_opportunity}% of Opportunity + ${pipe.w_fit}% of Coupa Fit`}>{scores[a.id].rank}%</b> }, { h: "", cls: "logo-cell", cell: (a) => <CompanyLogo a={a} /> }, { h: "Company", cls: "co-cell", field: "company_name", cell: (a) => <><b>{a.company_name}</b><div className="muted clamp2" title={`${a.industry} · ${a.country}`}>{a.industry} · {a.country}</div></> },
-        { h: "ICP match", tip: "icpMatch", cell: (a) => <ScoreChip s={scores[a.id].m} label="ICP Match" /> }, { h: "Opportunity", tip: "opportunity", cell: (a) => <ScoreChip s={scores[a.id].o} label="Opportunity" /> },
-        { h: "Coupa fit", tip: "coupaFit", cell: (a) => <ScoreChip s={scores[a.id].f} label="Coupa Fit" /> }, { h: "ICP status", tip: "icpStatus", field: "icp_status", cell: (a) => <IcpTag s={a.icp_status} why={a.icp_fit_reason} /> },
+      cols={[{ h: "Rank", tip: "rank", field: "rank_pct", cell: (a) => <b className="mono" title={`Rank ${scores[a.id].rank}% = ${pipe.w_match}% of ICP Match + ${pipe.w_opportunity}% of Opportunity + ${pipe.w_fit}% of Coupa Fit`}>{scores[a.id].rank}%</b> }, { h: "", cls: "logo-cell", cell: (a) => <CompanyLogo a={a} /> }, { h: "Company", cls: "co-cell", field: "company_name", cell: (a) => <><b>{a.company_name}</b><div className="muted clamp2" title={`${a.industry} · ${a.country}`}>{a.industry} · {a.country}</div></> },
+        { h: "ICP match", tip: "icpMatch", field: "icp_match_pct", cell: (a) => <ScoreChip s={scores[a.id].m} label="ICP Match" /> }, { h: "Opportunity", tip: "opportunity", field: "opportunity_pct", cell: (a) => <ScoreChip s={scores[a.id].o} label="Opportunity" /> },
+        { h: "Coupa fit", tip: "coupaFit", field: "coupa_fit_pct", cell: (a) => <ScoreChip s={scores[a.id].f} label="Coupa Fit" /> }, { h: "ICP status", tip: "icpStatus", field: "icp_status", cell: (a) => <IcpTag s={a.icp_status} why={a.icp_fit_reason} /> },
         { h: "Revenue", field: "revenue_usd_m", cell: (a) => <span className="mono">{usd(bestRevenue(a).v)}</span> }, { h: "Existing S2P", field: "existing_s2p_product", cell: (a) => a.existing_s2p_product },
         { h: "Exchange", field: "exchange", cell: (a) => a.exchange ? <span className="mono">{a.exchange} {a.ticker}</span> : <span className="muted">—</span> },
         { h: "Entity", field: "entity_type", tip: "entityType", cell: (a) => (a.entity_type && a.entity_type !== "Unknown") ? a.entity_type : <span className="muted">—</span> },

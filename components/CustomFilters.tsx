@@ -27,6 +27,7 @@ export const ACCOUNT_FIELDS = [
 const HIDE = /^(id|company_id|run_id|entity_id|profile|__|person_key|best_id|rows|sources_json)$|_id$|^__/;
 const LABEL: Record<string, string> = {
   company_name: "Company", company: "Company", full_name: "Full name", title_verbatim: "Title", icp_status: "ICP status", icp_fit_reason: "ICP reason",
+  icp_match_pct: "ICP Match %", opportunity_pct: "Opportunity %", coupa_fit_pct: "Coupa Fit %", rank_pct: "Pipeline Rank %", entity_type: "Entity",
   revenue_usd_m: "Revenue (USD M, your data)", verified_revenue_usd_m: "Verified revenue (USD M)", verified_revenue_status: "Revenue evidence",
   s2p_signal_level: "S2P signal", existing_s2p_product: "Existing S2P", s2p_platform_status: "S2P status", erp: "ERP", erp_status: "ERP status",
   erp_evidence: "ERP evidence", hq_city: "HQ city",
