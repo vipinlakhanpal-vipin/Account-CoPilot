@@ -663,21 +663,23 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
           <button type="button" aria-pressed={missionView === "runs"} onClick={() => setMissionView("runs")}>Scheduled runs</button>
         </div>
       </div>
-      {missionView === "saved" && <>
+      {missionView === "saved" && <div className="mission-row">
+        <div className="mission-main">
+          <FilterTable key={reportKey} unit="contacts" title="Search / Filter results" note="One row per contact, with the account context alongside — a ready list to call or email. Narrow it with the search box, dropdowns or + Custom filter below, or the Discovery panel on the left — saving a filter remembers whatever you've set, however you set it."
+            toggleExtra={<SaveReportButton criteria={criteria} tableState={reportTableState} onSaved={setSavedReportItems} />}
+            rows={reportRows} initial={reportSeed} onState={setReportTableState}
+            search={(p) => [p.company, p.full_name, p.title_verbatim, p.email, p.r_country].join(" ")}
+            filters={[{ label: "ICP status", get: (p) => p.r_icp }, { label: "Country", get: (p) => p.r_country }, { label: "S2P signal", get: (p) => p.r_signal }]}
+            cols={[{ h: "Company", field: "company", cell: (p) => <b>{p.company}</b> }, { h: "Contact Name", field: "full_name", cell: (p) => p.full_name }, { h: "Job Title", field: "title_verbatim", cell: (p) => p.title_verbatim, wrap: true },
+              { h: "Email", field: "email", cell: (p) => <span className="mono">{p.email}</span> }, { h: "Phone", field: "phone", cell: (p) => <span className="mono">{p.phone}</span> },
+              { h: "Country", field: "r_country", cell: (p) => p.r_country }, { h: "ICP Status", field: "r_icp", cell: (p) => p.r_icp }, { h: "Revenue", field: "r_revenue", cell: (p) => p.r_revenue },
+              { h: "Employees", field: "r_employees", cell: (p) => p.r_employees }, { h: "S2P Signal", field: "r_signal", cell: (p) => <Pill s={p.r_signal} /> }, { h: "ERP", field: "r_erp", cell: (p) => p.r_erp }]}
+            onRow={(p) => setContact(p.best_id || p.id)} />
+        </div>
         <SavedReportsList items={savedReportItems}
           onOpen={(c, tf, name) => { setCriteria(c); setReportSeed(tf); setReportKey((k) => k + 1); notify(`Opened "${name}" — reapplying its filters.`, "ok"); }}
           onDelete={setSavedReportItems} />
-        <FilterTable key={reportKey} unit="contacts" title="Search / Filter results" note="One row per contact, with the account context alongside — a ready list to call or email. Narrow it with the search box, dropdowns or + Custom filter below, or the Discovery panel on the left — saving a filter remembers whatever you've set, however you set it."
-          toggleExtra={<SaveReportButton criteria={criteria} tableState={reportTableState} onSaved={setSavedReportItems} />}
-          rows={reportRows} initial={reportSeed} onState={setReportTableState}
-          search={(p) => [p.company, p.full_name, p.title_verbatim, p.email, p.r_country].join(" ")}
-          filters={[{ label: "ICP status", get: (p) => p.r_icp }, { label: "Country", get: (p) => p.r_country }, { label: "S2P signal", get: (p) => p.r_signal }]}
-          cols={[{ h: "Company", field: "company", cell: (p) => <b>{p.company}</b> }, { h: "Contact Name", field: "full_name", cell: (p) => p.full_name }, { h: "Job Title", field: "title_verbatim", cell: (p) => p.title_verbatim, wrap: true },
-            { h: "Email", field: "email", cell: (p) => <span className="mono">{p.email}</span> }, { h: "Phone", field: "phone", cell: (p) => <span className="mono">{p.phone}</span> },
-            { h: "Country", field: "r_country", cell: (p) => p.r_country }, { h: "ICP Status", field: "r_icp", cell: (p) => p.r_icp }, { h: "Revenue", field: "r_revenue", cell: (p) => p.r_revenue },
-            { h: "Employees", field: "r_employees", cell: (p) => p.r_employees }, { h: "S2P Signal", field: "r_signal", cell: (p) => <Pill s={p.r_signal} /> }, { h: "ERP", field: "r_erp", cell: (p) => p.r_erp }]}
-          onRow={(p) => setContact(p.best_id || p.id)} />
-      </>}
+      </div>}
       {missionView === "search" && isSuper && <EngineSearchAndRefresh />}
       {missionView === "runs" && <ScheduledRunHistory />}
     </>;

@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.49";
+export const APP_VERSION = "3.50";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.50", date: "2026-10-06", notes: "Mission Control's Saved filters tab: the saved-filter list is now a compact panel on the right of the results table (was a wide table above it), and Save this filter is disabled until something is actually filtered.", changes: [
+      { what: "Redesigned SavedReportsList from a wide table (Name/Created by/Created/Contacts columns) to a compact card list, and placed it as a 280px panel to the right of the Search / Filter results table inside a new .mission-row flex layout (stacks on narrow screens)", where: "components/SavedReports.tsx (SavedReportsList), components/CoPilotApp.tsx (missionView \"saved\"), app/globals.css (.mission-row, .saved-reports-card)", why: "Reported with a screenshot — the saved-filter table sat as a wide block above the results table; asked for a small panel on the right instead" },
+      { what: "Save this filter is now disabled (with an explanatory tooltip) unless the search box, a dropdown or a custom filter is actually set", where: "components/SavedReports.tsx (SaveReportButton, isFiltered)", why: "Reported — the button was enabled and showed \"Save this filter (1093)\" even with nothing filtered, which is just the full unfiltered contact count, not a filter worth naming and revisiting" },
+    ] },
   { version: "3.49", date: "2026-10-06", notes: "Finished the Mission Control move: Search companies and Plan a refresh are out of Settings, Mission Control now has its own Saved filters / Search & refresh / Scheduled runs sub-tabs instead of one long stacked page. Settings is left with only genuine configuration — PIN, API balance, engine token, uploads, pending activation.", changes: [
       { what: "Extracted Search companies (free job queue) and Plan a refresh (paid budgeted refresh) into a new EngineSearchAndRefresh component in Mission Control, Super-Admin gated same as before; removed both from Settings, replaced with short links; removed the now-dead state, types and helpers that only those two sections used", where: "components/EngineSearchAndRefresh.tsx (new), components/EngineSettings.tsx, components/CoPilotApp.tsx", why: "Completes the consolidation requested earlier — these were paid/free \"find or update companies\" actions sitting in Settings, duplicating the same concept Dashboard's own Discover already does" },
       { what: "Gave Mission Control its own segmented sub-tabs (Saved filters / Search & refresh / Scheduled runs) instead of stacking all three vertically on one page", where: "components/CoPilotApp.tsx (.seg-toggle, missionView state)", why: "Reported — stacking Search companies' form+table, Plan a refresh's form+table, the saved-filter table and the run-history table all on one page would be cluttered; splitting into sub-tabs (the same pattern Stakeholders already uses) keeps each one focused" },

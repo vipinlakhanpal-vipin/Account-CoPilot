@@ -162,7 +162,17 @@ h2{font-family:var(--display);font-weight:600;font-size:16px;letter-spacing:.06e
 .saved-reports-head h4{margin:0;font-size:14px}
 .saved-reports-naming{display:flex;gap:6px;align-items:center}
 .saved-reports-naming input{background:var(--accent-soft);border:1px solid transparent;border-radius:7px;padding:6px 9px;font-size:13px;min-width:180px}
-.saved-reports-row-actions{display:flex;gap:6px}
+.saved-reports-row-actions{display:flex;gap:6px;flex-shrink:0}
+.mission-row{display:flex;gap:16px;align-items:flex-start}
+.mission-row > .saved-reports-panel{flex:0 0 280px;margin-bottom:0}
+.mission-row > .mission-main{flex:1;min-width:0}
+.saved-reports-list{display:flex;flex-direction:column;gap:2px}
+.saved-reports-card{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 2px;border-top:1px solid var(--line)}
+.saved-reports-card:first-child{border-top:none}
+.saved-reports-card-main{display:flex;flex-direction:column;gap:2px;min-width:0}
+.saved-reports-card-name{font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.saved-reports-card-meta{font-size:10.5px;line-height:1.4}
+@media (max-width:1100px){.mission-row{flex-direction:column}.mission-row > .saved-reports-panel{flex-basis:auto;width:100%}}
 
 /* Conflicts tab + account-brief "Conflicts retained": grouped by company > person, candidates ranked and one
    suggested, with a Super-Admin "Review & resolve" picker that writes the chosen value back to the real record. */

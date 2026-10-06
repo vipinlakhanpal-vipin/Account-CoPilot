@@ -38,6 +38,10 @@ export function SaveReportButton({ criteria, tableState, onSaved }:
     setBusy(false);
   }
 
+  // Nothing to actually save if no search box, dropdown or custom filter is set — that's just "everything",
+  // not a filter worth naming and revisiting.
+  const isFiltered = !!tableState.q.trim() || tableState.fv.some(Boolean) || tableState.cf.length > 0;
+
   return naming ? (
     <div className="saved-reports-naming saved-reports-naming-inline">
       <input type="text" placeholder="Name this filter" value={name} onChange={(e) => setName(e.target.value)}
@@ -45,7 +49,8 @@ export function SaveReportButton({ criteria, tableState, onSaved }:
       <button type="button" className="btn tiny primary" disabled={busy || !name.trim()} onClick={save}>{busy ? "Saving…" : "Save"}</button>
       <button type="button" className="btn tiny ghost" onClick={() => { setNaming(false); setName(""); }}>Cancel</button>
     </div>
-  ) : <button type="button" className="btn tiny primary" onClick={() => setNaming(true)}>💾 Save this filter ({tableState.count.toLocaleString()})</button>;
+  ) : <button type="button" className="btn tiny primary" disabled={!isFiltered} title={isFiltered ? undefined : "Set a search, a dropdown or a custom filter first — nothing to save yet"}
+      onClick={() => setNaming(true)}>💾 Save this filter ({tableState.count.toLocaleString()})</button>;
 }
 
 export default function SavedReportsList({ items, onOpen, onDelete }:
@@ -60,26 +65,22 @@ export default function SavedReportsList({ items, onOpen, onDelete }:
   }
 
   return (
-    <div className="saved-reports">
+    <div className="saved-reports saved-reports-panel">
       <div className="saved-reports-head"><h4>Saved filters</h4></div>
-      {items.length === 0 ? <p className="note">No saved filters yet — use &quot;Save this filter&quot; next to the filtered count below.</p> : (
-        <div className="tablewrap">
-          <table><thead><tr><th>Name</th><th>Created by</th><th>Created</th><th>Contacts</th><th></th></tr></thead>
-            <tbody>{items.map((it) => (
-              <tr key={it.id}>
-                <td><b>{it.name}</b></td>
-                <td className="muted">{it.created_by}</td>
-                <td className="muted">{fmtDateTime(it.created_at)}</td>
-                <td className="muted">{it.match_count}</td>
-                <td className="saved-reports-row-actions">
-                  <button type="button" className="btn icon" title="Open this filter" aria-label="Open this filter"
-                    onClick={() => onOpen(it.criteria, it.table_filters || { q: "", fv: [], cf: [] }, it.name)}><ViewIcon /></button>
-                  <button type="button" className="btn icon danger" title="Delete this filter" aria-label="Delete this filter" onClick={() => del(it)}><DeleteIcon /></button>
-                </td>
-              </tr>
-            ))}</tbody>
-          </table>
-        </div>
+      {items.length === 0 ? <p className="note">No saved filters yet — use &quot;Save this filter&quot; next to the filtered count.</p> : (
+        <div className="saved-reports-list">{items.map((it) => (
+          <div key={it.id} className="saved-reports-card">
+            <div className="saved-reports-card-main">
+              <b className="saved-reports-card-name" title={it.name}>{it.name}</b>
+              <span className="muted saved-reports-card-meta">{it.created_by} · {fmtDateTime(it.created_at)} · {it.match_count.toLocaleString()} contacts</span>
+            </div>
+            <div className="saved-reports-row-actions">
+              <button type="button" className="btn icon" title="Open this filter" aria-label="Open this filter"
+                onClick={() => onOpen(it.criteria, it.table_filters || { q: "", fv: [], cf: [] }, it.name)}><ViewIcon /></button>
+              <button type="button" className="btn icon danger" title="Delete this filter" aria-label="Delete this filter" onClick={() => del(it)}><DeleteIcon /></button>
+            </div>
+          </div>
+        ))}</div>
       )}
     </div>
   );
