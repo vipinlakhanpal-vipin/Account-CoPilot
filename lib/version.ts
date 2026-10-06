@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.48";
+export const APP_VERSION = "3.49";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.49", date: "2026-10-06", notes: "Finished the Mission Control move: Search companies and Plan a refresh are out of Settings, Mission Control now has its own Saved filters / Search & refresh / Scheduled runs sub-tabs instead of one long stacked page. Settings is left with only genuine configuration — PIN, API balance, engine token, uploads, pending activation.", changes: [
+      { what: "Extracted Search companies (free job queue) and Plan a refresh (paid budgeted refresh) into a new EngineSearchAndRefresh component in Mission Control, Super-Admin gated same as before; removed both from Settings, replaced with short links; removed the now-dead state, types and helpers that only those two sections used", where: "components/EngineSearchAndRefresh.tsx (new), components/EngineSettings.tsx, components/CoPilotApp.tsx", why: "Completes the consolidation requested earlier — these were paid/free \"find or update companies\" actions sitting in Settings, duplicating the same concept Dashboard's own Discover already does" },
+      { what: "Gave Mission Control its own segmented sub-tabs (Saved filters / Search & refresh / Scheduled runs) instead of stacking all three vertically on one page", where: "components/CoPilotApp.tsx (.seg-toggle, missionView state)", why: "Reported — stacking Search companies' form+table, Plan a refresh's form+table, the saved-filter table and the run-history table all on one page would be cluttered; splitting into sub-tabs (the same pattern Stakeholders already uses) keeps each one focused" },
+    ] },
   { version: "3.48", date: "2026-10-06", notes: "Pipeline and Accounts' \"+ Custom filter\" can now search ICP Match, Opportunity, Coupa Fit and (Pipeline only) Rank by number, e.g. \"ICP Match % ≥ 90\" — these were computed scores never attached to each row, so the filter builder couldn't see them to offer as a field.", changes: [
       { what: "Attached icp_match_pct, opportunity_pct, coupa_fit_pct (and rank_pct on Pipeline) as real properties on each row passed to FilterTable, and gave the matching ICP match/Opportunity/Coupa fit/Rank columns a field so the custom-filter builder (which only offers columns with a field) picks them up, with friendly labels (\"ICP Match %\" etc.)", where: "components/CoPilotApp.tsx (Accounts, Pipeline), components/CustomFilters.tsx (LABEL)", why: "Reported — wanted to filter Pipeline for ICP Match ≥ 90% and couldn't, since these scores lived only in a separate scores map, never as a field on the row itself; the existing ≥/≤ custom-filter operators already supported this, they just had nothing to point at" },
     ] },
