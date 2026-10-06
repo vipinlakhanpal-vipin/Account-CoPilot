@@ -17,13 +17,13 @@ export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 const EST = { update: 0.55, discovery: 0.75, profile: 0.55 }; // USD per Quick research / discovery search / new-company profile
 
-type JobDetail = { name: string; status?: string; revenue?: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; country?: string; decided?: "added" | "ignored"; entity_type?: "Regional HQ" | "Branch" | "Unknown" };
+type JobDetail = { name: string; status?: string; revenue?: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; country?: string; decided?: "added" | "ignored"; entity_type?: "Regional HQ" | "Branch" | "Foreign Branch" | "Unknown" };
 type Job = { id: string; region: string; count: number | "max"; mode: "verify" | "discover" | "both" | "company"; company_name?: string; website?: string; company_names?: string[]; requested_by: string; requested_at: string;
   status: "queued" | "running" | "done" | "error"; done_at?: string; result?: string; details?: JobDetail[] };
 type IgnoredCo = { id: string; name: string; country: string; region: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; ignored_at: string; ignored_by: string; recheck_at: string };
 type Batch = { id: string; region: string; update_count: number; new_count: number; budget: number; available: number; planned_update: number; planned_new: number;
   requested_by: string; at: string; companies: string[] };
-type PendingCo = { id: string; name: string; website?: string; country: string; region: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; watch?: boolean; requested_at: string; entity_type?: "Regional HQ" | "Branch" | "Unknown" };
+type PendingCo = { id: string; name: string; website?: string; country: string; region: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; watch?: boolean; requested_at: string; entity_type?: "Regional HQ" | "Branch" | "Foreign Branch" | "Unknown" };
 
 async function getSetting<T>(db: ReturnType<typeof supabaseAdmin>, key: string, fallback: T): Promise<T> {
   const { data } = await db.from("settings").select("value").eq("key", key).maybeSingle();
@@ -50,7 +50,7 @@ async function openJobIssue(job: Job) {
 }
 
 // Shared insert for a company found by a scheduled session (held pending region activation, or held pending the user's Add/Ignore review).
-function foundCompanyRow(p: { name: string; website?: string; country: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; watch?: boolean; entity_type?: "Regional HQ" | "Branch" | "Unknown" }, at: string) {
+function foundCompanyRow(p: { name: string; website?: string; country: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; watch?: boolean; entity_type?: "Regional HQ" | "Branch" | "Foreign Branch" | "Unknown" }, at: string) {
   const slug = "cd-" + p.name.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
   return { slug, company_name: p.name, country: p.country, company_website: p.website || null,
     domain: (p.website || "").toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0] || null,

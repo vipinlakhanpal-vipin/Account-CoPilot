@@ -2,14 +2,15 @@
 import { useEffect, useState } from "react";
 import { fmtDate, fmtTimeShort } from "@/lib/dates";
 
-type LogDetail = { name: string; status: string; revenue?: string; entity_type?: "Regional HQ" | "Branch" | "Unknown" };
+type LogDetail = { name: string; status: string; revenue?: string; entity_type?: "Regional HQ" | "Branch" | "Foreign Branch" | "Unknown" };
 type LogEntry = { at: string; summary: string; verified: number; new_companies: string[]; details?: LogDetail[]; source?: "daily" | "instant"; region?: string };
 /** Plain-text status color for the compact run-history table (no pill/box). */
 const statusColor = (s: string) => (/verified/i.test(s) ? "st-v" : /likely/i.test(s) ? "st-l" : /not icp/i.test(s) ? "st-n" : "st-u");
 /** "ICP — Verified" -> "ICP-Verified": compact, no spaces around the dash. */
 const compactStatus = (s: string) => s.replace(/\s*—\s*/g, "-");
 // Short label for this table — a row without entity_type is a revenue re-check, not a new find, so it never had one determined.
-const entityShort = (t?: string) => t === "Regional HQ" ? "HQ" : t === "Branch" ? "Branch" : "—";
+const entityShort = (t?: string) => t === "Regional HQ" ? "HQ" : t === "Branch" ? "Branch" : t === "Foreign Branch" ? "Foreign" : "—";
+const entityTitle = (t?: string) => t === "Branch" ? "Local branch or subsidiary of another Middle East company" : t === "Foreign Branch" ? "Local branch or subsidiary of a company headquartered outside the Middle East" : t === "Regional HQ" ? "Headquartered in the Middle East" : "Not determined (revenue re-check, not a new find)";
 
 // Mission Control: the engine's own run history, same data the bell shows, as a standing table instead of a popup
 // you have to keep open. Fetches independently (?only=log) so it doesn't need the rest of Settings' engine state.
@@ -45,7 +46,7 @@ export default function ScheduledRunHistory() {
             <tr key={`${e.at}-${i}`} className={i === 0 ? "run-group-top" : undefined}>
               {i === 0 && <td className="muted run-date" rowSpan={n}>{fmtDate(e.at)}<br />{fmtTimeShort(e.at)}</td>}
               <td className="wrap">{d.name}</td>
-              <td className="muted" title={(d as LogDetail).entity_type === "Branch" ? "Local branch or subsidiary of a company headquartered elsewhere" : (d as LogDetail).entity_type === "Regional HQ" ? "Headquartered in the Middle East" : "Not determined (revenue re-check, not a new find)"}>{entityShort((d as LogDetail).entity_type)}</td>
+              <td className="muted" title={entityTitle((d as LogDetail).entity_type)}>{entityShort((d as LogDetail).entity_type)}</td>
               <td>{d.status ? <span className={`status-plain ${statusColor(d.status)}`}>{compactStatus(d.status)}</span> : <span className="muted">—</span>}</td>
               <td className="muted">{d.revenue || "—"}</td>
               {i === 0 && <td rowSpan={n}>{e.region || <span className="muted">—</span>}</td>}

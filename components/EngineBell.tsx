@@ -4,11 +4,12 @@ import Link from "next/link";
 import DailyRunLocalTime from "@/components/DailyRunLocalTime";
 import { fmtDateTime } from "@/lib/dates";
 
-type Detail = { name: string; status: string; revenue?: string; region?: string; entity_type?: "Regional HQ" | "Branch" | "Unknown" };
+type Detail = { name: string; status: string; revenue?: string; region?: string; entity_type?: "Regional HQ" | "Branch" | "Foreign Branch" | "Unknown" };
 type Entry = { at: string; summary: string; verified: number; new_companies: string[]; details?: Detail[]; region?: string };
 const statusTag = (s: string) => (/verified/i.test(s) ? "fact" : /likely/i.test(s) ? "likely" : /not icp/i.test(s) ? "conflict" : "unv");
-// Short label for the bell's tight table — the full "Regional HQ" / "Branch" wording lives in Accounts/Pipeline.
-const entityShort = (t?: string) => t === "Regional HQ" ? "HQ" : t === "Branch" ? "Branch" : "—";
+// Short label for the bell's tight table — the full "Regional HQ" / "Branch" / "Foreign Branch" wording lives in Accounts/Pipeline.
+const entityShort = (t?: string) => t === "Regional HQ" ? "HQ" : t === "Branch" ? "Branch" : t === "Foreign Branch" ? "Foreign" : "—";
+const entityTitle = (t?: string) => t === "Branch" ? "Local branch or subsidiary of another Middle East company" : t === "Foreign Branch" ? "Local branch or subsidiary of a company headquartered outside the Middle East" : t === "Regional HQ" ? "Headquartered in the Middle East" : "Not yet determined";
 // A scheduled session can spell the same company slightly differently between its new_companies list and its
 // details rows (e.g. an apostrophe present in one but not the other) — normalize before matching so a one-character
 // difference doesn't silently drop that row's "New" flag and undercount the region's new-company total.
@@ -92,7 +93,7 @@ export default function EngineBell() {
                                   <table className="bell-table"><thead><tr><th>Company</th><th>New</th><th>Verified</th><th>Entity</th><th>Status</th><th>Revenue</th><th></th></tr></thead>
                                     <tbody>{s.rows.slice(0, 24).map((d, i) => (
                                       <tr key={i}><td>{d.name}</td><td>{d.isNew ? "✓" : ""}</td><td>{d.isVerified ? "✓" : ""}</td>
-                                        <td className="muted" title={d.entity_type === "Branch" ? "Local branch or subsidiary of a company headquartered elsewhere" : d.entity_type === "Regional HQ" ? "Headquartered in the Middle East" : "Not yet determined"}>{entityShort(d.entity_type)}</td>
+                                        <td className="muted" title={entityTitle(d.entity_type)}>{entityShort(d.entity_type)}</td>
                                         <td><span className={`tag ${statusTag(d.status)}`}>{d.status}</span></td><td className="muted">{d.revenue || "—"}</td>
                                         <td>{/^held/i.test(d.status) && <a className="job-link" href="/settings#engine-pending" onClick={() => setOpen(false)}>Activate →</a>}</td></tr>
                                     ))}</tbody></table>

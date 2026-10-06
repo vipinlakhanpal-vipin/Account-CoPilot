@@ -31,7 +31,7 @@ const Result = z.object({ slug: z.string(), company_name: z.string(), checked_at
   revenue_type: z.string(), revenue_local: z.string().optional().default(""), source_name: z.string().optional().default(""), source_url: z.string().optional().default(""),
   source_kind: z.string(), revenue_status: z.enum(["FACT", "LIKELY", "UNVERIFIED", "UNKNOWN"]), employees: z.string().optional().default(""),
   employees_source_url: z.string().optional().default(""), icp_verdict: z.enum(["Verified ICP", "Likely ICP", "Below minimum", "Below $250M", "Revenue not found"]), reasoning: z.string() });
-const EntityType = z.enum(["Regional HQ", "Branch", "Unknown"]).optional().default("Unknown");
+const EntityType = z.enum(["Regional HQ", "Branch", "Foreign Branch", "Unknown"]).optional().default("Unknown");
 const NewCo = z.object({ name: z.string().min(2), website: z.string().optional().default(""), country: z.string().default("UAE"), industry: z.string().optional().default(""), watch: z.boolean().optional().default(false),
   hq_city: z.string().optional().default(""), why_icp: z.string().optional().default(""), source_url: z.string().optional().default(""), entity_type: EntityType });
 const NewCoUpload = z.object({ name: z.string().min(2), website: z.string().optional().default(""), country: z.string().default("UAE"), industry: z.string().optional().default(""),
@@ -58,7 +58,7 @@ const Body = z.discriminatedUnion("action", [
 ]);
 type Job = { id: string; status: string; started_at?: string; done_at?: string; result?: string; company_names?: string[];
   details?: { name: string; status?: string; revenue?: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; country?: string; decided?: "added" | "ignored" }[] };
-type PendingCo = { id: string; name: string; website?: string; country: string; region: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; watch?: boolean; requested_at: string; entity_type?: "Regional HQ" | "Branch" | "Unknown" };
+type PendingCo = { id: string; name: string; website?: string; country: string; region: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; watch?: boolean; requested_at: string; entity_type?: "Regional HQ" | "Branch" | "Foreign Branch" | "Unknown" };
 
 export async function POST(req: Request) {
   const db = supabaseAdmin();

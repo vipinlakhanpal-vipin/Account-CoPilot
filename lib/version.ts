@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.46";
+export const APP_VERSION = "3.47";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.47", date: "2026-10-06", notes: "Entity field now matches the real ICP distinction: Regional HQ, Branch (of another Middle East company), or Foreign Branch (of a company headquartered outside the Middle East) — not just a flat HQ-vs-Branch split. Needs a second small database migration (see below).", changes: [
+      { what: "Split \"Branch\" into \"Branch\" (regional) and \"Foreign Branch\" everywhere entity_type is defined, written or displayed — the worker API, paid research schema and prompt, ENGINE.md's discover/company instructions, the InfoTip, and the bell/Accounts/Pipeline displays (bell shows it as \"Foreign\")", where: "supabase/migrations/0006_entity_type_foreign_branch.sql, app/api/engine/worker/route.ts, app/api/engine/route.ts, lib/research/schema.ts, lib/research/prompts.ts, ENGINE.md, components/InfoTip.tsx, components/EngineBell.tsx, components/ScheduledRunHistory.tsx", why: "Corrected — the original 2-value field (v3.46) collapsed two meaningfully different signals (a branch of a Gulf neighbor vs. a branch of a multinational HQ'd outside the region) into one \"Branch\" bucket; the real ICP criteria always distinguished them" },
+    ] },
   { version: "3.46", date: "2026-10-06", notes: "New Entity field: every account is now classified Regional HQ or Branch (of a company headquartered elsewhere, regional or foreign), visible in Accounts, Pipeline, and the bell's Scheduled runs — so you can directly check the engine is finding the right kind of company, not just the right revenue. Needs a one-time database migration before it starts working (see below).", changes: [
       { what: "Added entity_type column to companies (Regional HQ / Branch / Unknown, default Unknown) — supabase/migrations/0005_entity_type.sql, run once in the Supabase SQL editor", where: "supabase/migrations/0005_entity_type.sql", why: "Requested — a field to verify the daily engine is identifying genuine Middle East headquarters, not local branches of foreign or other regional companies, directly supporting the \"group HQs only\" ICP rule that was previously only an invisible discovery-time filter" },
       { what: "Free daily engine now determines and reports entity_type for every company it discovers (both the normal discover flow and a single-company lookup), flowing through to the stored record, the bell, and Scheduled run history", where: "ENGINE.md (discover and company steps, run_details.json shape), app/api/engine/worker/route.ts, app/api/engine/route.ts (foundCompanyRow, JobDetail, PendingCo)", why: "The ICP rule already excluded foreign branches during discovery — this makes that judgment visible and auditable per company instead of a silent pass/fail" },

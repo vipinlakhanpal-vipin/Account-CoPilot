@@ -18,7 +18,7 @@ export const Company = z.object({
   employee_range: z.string(), employee_source: z.string(),
   icp_fit: z.enum(["Yes", "No", "Borderline"]), icp_fit_reason: z.string(),
   ownership: z.string(), parent_company: z.string(), subsidiaries: z.string(), procurement_model: z.string(),
-  entity_type: z.enum(["Regional HQ", "Branch", "Unknown"]),
+  entity_type: z.enum(["Regional HQ", "Branch", "Foreign Branch", "Unknown"]),
   erp: z.string(), erp_status: STATUS, erp_evidence: z.string(),
   third_party_apps: z.array(z.object({ name: z.string(), category: z.string(), status: STATUS, evidence: z.string(), source_url: z.string() })),
   existing_s2p_product: z.enum(S2P_PRODUCTS), existing_s2p_detail: z.string(),
