@@ -46,9 +46,11 @@ typed in) — see "Multi-name discover jobs" under step 2.
   CLAUDE.md "Current task" describes and write `data/verification/revenue/<slug>.json` in the CLAUDE.md format.
   Every ~10 companies run `node scripts/engine_client.mjs submit` (it applies results and recalculates ICP status in the app).
 - **discover** — run `node scripts/engine_client.mjs names` first (existing companies; never propose any of them, under any name or domain), then find up to `count` NEW companies in `region` that meet the ICP (group HQs only; exclude ministries/government bodies,
-  single hotels/hospitals/schools/attractions and local branches of foreign HQs). Write them to `data/verification/new_companies.json`
-  as `[{"name","website","country","industry","hq_city","why_icp","source_url"}]`, run `node scripts/engine_client.mjs add data/verification/new_companies.json`,
-  then verify the added companies' revenue as in **verify** (use the returned slugs).
+  single hotels/hospitals/schools/attractions and local branches of foreign HQs). For each one, record `"entity_type"`: `"Regional HQ"` if this company's own headquarters is in the Middle
+  East (the normal case — anything else shouldn't have passed the filter above), `"Branch"` if research turns up that it's actually a local branch or subsidiary of a company headquartered
+  elsewhere (keep it only if the active region's `entity_level` rule allows that, e.g. "Group HQ and major operating subsidiaries"), or `"Unknown"` if genuinely unclear. Write them to
+  `data/verification/new_companies.json` as `[{"name","website","country","industry","hq_city","why_icp","source_url","entity_type"}]`, run
+  `node scripts/engine_client.mjs add data/verification/new_companies.json`, then verify the added companies' revenue as in **verify** (use the returned slugs).
   - **Multi-name discover jobs (`company_names` is present on the claimed job, e.g. `{"mode":"discover","company_names":["Almarai","Gulf Steel Works"],...}`)** — the user named these
     specific companies for a free, one-off check; they are reviewed and added (or ignored) by hand in the app, so do **not** run `add` or `hold` for any of them. For each name in
     `company_names`: run `names` first (skip it if already in the app — note that in its result entry instead), determine its real country as in **company** below, and research enough
@@ -60,8 +62,10 @@ typed in) — see "Multi-name discover jobs" under step 2.
   whether it is already in the app (any spelling, acronym or domain). **If it is**: verify its revenue now (as in **verify**) and add it to the watch list with
   `node scripts/engine_client.mjs watch <slug>`. **If not**: research it and determine its **real** country — never assume it's the job's `region` (that's only
   where the request happened to be queued from). The domain's country-code TLD is a strong signal (`.ae` → UAE, `.sa` / `.com.sa` → KSA, `.qa` → Qatar, `.kw` → Kuwait,
-  `.om` → Oman, `.bh` → Bahrain, `.eg` → Egypt); otherwise use its HQ address, exchange listing or press coverage. Write `data/verification/new_companies.json` with
-  ONE entry, `"country"` set to the **real** country and `"watch": true`. Then check `data/verification/icp_rules.json`'s `active` list for that real region:
+  `.om` → Oman, `.bh` → Bahrain, `.eg` → Egypt); otherwise use its HQ address, exchange listing or press coverage. While you're determining its real country, also determine
+  `"entity_type"`: `"Regional HQ"` if the company itself is headquartered there, `"Branch"` if it's a local branch or subsidiary of a company headquartered elsewhere, or `"Unknown"`
+  if unclear. Write `data/verification/new_companies.json` with ONE entry, `"country"` set to the **real** country, `"entity_type"` set, and `"watch": true`. Then check
+  `data/verification/icp_rules.json`'s `active` list for that real region:
   - **Region is Active** → run `node scripts/engine_client.mjs add data/verification/new_companies.json`, then verify it using the returned slug.
   - **Region is Paused or Next phase** → do **not** add it yet. Run `node scripts/engine_client.mjs hold data/verification/new_companies.json` instead (same file format) —
     this queues it in the app (Settings → a "Pending — waiting for region activation" card) without creating a live account, until a Super Admin activates that region.
@@ -76,9 +80,11 @@ typed in) — see "Multi-name discover jobs" under step 2.
 `node scripts/engine_client.mjs finish <id> done "<N verified: X Verified, Y Likely, Z Needs check, W Not ICP; M new companies added>"`
 (or `finish <id> error "<reason>"`). Claim the next job if time allows. Then ALWAYS, at the very end:
 1. Write `data/verification/run_details.json`: one row per company you checked or added this run (queued jobs and the daily batch together), in this exact shape:
-   `[{"name":"<company>","status":"<ICP — Verified|ICP — Likely|ICP — Needs check|Not ICP|Unknown|Held (<region>)>","region":"<its own real region, e.g. UAE>","revenue":"<e.g. $51.8B, ~$625.6M (estimate), Below $250M, or '' if none found>"}]`
+   `[{"name":"<company>","status":"<ICP — Verified|ICP — Likely|ICP — Needs check|Not ICP|Unknown|Held (<region>)>","region":"<its own real region, e.g. UAE>","entity_type":"<Regional HQ|Branch|Unknown, omit for a company you only verified today — see below>","revenue":"<e.g. $51.8B, ~$625.6M (estimate), Below $250M, or '' if none found>"}]`
    This becomes the small table shown in the bell and in Settings → Scheduled run history — keep `revenue` short (one figure, no sentences). **Always include each row's own `region`** — the app
-   groups the bell notification by it, so a row with the wrong or missing region shows up under the wrong heading or gets dropped from every region's table.
+   groups the bell notification by it, so a row with the wrong or missing region shows up under the wrong heading or gets dropped from every region's table. **Include `entity_type` for any
+   company you discovered or added this run** (you already determined it per the discover/company steps above) — leave it out for a row that's only a revenue re-check of an existing company,
+   since you're not re-researching its structure that day.
 2. **Call `log` once per region you worked this run — never combine multiple regions into one call.** If this run touched more than one region (e.g. the daily batch
    ran UAE, KSA, Qatar and Kuwait), run this command separately for EACH one, right after the other:
    `node scripts/engine_client.mjs log "<one-line summary for just this region>" <this region's verified_count> "<this region's new company names separated by ;>" <daily|instant> <region>`

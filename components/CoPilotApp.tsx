@@ -497,8 +497,9 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
       search={(a) => [a.company_name, a.industry, a.erp, a.existing_s2p_product, a.s2p_strong_signals].join(" ")}
       filters={[{ label: "ICP status", get: (a) => a.icp_status }, { label: "Source", get: (a) => simpleOrigin(a), tip: "source" },
         { label: "Signal", get: (a) => a.s2p_signal_level }, { label: "S2P Platform", get: (a) => a.existing_s2p_product }, { label: "Industry", get: (a) => a.industry },
-        { label: "Exchange", get: (a) => a.exchange, tip: "exchange" }, { label: "Country", get: (a) => a.country }]}
+        { label: "Exchange", get: (a) => a.exchange, tip: "exchange" }, { label: "Entity", get: (a) => a.entity_type || "Unknown", tip: "entityType" }, { label: "Country", get: (a) => a.country }]}
       cols={[{ h: "", cls: "logo-cell", cell: (a) => <CompanyLogo a={a} /> }, { h: "Company", field: "company_name", cell: (a) => <b>{a.company_name}</b> },
+        { h: "Entity", field: "entity_type", tip: "entityType", cell: (a) => (a.entity_type && a.entity_type !== "Unknown") ? a.entity_type : <span className="muted">—</span> },
         { h: "Exchange", field: "exchange", tip: "exchange", cell: (a) => a.exchange ? <span className="mono">{a.exchange} {a.ticker}</span> : <span className="muted">—</span> },
         { h: "Industry", field: "industry", cell: (a) => a.industry },
         { h: "S2P Platform", field: "existing_s2p_product", cell: (a) => a.existing_s2p_product || <span className="muted">—</span> },
@@ -530,12 +531,13 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
       </>}
       rows={ranked} search={(a) => [a.company_name, a.industry, a.erp, a.existing_s2p_product].join(" ")}
       filters={[{ label: "ICP status", get: (a) => a.icp_status }, { label: "S2P", get: (a) => a.existing_s2p_product }, { label: "Industry", get: (a) => a.industry },
-        { label: "Source", get: (a) => simpleOrigin(a), tip: "source" }, { label: "Exchange", get: (a) => a.exchange, tip: "exchange" }, { label: "Country", get: (a) => a.country }]}
+        { label: "Source", get: (a) => simpleOrigin(a), tip: "source" }, { label: "Exchange", get: (a) => a.exchange, tip: "exchange" }, { label: "Entity", get: (a) => a.entity_type || "Unknown", tip: "entityType" }, { label: "Country", get: (a) => a.country }]}
       cols={[{ h: "Rank", tip: "rank", cell: (a) => <b className="mono" title={`Rank ${scores[a.id].rank}% = ${pipe.w_match}% of ICP Match + ${pipe.w_opportunity}% of Opportunity + ${pipe.w_fit}% of Coupa Fit`}>{scores[a.id].rank}%</b> }, { h: "", cls: "logo-cell", cell: (a) => <CompanyLogo a={a} /> }, { h: "Company", cls: "co-cell", field: "company_name", cell: (a) => <><b>{a.company_name}</b><div className="muted clamp2" title={`${a.industry} · ${a.country}`}>{a.industry} · {a.country}</div></> },
         { h: "ICP match", tip: "icpMatch", cell: (a) => <ScoreChip s={scores[a.id].m} label="ICP Match" /> }, { h: "Opportunity", tip: "opportunity", cell: (a) => <ScoreChip s={scores[a.id].o} label="Opportunity" /> },
         { h: "Coupa fit", tip: "coupaFit", cell: (a) => <ScoreChip s={scores[a.id].f} label="Coupa Fit" /> }, { h: "ICP status", tip: "icpStatus", field: "icp_status", cell: (a) => <IcpTag s={a.icp_status} why={a.icp_fit_reason} /> },
         { h: "Revenue", field: "revenue_usd_m", cell: (a) => <span className="mono">{usd(bestRevenue(a).v)}</span> }, { h: "Existing S2P", field: "existing_s2p_product", cell: (a) => a.existing_s2p_product },
         { h: "Exchange", field: "exchange", cell: (a) => a.exchange ? <span className="mono">{a.exchange} {a.ticker}</span> : <span className="muted">—</span> },
+        { h: "Entity", field: "entity_type", tip: "entityType", cell: (a) => (a.entity_type && a.entity_type !== "Unknown") ? a.entity_type : <span className="muted">—</span> },
         { h: "Source", tip: "source", cell: (a) => simpleOrigin(a) },
         { h: "Contacts", cell: (a) => <span className="mono">{(byCo[a.id] || []).length}</span> }]}
       onRow={openRow} />;

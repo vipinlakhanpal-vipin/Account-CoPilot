@@ -2,12 +2,14 @@
 import { useEffect, useState } from "react";
 import { fmtDate, fmtTimeShort } from "@/lib/dates";
 
-type LogDetail = { name: string; status: string; revenue?: string };
+type LogDetail = { name: string; status: string; revenue?: string; entity_type?: "Regional HQ" | "Branch" | "Unknown" };
 type LogEntry = { at: string; summary: string; verified: number; new_companies: string[]; details?: LogDetail[]; source?: "daily" | "instant"; region?: string };
 /** Plain-text status color for the compact run-history table (no pill/box). */
 const statusColor = (s: string) => (/verified/i.test(s) ? "st-v" : /likely/i.test(s) ? "st-l" : /not icp/i.test(s) ? "st-n" : "st-u");
 /** "ICP — Verified" -> "ICP-Verified": compact, no spaces around the dash. */
 const compactStatus = (s: string) => s.replace(/\s*—\s*/g, "-");
+// Short label for this table — a row without entity_type is a revenue re-check, not a new find, so it never had one determined.
+const entityShort = (t?: string) => t === "Regional HQ" ? "HQ" : t === "Branch" ? "Branch" : "—";
 
 // Mission Control: the engine's own run history, same data the bell shows, as a standing table instead of a popup
 // you have to keep open. Fetches independently (?only=log) so it doesn't need the rest of Settings' engine state.
@@ -29,7 +31,7 @@ export default function ScheduledRunHistory() {
         <div className="run-summary-box-label">Summary</div>
         <div className="run-summary-box-body"><b>{latest.verified}</b> verified{latest.new_companies.length > 0 && <> · {latest.new_companies.length} new: {latest.new_companies.join(", ")}</>}</div>
       </div>
-      <div className="tablewrap"><table className="run-history-table"><thead><tr><th>Date</th><th>Company</th><th>Status</th><th>Revenue</th><th>Region</th><th>Run Status</th><th>Activate Region</th></tr></thead>
+      <div className="tablewrap"><table className="run-history-table"><thead><tr><th>Date</th><th>Company</th><th>Entity</th><th>Status</th><th>Revenue</th><th>Region</th><th>Run Status</th><th>Activate Region</th></tr></thead>
         <tbody>{log.slice(0, 10).flatMap((e) => {
           // Older runs, from before per-company detail tracking existed, only have a free-text summary and a
           // new-companies list — fall back to one row per named company (status/revenue unknown) instead of
@@ -43,6 +45,7 @@ export default function ScheduledRunHistory() {
             <tr key={`${e.at}-${i}`} className={i === 0 ? "run-group-top" : undefined}>
               {i === 0 && <td className="muted run-date" rowSpan={n}>{fmtDate(e.at)}<br />{fmtTimeShort(e.at)}</td>}
               <td className="wrap">{d.name}</td>
+              <td className="muted" title={(d as LogDetail).entity_type === "Branch" ? "Local branch or subsidiary of a company headquartered elsewhere" : (d as LogDetail).entity_type === "Regional HQ" ? "Headquartered in the Middle East" : "Not determined (revenue re-check, not a new find)"}>{entityShort((d as LogDetail).entity_type)}</td>
               <td>{d.status ? <span className={`status-plain ${statusColor(d.status)}`}>{compactStatus(d.status)}</span> : <span className="muted">—</span>}</td>
               <td className="muted">{d.revenue || "—"}</td>
               {i === 0 && <td rowSpan={n}>{e.region || <span className="muted">—</span>}</td>}

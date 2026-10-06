@@ -29,13 +29,13 @@ const emailOk = (e: string) => !!e && e.includes("@") && !GENERIC.test(e.split("
 
 const COMPANY_FIELDS = ["company_website", "domain", "country", "hq_city", "exchange", "ticker", "industry", "revenue_usd_m", "revenue_local",
   "revenue_fy", "revenue_source_url", "employee_range", "employee_source", "icp_fit", "icp_fit_reason", "ownership", "parent_company", "subsidiaries",
-  "procurement_model", "erp", "erp_status", "erp_evidence", "existing_s2p_product", "existing_s2p_detail", "s2p_platform_status", "s2p_signal_level",
+  "procurement_model", "entity_type", "erp", "erp_status", "erp_evidence", "existing_s2p_product", "existing_s2p_detail", "s2p_platform_status", "s2p_signal_level",
   "s2p_strong_signals", "digital_transformation_signals", "procurement_transformation_signals", "relevant_technologies",
   "known_implementation_partner", "known_consulting_partner", "coupa_opportunity_type", "ariba_opportunity_type", "potential_opportunity",
   "board_phone", "board_phone_source", "account_notes", "research_confidence"] as const;
 // Fields where a change is material enough to raise a conflict for review
 const MATERIAL = new Set(["erp", "existing_s2p_product", "s2p_platform_status", "s2p_signal_level", "parent_company", "exchange", "ticker",
-  "coupa_opportunity_type", "ariba_opportunity_type", "icp_fit"]);
+  "coupa_opportunity_type", "ariba_opportunity_type", "icp_fit", "entity_type"]);
 const PLACEHOLDER = new Set(["", "unknown", "noevidence", "nosignal", "notpubliclyverified", "null"]);
 const blank = (v: unknown) => v === null || v === undefined || PLACEHOLDER.has(norm(v));
 

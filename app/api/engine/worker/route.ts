@@ -31,15 +31,17 @@ const Result = z.object({ slug: z.string(), company_name: z.string(), checked_at
   revenue_type: z.string(), revenue_local: z.string().optional().default(""), source_name: z.string().optional().default(""), source_url: z.string().optional().default(""),
   source_kind: z.string(), revenue_status: z.enum(["FACT", "LIKELY", "UNVERIFIED", "UNKNOWN"]), employees: z.string().optional().default(""),
   employees_source_url: z.string().optional().default(""), icp_verdict: z.enum(["Verified ICP", "Likely ICP", "Below minimum", "Below $250M", "Revenue not found"]), reasoning: z.string() });
+const EntityType = z.enum(["Regional HQ", "Branch", "Unknown"]).optional().default("Unknown");
 const NewCo = z.object({ name: z.string().min(2), website: z.string().optional().default(""), country: z.string().default("UAE"), industry: z.string().optional().default(""), watch: z.boolean().optional().default(false),
-  hq_city: z.string().optional().default(""), why_icp: z.string().optional().default(""), source_url: z.string().optional().default("") });
+  hq_city: z.string().optional().default(""), why_icp: z.string().optional().default(""), source_url: z.string().optional().default(""), entity_type: EntityType });
 const NewCoUpload = z.object({ name: z.string().min(2), website: z.string().optional().default(""), country: z.string().default("UAE"), industry: z.string().optional().default(""),
   hq_city: z.string().optional().default(""), notes: z.string().optional().default("") });
 const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("claim") }),
   z.object({ action: z.literal("finish"), id: z.string(), status: z.enum(["done", "error"]), result: z.string().max(2000), slug: z.string().max(120).optional(),
     details: z.array(z.object({ name: z.string(), status: z.string().optional().default(""), revenue: z.string().optional().default(""), industry: z.string().optional().default(""),
-      hq_city: z.string().optional().default(""), why_icp: z.string().optional().default(""), source_url: z.string().optional().default(""), country: z.string().optional().default("") })).max(60).optional() }),
+      hq_city: z.string().optional().default(""), why_icp: z.string().optional().default(""), source_url: z.string().optional().default(""), country: z.string().optional().default(""),
+      entity_type: EntityType })).max(60).optional() }),
   z.object({ action: z.literal("queue"), region: z.string().default("UAE"), limit: z.number().int().min(1).max(200).default(50) }),
   z.object({ action: z.literal("submit"), results: z.array(Result).max(50) }),
   z.object({ action: z.literal("add_companies"), companies: z.array(NewCo).max(50) }),
@@ -51,12 +53,12 @@ const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("add_uploaded_companies"), filename: z.string(), companies: z.array(NewCoUpload).max(2000) }),
   z.object({ action: z.literal("watch"), slug: z.string().optional() }),
   z.object({ action: z.literal("log"), summary: z.string().max(1000), verified: z.number().int().min(0).default(0), new_companies: z.array(z.string()).max(100).default([]),
-    details: z.array(z.object({ name: z.string(), status: z.string(), revenue: z.string().optional().default("") })).max(60).optional().default([]),
+    details: z.array(z.object({ name: z.string(), status: z.string(), revenue: z.string().optional().default(""), region: z.string().optional(), entity_type: EntityType })).max(60).optional().default([]),
     source: z.enum(["daily", "instant"]).optional(), region: z.string().max(200).optional().default("") }),
 ]);
 type Job = { id: string; status: string; started_at?: string; done_at?: string; result?: string; company_names?: string[];
   details?: { name: string; status?: string; revenue?: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; country?: string; decided?: "added" | "ignored" }[] };
-type PendingCo = { id: string; name: string; website?: string; country: string; region: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; watch?: boolean; requested_at: string };
+type PendingCo = { id: string; name: string; website?: string; country: string; region: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; watch?: boolean; requested_at: string; entity_type?: "Regional HQ" | "Branch" | "Unknown" };
 
 export async function POST(req: Request) {
   const db = supabaseAdmin();
@@ -166,7 +168,7 @@ export async function POST(req: Request) {
       const row = {
         slug: "cd-" + c.name.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60), company_name: c.name, country: c.country,
         company_website: c.website || null, domain: dom(c.website) || null, hq_city: c.hq_city || null, industry: c.industry || null, research_channel: "Claude discovery",
-        lists: ["Claude discovery"], icp_status: "Unknown", account_notes: `Found by a scheduled Claude session on ${day}: ${c.why_icp} Source: ${c.source_url}`,
+        lists: ["Claude discovery"], icp_status: "Unknown", entity_type: c.entity_type || "Unknown", account_notes: `Found by a scheduled Claude session on ${day}: ${c.why_icp} Source: ${c.source_url}`,
         profile: { "Claude discovery": { why: c.why_icp, source_url: c.source_url, via: "scheduled session (no API cost)" }, ...(c.watch ? { Watch: { since: now, reason: "requested in Settings" } } : {}) } };
       const { error } = await db.from("companies").upsert([row], { onConflict: "slug", ignoreDuplicates: true });
       if (!error) { added.push({ slug: row.slug, company_name: row.company_name }); pool.push({ name: row.company_name, domain: row.domain || "", as: row.company_name }); }
@@ -208,7 +210,7 @@ export async function POST(req: Request) {
       if (hit) { skipped.push({ name: c.name, matches: hit.as }); continue; }
       const region = regionOf(c.country);
       const item: PendingCo = { id: crypto.randomUUID().slice(0, 8), name: c.name, website: c.website, country: c.country, region, industry: c.industry,
-        hq_city: c.hq_city, why_icp: c.why_icp, source_url: c.source_url, watch: c.watch, requested_at: now };
+        hq_city: c.hq_city, why_icp: c.why_icp, source_url: c.source_url, watch: c.watch, requested_at: now, entity_type: c.entity_type };
       st.items.unshift(item); held.push({ name: c.name, region }); pool.push({ name: c.name, domain: dom(c.website), as: c.name });
     }
     await put(db, "engine_pending", { items: st.items.slice(0, 200) });

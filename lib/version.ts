@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.45";
+export const APP_VERSION = "3.46";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,12 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.46", date: "2026-10-06", notes: "New Entity field: every account is now classified Regional HQ or Branch (of a company headquartered elsewhere, regional or foreign), visible in Accounts, Pipeline, and the bell's Scheduled runs — so you can directly check the engine is finding the right kind of company, not just the right revenue. Needs a one-time database migration before it starts working (see below).", changes: [
+      { what: "Added entity_type column to companies (Regional HQ / Branch / Unknown, default Unknown) — supabase/migrations/0005_entity_type.sql, run once in the Supabase SQL editor", where: "supabase/migrations/0005_entity_type.sql", why: "Requested — a field to verify the daily engine is identifying genuine Middle East headquarters, not local branches of foreign or other regional companies, directly supporting the \"group HQs only\" ICP rule that was previously only an invisible discovery-time filter" },
+      { what: "Free daily engine now determines and reports entity_type for every company it discovers (both the normal discover flow and a single-company lookup), flowing through to the stored record, the bell, and Scheduled run history", where: "ENGINE.md (discover and company steps, run_details.json shape), app/api/engine/worker/route.ts, app/api/engine/route.ts (foundCompanyRow, JobDetail, PendingCo)", why: "The ICP rule already excluded foreign branches during discovery — this makes that judgment visible and auditable per company instead of a silent pass/fail" },
+      { what: "Paid research also determines entity_type (prompts.ts) and can refine/fill it in via the normal reconcile merge, flagged as a material change if it contradicts what free discovery found", where: "lib/research/schema.ts, lib/research/prompts.ts, lib/research/reconcile.ts (COMPANY_FIELDS, MATERIAL)", why: "Keeps both research paths consistent — paid research's deeper diligence can correct an initial guess" },
+      { what: "Added an Entity column + filter to Accounts and Pipeline (full \"Regional HQ\"/\"Branch\" label, with an info tip), and a compact \"HQ\"/\"Branch\" column to the bell popup and Scheduled run history", where: "components/CoPilotApp.tsx, components/InfoTip.tsx, components/EngineBell.tsx, components/ScheduledRunHistory.tsx", why: "Requested — visible in Accounts and shortened in the bell summary, as asked" },
+    ] },
   { version: "3.45", date: "2026-10-06", notes: "Fixed the Regions at a glance chart's numbers being hard to read — they used each metric's own (often pale) color, now they're bold and dark for clear contrast against the bars.", changes: [
       { what: "Changed .bar.sigbar .n and .region-compare-vn from the metric's own color (var(--c)) to var(--text-strong), bold", where: "app/globals.css", why: "Reported with a screenshot — light colors like the pale blue (Likely) and gold (Strong signal) made the count numbers hard to read; the color-coding is already carried by the bar fill and legend dot, so the number itself just needs to be legible, not colored" },
     ] },
