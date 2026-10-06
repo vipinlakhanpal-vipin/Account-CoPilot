@@ -206,7 +206,7 @@ h2{font-family:var(--display);font-weight:600;font-size:16px;letter-spacing:.06e
 .bar .fill{display:block;height:100%;background:var(--bar);border-radius:3px}
 .bar.top .fill{background:linear-gradient(90deg,var(--teal-2),var(--teal))}
 .bar.sigbar .fill{background:linear-gradient(90deg,color-mix(in srgb, var(--c) 70%, var(--bg)),var(--c));box-shadow:0 0 10px color-mix(in srgb, var(--c) 40%, transparent)}
-.bar.sigbar .n{color:var(--c)}
+.bar.sigbar .n{color:var(--text-strong);font-weight:700}
 .region-compare-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
 .region-compare-head h2{margin:0}
 .region-compare-legend{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;font-size:10px;color:var(--muted)}
@@ -230,7 +230,7 @@ h2{font-family:var(--display);font-weight:600;font-size:16px;letter-spacing:.06e
 .region-compare-vbar{background:none;border:0;padding:0;margin:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px;cursor:pointer;width:16px;height:100%}
 .region-compare-vbar:disabled{cursor:default;opacity:.35}
 .region-compare-vbar:hover:not(:disabled) .region-compare-vfill{filter:brightness(1.15)}
-.region-compare-vn{font-family:var(--mono);font-size:8.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.region-compare-vn{font-family:var(--mono);font-size:8.5px;color:var(--text-strong);font-weight:700;font-variant-numeric:tabular-nums}
 .region-compare-vfill{display:block;width:16px;border-radius:3px 3px 0 0;min-height:2px;transition:height .2s}
 .bar .n{font-family:var(--mono);font-size:9.5px;text-align:right;font-variant-numeric:tabular-nums}
 .pie-wrap{display:flex;align-items:center;gap:16px}
