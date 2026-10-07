@@ -465,7 +465,7 @@ aside.brief.contact{width:min(760px,100%);z-index:70}
 .dp-undo{color:#8A5A00;background:color-mix(in srgb, #E0A21B 14%, var(--surface));border-color:color-mix(in srgb, #E0A21B 50%, transparent)}
 .dp-undo:hover{background:color-mix(in srgb, #E0A21B 22%, var(--surface))}
 .dp-saved{font-size:11.5px;color:var(--teal)}.dp-link{font-size:12px;margin-left:auto}
-@media (max-width:1100px){.app-shell,.app-shell.dp-closed{grid-template-columns:1fr}.dp{position:static;max-height:none}.dp-collapsed{flex-direction:row}.dp-vert{writing-mode:horizontal-tb;transform:none}}
+@media (max-width:1100px){.app-shell,.app-shell.dp-closed{grid-template-columns:1fr}.dp{position:static;max-height:none;overflow:visible}.dp-scroll{overflow-y:visible;flex:none}.dp-collapsed{flex-direction:row}.dp-vert{writing-mode:horizontal-tb;transform:none}}
 /* scores */
 .score{display:inline-block;min-width:34px;text-align:center;font:700 12px var(--mono);border-radius:8px;padding:3px 6px;cursor:help}
 .score.hi{background:rgba(46,204,143,.2);color:var(--ok-text)}.score.mid{background:rgba(245,166,35,.18);color:var(--warn-text)}.score.lo{background:rgba(255,77,106,.16);color:var(--bad-text)}

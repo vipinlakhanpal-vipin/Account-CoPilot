@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.49";
+export const APP_VERSION = "3.50";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.50", date: "2026-10-07", notes: "Fixed: on a narrowed/minimized window, the Discovery Criteria panel's filter editor (Business triggers and every other criteria section) rendered with no visible height and Discover got squeezed right up against it — a classic flexbox trap (an inner scroll area sized itself off a parent height that the narrow-screen layout deliberately removes), not a duplicate of the v3.49 fix.", changes: [
+      { what: "At the ≤1100px breakpoint, `.dp-scroll` (the filter-editor content area) now flows as normal block content (`flex:none; overflow-y:visible`) instead of keeping `flex:1; overflow-y:auto`, which collapsed to ~0 height once its parent lost its fixed/sticky height on narrow screens; also explicitly set `.dp{overflow:visible}` at that breakpoint", where: "app/globals.css (the @media (max-width:1100px) rule for .dp / .dp-scroll)", why: "Reported — on a minimized/narrow window, all the filter criteria appeared to vanish between the Company/Contact tabs and the footer, and Discover looked like it didn't appear; root cause was flex-basis:0 + overflow:auto on a flex item whose container has no definite height at that width" },
+    ] },
   { version: "3.49", date: "2026-10-07", notes: "Fixed: the Discovery Criteria panel's \"Technology landscape\", \"Business triggers\", \"Financial indicators\", \"Contact intelligence\" and \"Engagement signals\" sections were collapsed by default under Edit criteria — unlike the other sections (which open automatically), these showed only a title with a barely-visible \"+\" to expand, so editing Business triggers looked like clicking Edit did nothing.", changes: [
       { what: "Added the `open` attribute to those 5 <Section> blocks so they expand immediately like every other filter group", where: "components/DiscoveryPanel.tsx", why: "Reported — clicking Edit criteria to change Business triggers showed nothing, because that section (and 4 others) defaulted to collapsed while the rest of the panel opened automatically" },
     ] },
