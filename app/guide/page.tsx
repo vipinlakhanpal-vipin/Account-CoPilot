@@ -332,6 +332,7 @@ export default async function GuidePage() {
               <T head={["Action", "Where", "Uses the API?", "Typical cost", "Example"]} rows={[
                 ["Browse, filter, scores, Pipeline, Guide", "Everywhere", "No", "$0", "Open the Pipeline, filter by Coupa, read a brief — free"],
                 ["Download Master Book (Excel)", "Top bar", "No", "$0", "Export all 464 accounts — free"],
+                ["PDF report", "Accounts → PDF report", "No", "$0", "Full account brief for Verified / Likely / Needs check companies, with a one-page explanation of how it was built from your ICP — free"],
                 ["Daily engine (find 5 + verify 25)", "Runs by itself", "No — your Claude plan", "$0 API", "Tomorrow's run adds 5 companies and verifies 25 — no API charge"],
                 ["Search companies (queued job)", "Setup → Settings → engine", "No — your Claude plan", "$0 API", "Queue 'Verify 50 in UAE' — done in the next scheduled session"],
                 ["Draft pitch plan", "Account brief", "Yes", "≈ $0.05–0.10", "Drafting a plan for GEMS Education ≈ $0.07"],
@@ -350,6 +351,7 @@ export default async function GuidePage() {
               <p className="note">Every paid run records its real cost; see Setup → Settings → 2 · Paid refresh → A · Your API credit for this month, all time, carry-over and your estimated balance. Actual spend is also shown in the Anthropic Console.</p></section>
 
             <section id="excel" className="panel"><h2>Excel Master Book</h2>
+              <p>For a readable, shareable document use <b>Accounts → PDF report</b> instead: it explains how the report is built from your ICP, then gives the same detail as the account brief (facts, maturity, scores, signals, ERP and apps, stakeholders, evidence) for the Verified, Likely or Needs check companies you pick.</p>
               <p>The <b>Master Book</b> button (top bar) builds a fresh Excel file from the live database the moment you click — nothing is pre-made or stale. It contains everything in the app, arranged for reporting, campaigns and offline review. Gold column headers are for your team&apos;s own input.</p>
               <h3>How it is prepared</h3>
               <T head={["Step", "What happens"]} rows={[

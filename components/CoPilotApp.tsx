@@ -24,6 +24,7 @@ import SavedReportsList, { SaveReportButton, type SavedReport } from "@/componen
 import ScheduledRunHistory from "@/components/ScheduledRunHistory";
 import EngineSearchAndRefresh from "@/components/EngineSearchAndRefresh";
 import EngineActivity from "@/components/EngineActivity";
+import PdfReportDialog from "@/components/PdfReportDialog";
 
 const HERO: Record<string, [string, string]> = {
   dashboard: ["Dashboard", "A live snapshot of UAE target accounts, S2P signals, ERP landscape and decision makers."],
@@ -447,6 +448,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
   const inScopeSignal = (s: Row) => { const c = coById[s.company_id]; return !!c && !/coupa/i.test(str(c.existing_s2p_product)); };
   const [perPerson, setPerPerson] = useState(true);
   const [missionView, setMissionView] = useState<"saved" | "activity" | "search" | "runs">("saved");
+  const [pdfOpen, setPdfOpen] = useState(false);
   // ?view=activity deep-links straight to a Mission Control sub-tab (the bell uses it).
   const viewParam = params.get("view");
   useEffect(() => { if (viewParam === "activity" || viewParam === "runs" || viewParam === "saved") setMissionView(viewParam); }, [viewParam]);
@@ -498,7 +500,8 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
 
   let view: React.ReactNode = null;
   if (tab === "accounts") {
-    view = <FilterTable unit="companies" title="Accounts" empty={notFound} note="ICP = net revenue ≥ $250M and 100+ employees (stock listing not required). ✓ Verified: confirmed from an official source · ● Likely: your data / Seamless say ≥ $250M, not yet confirmed · ! Needs check: sources disagree about $250M · ? Unknown: no revenue figure yet · ✕ Not ICP: below $250M. Hover a status for the reason; select a row to open the account brief."
+    view = <FilterTable unit="companies" title="Accounts" empty={notFound}
+      toggleExtra={<button type="button" className="btn tiny" onClick={() => setPdfOpen(true)} title="Build a PDF with the full account brief for Verified / Likely / Needs check companies">📄 PDF report</button>} note="ICP = net revenue ≥ $250M and 100+ employees (stock listing not required). ✓ Verified: confirmed from an official source · ● Likely: your data / Seamless say ≥ $250M, not yet confirmed · ! Needs check: sources disagree about $250M · ? Unknown: no revenue figure yet · ✕ Not ICP: below $250M. Hover a status for the reason; select a row to open the account brief."
       rows={[...A].sort((a, b) => icpRank(a.icp_status) - icpRank(b.icp_status) || sigRank(a.s2p_signal_level) - sigRank(b.s2p_signal_level) || (bestRevenue(b).v || 0) - (bestRevenue(a).v || 0))
         .map((a) => ({ ...a, icp_match_pct: scores[a.id]?.m.total ?? null, opportunity_pct: scores[a.id]?.o.total ?? null, coupa_fit_pct: scores[a.id]?.f.total ?? null }))}
       search={(a) => [a.company_name, a.industry, a.erp, a.existing_s2p_product, a.s2p_strong_signals].join(" ")}
@@ -779,6 +782,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
         ? <div className="panel"><h2>No {COUNTRIES.find((c) => c.code === country)?.name || country} accounts yet</h2>
             <p>This market is next on the roadmap. Add companies from the Research Queue (choose the country there), or pick another country above.</p></div>
         : view}</section>
+      {pdfOpen && <PdfReportDialog accounts={all.accounts} icpDef={icpDef} defaultRegion={country === ALL ? "UAE" : regionOf(country)} onClose={() => setPdfOpen(false)} />}
       {drill && <DrillDown d={drill} byCo={byCo} coById={coById} onClose={() => setDrill(null)} onAccount={setOpen} onContact={setContact} />}
       {open && A.find((x) => x.id === open) && <Brief a={A.find((x) => x.id === open)!} data={data} people={byCo[open] || []} onClose={() => setOpen(null)} onContact={setContact}
         scores={scores[open]} criteria={criteria} isSuper={isSuper} />}
@@ -838,7 +842,18 @@ function Brief({ a, data, people, onClose, onContact, scores, criteria, isSuper 
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="muted mono">{a.exchange} {a.ticker} · {a.industry}</div>
             <h3 className="drawer-title-logo"><CompanyLogo a={a} size={30} />{a.company_name}</h3>
-            <div style={{ marginTop: 6 }}><Pill s={a.s2p_signal_level} /> <span className="tag">{a.existing_s2p_product || "Unknown"}</span> <span className="tag">{a.s2p_platform_status || "Unknown"}</span></div>
+            <div style={{ marginTop: 6 }}>
+              {(() => {
+                // Three separate facts, each labelled, and "Unknown" ones are left out instead of shown as grey filler.
+                const known = (v: unknown) => !!v && !/^(unknown|no evidence|none)$/i.test(String(v).trim());
+                return <>
+                  <span title="How strong the evidence is that this company is buying a source-to-pay platform"><span className="chip-label">S2P signal</span><Pill s={a.s2p_signal_level || "NO SIGNAL"} /></span>
+                  {known(a.existing_s2p_product) && <span className="tag" title="The procurement platform they run today"><span className="chip-label">Platform</span>{a.existing_s2p_product}</span>}
+                  {known(a.s2p_platform_status) && <span className="tag" title="How sure we are about that platform"><span className="chip-label">Confidence</span>{a.s2p_platform_status}</span>}
+                  {!known(a.existing_s2p_product) && <span className="muted"> · no procurement platform found yet</span>}
+                </>;
+              })()}
+            </div>
           </div>
           <span className="cost-wrap"><button className="btn ghost" type="button" onClick={refreshResearch}>Refresh research</button><CostNote cost="≈ $1.20–1.50" /></span>
           <button className="btn ghost" type="button" onClick={onClose}>Close</button>
@@ -848,7 +863,7 @@ function Brief({ a, data, people, onClose, onContact, scores, criteria, isSuper 
           <div className="facts">
             <Fact l="Website"><Ext href={a.company_website}>{a.domain || a.company_website}</Ext></Fact>
             <Fact l="Revenue">{bestRevenue(a).v ? <>{usd(bestRevenue(a).v)} <span className="muted">{[bestRevenue(a).src, a.revenue_local, a.revenue_fy].filter(Boolean).join(" · ")}</span></> : ""}</Fact>
-            <Fact l="Listing">{a.listing_status || (a.exchange ? `Listed (${a.exchange})` : "")}</Fact>
+            <Fact l="Stock listing">{a.listing_status || (a.exchange ? `Listed (${a.exchange})` : "")}</Fact>
             <Fact l="Employees">{a.employee_range}</Fact>
             <Fact l="ICP fit">{a.icp_fit}{a.icp_fit_reason && <div className="note">{a.icp_fit_reason}</div>}</Fact>
             <Fact l="Ownership">{a.ownership}</Fact>
@@ -857,7 +872,7 @@ function Brief({ a, data, people, onClose, onContact, scores, criteria, isSuper 
             <Fact l="Last researched">{str(a.last_researched).slice(0, 10)}</Fact>
             <Fact l="Record dates"><span className="mono">Added {day(a.created_at) || "—"} · Updated {day(a.updated_at) || "—"} · Status since {statusSince(a) || "—"}</span></Fact>
             <Fact l="ICP status"><IcpTag s={a.icp_status} why={a.icp_fit_reason} />{a.icp_fit_reason && <div className="note">{a.icp_fit_reason}</div>}</Fact>
-            <Fact l="Lists">{(a.lists || []).join(", ")}</Fact>
+            <Fact l="Source list">{(a.lists || []).join(", ")}</Fact>
           </div>
           <div className="block mat-top">
             <div className="mat-head"><h4>Procurement &amp; IT maturity</h4><span className={`mat-pill mat-${mat.level.toLowerCase()}`}>{mat.level}</span></div>
