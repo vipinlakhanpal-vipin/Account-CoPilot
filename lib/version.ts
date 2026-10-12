@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.50";
+export const APP_VERSION = "3.51";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.51", date: "2026-10-12", notes: "Fixed the header overlapping when the browser window is narrowed: the Home tab used to collide with the search box. The header now reflows instead — tabs drop to their own row, then search gets its own row on small screens.", changes: [
+      { what: "Header reflows in steps instead of squeezing: below ~1320px the section tabs move to their own row (still attached to the sub-tab bar) and search takes the freed space; below 760px search gets a full row, the tagline hides and Master Book becomes icon-only; below 560px the logo block shrinks so the buttons stay on the top row", where: "app/globals.css (navbar responsive block at end of file; replaces the old 980px rule)", why: "Reported with a screenshot — at medium window widths the search pill kept a fixed minimum width while its container shrank, so it spilled over the Home tab. Checked at 1400, 1250, 900, 700 and 420px: no element overlaps and no sideways page scroll" },
+    ] },
   { version: "3.50", date: "2026-10-06", notes: "Mission Control's Saved filters tab: the saved-filter list is now a compact panel on the right of the results table (was a wide table above it), and Save this filter is disabled until something is actually filtered.", changes: [
       { what: "Redesigned SavedReportsList from a wide table (Name/Created by/Created/Contacts columns) to a compact card list, and placed it as a 280px panel to the right of the Search / Filter results table inside a new .mission-row flex layout (stacks on narrow screens)", where: "components/SavedReports.tsx (SavedReportsList), components/CoPilotApp.tsx (missionView \"saved\"), app/globals.css (.mission-row, .saved-reports-card)", why: "Reported with a screenshot — the saved-filter table sat as a wide block above the results table; asked for a small panel on the right instead" },
       { what: "Save this filter is now disabled (with an explanatory tooltip) unless the search box, a dropdown or a custom filter is actually set", where: "components/SavedReports.tsx (SaveReportButton, isFiltered)", why: "Reported — the button was enabled and showed \"Save this filter (1093)\" even with nothing filtered, which is just the full unfiltered contact count, not a filter worth naming and revisiting" },
