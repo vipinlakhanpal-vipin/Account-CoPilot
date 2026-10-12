@@ -23,6 +23,7 @@ import { withDefaults, icpMatch, opportunity, coupaFit, companyPasses, contactMa
 import SavedReportsList, { SaveReportButton, type SavedReport } from "@/components/SavedReports";
 import ScheduledRunHistory from "@/components/ScheduledRunHistory";
 import EngineSearchAndRefresh from "@/components/EngineSearchAndRefresh";
+import EngineActivity from "@/components/EngineActivity";
 
 const HERO: Record<string, [string, string]> = {
   dashboard: ["Dashboard", "A live snapshot of UAE target accounts, S2P signals, ERP landscape and decision makers."],
@@ -445,7 +446,10 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
   // out of scope — the same check also excludes confirmed Coupa customers in one pass.
   const inScopeSignal = (s: Row) => { const c = coById[s.company_id]; return !!c && !/coupa/i.test(str(c.existing_s2p_product)); };
   const [perPerson, setPerPerson] = useState(true);
-  const [missionView, setMissionView] = useState<"saved" | "search" | "runs">("saved");
+  const [missionView, setMissionView] = useState<"saved" | "activity" | "search" | "runs">("saved");
+  // ?view=activity deep-links straight to a Mission Control sub-tab (the bell uses it).
+  const viewParam = params.get("view");
+  useEffect(() => { if (viewParam === "activity" || viewParam === "runs" || viewParam === "saved") setMissionView(viewParam); }, [viewParam]);
   // Geography follows the country tile you selected (so KSA accounts aren't marked down for not being in the panel's default UAE).
   const scoreCriteria = useMemo<Criteria>(() => country === ALL ? criteria : { ...criteria, company: { ...criteria.company, countries: [country], regions: [] } }, [criteria, country]);
   const scores = useMemo(() => {
@@ -659,6 +663,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
       <div className="seg-toggle-row">
         <div className="seg-toggle" role="group" aria-label="Mission Control section">
           <button type="button" aria-pressed={missionView === "saved"} onClick={() => setMissionView("saved")}>Saved filters</button>
+          <button type="button" aria-pressed={missionView === "activity"} onClick={() => setMissionView("activity")}>Engine activity</button>
           {isSuper && <button type="button" aria-pressed={missionView === "search"} onClick={() => setMissionView("search")}>Search &amp; refresh</button>}
           <button type="button" aria-pressed={missionView === "runs"} onClick={() => setMissionView("runs")}>Scheduled runs</button>
         </div>
@@ -680,6 +685,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
           onOpen={(c, tf, name) => { setCriteria(c); setReportSeed(tf); setReportKey((k) => k + 1); notify(`Opened "${name}" — reapplying its filters.`, "ok"); }}
           onDelete={setSavedReportItems} />
       </div>}
+      {missionView === "activity" && <EngineActivity />}
       {missionView === "search" && isSuper && <EngineSearchAndRefresh />}
       {missionView === "runs" && <ScheduledRunHistory />}
     </>;

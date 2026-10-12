@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.51";
+export const APP_VERSION = "3.52";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.52", date: "2026-10-12", notes: "New Mission Control → Engine activity tab and a region dropdown in the bell. Both start from the regions that should run each morning, so a skipped region shows as a red gap instead of silently not appearing. Also: the daily routine's prompt was UAE-only since 28 Sep (fixed in claude.ai, no app change).", changes: [
+      { what: "Added Mission Control → Engine activity: an all-regions overview (state, daily target, accounts, Verified/Likely, latest scheduled run with a Ran / Not run flag, a 7-day strip of new companies per day, new in 7 days), a Region dropdown that opens one region's rules, status totals, 14-day run history and company list with date added, and a warning line naming any active region with no run since the latest 6am run", where: "components/EngineActivity.tsx (new), app/api/engine/route.ts (?only=activity), components/CoPilotApp.tsx, app/globals.css", why: "Reported — KSA, UK and USA had no new companies for a week and nothing on screen showed it, because the bell and run history only list runs that happened" },
+      { what: "Bell: a Select region dropdown beside Scheduled runs, the chosen region's name in bold green under the title, and the same table fields filtered to that region (plus a note when the region was left out of the latest run, and a link to the full Engine activity report)", where: "components/EngineBell.tsx, app/globals.css", why: "Requested — the bell mixed every region's runs into one dated list that was hard to follow by country" },
+    ] },
   { version: "3.51", date: "2026-10-12", notes: "Fixed the header overlapping when the browser window is narrowed: the Home tab used to collide with the search box. The header now reflows instead — tabs drop to their own row, then search gets its own row on small screens.", changes: [
       { what: "Header reflows in steps instead of squeezing: below ~1320px the section tabs move to their own row (still attached to the sub-tab bar) and search takes the freed space; below 760px search gets a full row, the tagline hides and Master Book becomes icon-only; below 560px the logo block shrinks so the buttons stay on the top row", where: "app/globals.css (navbar responsive block at end of file; replaces the old 980px rule)", why: "Reported with a screenshot — at medium window widths the search pill kept a fixed minimum width while its container shrank, so it spilled over the Home tab. Checked at 1400, 1250, 900, 700 and 420px: no element overlaps and no sideways page scroll" },
     ] },

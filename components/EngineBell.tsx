@@ -3,6 +3,9 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import DailyRunLocalTime from "@/components/DailyRunLocalTime";
 import { fmtDateTime } from "@/lib/dates";
+import { REGIONS } from "@/lib/icpDefinition.mjs";
+
+const KNOWN_REGIONS = new Set<string>(REGIONS.map((r: { key: string }) => r.key));
 
 type Detail = { name: string; status: string; revenue?: string; region?: string; entity_type?: "Regional HQ" | "Branch" | "Foreign Branch" | "Unknown" };
 type Entry = { at: string; summary: string; verified: number; new_companies: string[]; details?: Detail[]; region?: string };
@@ -37,6 +40,25 @@ export default function EngineBell() {
     return () => { clearInterval(t); document.removeEventListener("visibilitychange", onFocus); window.removeEventListener("focus", onFocus); document.removeEventListener("mousedown", close); };
   }, []);
   const unread = entries.filter((e) => e.at > seen).length;
+  // "" = nothing chosen yet → default to the region of the latest run. "All" = every region, grouped by day (the original view).
+  const [picked, setPicked] = useState("");
+  useEffect(() => { try { setPicked(localStorage.getItem("bell-region") || ""); } catch {} }, []);
+  // One block per (run, region), so a single region's history can be read on its own.
+  const blocks = entries.flatMap((e) => {
+    const regionField = e.region || e.summary.match(/^([^—]+)—/)?.[1]?.trim() || "—";
+    const listed = regionField.split(",").map((r) => r.trim()).filter(Boolean);
+    const newSet = new Set(e.new_companies.map(norm));
+    const rows = (e.details || []).map((d) => ({ ...d, isNew: newSet.has(norm(d.name)), isVerified: !/unknown/i.test(d.status) }));
+    const split = rows.some((d) => d.region);
+    // Instant lookups ("Company lookup: …") and free-text lines aren't regions — group them so the dropdown stays a clean region list.
+    const known = (r: string) => KNOWN_REGIONS.has(r) || r.includes(" + ");
+    const regs = (split ? [...new Set(rows.map((d) => d.region).filter(Boolean) as string[])] : [listed.length > 1 ? listed.join(" + ") : listed[0] || "—"])
+      .map((r) => (known(r) ? r : "Instant lookups"));
+    return regs.map((r) => ({ at: e.at, region: r, rows: split ? rows.filter((d) => d.region === r) : rows, summary: e.summary }));
+  });
+  const regionList = [...new Set(blocks.map((b) => b.region))].sort();
+  const selected = picked === "All" || regionList.includes(picked) ? picked : blocks[0]?.region || "All";
+  const choose = (r: string) => { setPicked(r); try { localStorage.setItem("bell-region", r); } catch {} };
   const toggle = () => {
     setOpen((o) => !o);
     if (!open && entries[0]) { try { localStorage.setItem("engine-seen", entries[0].at); } catch {} setTimeout(() => setSeen(entries[0].at), 1500); }
@@ -49,12 +71,47 @@ export default function EngineBell() {
       </button>
       {open && (
         <div className="bell-pop" role="dialog" aria-label="Engine notifications">
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <b>Scheduled runs</b>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+            <span className="bell-title-row"><b>Scheduled runs</b>
+              {entries.length > 0 && <label className="bell-region-select"><span className="sr-only">Select region</span>
+                <select value={selected} onChange={(e) => choose(e.target.value)} aria-label="Select region">
+                  <option value="All">All regions</option>
+                  {regionList.map((r) => <option key={r} value={r}>{r}</option>)}
+                </select></label>}
+            </span>
             <button type="button" className="btn tiny" onClick={() => setOpen(false)}>Close</button>
           </div>
+          {entries.length > 0 && <div className="bell-region-name">{selected === "All" ? "All regions" : selected}</div>}
           <p className="bell-resize-hint">Drag the bottom-right corner to expand ↘</p>
           {entries.length === 0 ? <p className="note">No runs yet. The engine runs every day at <DailyRunLocalTime /> and posts a summary here.</p>
+            : selected !== "All" ? (() => {
+              const mine = blocks.filter((b) => b.region === selected).slice(0, 6);
+              const lastAny = entries[0]?.at, lastMine = mine[0]?.at;
+              // The newest run of ANY region is a day or more after this region's newest run → it was left out of the latest run.
+              const skipped = !!lastAny && !!lastMine && new Date(lastAny).getTime() - new Date(lastMine).getTime() > 12 * 3600 * 1000;
+              return (<>
+                {skipped && <p className="bell-skip" role="status">Not included in the latest run ({fmtDateTime(lastAny!)}). Last run for {selected}: {fmtDateTime(lastMine!)}.</p>}
+                {mine.map((b, bi) => {
+                  const verifiedCt = b.rows.filter((d) => /verified/i.test(d.status)).length;
+                  const newCt = b.rows.filter((d) => d.isNew).length;
+                  return (
+                    <div key={bi} className={`bell-item${b.at > seen ? " new" : ""}`}>
+                      <small>{fmtDateTime(b.at)}{b.rows.length > 0 && <> — {newCt} new, {b.rows.length} checked: {verifiedCt} Verified</>}</small>
+                      {b.rows.length > 0 && (
+                        <table className="bell-table"><thead><tr><th>Company</th><th>New</th><th>Verified</th><th>Entity</th><th>Status</th><th>Revenue</th><th></th></tr></thead>
+                          <tbody>{b.rows.slice(0, 24).map((d, i) => (
+                            <tr key={i}><td>{d.name}</td><td>{d.isNew ? "✓" : ""}</td><td>{d.isVerified ? "✓" : ""}</td>
+                              <td className="muted" title={entityTitle(d.entity_type)}>{entityShort(d.entity_type)}</td>
+                              <td><span className={`tag ${statusTag(d.status)}`}>{d.status}</span></td><td className="muted">{d.revenue || "—"}</td>
+                              <td>{/^held/i.test(d.status) && <a className="job-link" href="/settings#engine-pending" onClick={() => setOpen(false)}>Activate →</a>}</td></tr>
+                          ))}</tbody></table>
+                      )}
+                      <p className="note bell-note">{b.summary}</p>
+                    </div>
+                  );
+                })}
+              </>);
+            })()
             : (() => {
               // Group by day, then by region within the day, so each region reads as its own labelled section
               // (new/verified counts, then its own company table) instead of one combined Region column that's
@@ -109,7 +166,10 @@ export default function EngineBell() {
                 );
               });
             })()}
-          <Link href="/settings#engine" className="btn tiny" onClick={() => setOpen(false)}>Open engine settings</Link>
+          <div className="bell-foot">
+            <Link href="/?tab=reports&view=activity" className="btn tiny primary" onClick={() => setOpen(false)}>Full report: Engine activity →</Link>
+            <Link href="/settings#engine" className="btn tiny" onClick={() => setOpen(false)}>Open engine settings</Link>
+          </div>
         </div>)}
     </div>
   );

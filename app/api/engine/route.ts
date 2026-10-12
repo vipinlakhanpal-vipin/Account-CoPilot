@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
-import { getAccess, canSeeRegion } from "@/lib/access";
+import { getAccess, canSeeRegion, canSeeCountry } from "@/lib/access";
 import { requirePaidApproval, pinSetting, savePin } from "@/lib/paidGuard";
-import { regionOf, normalizeDefinition } from "@/lib/icpDefinition.mjs";
+import { regionOf, normalizeDefinition, summarizeRules, REGIONS } from "@/lib/icpDefinition.mjs";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { invalidateAllData } from "@/lib/dataCache";
 import { createHash, randomBytes } from "node:crypto";
@@ -80,8 +80,11 @@ async function summary(db: ReturnType<typeof supabaseAdmin>) {
     pin: await pinSetting().then((p) => ({ set: !!p.hash, ask_super: !!p.ask_super, set_by: p.set_by || "", set_at: p.set_at || "" })) };
 }
 
-type LogDetail = { name: string; status?: string; revenue?: string; region?: string };
+type LogDetail = { name: string; status?: string; revenue?: string; region?: string; entity_type?: string };
 type LogEntry = { region?: string; summary: string; details?: LogDetail[] };
+type ActivityLogEntry = LogEntry & { at: string; verified: number; new_companies: string[]; source?: string };
+type ActivityRun = { at: string; region: string; source?: string; added: number; checked: number; summary: string;
+  rows: { name: string; status: string; revenue?: string; entity_type?: string; isNew: boolean }[] };
 
 // Older log entries (before ENGINE.md required one `log` call per region) can have several regions joined into
 // one entry, with no per-row region to tell which company belongs to which. Rather than guess, resolve each
@@ -119,6 +122,55 @@ export async function GET(req: Request) {
   if (!user) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
   const db = supabaseAdmin();
   const access = await getAccess(user);
+  // ?only=activity → Mission Control's Engine activity tab: starts from the regions that SHOULD run (Active in Define ICP)
+  // so a skipped region shows as a gap, instead of only listing the runs that happened.
+  if (new URL(req.url).searchParams.get("only") === "activity") {
+    const def = normalizeDefinition(await getSetting<unknown>(db, "icp_definition", null));
+    const log = await getSetting<{ entries: ActivityLogEntry[] }>(db, "engine_log", { entries: [] });
+    const entries = scopeLog(await enrichRegions(db, log.entries) as ActivityLogEntry[], access);
+    const norm = (n: string) => n.toLowerCase().replace(/[^a-z0-9]+/g, "");
+    const regionKeys = new Set<string>(REGIONS.map((r: { key: string }) => r.key));
+    // One run per (log entry, region): rows split by their own region when present, else the entry's region(s).
+    const runs: ActivityRun[] = [];
+    for (const e of entries) {
+      const rows = e.details || [];
+      const listed = (e.region || e.summary.match(/^([^—]+)—/)?.[1] || "").split(",").map((r) => r.trim()).filter(Boolean);
+      const split = rows.some((d) => d.region);
+      // Only real regions count — an instant lookup's summary ("Company lookup: …") or a free-text line is not a region.
+      const regions = (split ? [...new Set(rows.map((d) => d.region).filter(Boolean) as string[])] : listed).filter((r) => regionKeys.has(r));
+      const newSet = new Set((e.new_companies || []).map(norm));
+      for (const r of regions) {
+        // A legacy entry covering several regions with no per-row region can't be attributed, so it counts as "ran" with no counts
+        // rather than copying the same rows into every region.
+        const unattributable = !split && regions.length > 1;
+        const mine = unattributable ? [] : split ? rows.filter((d) => d.region === r) : rows;
+        const added = mine.length ? mine.filter((d) => newSet.has(norm(d.name))).length : regions.length === 1 ? (e.new_companies || []).length : 0;
+        runs.push({ at: e.at, region: r, source: e.source, added, checked: mine.length || (regions.length === 1 ? e.verified : 0), summary: e.summary,
+          rows: mine.map((d) => ({ name: d.name, status: d.status || "", revenue: d.revenue, entity_type: d.entity_type, isNew: newSet.has(norm(d.name)) })) });
+      }
+    }
+    // Companies — slim columns, paged past the 1000-row API limit.
+    type Co = { slug: string; company_name: string; country: string | null; icp_status: string | null; created_at: string; entity_type: string | null; verified_revenue_usd_m: number | null; verified_revenue_status: string | null };
+    let companies: Co[] = [];
+    for (let from = 0; ; from += 1000) {
+      const { data } = await db.from("companies").select("slug,company_name,country,icp_status,created_at,entity_type,verified_revenue_usd_m,verified_revenue_status").order("created_at", { ascending: false }).range(from, from + 999);
+      companies = companies.concat((data || []) as Co[]);
+      if (!data || data.length < 1000) break;
+    }
+    companies = companies.filter((c) => canSeeCountry(access, c.country));
+    const regions = REGIONS.filter((r) => canSeeRegion(access, r.key)).map((r) => {
+      const rules = def.regions[r.key];
+      const mine = companies.filter((c) => regionOf(c.country) === r.key);
+      const by: Record<string, number> = {};
+      for (const c of mine) by[c.icp_status || "Unknown"] = (by[c.icp_status || "Unknown"] || 0) + 1;
+      return { region: r.key, name: r.name, status: rules.status as string, discover_per_day: rules.engine.discover_per_day, verify_per_day: rules.engine.verify_per_day,
+        rules: summarizeRules(r.key, rules), accounts: mine.length, by_status: by };
+    });
+    return NextResponse.json({ now: new Date().toISOString(), regions, runs, companies: companies.map((c) => ({
+      slug: c.slug, name: c.company_name, country: c.country, region: regionOf(c.country), status: c.icp_status, entity_type: c.entity_type, added: c.created_at,
+      revenue: c.verified_revenue_usd_m ? `${c.verified_revenue_status === "FACT" ? "" : "~"}$${Math.round(Number(c.verified_revenue_usd_m)).toLocaleString()}M` : "" })) },
+      { headers: { "Cache-Control": "no-store" } });
+  }
   // ?only=log → just the scheduled-run notifications (for the bell in the top bar).
   if (new URL(req.url).searchParams.get("only") === "log") {
     const log = await getSetting<{ entries: LogEntry[] }>(db, "engine_log", { entries: [] });
