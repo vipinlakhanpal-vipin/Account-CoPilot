@@ -59,6 +59,13 @@ export const withDefaults = (c?: Partial<Criteria> | null): Criteria => ({
 export const activeCount = (c: Criteria) =>
   Object.values(c.company).filter((v) => (Array.isArray(v) ? v.length : v)).length + Object.values(c.contact).filter((v) => (Array.isArray(v) ? v.length : v)).length;
 
+/** Revenue and spend are held in USD millions: 415800 -> "$415.8B", 990 -> "$990M". Used in every generated sentence so a raw "415800M" never shows. */
+export const fmtUsdM = (m: number) => {
+  if (!isFinite(m) || m <= 0) return "";
+  if (m >= 1000) return `$${(m / 1000).toFixed(m >= 100000 ? 1 : 2).replace(/\.?0+$/, "")}B`;
+  return `$${m >= 100 ? Math.round(m) : m.toFixed(1).replace(/\.0$/, "")}M`;
+};
+
 // ---------- account facts ----------
 const s = (v: unknown) => (v === null || v === undefined ? "" : String(v));
 const text = (a: Row) => [a.s2p_strong_signals, a.digital_transformation_signals, a.procurement_transformation_signals, a.relevant_technologies,
@@ -166,7 +173,7 @@ export function estimateSpend(a: Row): Spend | null {
   return { total, direct: total * b.direct, indirect: total * b.indirect, mro: total * b.mro, services: total * b.services, capex: total * b.capex,
     budget: total * (b.indirect + b.services + b.mro), invoicesPerMonth: Math.round(invoicesYear / 12), posPerMonth: Math.round((invoicesYear * 0.7) / 12),
     suppliers, activeSuppliers: Math.round(suppliers * 0.45), transactionsPerYear: Math.round(invoicesYear * 1.7),
-    basis: `ESTIMATE from revenue ${Math.round(rev)}M × ${Math.round(b.ratio * 100)}% addressable-spend benchmark for ${s(a.industry) || "this sector"} (${b.level}: ${b.src}); transaction volumes from spend benchmarks. Not company data.` };
+    basis: `ESTIMATE from revenue ${fmtUsdM(rev)} × ${Math.round(b.ratio * 100)}% addressable-spend benchmark for ${s(a.industry) || "this sector"} (${b.level}: ${b.src}); transaction volumes from spend benchmarks. Not company data.` };
 }
 
 // ---------- scores ----------
@@ -219,7 +226,7 @@ export function icpMatch(a: Row, c: Criteria): Score {
     const official = revenueIsOfficial(a), inside = inBands(rev, k.revenue, REV_BAND), disputed = a.icp_status === "ICP — Needs check";
     parts.push({ label: "Revenue", max: 30, score: rev === null || disputed ? 5 : !inside ? 0 : official ? 30 : 10,
       why: rev === null ? "No revenue figure yet" : disputed ? "Sources disagree about $250M (needs check)"
-        : `${Math.round(rev)}M ${inside ? "in" : "outside"} selected bands — ${official ? "official figure" : "estimate only (not yet verified)"}` });
+        : `${fmtUsdM(rev)} ${inside ? "in" : "outside"} selected bands — ${official ? "official figure" : "estimate only (not yet verified)"}` });
   }
   if (k.employees.length) parts.push({ label: "Employees", max: 15, score: inBands(emp, k.employees, EMP_BAND) ? 15 : emp === null ? 6 : 0,
     why: emp === null ? "Headcount unknown (partial credit)" : `~${emp.toLocaleString()} staff` });
@@ -417,7 +424,7 @@ export function personaFit(p: Row, k?: Personas): PersonaFit {
 // ---------- recommendations ----------
 export function whySelected(a: Row, c: Criteria, m: Score, spend: Spend | null): string[] {
   const o = m.parts.filter((p) => p.score >= p.max * 0.8 && p.label !== "Procurement maturity").map((p) => `${p.label}: ${p.why}`);
-  if (spend) o.push(`Estimated addressable spend ~$${Math.round(spend.total)}M (${spend.basis.split(";")[0].replace("ESTIMATE from ", "benchmark: ")})`);
+  if (spend) o.push(`Estimated addressable spend ~${fmtUsdM(spend.total)} (${spend.basis.split(";")[0].replace("ESTIMATE from ", "benchmark: ")})`);
   const tech = [erpFamily(a) && `ERP ${erpFamily(a)}`, ...procurementPlatforms(a), ...integrationPlatforms(a)].filter(Boolean);
   if (tech.length) o.push(`Technology: ${tech.join(", ")}`);
   o.push(`Procurement maturity: ${maturity(a).level}`);

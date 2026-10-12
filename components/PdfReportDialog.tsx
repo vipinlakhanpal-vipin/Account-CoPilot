@@ -7,6 +7,21 @@ import type { Row } from "@/lib/data";
 const STATUSES = ["ICP — Verified", "ICP — Likely", "ICP — Needs check"] as const;
 const LIMITS = [25, 50, 100, 150];
 
+/** POSTs to the report API and saves the PDF. Shared by the region dialog and the single-company button in the account brief. */
+export async function downloadReport(body: Record<string, unknown>): Promise<boolean> {
+  try {
+    const res = await fetch("/api/report/pdf", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    if (!res.ok) { const j = await res.json().catch(() => ({})); notify(j.error || "Could not build the report. Try again.", "error"); return false; }
+    const blob = await res.blob();
+    const name = /filename="?([^";]+)"?/.exec(res.headers.get("content-disposition") || "")?.[1] || "Account_CoPilot_ICP_Report.pdf";
+    const url = URL.createObjectURL(blob), a = document.createElement("a");
+    a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    const n = res.headers.get("X-Report-Count"), t = res.headers.get("X-Report-Total");
+    notify(Number(n) === 1 ? "Company report ready." : `Report ready: ${n} of ${t} companies.`, "ok");
+    return true;
+  } catch { notify("Could not build the report. Try again.", "error"); return false; }
+}
+
 // Accounts → "PDF report". Explains how the report is produced from the saved ICP first, then lets the user pick what goes in.
 export default function PdfReportDialog({ accounts, icpDef, defaultRegion, onClose }:
   { accounts: Row[]; icpDef: unknown; defaultRegion: string; onClose: () => void }) {
@@ -32,17 +47,9 @@ export default function PdfReportDialog({ accounts, icpDef, defaultRegion, onClo
   async function generate() {
     if (!picked.length || busy) return;
     setBusy(true);
-    try {
-      const res = await fetch("/api/report/pdf", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ statuses: picked, region, limit }) });
-      if (!res.ok) { const j = await res.json().catch(() => ({})); notify(j.error || "Could not build the report. Try again.", "error"); setBusy(false); return; }
-      const blob = await res.blob();
-      const name = /filename="?([^";]+)"?/.exec(res.headers.get("content-disposition") || "")?.[1] || "Account_CoPilot_ICP_Report.pdf";
-      const url = URL.createObjectURL(blob), a = document.createElement("a");
-      a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-      notify(`Report ready: ${res.headers.get("X-Report-Count")} of ${res.headers.get("X-Report-Total")} companies.`, "ok");
-      onClose();
-    } catch { notify("Could not build the report. Try again.", "error"); }
+    const ok = await downloadReport({ statuses: picked, region, limit });
     setBusy(false);
+    if (ok) onClose();
   }
 
   return (

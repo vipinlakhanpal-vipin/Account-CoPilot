@@ -1,8 +1,8 @@
 import "server-only";
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import type { AllData, Row } from "@/lib/data";
-import { icpMatch, opportunity, coupaFit, procurementMaturity, estimateSpend, whySelected, recommendedActions, withDefaults, revenueOf, revenueIsOfficial, type Criteria } from "@/lib/icp";
-import { rulesFor, regionOf, OPTIONS, summarizeRules, type Rules } from "@/lib/icpDefinition.mjs";
+import { icpMatch, opportunity, coupaFit, procurementMaturity, estimateSpend, whySelected, recommendedActions, withDefaults, revenueOf, revenueIsOfficial, fmtUsdM, type Criteria } from "@/lib/icp";
+import { rulesFor, regionOf, OPTIONS, REGIONS, summarizeRules, type Rules } from "@/lib/icpDefinition.mjs";
 
 // One PDF with the same information the Account brief shows for a company, for the companies in the chosen ICP statuses.
 // pdf-lib's built-in Helvetica only covers Latin-1, so text is sanitised (≥ → >=, Arabic or other scripts dropped).
@@ -14,13 +14,16 @@ const STATUS_COLOR: Record<string, ReturnType<typeof rgb>> = {
 const REPLACE: Record<string, string> = { "≥": ">=", "≤": "<=", "≈": "~", "→": "->", "←": "<-", "✓": "v", "✕": "x", "●": "-", "·": "-", "…": "...", " ": " ", "​": "" };
 
 export const REPORT_STATUSES = ["ICP — Verified", "ICP — Likely", "ICP — Needs check"] as const;
-export type ReportOptions = { statuses: string[]; region: string; limit: number; generatedBy: string; criteria?: Partial<Criteria> | null };
+export type ReportOptions = { statuses: string[]; region: string; limit: number; generatedBy: string; criteria?: Partial<Criteria> | null; ids?: string[] };
 const s = (v: unknown) => (v === null || v === undefined ? "" : String(v));
-const usd = (m: unknown) => {
-  const n = Number(m);
-  if (m === null || m === undefined || m === "" || !isFinite(n) || n <= 0) return "";
-  if (n >= 1000) return `$${(n / 1000).toFixed(2).replace(/\.?0+$/, "")}B`;
-  return `$${n >= 100 ? Math.round(n) : n.toFixed(1).replace(/\.0$/, "")}M`;
+const usd = (m: unknown) => { const n = Number(m); return m === null || m === undefined || m === "" ? "" : fmtUsdM(n); };
+type Cur = { code: string; per_usd: number };
+/** "$415.8B (SAR 1.56T)": USD is the base currency, the regional currency follows in brackets. */
+const money = (usdM: unknown, cur: Cur) => {
+  const n = Number(usdM), base = usd(usdM);
+  if (!base || cur.code === "USD") return base;
+  const v = n * cur.per_usd, t = v >= 1e6 ? `${(v / 1e6).toFixed(2)}T` : v >= 1000 ? `${(v / 1000).toFixed(2)}B` : `${v >= 100 ? Math.round(v) : v.toFixed(1)}M`;
+  return `${base} (${cur.code} ${t.replace(/\.00(?=[TBM])/, "").replace(/(\.\d)0(?=[TBM])/, "$1")})`;
 };
 const day = (v: unknown) => s(v).slice(0, 10);
 
@@ -95,7 +98,8 @@ class Writer {
   h2(t: string) {
     this.ensure(70); this.y -= 6;
     this.p(t.toUpperCase(), { size: 9.5, bold: true, color: TEAL, gap: 1 });
-    this.page.drawLine({ start: { x: M, y: this.y + 1 }, end: { x: W - M, y: this.y + 1 }, thickness: 0.6, color: LINE }); this.y -= 3;
+    this.y -= 3;
+    this.page.drawLine({ start: { x: M, y: this.y }, end: { x: W - M, y: this.y }, thickness: 0.6, color: LINE }); this.y -= 5;
   }
   kv(label: string, value: unknown) {
     const v = this.clean(value);
@@ -114,16 +118,25 @@ class Writer {
     const xs = widths.reduce<number[]>((a, w, i) => [...a, (a[i] ?? M) + w * CW], [M]);
     const draw = (cells: string[], font: PDFFont, shade: boolean) => {
       const wrapped = cells.map((c, i) => this.wrap(c, font, size, widths[i] * CW - 6));
-      const n = Math.max(...wrapped.map((l) => l.length)), lead = size * 1.3, h = n * lead + 4;
+      const n = Math.max(...wrapped.map((l) => l.length)), lead = size * 1.35, h = n * lead + 8;
       this.ensure(h);
-      if (shade) this.page.drawRectangle({ x: M, y: this.y - h + 2, width: CW, height: h, color: rgb(0.94, 0.96, 0.96) });
-      wrapped.forEach((ls, i) => ls.forEach((ln, j) => this.page.drawText(ln, { x: xs[i] + 3, y: this.y - 2 - lead * (j + 1) + 3, size, font, color: INK })));
+      if (shade) this.page.drawRectangle({ x: M, y: this.y - h, width: CW, height: h, color: rgb(0.94, 0.96, 0.96) });
+      wrapped.forEach((ls, i) => ls.forEach((ln, j) => this.page.drawText(ln, { x: xs[i] + 3, y: this.y - 4 - lead * (j + 1) + 3, size, font, color: INK })));
       this.y -= h;
-      this.page.drawLine({ start: { x: M, y: this.y + 2 }, end: { x: W - M, y: this.y + 2 }, thickness: 0.3, color: LINE });
+      this.page.drawLine({ start: { x: M, y: this.y }, end: { x: W - M, y: this.y }, thickness: 0.3, color: LINE });
     };
     draw(head, this.bold, true);
     rows.forEach((r) => draw(r, this.font, false));
     this.y -= 4;
+  }
+  /** The Account CoPilot mark (same shapes as components/Logo.tsx; the tile is a flat teal since PDFs have no gradient fill here). */
+  logo(x: number, top: number, size: number) {
+    const k = size / 40;
+    const at = { x, y: top, scale: k };
+    this.page.drawSvgPath("M11 1 H29 A10 10 0 0 1 39 11 V29 A10 10 0 0 1 29 39 H11 A10 10 0 0 1 1 29 V11 A10 10 0 0 1 11 1 Z", { ...at, color: rgb(0.18, 0.7, 0.62) });
+    this.page.drawSvgPath("M20 8 L30 31 L20 25.5 L10 31 Z", { ...at, color: rgb(1, 1, 1) });
+    this.page.drawSvgPath("M20 8 L20 25.5 L10 31 Z", { ...at, color: rgb(0.87, 0.97, 0.94) });
+    this.page.drawCircle({ x: x + 29.5 * k, y: top - 11 * k, size: 3 * k, color: rgb(1, 0.88, 0.54), borderColor: rgb(0.05, 0.09, 0.19), borderWidth: 0.8 });
   }
   pill(text: string, color: ReturnType<typeof rgb>) {
     const t = this.clean(text), w = this.bold.widthOfTextAtSize(t, 9) + 12;
@@ -159,7 +172,8 @@ function howItWorks(w: Writer, regions: string[], def: unknown, opt: ReportOptio
   const daily = regions.map((r) => rulesFor(def, r) as Rules).filter((x) => x.status === "active");
   w.bullet(`A scheduled session runs every morning (6am Dubai): it finds new companies and re-verifies existing ones for each active region${daily.length ? ` (currently find ${daily[0].engine.discover_per_day} and verify ${daily[0].engine.verify_per_day} per region per day)` : ""}.`);
   w.bullet("It uses its own web search, never guesses emails or phones, and keeps conflicting findings rather than overwriting your reference workbook.");
-  w.p(`Selection for this report: region ${opt.region}; statuses ${opt.statuses.map((x) => x.replace("ICP — ", "")).join(", ")}; most promising first (by ICP Match), up to ${opt.limit} companies.`, { size: 8.5, color: MUTED, gap: 6 });
+  if (opt.ids?.length) w.p("Selection for this report: one company, chosen from its account brief.", { size: 8.5, color: MUTED, gap: 6 });
+  else w.p(`Selection for this report: region ${opt.region}; statuses ${opt.statuses.map((x) => x.replace("ICP — ", "")).join(", ")}; most promising first (by ICP Match), up to ${opt.limit} companies.`, { size: 8.5, color: MUTED, gap: 6 });
 }
 
 export async function buildReport(all: AllData, def: unknown, opt: ReportOptions): Promise<{ bytes: Uint8Array; count: number; total: number }> {
@@ -167,7 +181,8 @@ export async function buildReport(all: AllData, def: unknown, opt: ReportOptions
   const hires: Record<string, number> = {};
   all.history.forEach((h) => { if (/change|promot|join|hire/i.test(s(h.determination))) hires[h.company_id] = (hires[h.company_id] || 0) + 1; });
   const inRegion = (a: Row) => opt.region === "All" || regionOf(a.country) === opt.region;
-  const scored = all.accounts.filter((a) => opt.statuses.includes(s(a.icp_status)) && inRegion(a)).map((a) => {
+  const single = !!opt.ids?.length;
+  const scored = all.accounts.filter((a) => single ? opt.ids!.includes(a.id) : opt.statuses.includes(s(a.icp_status)) && inRegion(a)).map((a) => {
     const c: Criteria = { ...criteria, company: { ...criteria.company, countries: [s(a.country) || "UAE"], regions: [] } };
     const focus = (rulesFor(def, a.country) as Rules).focus;
     return { a, m: icpMatch(a, c), o: opportunity(a, hires[a.id] || 0, focus), f: coupaFit(a, focus), c };
@@ -177,19 +192,30 @@ export async function buildReport(all: AllData, def: unknown, opt: ReportOptions
   const total = scored.length, picked = scored.slice(0, opt.limit);
 
   const w = await Writer.create();
-  w.p("ACCOUNT COPILOT", { size: 9, bold: true, color: MUTED, gap: 0 });
-  w.h1("ICP account report");
+  const regionName = (REGIONS.find((r: { key: string; name: string }) => r.key === opt.region)?.name) || (opt.region === "All" ? "all regions" : opt.region);
+  const title = single && picked[0] ? `Account CoPilot report on ${s(picked[0].a.company_name)}` : `Account CoPilot report on ${regionName}`;
+  const logoTop = w.y;
+  w.logo(M, logoTop, 46);
+  w.p("ACCOUNT COPILOT", { size: 9, bold: true, color: MUTED, gap: 2, indent: 58 });
+  w.p(title, { size: 18, bold: true, color: TEAL, gap: 4, indent: 58 });
+  w.y = Math.min(w.y, logoTop - 54);
   w.p(`Generated ${new Date().toISOString().slice(0, 16).replace("T", " ")} UTC by ${opt.generatedBy || "a team member"}  |  ${picked.length} of ${total} matching companies`, { size: 9, color: MUTED, gap: 8 });
   const regions = opt.region === "All" ? [...new Set(picked.map((x) => regionOf(x.a.country)))] : [opt.region];
   howItWorks(w, regions.length ? regions : [opt.region], def, opt);
 
-  w.ensure(150);
-  w.h2("Companies in this report");
-  const counts = REPORT_STATUSES.map((st) => `${st.replace("ICP — ", "")}: ${picked.filter((x) => x.a.icp_status === st).length}`).join("   ");
-  w.p(counts, { size: 9, color: MUTED, gap: 4 });
-  w.table(["#", "Company", "Country", "Status", "Revenue", "Match", "Opp.", "Fit"],
-    picked.map((x, i) => [String(i + 1), s(x.a.company_name), s(x.a.country), s(x.a.icp_status).replace("ICP — ", ""), usd(revenueOf(x.a)) + (revenueOf(x.a) && !revenueIsOfficial(x.a) ? " (est.)" : ""),
-      `${x.m.total}%`, `${x.o.total}%`, `${x.f.total}%`]), [0.05, 0.31, 0.11, 0.12, 0.17, 0.08, 0.08, 0.08]);
+  const curOf = (a: Row) => (rulesFor(def, a.country) as Rules).currency as Cur;
+  const contactCos = new Set(all.contacts.map((p) => p.company_id));
+  if (!single) {
+    w.ensure(150);
+    w.h2("Companies in this report");
+    const counts = REPORT_STATUSES.map((st) => `${st.replace("ICP — ", "")}: ${picked.filter((x) => x.a.icp_status === st).length}`).join("   ");
+    w.p(counts, { size: 9, color: MUTED, gap: 2 });
+    w.p(`Amounts are in USD, with the regional currency in brackets. Stakeholder contacts are on file for ${picked.filter((x) => contactCos.has(x.a.id)).length} of these ${picked.length} companies.`, { size: 8.5, color: MUTED, gap: 4 });
+    w.table(["#", "Company", "Country", "Status", "Revenue", "Match", "Opp.", "Fit"],
+      picked.map((x, i) => [String(i + 1), s(x.a.company_name), s(x.a.country), s(x.a.icp_status).replace("ICP — ", ""),
+        money(revenueOf(x.a), curOf(x.a)) + (revenueOf(x.a) && !revenueIsOfficial(x.a) ? " est." : ""),
+        `${x.m.total}%`, `${x.o.total}%`, `${x.f.total}%`]), [0.04, 0.27, 0.09, 0.1, 0.26, 0.08, 0.08, 0.08]);
+  }
 
   for (const { a, m, o, f, c } of picked) {
     w.newPage();
@@ -211,7 +237,8 @@ export async function buildReport(all: AllData, def: unknown, opt: ReportOptions
     w.h2("Facts");
     const rev = revenueOf(a);
     w.kv("Website", a.company_website || a.domain);
-    w.kv("Revenue", rev ? `${usd(rev)}${revenueIsOfficial(a) ? " (official)" : " (estimate)"}  ${[a.verified_revenue_source, a.revenue_local, a.revenue_fy].filter(Boolean).join(" - ")}` : "");
+    const cur = curOf(a);
+    w.kv("Revenue", rev ? `${money(rev, cur)}${revenueIsOfficial(a) ? " - official" : " - estimate"}.  ${[a.verified_revenue_source, a.revenue_local && `reported as ${a.revenue_local}`, a.revenue_fy].filter(Boolean).join(" - ")}` : "");
     w.kv("Stock listing", a.listing_status || (a.exchange ? `Listed (${a.exchange})` : ""));
     w.kv("Employees", a.employee_range);
     w.kv("ICP fit", [a.icp_fit, a.icp_fit_reason].filter(Boolean).join(" - "));
@@ -221,11 +248,11 @@ export async function buildReport(all: AllData, def: unknown, opt: ReportOptions
     w.kv("Board phone", a.board_phone);
     w.kv("Last researched", day(a.last_researched));
     w.kv("Record dates", `Added ${day(a.created_at) || "-"} | Updated ${day(a.updated_at) || "-"} | Status since ${day(a.profile?.["Status changed"]?.at || a.last_verified || a.created_at) || "-"}`);
-    w.kv("Source list", (a.lists || []).join(", "));
+    w.kv("Data source", (a.lists || []).join(", "));
 
     w.h2(`Procurement & IT maturity: ${mat.level}`);
     w.p(mat.why);
-    w.kv("S2P platform", mat.platform); w.kv("ERP", mat.erp); w.kv("S2P signal", mat.signal); w.kv("Addressable spend", spend ? usd(spend.total) : "");
+    w.kv("S2P platform", mat.platform); w.kv("ERP", mat.erp); w.kv("S2P signal", mat.signal); w.kv("Addressable spend", spend ? money(spend.total, cur) : "");
 
     w.h2("AI intelligence (rule-based)");
     for (const [label, sc] of [["ICP Match", m], ["Opportunity", o], ["Coupa Fit", f]] as const) {
@@ -236,10 +263,26 @@ export async function buildReport(all: AllData, def: unknown, opt: ReportOptions
     const why = whySelected(a, c, m, spend);
     if (why.length) { w.p("Why this account was selected", { bold: true }); why.forEach((x) => w.bullet(x)); }
     if (spend) {
-      w.p("Procurement & spend intelligence (ESTIMATE)", { bold: true });
-      w.p([["Total addressable", spend.total], ["Direct", spend.direct], ["Indirect", spend.indirect], ["MRO", spend.mro], ["Services", spend.services], ["CAPEX", spend.capex], ["Budget", spend.budget]]
-        .map(([l, v]) => `${l} ${usd(v)}`).join("  |  "), { size: 8.5 });
-      w.p(`~${Math.round(spend.invoicesPerMonth).toLocaleString()} invoices/month, ~${Math.round(spend.posPerMonth).toLocaleString()} POs/month, ~${Math.round(spend.suppliers).toLocaleString()} suppliers/year. ${spend.basis}`, { size: 8.5, color: MUTED });
+      w.h2("Procurement & spend intelligence (ESTIMATE)");
+      w.p(`Annual addressable spend is revenue x a sector benchmark, split by category. Amounts in USD${cur.code === "USD" ? "" : `, with ${cur.code} in brackets (at ${cur.per_usd} per USD)`}.`, { size: 8.5, color: MUTED, gap: 4 });
+      const pct = (v: number) => `${spend.total ? Math.round((v / spend.total) * 100) : 0}%`;
+      w.table(["Spend category", "Annual amount", "Share of addressable spend"], [
+        ["Total addressable spend", money(spend.total, cur), "100%"],
+        ["Direct (materials and goods for production)", money(spend.direct, cur), pct(spend.direct)],
+        ["Indirect (operating and administrative)", money(spend.indirect, cur), pct(spend.indirect)],
+        ["MRO (maintenance, repair and operations)", money(spend.mro, cur), pct(spend.mro)],
+        ["Services (contractors and professional services)", money(spend.services, cur), pct(spend.services)],
+        ["CAPEX (capital projects and equipment)", money(spend.capex, cur), pct(spend.capex)],
+        ["Annual procurement budget (indirect + services + MRO)", money(spend.budget, cur), pct(spend.budget)],
+      ], [0.5, 0.28, 0.22]);
+      w.table(["Transaction volume", "Estimate"], [
+        ["Invoices per month", `~${Math.round(spend.invoicesPerMonth).toLocaleString("en-US")}`],
+        ["Purchase orders per month", `~${Math.round(spend.posPerMonth).toLocaleString("en-US")}`],
+        ["Suppliers per year", `~${Math.round(spend.suppliers).toLocaleString("en-US")}`],
+        ["Active suppliers", `~${Math.round(spend.activeSuppliers).toLocaleString("en-US")}`],
+        ["Procurement transactions per year", `~${Math.round(spend.transactionsPerYear).toLocaleString("en-US")}`],
+      ], [0.5, 0.5]);
+      w.p(spend.basis, { size: 8, color: MUTED });
     }
     const rec = recommendedActions(a, cs, f);
     w.p("Recommended actions", { bold: true });
@@ -273,7 +316,7 @@ export async function buildReport(all: AllData, def: unknown, opt: ReportOptions
 
     w.h2(`Stakeholders (${cs.length})`);
     if (cs.length) w.table(["Name", "Title", "Tier", "Email", "Phone"], cs.slice(0, 25).map((p) => [s(p.full_name), s(p.title_verbatim), s(p.contact_tier), s(p.email), s(p.phone)]), [0.2, 0.3, 0.08, 0.26, 0.16], 8);
-    else w.p("No contacts on file.", { size: 8.5, color: MUTED });
+    else w.p("No stakeholder contacts are on file for this company yet. The daily engine finds companies and verifies revenue; it does not collect people. Contacts reach the app from your reference workbook or from Seamless enrichment.", { size: 8.5, color: MUTED });
 
     if (conf.length) { w.h2(`Conflicts retained (${conf.length})`); w.p("Sources disagree on one or more fields for this company. The app keeps both values; open the account in the app to review them.", { size: 8.5, color: MUTED }); }
 

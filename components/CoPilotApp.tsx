@@ -24,7 +24,7 @@ import SavedReportsList, { SaveReportButton, type SavedReport } from "@/componen
 import ScheduledRunHistory from "@/components/ScheduledRunHistory";
 import EngineSearchAndRefresh from "@/components/EngineSearchAndRefresh";
 import EngineActivity from "@/components/EngineActivity";
-import PdfReportDialog from "@/components/PdfReportDialog";
+import PdfReportDialog, { downloadReport } from "@/components/PdfReportDialog";
 
 const HERO: Record<string, [string, string]> = {
   dashboard: ["Dashboard", "A live snapshot of UAE target accounts, S2P signals, ERP landscape and decision makers."],
@@ -524,7 +524,8 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
       onRow={openRow} />;
   } else if (tab === "pipeline") {
     const ranked = A.filter((a) => inPipe(a, scores[a.id])).sort((a, b) => scores[b.id].rank - scores[a.id].rank);
-    view = <FilterTable unit="accounts" title="Ranked pipeline" tipW={pipe} empty={notFound} note={<>
+    view = <FilterTable unit="accounts" title="Ranked pipeline" tipW={pipe} empty={notFound}
+      toggleExtra={<button type="button" className="btn tiny" onClick={() => setPdfOpen(true)} title="Build a PDF with the full account brief for Verified / Likely / Needs check companies">📄 PDF report</button>} note={<>
         <div className="pipe-rank-row">
           <div><b>Rank</b> — which account to work first: <b>{pipe.w_match}% × ICP Match + {pipe.w_opportunity}% × Opportunity + {pipe.w_fit}% × Coupa Fit</b>.</div>
           {ranked[0] && (() => { const t = ranked[0], sc = scores[t.id], p1 = sc.m.total * pipe.w_match / 100, p2 = sc.o.total * pipe.w_opportunity / 100, p3 = sc.f.total * pipe.w_fit / 100;
@@ -812,6 +813,7 @@ function Brief({ a, data, people, onClose, onContact, scores, criteria, isSuper 
   const [pitch, setPitch] = useState("");
   const [busy, setBusy] = useState(false);
   const [refresh, setRefresh] = useState("");
+  const [pdfBusy, setPdfBusy] = useState(false);
 
   async function draftPitch() {
     setBusy(true); setPitch("Drafting…");
@@ -855,6 +857,8 @@ function Brief({ a, data, people, onClose, onContact, scores, criteria, isSuper 
               })()}
             </div>
           </div>
+          <button className="btn ghost" type="button" disabled={pdfBusy} title="PDF with everything on this page, plus how it was built from your ICP"
+            onClick={async () => { setPdfBusy(true); await downloadReport({ companyId: a.id }); setPdfBusy(false); }}>{pdfBusy ? "Building…" : "📄 PDF"}</button>
           <span className="cost-wrap"><button className="btn ghost" type="button" onClick={refreshResearch}>Refresh research</button><CostNote cost="≈ $1.20–1.50" /></span>
           <button className="btn ghost" type="button" onClick={onClose}>Close</button>
         </div>
@@ -872,7 +876,7 @@ function Brief({ a, data, people, onClose, onContact, scores, criteria, isSuper 
             <Fact l="Last researched">{str(a.last_researched).slice(0, 10)}</Fact>
             <Fact l="Record dates"><span className="mono">Added {day(a.created_at) || "—"} · Updated {day(a.updated_at) || "—"} · Status since {statusSince(a) || "—"}</span></Fact>
             <Fact l="ICP status"><IcpTag s={a.icp_status} why={a.icp_fit_reason} />{a.icp_fit_reason && <div className="note">{a.icp_fit_reason}</div>}</Fact>
-            <Fact l="Source list">{(a.lists || []).join(", ")}</Fact>
+            <Fact l="Data source">{(a.lists || []).join(", ")}</Fact>
           </div>
           <div className="block mat-top">
             <div className="mat-head"><h4>Procurement &amp; IT maturity</h4><span className={`mat-pill mat-${mat.level.toLowerCase()}`}>{mat.level}</span></div>
