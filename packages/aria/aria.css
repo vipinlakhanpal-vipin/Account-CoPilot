@@ -73,3 +73,6 @@
 .aria-cost{margin-top:8px}
 @media (max-width:640px){.aria-window{height:calc(100vh - 16px);border-radius:14px}.aria-title b{font-size:18px}.aria-toggle{display:none}}
 
+.aria-note{margin:8px 0 0 !important;font:600 11px var(--aria-body);padding-top:6px;border-top:1px dashed var(--aria-line)}
+.aria-note.free{color:#0B6B45}
+.aria-note.ai{color:#B8530A}

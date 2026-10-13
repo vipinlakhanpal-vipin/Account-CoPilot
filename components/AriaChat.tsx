@@ -2,7 +2,6 @@
 import AriaChat from "@/packages/aria/AriaChat";
 import { paidFetch } from "@/components/Confirm";
 import { downloadReport } from "@/components/ReportDialog";
-import CostNote from "@/components/CostNote";
 
 const EXAMPLES: [string, string][] = [
   ["Counts", "How many Verified companies do we have in each region?"],
@@ -23,7 +22,6 @@ export default function AccountCopilotAria() {
       examples={EXAMPLES}
       welcomeText={<>Ask me anything that lives in Account CoPilot: companies, contacts, signals, technology, sources, ICP rules, engine runs. I answer in tables, and I can build a detailed <b>PDF</b> or an <b>Excel</b> contact list for you. Type below, or tap the microphone and speak.</>}
       placeholder="Ask about companies, contacts, platforms, signals…"
-      footerNote={<CostNote cost="≈ $0.02–0.10 per question" />}
       buttonClassName="bell-btn"
     />
   );

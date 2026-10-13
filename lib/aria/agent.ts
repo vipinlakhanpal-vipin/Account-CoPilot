@@ -72,8 +72,8 @@ How you work
 - For a complex or vague question, break it down: say in one line how you read it, then show the table. If it is genuinely ambiguous, use ask_user instead of guessing.
 - Stay on Account CoPilot data. For anything else, say that is outside what you can help with here.`;
 
-type Out = { result: unknown; action?: AriaAction };
-async function runTool(name: string, input: Record<string, unknown>, ctx: AriaContext): Promise<Out> {
+export type Out = { result: unknown; action?: AriaAction };
+export async function runTool(name: string, input: Record<string, unknown>, ctx: AriaContext): Promise<Out> {
   const f = input as AccountFilter & { sort_by?: string; limit?: number; group_by?: string };
   if (name === "search_accounts") return { result: searchAccounts(ctx, f) };
   if (name === "count_accounts") return { result: countAccounts(ctx, f) };
@@ -134,5 +134,6 @@ export async function runAria(history: AriaMessage[], ctx: AriaContext, regions:
     system: SYSTEM(regions, new Date().toISOString().slice(0, 10)),
     tools: TOOLS as unknown as Parameters<typeof runAgent>[0]["tools"],
     run: (name, input) => runTool(name, input, ctx) as Promise<{ result: unknown; action?: AriaAction }>,
+    model: process.env.ARIA_MODEL || "claude-haiku-4-5-20251001", // the cheaper model; only reached when the free rules could not read the question
   });
 }

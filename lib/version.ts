@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.76";
+export const APP_VERSION = "3.77";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.77", date: "2026-10-14", notes: "Aria answers most questions for free: common ones (counts, lists, one company, contacts, ICP rules, PDF and Excel) are read by plain rules from your database with no AI and no API cost. Only questions the rules cannot read go to the AI, now on the cheaper model, and only those show a cost note.", changes: [
+      { what: "Added a free-first router: counts, company lists, one company's detail, contacts, ICP rules, PDF reports and Excel contact lists (with tap-able region / how many / pick-by questions) are answered from the database with no AI, no API cost and no PIN. Each reply is tagged \"Free answer\" or \"AI answer\" and the permanent cost note under the message box is gone", where: "lib/aria/router.ts (new), app/api/aria/route.ts, packages/aria/AriaChat.tsx, components/AriaChat.tsx", why: "Requested — Aria only extracts data already in the app, so it should not cost API credit unless a question truly needs the AI" },
+      { what: "The AI fallback now runs on the cheaper Haiku model (override with ARIA_MODEL) and is the only path behind the paid-actions PIN", where: "lib/aria/agent.ts, app/api/aria/route.ts", why: "Requested — option B: keep the AI but make what reaches it cheap" },
+    ] },
   { version: "3.76", date: "2026-10-14", notes: "Corrected Aria's name: Automatic Responsive Intelligent Assistant.", changes: [
       { what: "Aria's expansion now reads Automatic Responsive Intelligent Assistant in the chat window header, her instructions and the release notes", where: "packages/aria/AriaChat.tsx, lib/aria/agent.ts, lib/version.ts", why: "Corrected — it is Responsive, not Responsible" },
     ] },

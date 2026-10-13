@@ -111,6 +111,12 @@ Every Anthropic-API route (`/api/research`, `/api/discover`, `/api/pitch`, and `
 - **Client:** uses `paidFetch()` from `components/Confirm.tsx`, which asks for the PIN in-app and retries with the `x-paid-pin` header. The engine refresh forwards that header to the research and discovery calls it starts.
 - **Any new paid action** must use both the guard and `paidFetch`.
 
+## Aria, the in-app assistant (v3.72+)
+- **Where:** the robot icon beside the suggestions bulb (`components/AriaChat.tsx`, a thin wrapper over the copy-in package `packages/aria`). Server: `app/api/aria/route.ts`.
+- **Free first, AI second (v3.77):** `lib/aria/router.ts` reads common questions by plain rules (counts, lists, one company, contacts, ICP rules, PDF, Excel with its region / how-many / pick-by questions) and answers from the database with **no API cost and no PIN**. Only what the rules cannot read goes to the AI (`lib/aria/agent.ts`, default model Haiku 4.5, override with `ARIA_MODEL`), which is behind `requirePaidApproval`. Every reply carries a note saying which path answered.
+- **Tools** live in `lib/aria/tools.ts` (all read-only, scoped by `scopeData`). Excel and PDF go through the existing `/api/report/*` routes.
+- **Voice** uses the browser's speech recognition; nothing extra to configure. Aria's spend is not yet added to the Settings spend total.
+
 ## Guide & Research more (v1.14)
 - `/guide` documents every feature, the point system and the engine steps. Update it whenever a feature or rule changes (the spend table reads `SPEND_BENCHMARKS` from `lib/icp.ts`).
 - **Research more** (left panel) → `app/api/discover` → `discoverCompanies()` in `lib/research/engine.ts`. It is paid and user-triggered with a confirmation: it adds companies as list "Claude discovery" and, optionally, runs a Quick research per company. `app/api/research` now sets ICP status from the researched revenue (same rule as recompute).

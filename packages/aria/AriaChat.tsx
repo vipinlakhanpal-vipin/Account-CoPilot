@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import type { AriaAction } from "./types";
 
 type Action = AriaAction;
-type Msg = { role: "user" | "assistant"; content: string; actions?: Action[]; choices?: string[] };
+type Msg = { role: "user" | "assistant"; content: string; actions?: Action[]; choices?: string[]; mode?: string; note?: string };
 
 const DEFAULT_EXAMPLES: [string, string][] = [
   ["Counts", "How many Verified companies do we have in each region?"],
@@ -106,7 +106,7 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
       const init = { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: history }) };
       const res = await (sendFn ? sendFn(endpoint, init) : fetch(endpoint, init));
       const j = await res.json().catch(() => ({}));
-      reply = res.ok ? { role: "assistant", content: String(j.text || ""), actions: j.actions || [], choices: j.choices || [] }
+      reply = res.ok ? { role: "assistant", content: String(j.text || ""), actions: j.actions || [], choices: j.choices || [], mode: j.mode, note: j.note }
         : { role: "assistant", content: j.error || "I could not answer that just now. Try again." };
     } catch { reply = { role: "assistant", content: "I could not reach the server. Try again." }; }
     setMsgs([...next, reply]); setBusy(false);
@@ -185,6 +185,7 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
                         <button type="button" key={j} className="btn primary tiny" disabled={filing === `${i}-${j}`} onClick={() => file(a, `${i}-${j}`)}>
                           {filing === `${i}-${j}` ? "Building…" : `${a.kind === "xlsx" ? "📊" : "📄"} ${a.label}`}</button>))}</div>
                     )}
+                    {m.note && <p className={`aria-note ${m.mode === "ai" ? "ai" : "free"}`}>{m.note}</p>}
                     {m.choices && m.choices.length > 0 && i === msgs.length - 1 && !busy && (
                       <div className="aria-choices">{m.choices.map((c) => <button type="button" key={c} onClick={() => send(c)}>{c}</button>)}</div>
                     )}
