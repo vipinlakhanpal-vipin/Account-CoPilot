@@ -34,6 +34,37 @@ const TAGS: Record<string, [string, string]> = {
   "Matches your personas": ["FFD5F0E4", "FF0B6B45"], "Partly matches": ["FFFFF1D6", "FF8A5A00"], "Outside your personas": ["FFF1F3F6", "FF6B7280"],
 };
 const YES_NO: Record<string, [string, string]> = { Yes: ["FFE1ECFB", "FF1D4F91"], No: ["FFF1F3F6", "FF6B7280"] };
+// Colour code used on every sheet. value tone → [fill, text]
+const TONE: Record<"good" | "info" | "warn" | "bad" | "quiet", [string, string]> = {
+  good: ["FFD5F0E4", "FF0B6B45"], info: ["FFE1ECFB", "FF1D4F91"], warn: ["FFFFF1D6", "FF8A5A00"], bad: ["FFFDE7E7", "FF9B1C1C"], quiet: ["FFF1F3F6", "FF6B7280"],
+};
+// Column groups get their own header colour, so a wide sheet reads in blocks: who, how to reach, account context, evidence, your input.
+const G_WHO = "FF1F3A5F", G_REACH = "FF0E6E62", G_ACCOUNT = "FF2E5E8C", G_EVIDENCE = "FF5B6B80";
+const GROUP_KEYS: Record<string, string[]> = {
+  [G_REACH]: ["email", "email_status", "email_source", "email_confidence", "email_candidate", "phone", "phone_type", "location", "linkedin_url", "company_website", "website", "hq"],
+  [G_ACCOUNT]: ["existing_s2p_product", "account_s2p_signal", "s2p_contact_signal", "notes_company", "erp", "erp_status", "s2p_platform_status", "s2p_signal_level", "s2p_strong_signals",
+    "coupa_opportunity_type", "ariba_opportunity_type", "industry", "revenue", "revenue_type", "platform", "platform_status", "employees", "contacts"],
+  [G_EVIDENCE]: ["research_channel", "channel_state", "channel_source", "source", "source_type", "source_url", "verification_status", "employment_status", "previous_company", "previous_title",
+    "record_status", "claude_check", "notes_contact", "revenue_source_url", "research_confidence", "first_found", "last_researched"],
+};
+const headerGroup = (key: string) => Object.entries(GROUP_KEYS).find(([, keys]) => keys.includes(key))?.[0] || G_WHO;
+const STATUS_KEYS = new Set(["verification_status", "email_status", "record_status", "employment_status", "erp_status", "s2p_platform_status", "platform_status", "review_status",
+  "outreach_status", "research_confidence", "email_confidence", "revenue_status", "level", "revenue_type", "status"]);
+/** Colour for a status-like value, or undefined to leave the cell plain. Negative words are checked first ("Unverified" contains "verified"). */
+function toneOf(key: string, v: string): [string, string] | undefined {
+  const t = v.trim();
+  if (!t) return undefined;
+  if (key === "contact_tier") return /tier\s*1/i.test(t) ? TONE.good : /tier\s*2/i.test(t) ? TONE.info : /tier\s*3/i.test(t) ? TONE.warn : /tier\s*4/i.test(t) ? TONE.quiet : undefined;
+  if (key === "channel_state") return /claude/i.test(t) ? TONE.info : undefined;
+  if (key === "existing_s2p_product" || key === "platform") return /coupa/i.test(t) ? TONE.good : /ariba/i.test(t) ? TONE.info : /no evidence|unknown|none/i.test(t) ? TONE.quiet : TONE.warn;
+  if (!STATUS_KEYS.has(key)) return undefined;
+  if (/conflict|invalid|bounce|inactive|former|\bleft\b|wrong|rejected|not valid/i.test(t)) return TONE.bad;
+  if (/unverified|unknown|not found|no evidence|none|n\/a|not checked|pending/i.test(t)) return TONE.quiet;
+  if (/needs? check|to review|review|stale|partial|estimate|medium|low|replacement|transformation|evaluation|rfp|implementing|recently/i.test(t)) return TONE.warn;
+  if (/likely|probable|high|catch-all/i.test(t)) return TONE.info;
+  if (/verified|confirmed|active|valid|fact|official|current|done|yes/i.test(t)) return TONE.good;
+  return undefined;
+}
 const YES_NO_KEYS = new Set(["scp_customer", "hs_contact", "hs_in"]);
 const HUBSPOT_KEYS = new Set(["scp_customer", "hs_stage", "hs_owner", "hs_deals", "hs_latest", "hs_contact", "hs_action", "hs_in"]);
 const SIGNALS = TAGS;
@@ -70,10 +101,10 @@ function table(wb: ExcelJS.Workbook, name: string, title: string, subtitle: stri
   cols.forEach(([h, key, w], i) => {
     const cell = ws.getCell(3, i + 1);
     cell.value = h;
-    cell.fill = fill(inputs.includes(key) ? INPUT_HEADER : HUBSPOT_KEYS.has(key) ? HUBSPOT_HEADER : HEADER);
+    cell.fill = fill(inputs.includes(key) ? INPUT_HEADER : HUBSPOT_KEYS.has(key) ? HUBSPOT_HEADER : key === "__n" || key === "__logo" ? NAVY_2 : headerGroup(key));
     cell.font = f({ bold: true, color: { argb: "FFFFFFFF" } });
     cell.alignment = { wrapText: true, vertical: "middle", horizontal: key === "__n" ? "center" : "left", indent: key === "__n" ? 0 : 1 };
-    cell.border = { bottom: { style: "medium", color: { argb: NAVY } } };
+    cell.border = { top: { style: "thin", color: { argb: "FFFFFFFF" } }, left: { style: "thin", color: { argb: "FFFFFFFF" } }, right: { style: "thin", color: { argb: "FFFFFFFF" } }, bottom: { style: "medium", color: { argb: NAVY } } };
     ws.getColumn(i + 1).width = key === "__n" ? 7 : key === "__logo" ? 4.5 : W(w);
   });
   ws.getRow(3).height = 42;
@@ -99,10 +130,17 @@ function table(wb: ExcelJS.Workbook, name: string, title: string, subtitle: stri
       cell.fill = fill(isInput ? INPUT_FILL : ri % 2 ? BAND : "FFFFFFFF");
       cell.border = isInput
         ? { top: { style: "thin", color: { argb: INPUT_BORDER } }, left: { style: "thin", color: { argb: INPUT_BORDER } }, bottom: { style: "thin", color: { argb: INPUT_BORDER } }, right: { style: "thin", color: { argb: INPUT_BORDER } } }
-        : { bottom: { style: "hair", color: { argb: RULE } } };
-      const tag = TAGS[String(v)] || (YES_NO_KEYS.has(key) ? YES_NO[String(v)] : undefined);
+        : { top: { style: "thin", color: { argb: RULE } }, left: { style: "thin", color: { argb: RULE } }, bottom: { style: "thin", color: { argb: RULE } }, right: { style: "thin", color: { argb: RULE } } };
+      const tag = TAGS[String(v)] || (YES_NO_KEYS.has(key) ? YES_NO[String(v)] : undefined) || toneOf(key, String(v));
       if (tag) { cell.fill = fill(tag[0]); cell.font = f({ bold: true, color: { argb: tag[1] } }); }
     });
+    // A fixed, tidy row height: long notes wrap to at most three lines (the full text is in the cell) instead of stretching the row to a page.
+    const lines = cols.reduce((n, [, key, w, kind]) => {
+      if (kind !== "wrap") return n;
+      const text = String(Array.isArray(r[key]) ? r[key].join("; ") : r[key] ?? "");
+      return Math.max(n, Math.ceil(text.length / Math.max(8, W(w) * 0.95)));
+    }, 1);
+    ws.getRow(rowN).height = Math.min(lines, 3) * 17 + 8;
   });
   // Company logos: a 16px image inside the row (placed over the cell, so row heights don't change); one embedded copy per company.
   if (logos) rows.forEach((r, ri) => {
@@ -350,6 +388,13 @@ export async function buildWorkbook(d: AllData, icpDef?: unknown): Promise<Buffe
   const legend = wb.addWorksheet("Settings & Legend", { properties: { tabColor: { argb: TABS[11] } }, views: [{ showGridLines: false }] });
   banner(legend, "LEGEND", "How to read this workbook", 3);
   const itemsAll: [string, string, [string, string]?][] = [
+    ["Long notes", "Cells with long text show the first three lines; click the cell to read all of it"],
+    ["Green tag", "Verified, confirmed, official, current or valid", TONE.good],
+    ["Blue tag", "Likely, probable or high confidence; also Claude-added rows and Ariba", TONE.info],
+    ["Amber tag", "Needs a check, partial, an estimate, or a platform project under way", TONE.warn],
+    ["Red tag", "Conflicting, invalid, inactive or a person who has left", TONE.bad],
+    ["Grey tag", "Unknown, unverified, no evidence or not checked", TONE.quiet],
+    ["Header colours", "Dark blue = who it is · green = how to reach · blue = account context · grey = evidence and source · gold = your input", [G_WHO, "FFFFFFFF"]],
     ["ICP — Verified", "Revenue ≥ $250M from an official source (annual report, filing, company-quoted results)", TAGS["ICP — Verified"]],
     ["ICP — Likely", "≥ $250M per your data, Seamless or estimates; not yet confirmed officially", TAGS["ICP — Likely"]],
     ["ICP — Needs check", "Sources disagree across the $250M line", TAGS["ICP — Needs check"]],
@@ -402,48 +447,19 @@ function hubspotCols(hs: Row | undefined, email: string): Row {
   };
 }
 
-/** Existing platform customers (Coupa, Ariba, other platforms): the lists behind the dashboard's customer tiles, one sheet. */
+/** Existing platform customers (Coupa, Ariba, other platforms): the lists behind the dashboard's customer tiles, in the same table style as the other sheets. */
 function writeExistingCustomers(wb: ExcelJS.Workbook, groups: { label: string; rows: Row[]; note?: string }[], people: Row[], icpDef: unknown, today: string) {
-  const GREEN = "FF0F6E56", BAND = "FFF1F7F5";
   const perCo = new Map<string, number>();
   people.forEach((p) => perCo.set(p.company_id as string, (perCo.get(p.company_id as string) || 0) + 1));
-  const cols: [string, number][] = [["Platform", 24], ["Company Name", 34], ["Country", 11], ["ICP Status", 18], ["Net Revenue (USD, local in brackets)", 30], ["Revenue Type", 14],
-    ["Platform Status", 28], ["Existing ERP", 26], ["Total Employees", 18], ["HQ Location", 24], ["Contacts on File", 12], ["Opportunity", 52]];
-  const ws = wb.addWorksheet("Existing Customers", { properties: { tabColor: { argb: TABS[3] } }, views: [{ state: "frozen", ySplit: 4, showGridLines: false }] });
-  ws.columns = cols.map(([, width]) => ({ width }));
-  ws.mergeCells(1, 1, 1, 6);
-  ws.getCell(1, 1).value = "Existing platform customers";
-  ws.getCell(1, 1).font = { bold: true, size: 15, color: { argb: GREEN } };
-  ws.mergeCells(2, 1, 2, 12);
-  ws.getCell(2, 1).value = groups.map((g) => `${g.label}: ${g.rows.length}`).join("   |   ");
-  ws.getCell(2, 1).font = { bold: true, size: 12 };
-  ws.mergeCells(3, 1, 3, 12);
-  ws.getCell(3, 1).value = "These are the lists behind the Executive Dashboard's customer tiles. They already run an S2P platform, so they are not prospects: the question is what to sell them next. Revenue is in USD with the regional currency in brackets.";
-  ws.getCell(3, 1).font = { italic: true, color: { argb: "FF5B6670" } };
-  ws.getCell(3, 1).alignment = { wrapText: true, vertical: "top" };
-  ws.getRow(3).height = 30;
-  cols.forEach(([h], i) => { ws.getCell(4, i + 1).value = h; });
-  const head = ws.getRow(4);
-  head.height = 26;
-  head.eachCell((c) => { c.font = { bold: true, color: { argb: "FFFFFFFF" } }; c.fill = fill(GREEN); c.alignment = { vertical: "middle", wrapText: true }; });
-  let r = 5;
-  groups.forEach((g, gi) => {
-    const rows = [...g.rows].sort((a, b) => String(a.company_name).localeCompare(String(b.company_name)));
-    rows.forEach((a) => {
-      const rev = revenueOf(a), cur = rulesFor(icpDef, a.country).currency as { code: string; per_usd: number };
-      const v = [g.label, a.company_name, a.country, a.icp_status, rev ? fmtMoneyM(rev, cur) : "", rev ? (revenueIsOfficial(a) ? "Official" : "Estimate") : "",
-        a.s2p_platform_status, String(a.erp || "").replace(/\s*\(.*$/, ""), String(a.employee_range || "").replace(/\s*\(.*$/, ""),
-        [a.hq_city, a.country].filter(Boolean).join(", "), perCo.get(a.id) || 0, g.note || ""];
-      v.forEach((val, ci) => {
-        const cell = ws.getCell(r, ci + 1);
-        cell.value = val as string | number;
-        cell.fill = fill(gi % 2 ? "FFFFFFFF" : BAND);
-        cell.alignment = { vertical: "top", wrapText: true };
-      });
-      ws.getCell(r, 2).font = { bold: true };
-      r++;
-    });
-  });
-  if (r === 5) { ws.mergeCells(5, 1, 5, 12); ws.getCell(5, 1).value = "No existing platform customers on file yet."; ws.getCell(5, 1).font = { italic: true }; }
-  ws.autoFilter = { from: { row: 4, column: 1 }, to: { row: 4, column: cols.length } };
+  const rows: Row[] = groups.flatMap((g) => [...g.rows].sort((a, b) => String(a.company_name).localeCompare(String(b.company_name))).map((a) => {
+    const rev = revenueOf(a), cur = rulesFor(icpDef, a.country).currency as { code: string; per_usd: number };
+    return { platform: g.label, company_name: a.company_name, country: a.country, icp_status: a.icp_status, revenue: rev ? fmtMoneyM(rev, cur) : "",
+      revenue_type: rev ? (revenueIsOfficial(a) ? "Official" : "Estimate") : "", platform_status: a.s2p_platform_status, erp: String(a.erp || "").replace(/\s*\(.*$/, ""),
+      employees: String(a.employee_range || "").replace(/\s*\(.*$/, ""), hq: [a.hq_city, a.country].filter(Boolean).join(", "), contacts: perCo.get(a.id) || 0, opportunity: g.note || "" };
+  }));
+  table(wb, "Existing Customers", "EXISTING CUSTOMERS — Coupa, Ariba and other platforms",
+    `Exported ${today} · ${groups.map((g) => `${g.label}: ${g.rows.length}`).join("  |  ")} · the lists behind the dashboard's customer tiles · revenue in USD with local currency in brackets`,
+    [["Platform", "platform", 26], ["Company Name", "company_name", 34], ["Country", "country", 11], ["ICP Status", "icp_status", 18], ["Net Revenue (USD, local in brackets)", "revenue", 30],
+      ["Revenue Type", "revenue_type", 14], ["Platform Status", "platform_status", 28, "wrap"], ["Existing ERP", "erp", 26], ["Total Employees", "employees", 18],
+      ["HQ Location", "hq", 24], ["Contacts on File", "contacts", 12, "num"], ["Opportunity", "opportunity", 52, "wrap"]], rows, 3);
 }
