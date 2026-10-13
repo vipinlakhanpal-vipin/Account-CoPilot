@@ -23,7 +23,7 @@ export type CampaignOptions = { region: string; statuses: string[]; emailOnly: b
 
 const GREEN = "FF0F6E56", BAND = "FFF1F7F5", LINE = "FFD5DEDA";
 type Out = { company: string; name: string; first: string; last: string; title: string; email: string; erp: string; s2p: string;
-  revenue: string; revenueM: number | ""; revType: string; employees: string; hq: string; tier: string };
+  revenue: string; revType: string; employees: string; hq: string; tier: string };
 
 export async function buildCampaignList(d: AllData, o: CampaignOptions) {
   const idSet = o.ids ? new Set(o.ids) : null;
@@ -37,7 +37,7 @@ export async function buildCampaignList(d: AllData, o: CampaignOptions) {
     const name = s(p.full_name), { first, last } = splitName(name), rev = revenueOf(a);
     const cur = rulesFor(o.def, a.country).currency as { code: string; per_usd: number };
     return { company: s(a.company_name), name, first, last, title: s(p.title_verbatim), email, erp: known(a.erp).replace(/\s*\(.*$/, ""),
-      s2p: known(a.existing_s2p_product), revenue: rev ? fmtMoneyM(rev, cur) : "", revenueM: (rev ? Math.round(rev) : "") as number | "",
+      s2p: known(a.existing_s2p_product), revenue: rev ? fmtMoneyM(rev, cur) : "",
       revType: rev ? (revenueIsOfficial(a) ? "Official" : "Estimate") : "", employees: known(a.employee_range).replace(/\s*\(.*$/, ""),
       hq: [s(a.hq_city), s(a.country)].filter(Boolean).join(", "), tier: s(p.contact_tier) };
   }).filter((r) => r.name && (!o.emailOnly || r.email))
@@ -61,7 +61,7 @@ export async function buildCampaignList(d: AllData, o: CampaignOptions) {
       c.alignment = { vertical: "middle", wrapText: true }; });
   };
 
-  // ---- Sheet 1: grouped by company, with the totals up top ----
+  // One sheet only: grouped by company, with the totals up top
   const ws = wb.addWorksheet("Campaign List", { views: [{ state: "frozen", ySplit: 4, showGridLines: false }] });
   ws.columns = cols.map(([, , width]) => ({ width }));
   ws.mergeCells(1, 1, 1, 6);
@@ -100,33 +100,6 @@ export async function buildCampaignList(d: AllData, o: CampaignOptions) {
     if (end > start) COMPANY_LEVEL.forEach((c) => ws.mergeCells(start, c, end, c));
     ws.getCell(start, 1).font = { bold: true };
   });
-
-  // ---- Sheet 2: flat, the company repeated on every row, for CRM import ----
-  const flat = wb.addWorksheet("Upload list (flat)", { views: [{ state: "frozen", ySplit: 1 }] });
-  const flatCols: [string, keyof Out, number][] = [...cols.slice(0, 8), ["Net Revenue (USD, local in brackets)", "revenue", 30], ["Net Revenue (USD M)", "revenueM", 16], ...cols.slice(9)];
-  flat.columns = flatCols.map(([header, key, width]) => ({ header, key, width }));
-  rows.forEach((x) => flat.addRow(x));
-  styleHeader(flat.getRow(1));
-  flat.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: flatCols.length } };
-  flat.getColumn("revenueM").numFmt = "#,##0";
-
-  // ---- Sheet 3: about ----
-  const about = wb.addWorksheet("About this file");
-  about.columns = [{ width: 26 }, { width: 92 }];
-  [
-    ["Generated", `${new Date().toISOString().slice(0, 16).replace("T", " ")} UTC by ${o.generatedBy || "a team member"}`],
-    ["Region", o.region],
-    ["Selection", idSet ? "The companies in the list you opened, whatever their ICP status" : o.statuses.map((x) => x.replace("ICP — ", "")).join(", ")],
-    ["Companies listed", `${companies} of ${accounts.length} selected`],
-    ["Contacts listed", String(rows.length)],
-    ["Email rule", o.emailOnly ? "Only people with an official email are included." : "People without an email are included; their Email ID is blank."],
-    ["Emails", "Official company emails only. Generic mailboxes (info@, sales@ …) and personal domains are left out, and emails are never guessed."],
-    ["Net revenue", "USD, always in millions (M) or billions (B), with the regional currency in brackets at the rate set in Define ICP. Revenue Type says whether the figure is Official (filing or results) or an Estimate."],
-    ["Sheets", "Campaign List groups each company once with its contacts beneath it. Upload list (flat) repeats the company on every row and has filters, for importing into a CRM."],
-    ["Left out", "People whose sources conflict about who they are or where they work."],
-  ].forEach((x) => about.addRow(x));
-  about.getColumn(1).font = { bold: true };
-  about.getColumn(2).alignment = { wrapText: true, vertical: "top" };
 
   const buf = Buffer.from(await wb.xlsx.writeBuffer());
   return { buf, contacts: rows.length, companies, totalCompanies: accounts.length };

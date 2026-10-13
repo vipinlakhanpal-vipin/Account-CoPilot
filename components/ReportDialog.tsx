@@ -92,8 +92,8 @@ export default function ReportDialog({ accounts, icpDef, onClose, companyIds, li
           ) : (
             <>
               <h3>What you get</h3>
-              <p className="note">One row per person at the companies in the region you choose, ready to upload to your CRM or mailing tool:</p>
-              <p className="pdf-cols">Company Name · Contact Name (plus First and Last Name) · Contact Job Title · Email ID · Existing ERP · Existing S2P Platform · Net Revenue (USD M) · Total Employees · HQ Location</p>
+              <p className="note">A single Campaign List sheet for the region you choose: each company once, with its contacts beneath it and the number of companies at the top.</p>
+              <p className="pdf-cols">Company Name · Contact Name (plus First and Last Name) · Contact Job Title · Email ID · Existing ERP · Existing S2P Platform · Net Revenue (USD, local currency in brackets) · Revenue Type · Total Employees · HQ Location</p>
               <p className="note">Official company emails only; generic mailboxes and personal domains are left out and emails are never guessed. Contacts exist only where your workbook or Seamless enrichment added them.</p>
             </>
           )}

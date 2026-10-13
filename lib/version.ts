@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.65";
+export const APP_VERSION = "3.66";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.66", date: "2026-10-13", notes: "The Excel contact list is now a single sheet, Campaign List, with just the company and contact details.", changes: [
+      { what: "Removed the \"Upload list (flat)\" and \"About this file\" sheets from the Excel contact list; the totals (region, companies, contacts) stay in the header of the Campaign List sheet", where: "lib/xlsxReport.ts", why: "Requested — the file is only contact and company details, so one sheet is enough" },
+    ] },
   { version: "3.65", date: "2026-10-13", notes: "Every Close button is now orange with white text, so it is easy to find: account brief, dashboard drill-down, contact card, the What's new and version history windows, the bell, the suggestions box, and the round × in every dialog header.", changes: [
       { what: "Gave all Close controls one orange style (#D9650D, white text, darker on hover) via a shared btn-close class and the dialog × button", where: "components/CoPilotApp.tsx, components/Header.tsx, components/EngineBell.tsx, components/SuggestionsButton.tsx, app/globals.css (.btn-close, .wn-close)", why: "Requested — orange makes Close easy to identify wherever it appears" },
     ] },
