@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Logo from "@/components/Logo";
+import AriaChat from "@/components/AriaChat";
 import ProfileMenu from "@/components/ProfileMenu";
 import EngineBell from "@/components/EngineBell";
 import SuggestionsButton from "@/components/SuggestionsButton";
@@ -243,6 +244,7 @@ export default function Header({ meta }: { meta: string }) {
               {meta && <span className="subtabs-meta">{meta}</span>}
             </nav>) : null; })()}
       </header>
+      <AriaChat />
     </>
   );
 }
