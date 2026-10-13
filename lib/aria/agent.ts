@@ -1,7 +1,8 @@
 import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import { buildCampaignList } from "@/lib/xlsxReport";
-import { type AriaContext, type AccountFilter, filterAccounts, searchAccounts, countAccounts, getAccount, findAccounts, searchContacts, regionKey } from "@/lib/aria/tools";
+import { type AriaContext, type AccountFilter, filterAccounts, searchAccounts, countAccounts, getAccount, findAccounts, searchContacts, regionKey,
+  fullTextSearch, searchSignals, searchTechnology, searchConflicts, searchHistory, icpRules, engineActivity } from "@/lib/aria/tools";
 import type { Criteria } from "@/lib/icp";
 
 const MODEL = "claude-sonnet-5";
@@ -9,6 +10,7 @@ const MAX_STEPS = 7;
 
 export type AriaAction = { kind: "xlsx" | "pdf"; label: string; body: Record<string, unknown> };
 export type AriaMessage = { role: "user" | "assistant"; content: string };
+export type AriaResult = { text: string; actions: AriaAction[]; choices: string[]; usage: { input: number; output: number } };
 
 const FILTER_PROPS = {
   region: { type: "string", description: "Region or country: UAE, KSA, Qatar, Kuwait, UK, USA, Oman, Bahrain, Egypt..." },
@@ -34,6 +36,22 @@ const TOOLS = [
   { name: "search_contacts", description: "Find people (stakeholders) by company, region, title or tier. Official emails only.",
     input_schema: { type: "object", properties: { company_name: { type: "string" }, region: { type: "string" }, title_contains: { type: "string" }, tier: { type: "string" },
       has_email: { type: "boolean" }, limit: { type: "integer" } } } },
+  { name: "search_everything", description: "Free-text search across EVERYTHING in the app at once: companies (names, notes, signals, opportunity), people, S2P signals, technology and sources. Use it when the question is a word or topic ('Ariba', 'e-invoicing', 'tender') rather than a filter.",
+    input_schema: { type: "object", required: ["query"], properties: { query: { type: "string" }, limit: { type: "integer" } } } },
+  { name: "search_signals", description: "S2P buying signals with their evidence. Filter by company, level (VERY STRONG..NO), platform, text or region.",
+    input_schema: { type: "object", properties: { company_name: { type: "string" }, level: { type: "string" }, platform: { type: "string" }, text: { type: "string" }, region: { type: "string" }, limit: { type: "integer" } } } },
+  { name: "search_technology", description: "ERP and third-party applications found at companies (name, category, FACT/LIKELY/UNVERIFIED status).",
+    input_schema: { type: "object", properties: { company_name: { type: "string" }, name_contains: { type: "string" }, category: { type: "string" }, status: { type: "string" }, limit: { type: "integer" } } } },
+  { name: "search_conflicts", description: "Places where sources disagree (both values are kept).",
+    input_schema: { type: "object", properties: { company_name: { type: "string" }, field: { type: "string" }, limit: { type: "integer" } } } },
+  { name: "search_history", description: "Employment moves and job changes of people at the accounts.",
+    input_schema: { type: "object", properties: { company_name: { type: "string" }, person: { type: "string" }, determination_contains: { type: "string" }, limit: { type: "integer" } } } },
+  { name: "get_icp_rules", description: "The ICP rules (Define ICP) for one region or all: revenue and employee floors, listing, entity level, daily run, pipeline threshold, focus platforms.",
+    input_schema: { type: "object", properties: { region: { type: "string" } } } },
+  { name: "get_engine_activity", description: "Recent runs of the daily discovery engine: which regions ran, how many companies were added and checked. Super Admins only.",
+    input_schema: { type: "object", properties: { region: { type: "string" }, limit: { type: "integer" } } } },
+  { name: "ask_user", description: "Ask the user a short clarifying question with 2-6 tap-able options. Use it BEFORE building an Excel (region, how many companies, how to pick them) and whenever a request is ambiguous. Ends your turn.",
+    input_schema: { type: "object", required: ["question", "options"], properties: { question: { type: "string" }, options: { type: "array", items: { type: "string" } } } } },
   { name: "create_excel", description: "Prepare an Excel contact list (company once, its contacts beneath) for ONE region. The user gets a download button. The region is required: if the user has not said which region, ask them instead of guessing.",
     input_schema: { type: "object", required: ["region"], properties: { ...FILTER_PROPS, region: { type: "string" }, limit: { type: "integer", description: "How many companies; omit for all with a contact" },
       rank: { type: "string", enum: ["fit", "revenue", "name"] }, email_only: { type: "boolean" } } } },
@@ -51,7 +69,10 @@ How you work
 - Money is already formatted by the tools (USD first, local currency in brackets). Quote it as given.
 - ICP statuses: Verified = official revenue at or above the region's floor; Likely = estimates only; Needs check = sources disagree; Unknown = no figure; Not ICP = below the floor. Existing Coupa customers are the install base, not prospects: the app's dashboard tiles leave them out, so mention it when it changes a count.
 - Contacts exist mostly for UAE companies; for other regions say so rather than implying a list is empty by mistake.
-- Files: when the user wants a spreadsheet or contact list, call create_excel; when they want a report, detailed brief or PDF, call create_pdf (it works for a single company). create_excel needs a region: if it is missing, ask which region and offer how many companies and how to pick them (best ICP fit, largest revenue, A to Z). After preparing a file, say in one line what it contains; the app shows the download button.
+- You can search anything that lives in the app: accounts, contacts, signals, technology, sources, conflicts, job moves, ICP rules and engine runs. Pick the right tool, combine several when a question needs it, and answer in one tidy table where possible.
+- PDF: when the user wants a report, a detailed brief or "everything on" a company, call create_pdf straight away (it works for one company or many). No questions are needed for a named company.
+- Excel: ALWAYS ask before building one. Use ask_user (one question at a time) to confirm: (1) the region, (2) how many companies (1, 5, 10, 25, 50 or all), (3) how to pick them (best ICP fit, largest revenue, A to Z). Skip a question only if the user already answered it. Never put such a question in plain text: always use ask_user so the user gets buttons. Then call create_excel. After preparing a file, say in one line what it contains, quoting the totals exactly as the tool returned them (companies_in_file and contacts_in_file are totals for the whole file); the app shows the download button.
+- For a complex or vague question, break it down: say in one line how you read it, then show the table. If it is genuinely ambiguous, use ask_user instead of guessing.
 - Stay on Account CoPilot data. For anything else, say that is outside what you can help with here.`;
 
 type Out = { result: unknown; action?: AriaAction };
@@ -61,6 +82,14 @@ async function runTool(name: string, input: Record<string, unknown>, ctx: AriaCo
   if (name === "count_accounts") return { result: countAccounts(ctx, f) };
   if (name === "get_account") return { result: getAccount(ctx, { id: input.id as string | undefined, name: input.name as string | undefined }) };
   if (name === "search_contacts") return { result: searchContacts(ctx, input as Parameters<typeof searchContacts>[1]) };
+
+  if (name === "search_everything") return { result: fullTextSearch(ctx, { query: String(input.query || ""), limit: input.limit as number | undefined }) };
+  if (name === "search_signals") return { result: searchSignals(ctx, input as Parameters<typeof searchSignals>[1]) };
+  if (name === "search_technology") return { result: searchTechnology(ctx, input as Parameters<typeof searchTechnology>[1]) };
+  if (name === "search_conflicts") return { result: searchConflicts(ctx, input as Parameters<typeof searchConflicts>[1]) };
+  if (name === "search_history") return { result: searchHistory(ctx, input as Parameters<typeof searchHistory>[1]) };
+  if (name === "get_icp_rules") return { result: icpRules(ctx, input.region as string | undefined) };
+  if (name === "get_engine_activity") return { result: engineActivity(ctx, input as Parameters<typeof engineActivity>[1]) };
 
   if (name === "create_excel") {
     const region = regionKey(input.region);
@@ -101,7 +130,7 @@ async function runTool(name: string, input: Record<string, unknown>, ctx: AriaCo
   return { result: { error: `Unknown tool ${name}` } };
 }
 
-export async function runAria(history: AriaMessage[], ctx: AriaContext, regions: string[]) {
+export async function runAria(history: AriaMessage[], ctx: AriaContext, regions: string[]): Promise<AriaResult> {
   const client = new Anthropic();
   const msgs: Anthropic.MessageParam[] = history.map((m) => ({ role: m.role, content: m.content }));
   const actions: AriaAction[] = [];
@@ -112,7 +141,14 @@ export async function runAria(history: AriaMessage[], ctx: AriaContext, regions:
     usage.input += res.usage.input_tokens; usage.output += res.usage.output_tokens;
     if (res.stop_reason !== "tool_use") {
       const text = res.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("\n").trim();
-      return { text: text || "I could not put an answer together. Could you rephrase that?", actions, usage };
+      return { text: text || "I could not put an answer together. Could you rephrase that?", actions, choices: [], usage };
+    }
+    // A clarifying question ends the turn: the app shows the options as buttons.
+    const ask = res.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use" && b.name === "ask_user");
+    if (ask) {
+      const a = (ask.input || {}) as { question?: string; options?: string[] };
+      const lead = res.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("\n").trim();
+      return { text: [lead, String(a.question || "Which one do you mean?")].filter(Boolean).join("\n\n"), actions, choices: (a.options || []).map(String).slice(0, 8), usage };
     }
     msgs.push({ role: "assistant", content: res.content });
     const results: Anthropic.ToolResultBlockParam[] = [];
@@ -125,5 +161,5 @@ export async function runAria(history: AriaMessage[], ctx: AriaContext, regions:
     }
     msgs.push({ role: "user", content: results });
   }
-  return { text: "That needs more steps than I allow in one go. Could you narrow it down, for example to one region?", actions, usage };
+  return { text: "That needs more steps than I allow in one go. Could you narrow it down, for example to one region?", actions, choices: [], usage };
 }

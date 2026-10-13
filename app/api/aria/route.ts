@@ -25,14 +25,15 @@ export async function POST(req: Request) {
   try {
     const access = await getAccess(user);
     const db = supabaseAdmin();
-    const [data, def, crit] = await Promise.all([
+    const [data, def, crit, log] = await Promise.all([
       loadAllCached().then((d) => scopeData(d, access)),
       db.from("settings").select("value").eq("key", "icp_definition").maybeSingle().then((r) => r.data?.value),
       db.from("settings").select("value").eq("key", "icp_criteria").maybeSingle().then((r) => r.data?.value),
+      access.isSuper ? db.from("settings").select("value").eq("key", "engine_log").maybeSingle().then((r) => (r.data?.value as { entries?: Record<string, unknown>[] } | undefined)?.entries || []) : Promise.resolve([]),
     ]);
     const regions = access.isSuper ? ALL_REGIONS : access.regions;
-    const out = await runAria(parsed.data.messages, makeContext(data, def, crit), regions);
-    return NextResponse.json({ text: out.text, actions: out.actions });
+    const out = await runAria(parsed.data.messages, makeContext(data, def, crit, log), regions);
+    return NextResponse.json({ text: out.text, actions: out.actions, choices: out.choices });
   } catch {
     return NextResponse.json({ error: "Aria could not answer that just now. Try again." }, { status: 502 });
   }

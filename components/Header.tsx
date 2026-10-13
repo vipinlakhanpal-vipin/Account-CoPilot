@@ -211,6 +211,7 @@ export default function Header({ meta }: { meta: string }) {
                   </button>
                   <EngineBell />
                   <SuggestionsButton />
+                  <AriaChat />
                 </span>
               </div>
               <span className="brand-sub">{TAGLINE}</span>
@@ -244,7 +245,6 @@ export default function Header({ meta }: { meta: string }) {
               {meta && <span className="subtabs-meta">{meta}</span>}
             </nav>) : null; })()}
       </header>
-      <AriaChat />
     </>
   );
 }

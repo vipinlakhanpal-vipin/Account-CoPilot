@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.72";
+export const APP_VERSION = "3.73";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,11 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.73", date: "2026-10-14", notes: "Aria upgrade: her icon now sits next to the suggestions bulb and opens a full chat window; she can search everything in the app, asks tap-able questions before building an Excel, and you can talk to her with the microphone.", changes: [
+      { what: "Moved Aria to an icon beside the suggestions bulb in the top bar; clicking it opens a large centred chat window with example questions, a message box, send, a microphone and a read-aloud switch (Esc or Close to leave)", where: "components/AriaChat.tsx, components/Header.tsx, app/globals.css", why: "Requested — Aria beside the bulb, with a proper window to type in" },
+      { what: "Aria searches everything in the app: accounts, contacts, signals, technology, sources, conflicts, job moves, ICP rules and engine runs (Super Admins), with a free-text search across all of them, and shows answers as tables", where: "lib/aria/tools.ts, lib/aria/agent.ts", why: "Requested — search anything that lives in the app and present it in a tabular format" },
+      { what: "Before building an Excel Aria asks, with tap-able options, which region, how many companies and how to pick them; a PDF for a named company is built straight away. Voice: tap the microphone, speak, and the question is sent when you stop (Chrome, Edge or Safari); optional read-aloud for answers", where: "components/AriaChat.tsx, lib/aria/agent.ts (ask_user tool)", why: "Requested — questions before an Excel, PDFs on request, complex questions, and a mic to speak to Aria" },
+    ] },
   { version: "3.72", date: "2026-10-14", notes: "Meet Aria, the in-app assistant: ask about accounts, contacts and platforms, and have her build an Excel contact list or a detailed PDF (one company or many). Also: Close buttons are back at the right edge of every panel, and the selected region tab is solid sky blue.", changes: [
       { what: "Added Aria (Automatic Responsible Intelligent Assistant): a floating \"Ask Aria\" chat on every page. She answers from your live data with tables (counts, lists, one company's detail, contacts), and prepares Excel contact lists and PDF reports with download buttons, including a PDF for a single company. She always asks for the region before an Excel, respects each user's regions, and sits behind the paid-actions PIN (about 2-10 cents per question)", where: "components/AriaChat.tsx, app/api/aria/route.ts, lib/aria/agent.ts, lib/aria/tools.ts, components/Header.tsx", why: "Requested — an AI assistant to ask for data in-app and to generate Excel and PDF reports by asking the right question" },
       { what: "Close (and PDF / Refresh / Reports) buttons sit at the right edge of the account brief, drill-down and contact card headers at normal width, and dialog footer buttons are right-aligned", where: "app/globals.css (.bh-top, .bh-actions, .wn-actions)", why: "Requested — keep Close at the right edge in every panel" },
