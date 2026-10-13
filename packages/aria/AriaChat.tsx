@@ -67,7 +67,7 @@ export type AriaChatProps = {
 };
 
 export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onAction, examples = DEFAULT_EXAMPLES, footerNote, name = "Aria",
-  tagline = "Automatic Responsible Intelligent Assistant", welcomeText, placeholder, buttonClassName = "", storageKey = "aria-read-aloud" }: AriaChatProps) {
+  tagline = "Automatic Responsive Intelligent Assistant", welcomeText, placeholder, buttonClassName = "", storageKey = "aria-read-aloud" }: AriaChatProps) {
   const [open, setOpen] = useState(false);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [text, setText] = useState("");

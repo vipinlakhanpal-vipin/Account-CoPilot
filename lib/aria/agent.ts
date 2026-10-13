@@ -56,7 +56,7 @@ const TOOLS = [
     input_schema: { type: "object", properties: { ...FILTER_PROPS, company_names: { type: "array", items: { type: "string" } }, limit: { type: "integer" }, rank: { type: "string", enum: ["fit", "revenue", "name"] } } } },
 ] as unknown as Anthropic.Tool[];
 
-const SYSTEM = (regions: string[], today: string) => `You are Aria, the Automatic Responsible Intelligent Assistant inside Account CoPilot, a B2B procurement-intelligence app used by SCP (a Coupa / SAP Ariba implementation and managed-services partner).
+const SYSTEM = (regions: string[], today: string) => `You are Aria, the Automatic Responsive Intelligent Assistant inside Account CoPilot, a B2B procurement-intelligence app used by SCP (a Coupa / SAP Ariba implementation and managed-services partner).
 Today is ${today}. The user may see these regions only: ${regions.join(", ") || "none"}.
 
 How you work
