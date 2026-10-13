@@ -793,6 +793,10 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
   );
 }
 
+function HChip({ k, l, tip, children }: { k: string; l: string; tip?: string; children: React.ReactNode }) {
+  return <span className="hchip" style={{ "--k": k } as React.CSSProperties} title={tip}><i aria-hidden="true" /><small>{l}</small><b>{children}</b></span>;
+}
+
 function Fact({ l, children }: { l: string; children: React.ReactNode }) {
   if (children === null || children === undefined || children === "") return null;
   return <div className="fact"><small>{l}</small><div>{children}</div></div>;
@@ -814,6 +818,7 @@ function Brief({ a, data, people, onClose, onContact, scores, criteria, isSuper 
   const [busy, setBusy] = useState(false);
   const [refresh, setRefresh] = useState("");
   const [pdfBusy, setPdfBusy] = useState(false);
+  const [confirmRefresh, setConfirmRefresh] = useState(false); // the cost note only appears once Refresh research is clicked
 
   async function draftPitch() {
     setBusy(true); setPitch("Drafting…");
@@ -841,26 +846,43 @@ function Brief({ a, data, people, onClose, onContact, scores, criteria, isSuper 
       <div className="scrim" onClick={onClose} />
       <aside className="brief" aria-label="Account brief">
         <div className="brief-head">
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div className="muted mono">{a.exchange} {a.ticker} · {a.industry}</div>
-            <h3 className="drawer-title-logo"><CompanyLogo a={a} size={30} />{a.company_name}</h3>
-            <div style={{ marginTop: 6 }}>
-              {(() => {
-                // Three separate facts, each labelled, and "Unknown" ones are left out instead of shown as grey filler.
-                const known = (v: unknown) => !!v && !/^(unknown|no evidence|none)$/i.test(String(v).trim());
-                return <>
-                  <span title="How strong the evidence is that this company is buying a source-to-pay platform"><span className="chip-label">S2P signal</span><Pill s={a.s2p_signal_level || "NO SIGNAL"} /></span>
-                  {known(a.existing_s2p_product) && <span className="tag" title="The procurement platform they run today"><span className="chip-label">Platform</span>{a.existing_s2p_product}</span>}
-                  {known(a.s2p_platform_status) && <span className="tag" title="How sure we are about that platform"><span className="chip-label">Confidence</span>{a.s2p_platform_status}</span>}
-                  {!known(a.existing_s2p_product) && <span className="muted"> · no procurement platform found yet</span>}
-                </>;
-              })()}
+          <div className="bh-top">
+            <h3 className="drawer-title-logo bh-title"><CompanyLogo a={a} size={34} />{a.company_name}</h3>
+            <div className="bh-actions">
+              <div className="bh-btns">
+                <button className="btn ghost" type="button" disabled={pdfBusy} title="PDF with everything on this page, plus how it was built from your ICP"
+                  onClick={async () => { setPdfBusy(true); await downloadReport({ companyId: a.id }); setPdfBusy(false); }}>{pdfBusy ? "Building…" : "📄 PDF"}</button>
+                <button className="btn ghost" type="button" aria-expanded={confirmRefresh} onClick={() => setConfirmRefresh((v) => !v)}>Refresh research</button>
+                <button className="btn ghost" type="button" onClick={onClose}>Close</button>
+              </div>
+              {confirmRefresh && (
+                <div className="bh-confirm">
+                  <CostNote cost="≈ $1.20–1.50" />
+                  <button className="btn primary tiny" type="button" onClick={() => { setConfirmRefresh(false); refreshResearch(); }}>Start research</button>
+                  <button className="btn tiny" type="button" onClick={() => setConfirmRefresh(false)}>Cancel</button>
+                </div>
+              )}
             </div>
           </div>
-          <button className="btn ghost" type="button" disabled={pdfBusy} title="PDF with everything on this page, plus how it was built from your ICP"
-            onClick={async () => { setPdfBusy(true); await downloadReport({ companyId: a.id }); setPdfBusy(false); }}>{pdfBusy ? "Building…" : "📄 PDF"}</button>
-          <span className="cost-wrap"><button className="btn ghost" type="button" onClick={refreshResearch}>Refresh research</button><CostNote cost="≈ $1.20–1.50" /></span>
-          <button className="btn ghost" type="button" onClick={onClose}>Close</button>
+          {/* One labelled, colour-coded row of identifiers. Unknown values are left out rather than shown as grey filler. */}
+          {(() => {
+            const known = (v: unknown) => !!v && !/^(unknown|no evidence|none|not_found|n\/a)$/i.test(String(v).trim());
+            const sig = str(a.s2p_signal_level) || "NO SIGNAL";
+            const sigColor = SIGVAR[sig.split(" ")[0]] ? `var(${SIGVAR[sig.split(" ")[0]]})` : "#8A94A6";
+            const listed = [a.exchange, a.ticker].filter(known).join(": ") || (known(a.listing_status) ? str(a.listing_status) : "");
+            return (
+              <div className="bh-chips">
+                {a.icp_status && <IcpTag s={a.icp_status} why={a.icp_fit_reason} />}
+                <HChip k={sigColor} l="S2P signal" tip="How strong the evidence is that this company is buying a source-to-pay platform">{sig.replace(" SIGNAL", "")}</HChip>
+                {known(a.existing_s2p_product) ? <HChip k="#2EC4A6" l="Platform" tip="The procurement platform they run today">{a.existing_s2p_product}</HChip>
+                  : <HChip k="#8A94A6" l="Platform" tip="No procurement platform has been found for this company yet">none found yet</HChip>}
+                {known(a.s2p_platform_status) && <HChip k="#F5A623" l="Confidence" tip="How sure we are about that platform">{a.s2p_platform_status}</HChip>}
+                {listed && <HChip k="#3AA0FF" l="Listing" tip="Stock exchange and ticker, or the company's listing / ownership status">{listed}</HChip>}
+                {known(a.industry) && <HChip k="#9B6BFF" l="Industry">{str(a.industry).replace(/_/g, " ")}</HChip>}
+                {known(a.entity_type) && <HChip k="#6C7BFF" l="Entity" tip="Whether this record is the regional headquarters or a branch">{a.entity_type}</HChip>}
+              </div>
+            );
+          })()}
         </div>
         <div className="brief-body">
           {refresh && <p className="note">{refresh}</p>}
