@@ -2,7 +2,7 @@ import "server-only";
 import { SHOW_HUBSPOT } from "@/lib/features";
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import type { AllData, Row } from "@/lib/data";
-import { icpMatch, opportunity, coupaFit, procurementMaturity, estimateSpend, whySelected, recommendedActions, withDefaults, revenueOf, revenueIsOfficial, fmtUsdM, type Criteria } from "@/lib/icp";
+import { icpMatch, opportunity, coupaFit, procurementMaturity, estimateSpend, whySelected, recommendedActions, withDefaults, revenueOf, revenueIsOfficial, fmtUsdM, fmtMoneyM, type Criteria } from "@/lib/icp";
 import { rulesFor, regionOf, OPTIONS, REGIONS, describeRules, type Rules } from "@/lib/icpDefinition.mjs";
 
 // One PDF with the same information the Account brief shows for a company, for the companies in the chosen ICP statuses.
@@ -19,13 +19,7 @@ export type ReportOptions = { statuses: string[]; region: string; limit: number;
 const s = (v: unknown) => (v === null || v === undefined ? "" : String(v));
 const usd = (m: unknown) => { const n = Number(m); return m === null || m === undefined || m === "" ? "" : fmtUsdM(n); };
 type Cur = { code: string; per_usd: number };
-/** "$415.8B (SAR 1.56T)": USD is the base currency, the regional currency follows in brackets. */
-const money = (usdM: unknown, cur: Cur) => {
-  const n = Number(usdM), base = usd(usdM);
-  if (!base || cur.code === "USD") return base;
-  const v = n * cur.per_usd, t = v >= 1e6 ? `${(v / 1e6).toFixed(2)}T` : v >= 1000 ? `${(v / 1000).toFixed(2)}B` : `${v >= 100 ? Math.round(v) : v.toFixed(1)}M`;
-  return `${base} (${cur.code} ${t.replace(/\.00(?=[TBM])/, "").replace(/(\.\d)0(?=[TBM])/, "$1")})`;
-};
+const money = (usdM: unknown, cur: Cur) => fmtMoneyM(Number(usdM), cur);
 const day = (v: unknown) => s(v).slice(0, 10);
 
 class Writer {

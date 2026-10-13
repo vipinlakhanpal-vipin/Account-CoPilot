@@ -27,8 +27,12 @@ export async function POST(req: Request) {
   const access = await getAccess(user);
   if (!canSeeRegion(access, region)) return NextResponse.json({ error: "You don't have access to that region." }, { status: 403 });
 
-  const all = scopeData(await loadAll(supabaseAdmin()), access);
-  const out = await buildCampaignList(all, { region, statuses, emailOnly, generatedBy: access.email, ids: companyIds });
+  const db = supabaseAdmin();
+  const [all, def] = await Promise.all([
+    loadAll(db).then((d) => scopeData(d, access)),
+    db.from("settings").select("value").eq("key", "icp_definition").maybeSingle().then((r) => r.data?.value),
+  ]);
+  const out = await buildCampaignList(all, { region, statuses, emailOnly, generatedBy: access.email, ids: companyIds, def });
   if (out.contacts === 0) {
     return NextResponse.json({ error: `No contacts${emailOnly ? " with an official email" : ""} are on file for ${region} companies ${companyIds ? "in that list" : "with those statuses"} yet. Contacts come from your workbook or Seamless enrichment.` }, { status: 404 });
   }

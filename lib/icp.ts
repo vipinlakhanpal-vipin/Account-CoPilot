@@ -59,11 +59,18 @@ export const withDefaults = (c?: Partial<Criteria> | null): Criteria => ({
 export const activeCount = (c: Criteria) =>
   Object.values(c.company).filter((v) => (Array.isArray(v) ? v.length : v)).length + Object.values(c.contact).filter((v) => (Array.isArray(v) ? v.length : v)).length;
 
-/** Revenue and spend are held in USD millions: 415800 -> "$415.8B", 990 -> "$990M". Used in every generated sentence so a raw "415800M" never shows. */
-export const fmtUsdM = (m: number) => {
-  if (!isFinite(m) || m <= 0) return "";
-  if (m >= 1000) return `$${(m / 1000).toFixed(m >= 100000 ? 1 : 2).replace(/\.?0+$/, "")}B`;
-  return `$${m >= 100 ? Math.round(m) : m.toFixed(1).replace(/\.0$/, "")}M`;
+/** Revenue and spend are held in USD millions. Always shown in millions or billions, never thousands or trillions:
+ *  990 -> "$990M", 52.4 -> "$52.4M", 11500 -> "$11.5B", 415800 -> "$415.8B". */
+const trim = (n: number, dec: number) => n.toFixed(dec).replace(/\.?0+$/, "");
+const group = (n: string) => n.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+const scaled = (m: number) => (m >= 999.95 ? `${group(trim(m / 1000, m >= 100000 ? 1 : 2))}B` : `${trim(m, 1)}M`);
+export const fmtUsdM = (m: number) => (!isFinite(m) || m <= 0 ? "" : `$${scaled(m)}`);
+/** The same amount in a regional currency, e.g. "SAR 1,559.3B" (still millions or billions). */
+export const fmtLocalM = (usdM: number, cur: { code: string; per_usd: number }) => (!isFinite(usdM) || usdM <= 0 ? "" : `${cur.code} ${scaled(usdM * cur.per_usd)}`);
+/** "$415.8B (SAR 1,559.3B)": USD is the base currency, the regional currency follows in brackets (omitted for USD). */
+export const fmtMoneyM = (usdM: number, cur?: { code: string; per_usd: number }) => {
+  const base = fmtUsdM(usdM);
+  return !base || !cur || cur.code === "USD" ? base : `${base} (${fmtLocalM(usdM, cur)})`;
 };
 
 // ---------- account facts ----------
