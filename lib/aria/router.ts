@@ -1,6 +1,6 @@
 import "server-only";
 import type { Row } from "@/lib/data";
-import { type AriaContext, type AccountFilter, regionKey, filterAccounts, searchAccounts, countAccounts, getAccount, searchContacts, icpRules, findAccounts } from "@/lib/aria/tools";
+import { type AriaContext, type AccountFilter, regionKey, filterAccounts, searchAccounts, countAccounts, getAccount, searchContacts, icpRules, findAccounts, roleKey } from "@/lib/aria/tools";
 import { runTool } from "@/lib/aria/agent";
 import type { AriaAction } from "@/packages/aria/types";
 import { REGIONS } from "@/lib/icpDefinition.mjs";
@@ -149,6 +149,20 @@ export async function tryFree(question: string, ctx: AriaContext): Promise<FreeR
     const name = s(d.company);
     return { text: `${table(["Field", "Detail"], kv)}${sig ? `\n\n**Top signals**\n${sig}` : ""}${ppl.length ? `\n\n**Contacts**\n${table(["Name", "Title", "Email"], ppl.map((p) => [p.name, p.title, p.email]))}` : ""}`,
       actions: [], choices: [`PDF report on ${name}`, `Contacts at ${name}`] };
+  }
+
+  // ---- A role is named ("... have a CFO contact", "who are the procurement heads in KSA"): answer at person level, with name and title ----
+  const roleWord = /\b(cfos?|cpos?|ceos?|cios?|ctos?|coos?|chief financial officers?|chief procurement officers?|head of procurement|procurement (heads?|directors?|leaders?)|finance (heads?|directors?))\b/.exec(t)?.[1];
+  if (roleWord && !wantsExcel && !wantsPdf && !/\b(how many|count|number of)\b/.test(t) && !(company.hits.length === 1 && /\b(tell me about|about|details?)\b/.test(t))) {
+    const role = roleKey(roleWord.replace(/s$/, "").replace(/chief financial officer/, "cfo").replace(/chief procurement officer/, "cpo").replace(/.*procurement.*/, "procurement").replace(/finance.*/, "finance"));
+    const r = searchContacts(ctx, { ...f, role: role || undefined, company_name: company.hits.length === 1 ? s(company.hits[0].company_name) : undefined, limit: 25 });
+    const label = (role || "matching").toUpperCase();
+    const one = company.hits.length === 1 ? s(company.hits[0].company_name) : "";
+    if (!r.total) return { text: `No **${label}** contacts are on file${one ? ` at ${one}` : readable(f) ? ` (${readable(f)})` : ""}. Contacts exist only for companies enriched from the workbook or Seamless; most non-UAE regions have none yet.`, actions: [], choices: [] };
+    const head = one ? `**${r.total}** ${label} contact${r.total === 1 ? "" : "s"} at ${one}:`
+      : `**${r.companies_with_a_match}** of ${r.companies_in_filter} companies${readable(f) ? ` (${readable(f)})` : ""} have a ${label} contact on file${r.total > r.shown ? `; showing ${r.shown} of ${r.total} people, largest companies first` : ""}:`;
+    return { text: `${head}\n\n${table(["Company", "Revenue", "ERP", label + " name", "Title", "Email"],
+      r.rows.map((x) => [x.company, x.revenue, x.erp, x.name, x.title, x.email]))}`, actions: [], choices: f.region ? nextSteps(f, f.region).slice(0, 1) : [] };
   }
 
   // ---- Contacts ----

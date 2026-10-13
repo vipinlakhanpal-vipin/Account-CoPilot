@@ -31,7 +31,7 @@ function Md({ text }: { text: string }) {
       while (i < lines.length && /^\s*\|/.test(lines[i])) rows.push(cells(lines[i++]));
       i--;
       out.push(<div className="aria-tablewrap" key={`t${i}`}><table className="aria-table"><thead><tr>{head.map((h, j) => <th key={j}>{inline(h)}</th>)}</tr></thead>
-        <tbody>{rows.map((r, j) => <tr key={j}>{r.map((c, k) => <td key={k}>{inline(c)}</td>)}</tr>)}</tbody></table></div>);
+        <tbody>{rows.map((r, j) => <tr key={j}>{r.map((c, k) => <td key={k} className={c.length <= 26 && !/\s{2}/.test(c) ? "nw" : undefined}>{inline(c)}</td>)}</tr>)}</tbody></table></div>);
     } else if (/^\s*[-*•]\s+/.test(ln)) {
       const items: string[] = [];
       while (i < lines.length && /^\s*[-*•]\s+/.test(lines[i])) items.push(lines[i++].replace(/^\s*[-*•]\s+/, ""));
@@ -70,6 +70,7 @@ export type AriaChatProps = {
 export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onAction, examples = DEFAULT_EXAMPLES, footerNote, name = "Aria",
   tagline = "Automatic Responsive Intelligent Assistant", welcomeText, placeholder, buttonClassName = "", storageKey = "aria-read-aloud" }: AriaChatProps) {
   const [open, setOpen] = useState(false);
+  const [wide, setWide] = useState(false);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
@@ -183,11 +184,12 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
       </button>
       {open && typeof document !== "undefined" && createPortal(
         <div className="aria-backdrop" onClick={() => setOpen(false)}>
-          <section className="aria-window" role="dialog" aria-modal="true" aria-label={`${name}, your assistant`} onClick={(e) => e.stopPropagation()}>
+          <section className={`aria-window${wide ? " wide" : ""}`} role="dialog" aria-modal="true" aria-label={`${name}, your assistant`} onClick={(e) => e.stopPropagation()}>
             <header className="aria-top">
               <span className="aria-badge" aria-hidden="true">{name.charAt(0)}</span>
               <div className="aria-title"><b>{name}</b><small>{tagline}</small></div>
               <div className="aria-top-actions">
+                <button type="button" className="aria-home" onClick={() => setWide((w) => !w)} aria-pressed={wide} title="Make the window fill the screen, or drag its bottom-right corner to size it">{wide ? "⤡ Smaller" : "⤢ Expand"}</button>
                 {msgs.length > 0 && <button type="button" className="aria-home" onClick={restart} title="Back to the start screen with the example questions">🏠 Home</button>}
                 <button type="button" className={`aria-toggle${readAloud ? " on" : ""}`} onClick={toggleRead} aria-pressed={readAloud} title="Read answers aloud">🔊 {readAloud ? "Reading aloud" : "Read aloud"}</button>
                 <button type="button" className="btn tiny btn-close" onClick={() => setOpen(false)}>Close</button>

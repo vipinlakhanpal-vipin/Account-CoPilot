@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.80";
+export const APP_VERSION = "3.81";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.81", date: "2026-10-14", notes: "Aria answers \"which companies ... have a CFO contact\" with the CFO's name, title and email, her tables fit better, and her window can be dragged bigger from its bottom-right corner or expanded to fill the screen.", changes: [
+      { what: "Questions that name a role (CFO, CPO, CEO, CIO, COO, procurement, finance) are answered at person level: company, revenue, ERP, the person's name, title and official email, combined with filters like region, status and ERP. The AI path's contact tool understands the same filters and roles. Personal and generic email addresses are never shown", where: "lib/aria/tools.ts, lib/aria/router.ts, lib/aria/agent.ts", why: "Reported — a CFO question returned companies with no CFO name or title" },
+      { what: "Aria's window is resizable by dragging its bottom-right corner, has an Expand / Smaller button, and her tables are compact: short cells stay on one line, long ones wrap, with a sticky header", where: "packages/aria/aria.css, packages/aria/AriaChat.tsx", why: "Requested — fit the fields properly and let the window stretch to show broader data" },
+    ] },
   { version: "3.80", date: "2026-10-14", notes: "Aria's numbers now match the dashboard: she shows prospects (the dashboard figure) with existing Coupa customers beside it, for example UAE 128 + 4 Coupa = 132, instead of one blended number.", changes: [
       { what: "Counts and lists now separate prospects from existing Coupa customers: a Prospects (dashboard) column, a + Existing Coupa customers column and an All accounts column, with a headline that adds up (275 prospects + 7 Coupa = 282). Lists show prospects and say how many Coupa customers also match; asking about Coupa customers directly lists them. The AI path follows the same rule. Removed stray underscores from the note", where: "lib/aria/tools.ts, lib/aria/router.ts, lib/aria/agent.ts", why: "Reported — Aria showed UAE 132 while the dashboard shows 128, because existing Coupa customers were blended in without saying so" },
     ] },

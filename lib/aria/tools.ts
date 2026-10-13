@@ -10,6 +10,10 @@ const s = (v: unknown) => (v === null || v === undefined ? "" : String(v).trim()
 const UNKNOWN = /^(unknown|no evidence|none|not[ _](identified|found|public)|n\/a)$/i;
 const known = (v: unknown) => { const t = s(v); return t && !UNKNOWN.test(t) ? t : ""; };
 const cut = (v: unknown, n = 280) => { const t = s(v); return t.length > n ? `${t.slice(0, n)}…` : t; };
+// Same rule as the Excel contact list: official company emails only. Personal domains and generic mailboxes are never shown.
+const PERSONAL = /@(gmail|googlemail|hotmail|outlook|live|yahoo|icloud|me|aol|proton(mail)?|gmx|yandex|mail)\./i;
+const GENERIC = /^(info|sales|contact|enquiries|inquiries|admin|office|hello|support|marketing|hr|careers|jobs|procurement|purchasing|finance|accounts|tenders?)@/i;
+const officialEmail = (e: unknown) => { const v = s(e); return v && !PERSONAL.test(v) && !GENERIC.test(v) ? v : ""; };
 const isCoupa = (a: Row) => /coupa/i.test(s(a.existing_s2p_product));
 
 export type AccountFilter = {
@@ -129,24 +133,42 @@ export function getAccount(ctx: AriaContext, q: { id?: string; name?: string }) 
     opportunity: cut(a.potential_opportunity, 300), notes: cut(a.account_notes, 300), signals: sigs, contacts: people, last_researched: s(a.last_researched).slice(0, 10) };
 }
 
-export function searchContacts(ctx: AriaContext, f: { company_name?: string; region?: string; title_contains?: string; tier?: string; has_email?: boolean; limit?: number }) {
-  const reg = f.region ? regionKey(f.region) : "";
-  const byId = new Map(ctx.data.accounts.map((a) => [a.id, a]));
-  let rows = ctx.people.filter((p) => p.trust !== "Conflicting");
+/** Role words people use, mapped to the titles they mean. */
+const ROLES: Record<string, RegExp> = {
+  cfo: /\bcfo\b|chief financial|finance director|director of finance|head of finance|vp finance|vice president.*finance|group financial controller/i,
+  cpo: /\bcpo\b|chief procurement|head of procurement|procurement director|director.*procurement|vp procurement|vice president.*procurement|supply chain director/i,
+  ceo: /\bceo\b|chief executive|managing director|group md/i,
+  cio: /\bcio\b|\bcto\b|chief information|chief technology|head of it|it director|digital/i,
+  coo: /\bcoo\b|chief operating|operations director/i,
+  procurement: /procure|purchas|sourcing|supply chain|buyer/i,
+  finance: /financ|treasur|controller|accounting/i,
+};
+export const roleKey = (v: string) => { const t = v.toLowerCase(); return ROLES[t] ? t : /financial|finance/.test(t) ? "cfo" : /procurement|purchasing/.test(t) ? "procurement" : ""; };
+
+export function searchContacts(ctx: AriaContext, f: AccountFilter & { company_name?: string; title_contains?: string; role?: string; tier?: string; has_email?: boolean; limit?: number }) {
+  const hasAccountFilter = !!(f.region || f.icp_status || f.platform || f.erp_contains || f.industry_contains || f.signal || f.min_revenue_usd_m || f.max_revenue_usd_m);
+  const accounts = hasAccountFilter ? filterAccounts(ctx, { ...f, exclude_coupa_customers: f.exclude_coupa_customers ?? !/coupa/i.test(s(f.platform)) }) : ctx.data.accounts;
+  const ok = new Set(accounts.map((a) => a.id)), byId = new Map(ctx.data.accounts.map((a) => [a.id, a]));
+  const roleRe = f.role ? ROLES[roleKey(f.role)] : undefined;
+  let rows = ctx.people.filter((p) => p.trust !== "Conflicting" && ok.has(p.company_id as string));
   rows = rows.filter((p) => {
     const a = byId.get(p.company_id as string);
     if (!a) return false;
-    if (reg && regionOf(a.country) !== reg) return false;
     if (f.company_name && !s(a.company_name).toLowerCase().includes(f.company_name.toLowerCase())) return false;
     if (f.title_contains && !s(p.title_verbatim).toLowerCase().includes(f.title_contains.toLowerCase())) return false;
+    if (roleRe && !roleRe.test(s(p.title_verbatim))) return false;
     if (f.tier && !s(p.contact_tier).toLowerCase().includes(f.tier.toLowerCase())) return false;
-    if (f.has_email !== false && !s(p.email)) return false;
+    if (f.has_email === true && !officialEmail(p.email)) return false;
     return true;
   });
+  rows.sort((x, y) => (revenueOf(byId.get(y.company_id as string)!) || 0) - (revenueOf(byId.get(x.company_id as string)!) || 0));
+  const companies = new Set(rows.map((p) => p.company_id)).size;
   const limit = Math.min(Math.max(Number(f.limit) || 20, 1), 40);
-  return { total: rows.length, shown: Math.min(limit, rows.length), note: "Contacts exist only for companies enriched from the workbook or Seamless; most non-UAE regions have none yet.",
-    rows: rows.slice(0, limit).map((p) => { const a = byId.get(p.company_id as string)!; return { company: s(a.company_name), country: s(a.country), name: s(p.full_name),
-      title: cut(p.title_verbatim, 90), tier: s(p.contact_tier), email: s(p.email), phone: s(p.phone) }; }) };
+  return { total: rows.length, companies_with_a_match: companies, companies_in_filter: ok.size, shown: Math.min(limit, rows.length),
+    note: "Contacts exist only for companies enriched from the workbook or Seamless; most non-UAE regions have none yet.",
+    rows: rows.slice(0, limit).map((p) => { const a = byId.get(p.company_id as string)!; const rev = revenueOf(a);
+      return { company: s(a.company_name), country: s(a.country), revenue: rev ? fmtMoneyM(rev, curOf(ctx, a)) : "", erp: known(a.erp).replace(/\s*\(.*$/, ""), name: s(p.full_name),
+        title: cut(p.title_verbatim, 90), tier: s(p.contact_tier), email: officialEmail(p.email), phone: s(p.phone) }; }) };
 }
 
 // ---------- everything else that lives in the app ----------
@@ -168,7 +190,7 @@ export function fullTextSearch(ctx: AriaContext, q: { query: string; limit?: num
   const srcs = ctx.data.sources.filter((x) => lc(x.information_found).includes(n) || lc(x.source).includes(n));
   return { query: q.query,
     companies: { total: accs.length, rows: accs.slice(0, per).map((a) => accountRow(ctx, a)) },
-    people: { total: ppl.length, rows: ppl.slice(0, per).map((p) => ({ name: s(p.full_name), title: cut(p.title_verbatim, 80), company: s(p.company), email: s(p.email) })) },
+    people: { total: ppl.length, rows: ppl.slice(0, per).map((p) => ({ name: s(p.full_name), title: cut(p.title_verbatim, 80), company: s(p.company), email: officialEmail(p.email) })) },
     signals: { total: sigs.length, rows: sigs.slice(0, per).map((x) => ({ company: coName(ctx, x.company_id), level: s(x.level), signal: cut(x.signal, 140), date: s(x.date) })) },
     technology: { total: apps.length, rows: apps.slice(0, per).map((x) => ({ company: coName(ctx, x.company_id), name: s(x.name), category: s(x.category), status: s(x.status) })) },
     sources: { total: srcs.length, rows: srcs.slice(0, per).map((x) => ({ company: coName(ctx, x.company_id), source: cut(x.source, 80), tier: s(x.source_tier), found: cut(x.information_found, 140) })) } };
