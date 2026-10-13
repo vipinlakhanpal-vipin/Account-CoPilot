@@ -71,6 +71,8 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
   tagline = "Automatic Responsive Intelligent Assistant", welcomeText, placeholder, buttonClassName = "", storageKey = "aria-read-aloud" }: AriaChatProps) {
   const [open, setOpen] = useState(false);
   const [wide, setWide] = useState(false);
+  const [rect, setRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+  const winRef = useRef<HTMLElement>(null);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
@@ -85,6 +87,50 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
   const recRef = useRef<SR | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const sendRef = useRef<(q: string) => void>(() => {});
+
+  // Drag the window by its header, or resize it from any edge or corner. The position is kept in state so it
+  // survives close/re-open, and is clamped so the header can never be lost off-screen.
+  const startDrag = (mode: string) => (e: React.PointerEvent) => {
+    if (e.button !== 0 || !winRef.current) return;
+    if (mode === "move" && (e.target as HTMLElement).closest("button")) return;
+    e.preventDefault();
+    const r = winRef.current.getBoundingClientRect();
+    const o = { x: r.left, y: r.top, w: r.width, h: r.height };
+    const sx = e.clientX, sy = e.clientY, MIN_W = 420, MIN_H = 360;
+    setWide(false);
+    setRect(o);
+    document.body.style.userSelect = "none";
+    const onMove = (ev: PointerEvent) => {
+      const dx = ev.clientX - sx, dy = ev.clientY - sy;
+      const vw = window.innerWidth, vh = window.innerHeight;
+      let { x, y, w, h } = o;
+      if (mode === "move") {
+        x = Math.min(Math.max(o.x + dx, 140 - o.w), vw - 140);
+        y = Math.min(Math.max(o.y + dy, 0), vh - 56);
+      } else {
+        if (mode.includes("e")) w = Math.min(Math.max(MIN_W, o.w + dx), vw - o.x);
+        if (mode.includes("s")) h = Math.min(Math.max(MIN_H, o.h + dy), vh - o.y);
+        if (mode.includes("w")) { const nw = Math.min(Math.max(MIN_W, o.w - dx), o.x + o.w); x = o.x + o.w - nw; w = nw; }
+        if (mode.includes("n")) { const nh = Math.min(Math.max(MIN_H, o.h - dy), o.y + o.h); y = o.y + o.h - nh; h = nh; }
+      }
+      setRect({ x, y, w, h });
+    };
+    const onUp = () => {
+      document.removeEventListener("pointermove", onMove);
+      document.removeEventListener("pointerup", onUp);
+      document.removeEventListener("pointercancel", onUp);
+      document.body.style.userSelect = "";
+    };
+    document.addEventListener("pointermove", onMove);
+    document.addEventListener("pointerup", onUp);
+    document.addEventListener("pointercancel", onUp);
+  };
+  // keep a dragged window reachable if the browser is shrunk
+  useEffect(() => {
+    const fit = () => setRect((r) => r && { ...r, x: Math.min(Math.max(r.x, 140 - r.w), window.innerWidth - 140), y: Math.min(Math.max(r.y, 0), window.innerHeight - 56) });
+    window.addEventListener("resize", fit);
+    return () => window.removeEventListener("resize", fit);
+  }, []);
 
   useEffect(() => {
     const w = window as unknown as { SpeechRecognition?: new () => SR; webkitSpeechRecognition?: new () => SR };
@@ -184,12 +230,14 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
       </button>
       {open && typeof document !== "undefined" && createPortal(
         <div className="aria-backdrop" onClick={() => setOpen(false)}>
-          <section className={`aria-window${wide ? " wide" : ""}`} role="dialog" aria-modal="true" aria-label={`${name}, your assistant`} onClick={(e) => e.stopPropagation()}>
-            <header className="aria-top">
+          <section ref={winRef} className={`aria-window${wide ? " wide" : ""}`} style={rect ? { left: rect.x, top: rect.y, width: rect.w, height: rect.h } : undefined}
+            role="dialog" aria-modal="true" aria-label={`${name}, your assistant`} onClick={(e) => e.stopPropagation()}>
+            {["n", "s", "e", "w", "ne", "nw", "se", "sw"].map((d) => <span key={d} className={`aria-rz ${d}`} onPointerDown={startDrag(d)} aria-hidden="true" />)}
+            <header className="aria-top" onPointerDown={startDrag("move")} title="Drag to move the window anywhere. Drag any edge or corner to resize it.">
               <span className="aria-badge" aria-hidden="true">{name.charAt(0)}</span>
               <div className="aria-title"><b>{name}</b><small>{tagline}</small></div>
               <div className="aria-top-actions">
-                <button type="button" className="aria-home" onClick={() => setWide((w) => !w)} aria-pressed={wide} title="Make the window fill the screen, or drag its bottom-right corner to size it">{wide ? "⤡ Smaller" : "⤢ Expand"}</button>
+                <button type="button" className="aria-home" onClick={() => { setRect(null); setWide((w) => !w); }} aria-pressed={wide} title="Make the window fill the screen, or back to its normal size. You can also drag the header to move it and any edge to resize it.">{wide ? "⤡ Smaller" : "⤢ Expand"}</button>
                 {msgs.length > 0 && <button type="button" className="aria-home" onClick={restart} title="Back to the start screen with the example questions">🏠 Home</button>}
                 <button type="button" className={`aria-toggle${readAloud ? " on" : ""}`} onClick={toggleRead} aria-pressed={readAloud} title="Read answers aloud">🔊 {readAloud ? "Reading aloud" : "Read aloud"}</button>
                 <button type="button" className="btn tiny btn-close" onClick={() => setOpen(false)}>Close</button>

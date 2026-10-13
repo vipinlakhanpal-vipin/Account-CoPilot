@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.84";
+export const APP_VERSION = "3.85";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.85", date: "2026-10-14", notes: "Aria's window can be dragged anywhere on screen by its header and resized from any edge or corner, and her tables keep their column-header bar in view while you scroll a long list.", changes: [
+      { what: "Drag the Aria window by its header to move it in any direction, and drag any edge or corner to resize it (not just the bottom-right corner). It stays reachable if the browser is shrunk, and Expand/Smaller still resets it", where: "packages/aria/AriaChat.tsx (startDrag), packages/aria/aria.css (.aria-rz)", why: "Requested — drag the Aria window in all directions" },
+      { what: "Tables in Aria's answers now scroll within their own frame (up to about 58% of the window height) with a sticky green header row, so the field names stay visible while you read down a long list", where: "packages/aria/aria.css (.aria-tablewrap, .aria-table th)", why: "Reported — in a long table the header bar scrolled away and the report appeared to start mid-list" },
+    ] },
   { version: "3.84", date: "2026-10-14", notes: "The \"Ask Aria\" label that appears when you point at her icon is now a coloured gradient pill in the display font, instead of the browser's plain black-and-white tooltip.", changes: [
       { what: "Removed the browser's native tooltip from Aria's icon (it was drawing a plain black and white box over her own label) and restyled her label as a teal-to-violet pill with a white bold font, a small pointer and a gold dot", where: "packages/aria/AriaChat.tsx, packages/aria/aria.css (.aria-tip)", why: "Reported — the Ask Aria tab was black and white; asked for a nicer colour and font" },
     ] },

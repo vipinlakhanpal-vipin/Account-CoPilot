@@ -19,13 +19,20 @@
 @media (prefers-reduced-motion:reduce){.aria-btn,.aria-btn::after{animation:none}.aria-btn:hover{transform:none}}
 .aria-backdrop{position:fixed;inset:0;z-index:900;background:rgba(6,14,24,.55);backdrop-filter:blur(3px)}
 .aria-window{position:fixed;left:max(12px,calc(50vw - 450px));top:3vh;width:900px;height:min(760px,92vh);min-width:min(420px,calc(100vw - 24px));min-height:360px;
-  max-width:calc(100vw - 24px);max-height:96vh;resize:both;display:flex;flex-direction:column;background:var(--aria-bg);border:1px solid var(--aria-line-2);border-radius:20px;
+  max-width:calc(100vw - 24px);max-height:96vh;display:flex;flex-direction:column;background:var(--aria-bg);border:1px solid var(--aria-line-2);border-radius:20px;
   box-shadow:0 30px 80px rgba(3,8,20,.55);overflow:hidden;animation:aria-in .22s ease-out}
 .aria-window.wide{left:1.5vw;top:2vh;width:97vw;height:96vh}
 .aria-window::after{content:"";position:absolute;right:3px;bottom:3px;width:16px;height:16px;pointer-events:none;opacity:.6;
   background:linear-gradient(135deg,transparent 52%,var(--aria-muted) 52%,var(--aria-muted) 58%,transparent 58%,transparent 72%,var(--aria-muted) 72%,var(--aria-muted) 78%,transparent 78%)}
+.aria-top:active{cursor:grabbing}
+.aria-rz{position:absolute;z-index:6;touch-action:none}
+.aria-rz.n,.aria-rz.s{left:16px;right:16px;height:7px;cursor:ns-resize}.aria-rz.n{top:0}.aria-rz.s{bottom:0}
+.aria-rz.e,.aria-rz.w{top:16px;bottom:16px;width:5px;cursor:ew-resize}.aria-rz.e{right:0}.aria-rz.w{left:0}
+.aria-rz.ne,.aria-rz.nw,.aria-rz.se,.aria-rz.sw{width:18px;height:18px}
+.aria-rz.ne{top:0;right:0;cursor:nesw-resize}.aria-rz.sw{bottom:0;left:0;cursor:nesw-resize}
+.aria-rz.nw{top:0;left:0;cursor:nwse-resize}.aria-rz.se{bottom:0;right:0;cursor:nwse-resize}
 @keyframes aria-in{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
-.aria-top{display:flex;align-items:center;gap:14px;padding:16px 20px;color:#fff;background:linear-gradient(120deg,#0F6E56 0%,#2E5E8C 60%,#5B4BC4 100%)}
+.aria-top{display:flex;align-items:center;gap:14px;padding:16px 20px;color:#fff;cursor:grab;touch-action:none;user-select:none;background:linear-gradient(120deg,#0F6E56 0%,#2E5E8C 60%,#5B4BC4 100%)}
 .aria-badge{flex:none;display:grid;place-items:center;width:46px;height:46px;border-radius:14px;background:#fff;color:#0F6E56;font:800 24px var(--aria-display);box-shadow:0 4px 14px rgba(0,0,0,.25)}
 .aria-title{flex:1;min-width:0;display:flex;flex-direction:column}
 .aria-title b{font:700 22px var(--aria-display);letter-spacing:.02em}.aria-title small{font-size:12px;opacity:.9}
@@ -50,9 +57,9 @@
 .aria-typing{color:var(--aria-muted);font-style:italic}
 .aria-dots::after{content:"";animation:aria-dots 1.2s steps(4,end) infinite}
 @keyframes aria-dots{0%{content:""}25%{content:"."}50%{content:".."}75%,100%{content:"..."}}
-.aria-tablewrap{overflow-x:auto;max-width:100%;margin:8px 0;border:1px solid var(--aria-line);border-radius:10px}
+.aria-tablewrap{overflow:auto;max-width:100%;max-height:min(58vh,560px);margin:8px 0;border:1px solid var(--aria-line);border-radius:10px;background:var(--aria-surface)}
 .aria-table{border-collapse:collapse;font-size:12px;width:100%;table-layout:auto}
-.aria-table th{background:#0F6E56;color:#fff;text-align:left;padding:6px 8px;white-space:nowrap;font-weight:600;position:sticky;top:0}
+.aria-table th{background:#0F6E56;color:#fff;text-align:left;padding:7px 8px;white-space:nowrap;font-weight:600;position:sticky;top:0;z-index:2;box-shadow:0 2px 0 rgba(0,0,0,.12)}
 .aria-table td{padding:5px 8px;border-top:1px solid var(--aria-line);vertical-align:top;line-height:1.35}
 .aria-table td.nw{white-space:nowrap}
 .aria-table tbody tr:nth-child(even) td{background:rgba(var(--aria-ink),.035)}
@@ -91,6 +98,8 @@
 .aria-restart{align-self:center;font:600 12.5px var(--aria-body);color:#0F6E56;background:none;border:1px dashed #0F6E56;border-radius:999px;padding:6px 16px;cursor:pointer}
 .aria-restart:hover{background:#0F6E56;color:#fff}
 .aria-window.wide .aria-bubble,.aria-window .aria-msg.assistant .aria-bubble:has(.aria-table){width:calc(100% - 44px)}
+.aria-table{border-collapse:separate;border-spacing:0}
+.aria-table td{border-top:1px solid var(--aria-line)}
 @media (max-width:900px){.aria-cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (max-width:560px){.aria-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 /* "Ask Aria" label under the icon: a coloured pill in the display font (the browser's plain tooltip is switched off) */
