@@ -501,7 +501,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
   let view: React.ReactNode = null;
   if (tab === "accounts") {
     view = <FilterTable unit="companies" title="Accounts" empty={notFound}
-      toggleExtra={<button type="button" className="btn tiny" onClick={() => setPdfOpen(true)} title="Build a PDF with the full account brief for Verified / Likely / Needs check companies">📄 PDF report</button>} note="ICP = net revenue ≥ $250M and 100+ employees (stock listing not required). ✓ Verified: confirmed from an official source · ● Likely: your data / Seamless say ≥ $250M, not yet confirmed · ! Needs check: sources disagree about $250M · ? Unknown: no revenue figure yet · ✕ Not ICP: below $250M. Hover a status for the reason; select a row to open the account brief."
+      toggleExtra={<button type="button" className="btn primary tiny" onClick={() => setPdfOpen(true)} title="Build one PDF with the full account brief for every Verified / Likely / Needs check company in a region">📄 Region PDF report</button>} note="ICP = net revenue ≥ $250M and 100+ employees (stock listing not required). ✓ Verified: confirmed from an official source · ● Likely: your data / Seamless say ≥ $250M, not yet confirmed · ! Needs check: sources disagree about $250M · ? Unknown: no revenue figure yet · ✕ Not ICP: below $250M. Hover a status for the reason; select a row to open the account brief."
       rows={[...A].sort((a, b) => icpRank(a.icp_status) - icpRank(b.icp_status) || sigRank(a.s2p_signal_level) - sigRank(b.s2p_signal_level) || (bestRevenue(b).v || 0) - (bestRevenue(a).v || 0))
         .map((a) => ({ ...a, icp_match_pct: scores[a.id]?.m.total ?? null, opportunity_pct: scores[a.id]?.o.total ?? null, coupa_fit_pct: scores[a.id]?.f.total ?? null }))}
       search={(a) => [a.company_name, a.industry, a.erp, a.existing_s2p_product, a.s2p_strong_signals].join(" ")}
@@ -525,7 +525,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
   } else if (tab === "pipeline") {
     const ranked = A.filter((a) => inPipe(a, scores[a.id])).sort((a, b) => scores[b.id].rank - scores[a.id].rank);
     view = <FilterTable unit="accounts" title="Ranked pipeline" tipW={pipe} empty={notFound}
-      toggleExtra={<button type="button" className="btn tiny" onClick={() => setPdfOpen(true)} title="Build a PDF with the full account brief for Verified / Likely / Needs check companies">📄 PDF report</button>} note={<>
+      toggleExtra={<button type="button" className="btn primary tiny" onClick={() => setPdfOpen(true)} title="Build one PDF with the full account brief for every Verified / Likely / Needs check company in a region">📄 Region PDF report</button>} note={<>
         <div className="pipe-rank-row">
           <div><b>Rank</b> — which account to work first: <b>{pipe.w_match}% × ICP Match + {pipe.w_opportunity}% × Opportunity + {pipe.w_fit}% × Coupa Fit</b>.</div>
           {ranked[0] && (() => { const t = ranked[0], sc = scores[t.id], p1 = sc.m.total * pipe.w_match / 100, p2 = sc.o.total * pipe.w_opportunity / 100, p3 = sc.f.total * pipe.w_fit / 100;

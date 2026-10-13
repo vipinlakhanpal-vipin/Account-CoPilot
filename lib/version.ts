@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.56";
+export const APP_VERSION = "3.57";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.57", date: "2026-10-13", notes: "The region PDF report button on Accounts and Pipeline is now a prominent green \"Region PDF report\" button, since it was easy to miss.", changes: [
+      { what: "Renamed the Accounts / Pipeline button from a small \"PDF report\" to a primary-coloured \"Region PDF report\"", where: "components/CoPilotApp.tsx (Accounts and Pipeline toggle row)", why: "Asked where to generate a PDF for a region — the option existed but looked like a minor control" },
+    ] },
   { version: "3.56", date: "2026-10-13", notes: "The account brief's header is now ordered: company name with PDF / Refresh research / Close on one row, then one colour-coded row of labelled identifiers. The orange cost note appears only when Refresh research is clicked.", changes: [
       { what: "Rebuilt the account brief header. Row 1: logo and company name, with PDF, Refresh research and Close beside it. Row 2: labelled chips, each with its own colour: ICP status, S2P signal (signal colour), Platform (teal), Confidence (amber), Listing (blue, exchange and ticker), Industry (purple), Entity (indigo). Unknown values are left out", where: "components/CoPilotApp.tsx (Brief header, HChip), app/globals.css", why: "Reported with a screenshot — the exchange and ticker read as random text, the name wrapped over four lines and the signal chips stacked below each other" },
       { what: "Refresh research now shows the orange Cost impact note, with Start research and Cancel, only after you click it, instead of a permanent banner", where: "components/CoPilotApp.tsx (Brief header)", why: "Requested — the static note only took up space; it still appears before any paid action starts" },
