@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.64";
+export const APP_VERSION = "3.65";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.65", date: "2026-10-13", notes: "Every Close button is now orange with white text, so it is easy to find: account brief, dashboard drill-down, contact card, the What's new and version history windows, the bell, the suggestions box, and the round × in every dialog header.", changes: [
+      { what: "Gave all Close controls one orange style (#D9650D, white text, darker on hover) via a shared btn-close class and the dialog × button", where: "components/CoPilotApp.tsx, components/Header.tsx, components/EngineBell.tsx, components/SuggestionsButton.tsx, app/globals.css (.btn-close, .wn-close)", why: "Requested — orange makes Close easy to identify wherever it appears" },
+    ] },
   { version: "3.64", date: "2026-10-13", notes: "Excel contact list now lists each company once with its contacts beneath it and a company total at the top. Revenue is always shown in millions or billions, in USD with the regional currency in brackets, in the Excel, the PDF and the app's generated score reasons.", changes: [
       { what: "Excel: the Campaign List sheet groups contacts under one company (company, ERP, S2P platform, revenue, employees and HQ shown once per company) with \"Companies: N of M selected | Contacts: N\" at the top. A second sheet, Upload list (flat), repeats the company on every row with filters and a numeric USD M column for CRM import", where: "lib/xlsxReport.ts, app/api/report/xlsx/route.ts", why: "Requested — one company was repeated on many rows, and the number of companies selected was not visible" },
       { what: "Revenue and spend always read as millions or billions with the regional currency in brackets: $990M (SAR 3.71B), $11.5B (SAR 43.13B), $415.8B (SAR 1,559.3B). Never thousands or trillions", where: "lib/icp.ts (fmtUsdM, fmtLocalM, fmtMoneyM), lib/pdfReport.ts, lib/xlsxReport.ts", why: "Requested — consistent M / B amounts with local currency in brackets in both the Excel and the PDF" },

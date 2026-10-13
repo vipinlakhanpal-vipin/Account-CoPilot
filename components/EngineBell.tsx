@@ -79,7 +79,7 @@ export default function EngineBell() {
                   {regionList.map((r) => <option key={r} value={r}>{r}</option>)}
                 </select></label>}
             </span>
-            <button type="button" className="btn tiny" onClick={() => setOpen(false)}>Close</button>
+            <button type="button" className="btn tiny btn-close" onClick={() => setOpen(false)}>Close</button>
           </div>
           {entries.length > 0 && <div className="bell-region-name">{selected === "All" ? "All regions" : selected}</div>}
           <p className="bell-resize-hint">Drag the bottom-right corner to expand ↘</p>

@@ -1291,3 +1291,9 @@ th .infotip{margin-left:3px}.infotip-btn{width:15px;height:15px;font-size:10px}
 .bh-btns .bh-btn:disabled{opacity:.7}
 .pdf-cols{margin:6px 0;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:rgba(var(--ink),.03);font-size:12.5px;line-height:1.5}
 .pdf-check{display:flex;align-items:center;gap:8px;font-size:13px;margin:6px 0}
+
+/* Every Close control is orange with white text so it is easy to find, whatever panel or dialog it sits in */
+.btn.btn-close,.bh-btns .bh-btn.btn-close{background:#D9650D;border-color:#D9650D;color:#FFFFFF;font-weight:600}
+.btn.btn-close:hover:not(:disabled),.bh-btns .bh-btn.btn-close:hover:not(:disabled){background:#B8530A;border-color:#B8530A;color:#FFFFFF}
+.wn-close{background:#D9650D;border-color:#D9650D;color:#FFFFFF}
+.wn-close:hover{background:#B8530A}

@@ -65,7 +65,7 @@ export default function SuggestionsButton() {
         <div className="bell-pop suggest-pop" role="dialog" aria-label="Suggest an improvement">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <b>Suggest an improvement</b>
-            <button type="button" className="btn tiny" onClick={() => setOpen(false)}>Close</button>
+            <button type="button" className="btn tiny btn-close" onClick={() => setOpen(false)}>Close</button>
           </div>
           <p className="bell-resize-hint">Drag the bottom-right corner to expand ↘</p>
 

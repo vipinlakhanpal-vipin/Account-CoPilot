@@ -867,7 +867,7 @@ function Brief({ a, data, people, onClose, onContact, scores, criteria, isSuper 
                 <button className="btn ghost bh-btn" type="button" disabled={pdfBusy} title="PDF with everything on this page, plus how it was built from your ICP"
                   onClick={async () => { setPdfBusy(true); await downloadReport({ companyId: a.id }); setPdfBusy(false); }}>{pdfBusy ? "Building…" : "📄 PDF"}</button>
                 <button className="btn ghost bh-btn" type="button" aria-expanded={confirmRefresh} onClick={() => setConfirmRefresh((v) => !v)}>Refresh research</button>
-                <button className="btn ghost bh-btn" type="button" onClick={onClose}>Close</button>
+                <button className="btn ghost bh-btn btn-close" type="button" onClick={onClose}>Close</button>
               </div>
               {confirmRefresh && (
                 <div className="bh-confirm">
@@ -1106,7 +1106,7 @@ function DrillDown({ d, byCo, coById, onClose, onAccount, onContact }: { d: { ti
           <div className="bh-top">
             <div><div className="muted">Dashboard drill-down</div><h3 className="bh-title">{d.title}</h3></div>
             <div className="bh-actions"><div className="bh-btns">
-              <button className="btn ghost bh-btn" type="button" onClick={onClose}>Close</button>
+              <button className="btn ghost bh-btn btn-close" type="button" onClick={onClose}>Close</button>
             </div></div>
           </div>
         </div>
@@ -1140,7 +1140,7 @@ function ContactCard({ p, data, onClose, onAccount }: { p: Row; data: AllData; o
             </div>
             <div className="bh-actions"><div className="bh-btns">
               <button className="btn ghost bh-btn" type="button" onClick={() => onAccount(p.company_id)}>Company brief</button>
-              <button className="btn ghost bh-btn" type="button" onClick={onClose}>Close</button>
+              <button className="btn ghost bh-btn btn-close" type="button" onClick={onClose}>Close</button>
             </div></div>
           </div>
         </div>

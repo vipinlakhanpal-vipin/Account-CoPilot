@@ -155,7 +155,7 @@ export default function Header({ meta }: { meta: string }) {
             <div className="wn-foot">
               {author && <span className="wn-by">Changes/upgrades were made by — <b>{author}</b></span>}
               <span className="wn-actions">
-                <button type="button" className="btn" onClick={() => setShowChanges(false)}>Close</button>
+                <button type="button" className="btn btn-close" onClick={() => setShowChanges(false)}>Close</button>
                 <button type="button" className="btn primary" disabled={upgrading} onClick={() => { setShowChanges(false); upgrade(); }}>Upgrade to v{latest}</button>
               </span>
             </div>
@@ -185,7 +185,7 @@ export default function Header({ meta }: { meta: string }) {
             </div>
             <div className="wn-foot">
               <span className="wn-by">Changes/upgrades were made by — <b>{RELEASE_AUTHOR}</b></span>
-              <span className="wn-actions"><button type="button" className="btn" onClick={() => setShowHistory(false)}>Close</button></span>
+              <span className="wn-actions"><button type="button" className="btn btn-close" onClick={() => setShowHistory(false)}>Close</button></span>
             </div>
           </div>
         </div>
