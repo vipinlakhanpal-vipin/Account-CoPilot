@@ -17,14 +17,17 @@ const Body = z.object({
   region: z.string().min(2).max(40).default("All"),
   limit: z.number().int().min(1).max(MAX_COMPANIES).default(50),
   companyId: z.string().min(8).max(60).optional(),
-}).refine((b) => b.companyId || b.statuses, { message: "statuses or companyId required" });
+  companyIds: z.array(z.string().min(8).max(60)).min(1).max(1000).optional(),
+  title: z.string().max(120).optional(),
+}).refine((b) => b.companyId || b.companyIds || b.statuses, { message: "statuses, companyIds or companyId required" });
 
 export async function POST(req: Request) {
   const user = await requireUser();
   if (!user) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
   const parsed = Body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Pick at least one status and a region." }, { status: 400 });
-  const { statuses = [...REPORT_STATUSES], region, limit, companyId } = parsed.data;
+  const { statuses = [...REPORT_STATUSES], region, limit, companyId, companyIds, title } = parsed.data;
+  const ids = companyId ? [companyId] : companyIds;
   const access = await getAccess(user);
   if (region !== "All" && !canSeeRegion(access, region)) return NextResponse.json({ error: "You don't have access to that region." }, { status: 403 });
 
@@ -34,8 +37,8 @@ export async function POST(req: Request) {
     db.from("settings").select("value").eq("key", "icp_definition").maybeSingle().then((r) => r.data?.value),
     db.from("settings").select("value").eq("key", "icp_criteria").maybeSingle().then((r) => r.data?.value),
   ]);
-  const { bytes, count, total } = await buildReport(all, def, { statuses, region, limit, generatedBy: access.email, criteria: crit, ids: companyId ? [companyId] : undefined });
-  if (count === 0) return NextResponse.json({ error: companyId ? "That company wasn't found, or you don't have access to it." : "No companies match those statuses in that region." }, { status: 404 });
+  const { bytes, count, total } = await buildReport(all, def, { statuses, region, limit, generatedBy: access.email, criteria: crit, ids, title });
+  if (count === 0) return NextResponse.json({ error: companyId ? "That company wasn't found, or you don't have access to it." : ids ? "None of the companies in that list are in the region you chose." : "No companies match those statuses in that region." }, { status: 404 });
   const date = new Date().toISOString().slice(0, 10);
   return new NextResponse(new Uint8Array(bytes), {
     headers: {

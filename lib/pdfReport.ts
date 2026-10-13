@@ -15,7 +15,7 @@ const STATUS_COLOR: Record<string, ReturnType<typeof rgb>> = {
 const REPLACE: Record<string, string> = { "≥": ">=", "≤": "<=", "≈": "~", "→": "->", "←": "<-", "✓": "v", "✕": "x", "●": "-", "·": "-", "…": "...", " ": " ", "​": "" };
 
 export const REPORT_STATUSES = ["ICP — Verified", "ICP — Likely", "ICP — Needs check"] as const;
-export type ReportOptions = { statuses: string[]; region: string; limit: number; generatedBy: string; criteria?: Partial<Criteria> | null; ids?: string[] };
+export type ReportOptions = { statuses: string[]; region: string; limit: number; generatedBy: string; criteria?: Partial<Criteria> | null; ids?: string[]; title?: string };
 const s = (v: unknown) => (v === null || v === undefined ? "" : String(v));
 const usd = (m: unknown) => { const n = Number(m); return m === null || m === undefined || m === "" ? "" : fmtUsdM(n); };
 type Cur = { code: string; per_usd: number };
@@ -174,7 +174,8 @@ function howItWorks(w: Writer, regions: string[], def: unknown, opt: ReportOptio
   const daily = regions.map((r) => rulesFor(def, r) as Rules).filter((x) => x.status === "active");
   w.bullet(`A scheduled session runs every morning (6am Dubai): it finds new companies and re-verifies existing ones for each active region${daily.length ? ` (currently ${daily[0].engine.discover_per_day} new and up to ${daily[0].engine.verify_per_day} re-verified per region per day)` : ""}.`);
   w.bullet("It uses its own web search, never guesses emails or phones, and keeps conflicting findings rather than overwriting your reference workbook.");
-  if (opt.ids?.length) w.p("Selection for this report: one company, chosen from its account brief.", { size: 8.5, color: MUTED, gap: 6 });
+  if (opt.ids?.length === 1) w.p("Selection for this report: one company, chosen from its account brief.", { size: 8.5, color: MUTED, gap: 6 });
+  else if (opt.ids?.length) w.p(`Selection for this report: the companies in the list you opened${opt.title ? ` ("${opt.title}")` : ""}, region ${opt.region}, whatever their ICP status; most promising first (by ICP Match), up to ${opt.limit} companies.`, { size: 8.5, color: MUTED, gap: 6 });
   else w.p(`Selection for this report: region ${opt.region}; statuses ${opt.statuses.map((x) => x.replace("ICP — ", "")).join(", ")}; most promising first (by ICP Match), up to ${opt.limit} companies.`, { size: 8.5, color: MUTED, gap: 6 });
 }
 
@@ -218,8 +219,8 @@ export async function buildReport(all: AllData, def: unknown, opt: ReportOptions
   const hires: Record<string, number> = {};
   all.history.forEach((h) => { if (/change|promot|join|hire/i.test(s(h.determination))) hires[h.company_id] = (hires[h.company_id] || 0) + 1; });
   const inRegion = (a: Row) => opt.region === "All" || regionOf(a.country) === opt.region;
-  const single = !!opt.ids?.length;
-  const scored = all.accounts.filter((a) => single ? opt.ids!.includes(a.id) : opt.statuses.includes(s(a.icp_status)) && inRegion(a)).map((a) => {
+  const single = opt.ids?.length === 1;
+  const scored = all.accounts.filter((a) => opt.ids?.length ? opt.ids.includes(a.id) && (single || inRegion(a)) : opt.statuses.includes(s(a.icp_status)) && inRegion(a)).map((a) => {
     const c: Criteria = { ...criteria, company: { ...criteria.company, countries: [s(a.country) || "UAE"], regions: [] } };
     const focus = (rulesFor(def, a.country) as Rules).focus;
     return { a, m: icpMatch(a, c), o: opportunity(a, hires[a.id] || 0, focus), f: coupaFit(a, focus), c };
@@ -230,7 +231,8 @@ export async function buildReport(all: AllData, def: unknown, opt: ReportOptions
 
   const w = await Writer.create();
   const regionName = (REGIONS.find((r: { key: string; name: string }) => r.key === opt.region)?.name) || (opt.region === "All" ? "all regions" : opt.region);
-  const title = single && picked[0] ? `Account CoPilot report on ${s(picked[0].a.company_name)}` : `Account CoPilot report on ${regionName}`;
+  const title = single && picked[0] ? `Account CoPilot report on ${s(picked[0].a.company_name)}`
+    : opt.title ? `Account CoPilot report on ${w.clean(opt.title)}` : `Account CoPilot report on ${regionName}`;
   const logoTop = w.y;
   w.logo(M, logoTop, 46);
   w.p("ACCOUNT COPILOT", { size: 9, bold: true, color: MUTED, gap: 2, indent: 58 });

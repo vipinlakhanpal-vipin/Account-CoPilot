@@ -26,7 +26,11 @@ export async function downloadReport(body: Record<string, unknown>, format: Form
 
 // Accounts, Pipeline and Priority accounts → "Reports". Two formats: a full PDF brief per company, or an Excel contact list for campaigns.
 // The region is always asked for explicitly, never assumed from the screen you opened this from.
-export default function ReportDialog({ accounts, icpDef, onClose }: { accounts: Row[]; icpDef: unknown; onClose: () => void }) {
+// With `companyIds` (opened from a dashboard drill-down) the report covers exactly that list, whatever its statuses.
+export default function ReportDialog({ accounts, icpDef, onClose, companyIds, listTitle }:
+  { accounts: Row[]; icpDef: unknown; onClose: () => void; companyIds?: string[]; listTitle?: string }) {
+  const listMode = !!companyIds;
+  const idSet = useMemo(() => new Set(companyIds || []), [companyIds]);
   const [format, setFormat] = useState<Format>("pdf");
   const [region, setRegion] = useState("");
   const [picked, setPicked] = useState<string[]>([...STATUSES]);
@@ -38,22 +42,24 @@ export default function ReportDialog({ accounts, icpDef, onClose }: { accounts: 
     const c: Record<string, Record<string, number>> = {};
     for (const a of accounts) {
       const r = regionOf(a.country), st = String(a.icp_status || "");
+      if (listMode) { if (!idSet.has(a.id)) continue; (c[r] ||= {}).list = (c[r]?.list || 0) + 1; continue; }
       if (!(STATUSES as readonly string[]).includes(st)) continue;
       (c[r] ||= {})[st] = (c[r]?.[st] || 0) + 1;
     }
     return c;
-  }, [accounts]);
+  }, [accounts, listMode, idSet]);
   const regionKeys = REGIONS.map((r: { key: string }) => r.key).filter((k: string) => counts[k]);
   const inRegion = (st: string) => region === "All" ? regionKeys.reduce((n: number, k: string) => n + (counts[k]?.[st] || 0), 0) : counts[region]?.[st] || 0;
-  const matching = region ? picked.reduce((n, st) => n + inRegion(st), 0) : 0;
+  const matching = !region ? 0 : listMode ? inRegion("list") : picked.reduce((n, st) => n + inRegion(st), 0);
   const rules = region && region !== "All" ? rulesFor(icpDef, region) : null;
-  const ready = !!region && picked.length > 0 && matching > 0 && !busy;
+  const ready = !!region && (listMode || picked.length > 0) && matching > 0 && !busy;
 
   async function generate() {
     if (!ready) return;
     setBusy(true);
-    const ok = format === "pdf" ? await downloadReport({ statuses: picked, region, limit })
-      : await downloadReport({ statuses: picked, region, emailOnly }, "xlsx");
+    const scope = listMode ? { companyIds, title: listTitle } : { statuses: picked };
+    const ok = format === "pdf" ? await downloadReport({ ...scope, region, limit })
+      : await downloadReport({ ...scope, region, emailOnly }, "xlsx");
     setBusy(false);
     if (ok) onClose();
   }
@@ -107,13 +113,14 @@ export default function ReportDialog({ accounts, icpDef, onClose }: { accounts: 
                 </select></label>
             )}
           </div>
-          <div className="pdf-status">
+          {listMode && <p className="note">This covers the {idSet.size.toLocaleString()} companies in &quot;{listTitle}&quot;, whatever their ICP status.</p>}
+          {!listMode && <div className="pdf-status">
             {STATUSES.map((st) => (
               <label key={st}><input type="checkbox" checked={picked.includes(st)}
                 onChange={(e) => setPicked((p) => e.target.checked ? [...p, st] : p.filter((x) => x !== st))} />
                 {st.replace("ICP — ", "")} {region && <span className="muted">({inRegion(st)})</span>}</label>
             ))}
-          </div>
+          </div>}
           {format === "xlsx" && (
             <label className="pdf-check"><input type="checkbox" checked={emailOnly} onChange={(e) => setEmailOnly(e.target.checked)} /> Only people with an official email (recommended for campaigns)</label>
           )}

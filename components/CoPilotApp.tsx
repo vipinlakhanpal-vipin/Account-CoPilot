@@ -786,7 +786,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
             <p>This market is next on the roadmap. Add companies from the Research Queue (choose the country there), or pick another country above.</p></div>
         : view}</section>
       {pdfOpen && <ReportDialog accounts={all.accounts} icpDef={icpDef} onClose={() => setPdfOpen(false)} />}
-      {drill && <DrillDown d={drill} byCo={byCo} coById={coById} onClose={() => setDrill(null)} onAccount={setOpen} onContact={setContact} />}
+      {drill && <DrillDown d={drill} byCo={byCo} coById={coById} icpDef={icpDef} onClose={() => setDrill(null)} onAccount={setOpen} onContact={setContact} />}
       {open && A.find((x) => x.id === open) && <Brief a={A.find((x) => x.id === open)!} data={data} people={byCo[open] || []} onClose={() => setOpen(null)} onContact={setContact}
         scores={scores[open]} criteria={criteria} isSuper={isSuper} />}
       {contact && (() => { const p = P.find((x) => x.id === contact); return p ? <ContactCard p={p} data={data} onClose={() => setContact(null)} onAccount={(id) => { setContact(null); setOpen(id); }} /> : null; })()}
@@ -1050,8 +1050,11 @@ function Profile({ profile }: { profile: Record<string, Record<string, unknown>>
 
 type Kind = "accounts" | "contacts" | "signals" | "conflicts" | "history";
 
-function DrillDown({ d, byCo, coById, onClose, onAccount, onContact }: { d: { title: string; kind: Kind; rows: Row[] }; byCo: Record<string, Row[]>; coById: Record<string, Row>;
-  onClose: () => void; onAccount: (id: string) => void; onContact: (id: string) => void }) {
+function DrillDown({ d, byCo, coById, icpDef, onClose, onAccount, onContact }: { d: { title: string; kind: Kind; rows: Row[] }; byCo: Record<string, Row[]>; coById: Record<string, Row>;
+  icpDef: unknown; onClose: () => void; onAccount: (id: string) => void; onContact: (id: string) => void }) {
+  const [reportOpen, setReportOpen] = useState(false);
+  // Every tile list can be reported on: accounts directly, everything else (contacts, signals, conflicts, history) through the company it belongs to.
+  const reportIds = [...new Set(d.rows.map((r) => (d.kind === "accounts" ? r.id : r.company_id) as string).filter(Boolean))];
   let table: React.ReactNode;
   if (d.kind === "accounts") {
     table = <FilterTable unit="companies" title={d.title} rows={[...d.rows].sort((a, b) => icpRank(a.icp_status) - icpRank(b.icp_status) || (bestRevenue(b).v || 0) - (bestRevenue(a).v || 0))}
@@ -1093,9 +1096,14 @@ function DrillDown({ d, byCo, coById, onClose, onAccount, onContact }: { d: { ti
         <div className="brief-head bh">
           <div className="bh-top">
             <div><div className="muted">Dashboard drill-down</div><h3 className="bh-title">{d.title}</h3></div>
-            <div className="bh-actions"><div className="bh-btns"><button className="btn ghost bh-btn" type="button" onClick={onClose}>Close</button></div></div>
+            <div className="bh-actions"><div className="bh-btns">
+              {reportIds.length > 0 && <button className="btn ghost bh-btn" type="button" onClick={() => setReportOpen(true)}
+                title="Build a full PDF report or an Excel contact list for the companies in this list">📊 Reports (PDF / Excel)</button>}
+              <button className="btn ghost bh-btn" type="button" onClick={onClose}>Close</button>
+            </div></div>
           </div>
         </div>
+        {reportOpen && <ReportDialog accounts={Object.values(coById)} icpDef={icpDef} companyIds={reportIds} listTitle={d.title} onClose={() => setReportOpen(false)} />}
         <div className="brief-body">{table}</div>
       </aside>
     </>

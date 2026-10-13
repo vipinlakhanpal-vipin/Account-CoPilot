@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.61";
+export const APP_VERSION = "3.62";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.62", date: "2026-10-13", notes: "Every Dashboard tile now has report options: open any tile and use Reports (PDF / Excel) in its header to build a full PDF or an Excel contact list for the companies in that list.", changes: [
+      { what: "Added \"Reports (PDF / Excel)\" to the dashboard drill-down panel that every tile, chart bar and region card opens. It reports on exactly the companies in that list (contacts, signals, conflicts and history lists through the company they belong to), whatever their ICP status, and still asks which region to build it for", where: "components/CoPilotApp.tsx (DrillDown), components/ReportDialog.tsx, app/api/report/pdf/route.ts, app/api/report/xlsx/route.ts, lib/pdfReport.ts, lib/xlsxReport.ts", why: "Reported — the drill-down opened from a tile had no way to print or generate a PDF or Excel file" },
+    ] },
   { version: "3.61", date: "2026-10-13", notes: "Brought in two fixes that were sitting unmerged on a GitHub branch from 7 Oct: the Discovery Criteria sections now open by default, and the criteria editor no longer collapses to nothing on a narrow or minimised window.", changes: [
       { what: "Technology landscape, Business triggers, Financial indicators, Contact intelligence and Engagement signals now open by default under Edit criteria, like the other sections", where: "components/DiscoveryPanel.tsx", why: "Reported earlier — clicking Edit criteria to change Business triggers looked like nothing happened because those five sections were collapsed" },
       { what: "At 1100px and below the Discovery panel's scroll area flows as normal content (no inner scroll, no fixed flex height) instead of collapsing to about zero height", where: "app/globals.css (@media max-width:1100px, .dp / .dp-scroll)", why: "Reported earlier — on a narrow or minimised window all the filter criteria vanished between the tabs and the footer" },

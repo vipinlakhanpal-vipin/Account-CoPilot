@@ -13,23 +13,24 @@ export const dynamic = "force-dynamic";
 const STATUSES = ["ICP — Verified", "ICP — Likely", "ICP — Needs check"] as const;
 const Body = z.object({
   region: z.string().min(2).max(40),
-  statuses: z.array(z.enum(STATUSES)).min(1),
+  statuses: z.array(z.enum(STATUSES)).min(1).optional(),
+  companyIds: z.array(z.string().min(8).max(60)).min(1).max(1000).optional(),
   emailOnly: z.boolean().default(true),
-});
+}).refine((b) => b.statuses || b.companyIds, { message: "statuses or companyIds required" });
 
 export async function POST(req: Request) {
   const user = await requireUser();
   if (!user) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
   const parsed = Body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Choose a region and at least one status." }, { status: 400 });
-  const { region, statuses, emailOnly } = parsed.data;
+  const { region, statuses = [...STATUSES], emailOnly, companyIds } = parsed.data;
   const access = await getAccess(user);
   if (!canSeeRegion(access, region)) return NextResponse.json({ error: "You don't have access to that region." }, { status: 403 });
 
   const all = scopeData(await loadAll(supabaseAdmin()), access);
-  const out = await buildCampaignList(all, { region, statuses, emailOnly, generatedBy: access.email });
+  const out = await buildCampaignList(all, { region, statuses, emailOnly, generatedBy: access.email, ids: companyIds });
   if (out.contacts === 0) {
-    return NextResponse.json({ error: `No contacts${emailOnly ? " with an official email" : ""} are on file for ${region} companies with those statuses yet. Contacts come from your workbook or Seamless enrichment.` }, { status: 404 });
+    return NextResponse.json({ error: `No contacts${emailOnly ? " with an official email" : ""} are on file for ${region} companies ${companyIds ? "in that list" : "with those statuses"} yet. Contacts come from your workbook or Seamless enrichment.` }, { status: 404 });
   }
   const date = new Date().toISOString().slice(0, 10);
   return new NextResponse(new Uint8Array(out.buf), {

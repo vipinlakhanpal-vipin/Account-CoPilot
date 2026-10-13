@@ -19,10 +19,11 @@ const splitName = (full: string) => {
   return { first: parts[0] || "", last: parts.slice(1).join(" ") };
 };
 
-export type CampaignOptions = { region: string; statuses: string[]; emailOnly: boolean; generatedBy: string };
+export type CampaignOptions = { region: string; statuses: string[]; emailOnly: boolean; generatedBy: string; ids?: string[] };
 
 export async function buildCampaignList(d: AllData, o: CampaignOptions) {
-  const accounts = d.accounts.filter((a) => o.statuses.includes(s(a.icp_status)) && regionOf(a.country) === o.region);
+  const idSet = o.ids ? new Set(o.ids) : null;
+  const accounts = d.accounts.filter((a) => (idSet ? idSet.has(a.id) : o.statuses.includes(s(a.icp_status))) && regionOf(a.country) === o.region);
   const byId = new Map(accounts.map((a) => [a.id, a]));
   const people = buildPeople(d.contacts.filter((p) => byId.has(p.company_id))).filter((p) => p.trust !== "Conflicting");
 
@@ -59,7 +60,7 @@ export async function buildCampaignList(d: AllData, o: CampaignOptions) {
   [
     ["Generated", `${new Date().toISOString().slice(0, 16).replace("T", " ")} UTC by ${o.generatedBy || "a team member"}`],
     ["Region", o.region],
-    ["ICP statuses", o.statuses.map((x) => x.replace("ICP — ", "")).join(", ")],
+    ["ICP statuses", idSet ? "All statuses (the list you opened)" : o.statuses.map((x) => x.replace("ICP — ", "")).join(", ")],
     ["Contacts in this file", String(rows.length)],
     ["Companies with a contact", `${companiesWithRows.size} of ${accounts.length}`],
     ["Email rule", o.emailOnly ? "Only people with an official email are included." : "People without an email are included; their Email ID is blank."],
