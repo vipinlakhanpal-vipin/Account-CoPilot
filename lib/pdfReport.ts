@@ -2,7 +2,7 @@ import "server-only";
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import type { AllData, Row } from "@/lib/data";
 import { icpMatch, opportunity, coupaFit, procurementMaturity, estimateSpend, whySelected, recommendedActions, withDefaults, revenueOf, revenueIsOfficial, fmtUsdM, type Criteria } from "@/lib/icp";
-import { rulesFor, regionOf, OPTIONS, REGIONS, summarizeRules, type Rules } from "@/lib/icpDefinition.mjs";
+import { rulesFor, regionOf, OPTIONS, REGIONS, describeRules, type Rules } from "@/lib/icpDefinition.mjs";
 
 // One PDF with the same information the Account brief shows for a company, for the companies in the chosen ICP statuses.
 // pdf-lib's built-in Helvetica only covers Latin-1, so text is sanitised (≥ → >=, Arabic or other scripts dropped).
@@ -95,16 +95,17 @@ class Writer {
     this.y -= 1;
   }
   h1(t: string) { this.ensure(30); this.p(t, { size: 18, bold: true, color: TEAL, gap: 4 }); }
-  h2(t: string) {
-    this.ensure(70); this.y -= 6;
+  /** `keep` is the room the heading needs below it, so a heading never ends a page with its content on the next. */
+  h2(t: string, keep = 100) {
+    this.ensure(keep); this.y -= 6;
     this.p(t.toUpperCase(), { size: 9.5, bold: true, color: TEAL, gap: 1 });
     this.y -= 3;
     this.page.drawLine({ start: { x: M, y: this.y }, end: { x: W - M, y: this.y }, thickness: 0.6, color: LINE }); this.y -= 5;
   }
-  kv(label: string, value: unknown) {
+  kv(label: string, value: unknown, lw = 96) {
     const v = this.clean(value);
     if (!v) return;
-    const lw = 96, lead = 9.5 * 1.35, lines = this.wrap(v, this.font, 9.5, CW - lw);
+    const lead = 9.5 * 1.35, lines = this.wrap(v, this.font, 9.5, CW - lw);
     this.ensure(lead);
     lines.forEach((ln, i) => {
       this.ensure(lead); this.y -= lead;
@@ -150,10 +151,10 @@ class Writer {
 function howItWorks(w: Writer, regions: string[], def: unknown, opt: ReportOptions) {
   w.h2("How Account CoPilot produced this report");
   w.p("Every figure below comes from rules you defined, not from a model's opinion. The report only lists companies that the ICP rules and the evidence rank into the statuses you picked.", { gap: 6 });
-  w.p("1. Your ICP (Setup -> Define ICP) decides who counts", { bold: true });
+  w.p("1. ICP Profile", { bold: true });
   for (const r of regions) {
     const rules = rulesFor(def, r) as Rules;
-    w.bullet(`${summarizeRules(r, rules)}.`);
+    w.bullet(`${describeRules(r, rules)}.`);
     const entity = OPTIONS.entity.find((e: [string, string]) => e[0] === rules.entity_level)?.[1] || rules.entity_level;
     w.p(`${entity}. Ownership allowed: ${rules.ownership_allowed.join(", ") || "any"}. Excludes: ${[rules.exclude.government_bodies && "government bodies", rules.exclude.single_sites && "single sites (one hotel, hospital, school)", rules.exclude.foreign_branches && "local branches of foreign HQs"].filter(Boolean).join(", ") || "nothing specific"}.`, { size: 8.5, color: MUTED, indent: 16 });
   }
@@ -170,10 +171,45 @@ function howItWorks(w: Writer, regions: string[], def: unknown, opt: ReportOptio
   w.bullet("Pipeline rank = weighted blend of the three, using the weights saved in Define ICP. Spend, invoice and transaction numbers are benchmark ESTIMATES.");
   w.p("5. How the data arrives", { bold: true });
   const daily = regions.map((r) => rulesFor(def, r) as Rules).filter((x) => x.status === "active");
-  w.bullet(`A scheduled session runs every morning (6am Dubai): it finds new companies and re-verifies existing ones for each active region${daily.length ? ` (currently find ${daily[0].engine.discover_per_day} and verify ${daily[0].engine.verify_per_day} per region per day)` : ""}.`);
+  w.bullet(`A scheduled session runs every morning (6am Dubai): it finds new companies and re-verifies existing ones for each active region${daily.length ? ` (currently ${daily[0].engine.discover_per_day} new and up to ${daily[0].engine.verify_per_day} re-verified per region per day)` : ""}.`);
   w.bullet("It uses its own web search, never guesses emails or phones, and keeps conflicting findings rather than overwriting your reference workbook.");
   if (opt.ids?.length) w.p("Selection for this report: one company, chosen from its account brief.", { size: 8.5, color: MUTED, gap: 6 });
   else w.p(`Selection for this report: region ${opt.region}; statuses ${opt.statuses.map((x) => x.replace("ICP — ", "")).join(", ")}; most promising first (by ICP Match), up to ${opt.limit} companies.`, { size: 8.5, color: MUTED, gap: 6 });
+}
+
+/** How each score's points are earned, mirroring lib/icp.ts so the report explains exactly what it computed. */
+function pointsExplained(w: Writer) {
+  w.h2("How the points are calculated", 150);
+  w.p("Each score is the points a company earned divided by the points available, shown as a percentage. Only checks that apply are counted: ICP Match counts the criteria saved in the Discovery panel, and the lines starting with \"Your\" appear only when you have set them in Define ICP.", { gap: 6 });
+
+  w.p("ICP Match: how well the company fits your criteria", { bold: true, gap: 5 });
+  w.table(["Check", "Max", "How the points are earned"], [
+    ["Revenue", "30", "30 if revenue is official (filing or results) and inside your bands; 10 if only an estimate; 5 if sources disagree or no figure exists; 0 if outside your bands"],
+    ["Employees", "15", "15 if headcount is inside your bands; 6 if headcount is unknown; 0 if outside"],
+    ["Geography", "15", "15 if the company's country is one you selected; otherwise 0"],
+    ["Industry", "15", "15 if its industry is one you selected (only when you set industries)"],
+    ["Ownership", "5", "5 if its ownership type matches (only when you set ownership)"],
+    ["Technology", "10", "10 if its ERP or platform matches your list; 3 if the stack is unknown; 0 otherwise (only when set)"],
+    ["Triggers", "10", "10 if any trigger you selected is found (only when set)"],
+    ["Procurement maturity", "10", "10 suite in place (Coupa or Ariba); 7 other or in-house tools; 5 manual or ERP only; 4 unknown"],
+  ], [0.2, 0.07, 0.73]);
+
+  w.p("Opportunity: how likely the company is to buy soon", { bold: true, gap: 5 });
+  w.table(["Check", "Max", "How the points are earned"], [
+    ["S2P signal strength", "40", "Very strong 40; Strong 30; Moderate 18; Weak 8; Conflicting 10; no signal 0"],
+    ["Procurement transformation", "15", "15 if procurement transformation is evidenced or a platform project is under way (evaluation, RFP, implementing, replacement)"],
+    ["ERP modernisation", "15", "15 if an ERP programme is evidenced; 8 if it runs S/4HANA or Oracle Fusion; otherwise 0"],
+    ["Digital transformation", "10", "10 if a digital programme is evidenced"],
+    ["Cost reduction", "5", "5 if a cost-optimisation programme is evidenced"],
+    ["Executive hiring", "10", "5 for each recorded leadership move, up to 10"],
+    ["Recent growth", "5", "5 if record revenue, profit or growth is reported"],
+    ["Your buying triggers", "20", "20 if two or more of your triggers are found; 12 for one (when set in Define ICP)"],
+    ["Your ERP of interest", "10", "10 if it runs an ERP on your list (when set in Define ICP)"],
+  ], [0.26, 0.07, 0.67]);
+
+  w.p("Coupa Fit: estimated fit across five Coupa value areas", { bold: true, gap: 4 });
+  w.p("Source-to-Pay, Supplier management, Contract management, Spend analytics and Invoice automation are each worth 20 points. Each is estimated from the platform the company runs today (no suite found or an existing Coupa customer scores highest, Ariba lowest as a displacement play), its size (revenue of $1B or more scores highest), its ERP (SAP, Oracle or Microsoft best), and its sector (supplier-heavy sectors lift supplier and contract management; services-heavy sectors lift contracts and invoicing). \"Your platform focus\" adds 20 points if the platform is on your Define ICP list, 8 if it is unknown, 0 otherwise.", { size: 9, gap: 4 });
+  w.p("Pipeline rank is a weighted blend of the three scores, using the weights saved in Define ICP. Spend and transaction figures are benchmark estimates, never company data.", { size: 9, color: MUTED, gap: 6 });
 }
 
 export async function buildReport(all: AllData, def: unknown, opt: ReportOptions): Promise<{ bytes: Uint8Array; count: number; total: number }> {
@@ -202,12 +238,13 @@ export async function buildReport(all: AllData, def: unknown, opt: ReportOptions
   w.p(`Generated ${new Date().toISOString().slice(0, 16).replace("T", " ")} UTC by ${opt.generatedBy || "a team member"}  |  ${picked.length} of ${total} matching companies`, { size: 9, color: MUTED, gap: 8 });
   const regions = opt.region === "All" ? [...new Set(picked.map((x) => regionOf(x.a.country)))] : [opt.region];
   howItWorks(w, regions.length ? regions : [opt.region], def, opt);
+  pointsExplained(w);
 
   const curOf = (a: Row) => (rulesFor(def, a.country) as Rules).currency as Cur;
   const contactCos = new Set(all.contacts.map((p) => p.company_id));
   if (!single) {
     w.ensure(150);
-    w.h2("Companies in this report");
+    w.h2("Companies in this report", 170);
     const counts = REPORT_STATUSES.map((st) => `${st.replace("ICP — ", "")}: ${picked.filter((x) => x.a.icp_status === st).length}`).join("   ");
     w.p(counts, { size: 9, color: MUTED, gap: 2 });
     w.p(`Amounts are in USD, with the regional currency in brackets. Stakeholder contacts are on file for ${picked.filter((x) => contactCos.has(x.a.id)).length} of these ${picked.length} companies.`, { size: 8.5, color: MUTED, gap: 4 });
@@ -254,7 +291,7 @@ export async function buildReport(all: AllData, def: unknown, opt: ReportOptions
     w.p(mat.why);
     w.kv("S2P platform", mat.platform); w.kv("ERP", mat.erp); w.kv("S2P signal", mat.signal); w.kv("Addressable spend", spend ? money(spend.total, cur) : "");
 
-    w.h2("AI intelligence (rule-based)");
+    w.h2("AI intelligence (rule-based)", 140);
     for (const [label, sc] of [["ICP Match", m], ["Opportunity", o], ["Coupa Fit", f]] as const) {
       w.p(`${label}: ${sc.total}%`, { bold: true, gap: 0 });
       sc.parts.forEach((x) => w.p(`${x.label}: ${x.score} of ${x.max} pts - ${x.why}`, { size: 8.5, color: MUTED, indent: 10, gap: 0 }));
@@ -263,7 +300,7 @@ export async function buildReport(all: AllData, def: unknown, opt: ReportOptions
     const why = whySelected(a, c, m, spend);
     if (why.length) { w.p("Why this account was selected", { bold: true }); why.forEach((x) => w.bullet(x)); }
     if (spend) {
-      w.h2("Procurement & spend intelligence (ESTIMATE)");
+      w.h2("Procurement & spend intelligence (ESTIMATE)", 230);
       w.p(`Annual addressable spend is revenue x a sector benchmark, split by category. Amounts in USD${cur.code === "USD" ? "" : `, with ${cur.code} in brackets (at ${cur.per_usd} per USD)`}.`, { size: 8.5, color: MUTED, gap: 4 });
       const pct = (v: number) => `${spend.total ? Math.round((v / spend.total) * 100) : 0}%`;
       w.table(["Spend category", "Annual amount", "Share of addressable spend"], [
@@ -306,7 +343,7 @@ export async function buildReport(all: AllData, def: unknown, opt: ReportOptions
 
     const trans = [["Procurement model", a.procurement_model], ["Procurement transformation", a.procurement_transformation_signals], ["Digital transformation", a.digital_transformation_signals],
       ["Implementation partner", a.known_implementation_partner], ["Subsidiaries", a.subsidiaries]].filter(([, v]) => v);
-    if (trans.length) { w.h2("Transformation context"); trans.forEach(([l, v]) => w.kv(l as string, v)); }
+    if (trans.length) { w.h2("Transformation context"); trans.forEach(([l, v]) => w.kv(l as string, v, 150)); }
 
     if (hs) { w.h2("HubSpot (read-only)"); w.p(hs.in_hubspot ? `${s(hs.hubspot_name)} | stage ${s(hs.stage) || "-"} | owner ${s(hs.owner) || "-"}` : "Not in HubSpot."); }
 
@@ -314,7 +351,7 @@ export async function buildReport(all: AllData, def: unknown, opt: ReportOptions
     w.p(a.potential_opportunity || "-");
     if (a.account_notes) w.p(a.account_notes, { size: 8.5, color: MUTED });
 
-    w.h2(`Stakeholders (${cs.length})`);
+    w.h2(`Stakeholders (${cs.length})`, 150);
     if (cs.length) w.table(["Name", "Title", "Tier", "Email", "Phone"], cs.slice(0, 25).map((p) => [s(p.full_name), s(p.title_verbatim), s(p.contact_tier), s(p.email), s(p.phone)]), [0.2, 0.3, 0.08, 0.26, 0.16], 8);
     else w.p("No stakeholder contacts are on file for this company yet. The daily engine finds companies and verifies revenue; it does not collect people. Contacts reach the app from your reference workbook or from Seamless enrichment.", { size: 8.5, color: MUTED });
 

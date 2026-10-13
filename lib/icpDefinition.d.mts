@@ -34,3 +34,4 @@ export function regionOf(country: unknown): string;
 export function rulesFor(def: any, country: unknown): Rules;
 export function validateRules(key: string, r: Rules): string[];
 export function summarizeRules(key: string, r: Rules): string;
+export function describeRules(key: string, r: Rules): string;

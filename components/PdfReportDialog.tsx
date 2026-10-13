@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
-import { REGIONS, rulesFor, summarizeRules, regionOf } from "@/lib/icpDefinition.mjs";
+import { REGIONS, rulesFor, describeRules, regionOf } from "@/lib/icpDefinition.mjs";
 import { notify } from "@/components/Confirm";
 import type { Row } from "@/lib/data";
 
@@ -62,7 +62,7 @@ export default function PdfReportDialog({ accounts, icpDef, defaultRegion, onClo
         <div className="wn-body pdf-body">
           <h3>How Account CoPilot builds this</h3>
           <ol className="pdf-how">
-            <li><b>Your ICP decides who counts.</b> {rules ? <>For {region}: {summarizeRules(region, rules)}.</> : "Each region uses its own rules from Setup → Define ICP."} Changing the ICP changes this report.</li>
+            <li><b>Your ICP decides who counts.</b> {rules ? <>{describeRules(region, rules)}.</> : "Each region uses its own rules from Setup → Define ICP."} Changing the ICP changes this report.</li>
             <li><b>Evidence decides the status.</b> Official filings and results make a company <i>Verified</i>; estimates or your own data make it <i>Likely</i>; conflicting sources make it <i>Needs check</i>. Every figure keeps its source.</li>
             <li><b>Scores are rule-based.</b> ICP Match, Opportunity and Coupa Fit are computed from that evidence with no API cost; spend figures are labelled estimates.</li>
             <li><b>Same content as the account brief.</b> Facts, maturity, scores, signals, ERP and apps, stakeholders and evidence, for the companies you pick below. This explanation is also page 1 of the PDF.</li>

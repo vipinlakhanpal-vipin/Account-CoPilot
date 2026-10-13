@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.57";
+export const APP_VERSION = "3.58";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,11 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.58", date: "2026-10-13", notes: "PDF report: the first point is now \"ICP Profile\" with rules explained in brackets, a new section explains how the Match / Opportunity / Coupa Fit points are calculated, and headings stay with their content instead of being stranded at the bottom of a page.", changes: [
+      { what: "Point 1 is now \"ICP Profile\", and each region's rules are written in plain language with terms explained in brackets, e.g. \"listing not required (the company does not need to be on a stock exchange; private and family groups qualify)\" and \"active (each morning the engine finds 5 new companies and re-verifies up to 25)\"", where: "lib/pdfReport.ts, lib/icpDefinition.mjs (describeRules), components/PdfReportDialog.tsx", why: "Requested — simpler heading and the meaning of 'listing not required' spelled out" },
+      { what: "Added \"How the points are calculated\": a table per score (ICP Match, Opportunity) with each check, its maximum and exactly how points are earned, plus how Coupa Fit's five areas are estimated", where: "lib/pdfReport.ts (pointsExplained)", why: "Requested — the per-company points (e.g. Revenue 30 of 30) had no explanation of how they are calculated" },
+      { what: "Headings now keep their content: if there is not room for a heading and the start of its table or text, the whole block moves to the next page; long field labels no longer overlap their values", where: "lib/pdfReport.ts (h2 keep-with-content, kv label width)", why: "Reported — the Stakeholders title sat at the bottom of one page with its table on the next" },
+    ] },
   { version: "3.57", date: "2026-10-13", notes: "The region PDF report button on Accounts and Pipeline is now a prominent green \"Region PDF report\" button, since it was easy to miss.", changes: [
       { what: "Renamed the Accounts / Pipeline button from a small \"PDF report\" to a primary-coloured \"Region PDF report\"", where: "components/CoPilotApp.tsx (Accounts and Pipeline toggle row)", why: "Asked where to generate a PDF for a region — the option existed but looked like a minor control" },
     ] },
