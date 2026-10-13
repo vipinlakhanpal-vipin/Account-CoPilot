@@ -1308,9 +1308,14 @@ th .infotip{margin-left:3px}.infotip-btn{width:15px;height:15px;font-size:10px}
 .pdf-custom{width:92px;font:500 13px var(--body);color:var(--text);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
 
 /* Aria: icon beside the suggestions bulb, and her window */
-.aria-btn{border:1.5px solid color-mix(in srgb,#7C5CFF 55%,var(--line));box-shadow:0 0 11px 1.5px color-mix(in srgb,#7C5CFF 28%,transparent);padding:0}
-.aria-btn svg{width:20px;height:20px}
-.version .aria-btn svg{width:18px;height:18px}
+/* Same circle and size as the bell and the bulb (it inherits .bell-btn), filled and softly glowing so it catches the eye */
+.bell-btn.aria-btn{padding:0;border:1.5px solid rgba(255,255,255,.75);color:#fff;background:linear-gradient(135deg,#2EC4A6 0%,#5B7CFF 55%,#7C5CFF 100%);
+  box-shadow:0 0 10px 2px rgba(124,92,255,.55);animation:aria-glow 2.6s ease-in-out infinite}
+.bell-btn.aria-btn:hover{filter:brightness(1.12);box-shadow:0 0 16px 4px rgba(46,196,166,.65)}
+.bell-btn.aria-btn svg{width:62%;height:62%}
+.version .bell-btn.aria-btn svg{width:62%;height:62%}
+@keyframes aria-glow{0%,100%{box-shadow:0 0 8px 1px rgba(124,92,255,.5)}50%{box-shadow:0 0 15px 4px rgba(46,196,166,.6)}}
+@media (prefers-reduced-motion:reduce){.bell-btn.aria-btn{animation:none}}
 .aria-backdrop{position:fixed;inset:0;z-index:1100;background:rgba(6,14,24,.55);backdrop-filter:blur(3px);display:grid;place-items:center;padding:16px}
 .aria-window{width:min(900px,100%);height:min(760px,calc(100vh - 32px));display:flex;flex-direction:column;background:var(--bg);border:1px solid var(--line-2);border-radius:20px;
   box-shadow:0 30px 80px rgba(3,8,20,.55);overflow:hidden;animation:aria-in .22s ease-out}

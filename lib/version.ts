@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.73";
+export const APP_VERSION = "3.74";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.74", date: "2026-10-14", notes: "Aria's icon is now the same circle and size as the bell and the bulb, filled with a teal-to-violet gradient and a soft pulsing glow.", changes: [
+      { what: "Restyled the Aria button as a solid gradient circle that inherits the other top-bar icons' size, with a white A and sparkle and a slow glow (static for users who prefer reduced motion)", where: "components/AriaChat.tsx, app/globals.css (.aria-btn)", why: "Requested — same size as the neighbouring icons, circular for uniformity, and glowing to catch attention" },
+    ] },
   { version: "3.73", date: "2026-10-14", notes: "Aria upgrade: her icon now sits next to the suggestions bulb and opens a full chat window; she can search everything in the app, asks tap-able questions before building an Excel, and you can talk to her with the microphone.", changes: [
       { what: "Moved Aria to an icon beside the suggestions bulb in the top bar; clicking it opens a large centred chat window with example questions, a message box, send, a microphone and a read-aloud switch (Esc or Close to leave)", where: "components/AriaChat.tsx, components/Header.tsx, app/globals.css", why: "Requested — Aria beside the bulb, with a proper window to type in" },
       { what: "Aria searches everything in the app: accounts, contacts, signals, technology, sources, conflicts, job moves, ICP rules and engine runs (Super Admins), with a free-text search across all of them, and shows answers as tables", where: "lib/aria/tools.ts, lib/aria/agent.ts", why: "Requested — search anything that lives in the app and present it in a tabular format" },

@@ -126,10 +126,8 @@ export default function AriaChat() {
     <>
       <button type="button" className="bell-btn aria-btn" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label="Ask Aria" title="Ask Aria: search your data, build Excel and PDF reports">
         <svg viewBox="0 0 24 24" aria-hidden="true">
-          <defs><linearGradient id="aria-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#2EC4A6" /><stop offset="1" stopColor="#7C5CFF" /></linearGradient></defs>
-          <circle cx="12" cy="12" r="10" fill="url(#aria-g)" />
-          <path d="M12 6.2 15.6 17h-1.9l-.7-2.2h-2.9L9.4 17H7.5L11.1 6.2h.9Zm-.4 2.4-.9 3.1h1.9l-.9-3.1h-.1Z" fill="#fff" />
-          <path d="M18.4 3.2l.5 1.3 1.3.5-1.3.5-.5 1.3-.5-1.3-1.3-.5 1.3-.5.5-1.3Z" fill="#FFE08A" />
+          <path d="M12 4.6 17.2 19h-2.6l-.95-2.9H10.4L9.4 19H6.8L12 4.6Zm-.05 4.1-1.9 5.4h3.8l-1.9-5.4Z" fill="currentColor" />
+          <path d="M19.6 2.4l.6 1.7 1.7.6-1.7.6-.6 1.7-.6-1.7-1.7-.6 1.7-.6.6-1.7Z" fill="#FFE08A" />
         </svg>
       </button>
       {open && typeof document !== "undefined" && createPortal(
