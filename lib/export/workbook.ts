@@ -1,4 +1,5 @@
 import { SHOW_HUBSPOT } from "@/lib/features";
+import { dashboardTiles } from "@/lib/dashboardTiles";
 import "server-only";
 import ExcelJS from "exceljs";
 import type { AllData, Row } from "@/lib/data";
@@ -295,18 +296,13 @@ export async function buildWorkbook(d: AllData, icpDef?: unknown): Promise<Buffe
   // ---- Executive Dashboard: KPI cards + a clickable guide to every sheet
   banner(dash, "ACCOUNT COPILOT — Master Book", `ICP: revenue ≥ USD 250M and 100+ employees (listing not required) · exported ${today}`, 13);
   const A = (k: string) => rng("Accounts", accCols, k), C = (k: string) => rng("Contacts", conCols, k), L = (k: string) => rng("Contact List", listCols, k);
-  const kpisAll: [string, string, string][] = [
-    ["Accounts", `COUNTA(${A("company_name")})`, NAVY_2], ["ICP — Verified", `COUNTIF(${A("icp_status")},"ICP — Verified")`, "FF0B6B45"],
-    ["ICP — Likely", `COUNTIF(${A("icp_status")},"ICP — Likely")`, "FF1D4F91"], ["Needs check", `COUNTIF(${A("icp_status")},"ICP — Needs check")`, "FF8A5A00"],
-    ["Not ICP", `COUNTIF(${A("icp_status")},"Not ICP")`, "FF6B7280"], ["Accounts in HubSpot", `COUNTIF(${A("hs_in")},"Yes")`, HUBSPOT_HEADER],
-    ["Coupa accounts", `COUNTIF(${A("existing_s2p_product")},"*Coupa*")`, "FF0E8C7A"], ["SAP Ariba accounts", `COUNTIF(${A("existing_s2p_product")},"*Ariba*")`, "FF2E5E8C"],
-    ["People to contact", `COUNTA(${L("full_name")})`, NAVY_2], ["People already in HubSpot", `COUNTIF(${L("hs_contact")},"Yes")`, HUBSPOT_HEADER],
-    ["Strong S2P signals", `COUNTIF(${A("s2p_signal_level")},"STRONG SIGNAL")+COUNTIF(${A("s2p_signal_level")},"VERY STRONG SIGNAL")`, "FF0B6B45"],
-    ["Conflicts retained", `COUNTA('Conflicts'!$D$${FIRST}:$D$${MAX})`, "FF9B1C1C"],
-  ];
+  // The tiles are the app's own: same definitions (lib/dashboardTiles.ts), so every number matches the app's Dashboard.
+  const coByIdTiles: Record<string, Row> = Object.fromEntries(d.accounts.map((a) => [a.id, a]));
+  const tiles = dashboardTiles({ A: d.accounts, people: buildPeople(d.contacts), coById: coByIdTiles, signals: d.signals, conflicts: d.conflicts, history: d.history });
+  const ACCENT = ["FF0F6E56", "FF0B6B45", "FF1D4F91", "FF8A5A00", "FF0B6B45", NAVY_2, "FF0E8C7A", "FF2E5E8C", "FF1D4F91", "FF9B1C1C", "FF6B7280", "FF8A5A00", "FF9B1C1C", "FF0E8C7A", "FF2E5E8C", "FF8A5A00"];
+  const kpis: [string, number, string][] = [...tiles.kpis, ...tiles.customers].map((t, i) => [t.label, t.rows.length, ACCENT[i % ACCENT.length]]);
   dash.getCell(4, 2).value = "At a glance"; dash.getCell(4, 2).font = f({ size: 16, bold: true, color: { argb: NAVY_2 } });
-  const kpis = kpisAll.filter(([label]) => SHOW_HUBSPOT || !/HubSpot/.test(label));
-  kpis.forEach(([label, formula, accent], i) => {
+  kpis.forEach(([label, value, accent], i) => {
     const row = 6 + Math.floor(i / 4) * 5, col = 2 + (i % 4) * 3;
     dash.mergeCells(row, col, row, col + 1); dash.mergeCells(row + 1, col, row + 2, col + 1);
     for (let rr = row; rr <= row + 2; rr++) for (let cc = col; cc <= col + 1; cc++) {
@@ -316,13 +312,19 @@ export async function buildWorkbook(d: AllData, icpDef?: unknown): Promise<Buffe
     }
     dash.getCell(row, col).value = label; dash.getCell(row, col).font = f({ size: 11, bold: true, color: { argb: MUTED } });
     dash.getCell(row, col).alignment = { vertical: "bottom", indent: 1 };
-    dash.getCell(row + 1, col).value = { formula }; dash.getCell(row + 1, col).font = f({ size: 28, bold: true, color: { argb: accent } });
+    dash.getCell(row + 1, col).value = value; dash.getCell(row + 1, col).font = f({ size: 28, bold: true, color: { argb: accent } });
     dash.getCell(row + 1, col).alignment = { vertical: "middle", horizontal: "left", indent: 1 };
     dash.getRow(row).height = 22; dash.getRow(row + 1).height = 24; dash.getRow(row + 2).height = 20;
   });
   for (let c = 1; c <= 13; c++) dash.getColumn(c).width = c === 1 ? 3 : c % 3 === 1 ? 3 : 17;
   // sheet guide
-  const g0 = 22;
+  const tileRows = Math.ceil(kpis.length / 4), noteRow = 6 + tileRows * 5;
+  dash.mergeCells(noteRow, 2, noteRow, 13);
+  dash.getCell(noteRow, 2).value = "These tiles use the same rules as the app's Dashboard. Prospect tiles leave out existing Coupa customers (they are your install base), and Needs check includes Unknown. The Pivot Analysis sheet counts every account.";
+  dash.getCell(noteRow, 2).font = f({ italic: true, size: 10, color: { argb: MUTED } });
+  dash.getCell(noteRow, 2).alignment = { wrapText: true, vertical: "top" };
+  dash.getRow(noteRow).height = 30;
+  const g0 = noteRow + 2;
   dash.getCell(g0, 2).value = "What's in this workbook"; dash.getCell(g0, 2).font = f({ size: 16, bold: true, color: { argb: NAVY_2 } });
   const guide: [string, string][] = [
     ["Contact List", `One row per person, ready for outreach: official emails only${SHOW_HUBSPOT ? ", plus HubSpot status and the import action for each person" : ""}`],

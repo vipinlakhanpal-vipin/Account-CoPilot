@@ -25,6 +25,7 @@ import ScheduledRunHistory from "@/components/ScheduledRunHistory";
 import EngineSearchAndRefresh from "@/components/EngineSearchAndRefresh";
 import EngineActivity from "@/components/EngineActivity";
 import { SHOW_HUBSPOT } from "@/lib/features";
+import { dashboardTiles } from "@/lib/dashboardTiles";
 
 // Lets any table open the Reports dialog for the companies it is showing, without threading a prop through every view.
 type ReportRequest = { ids: string[]; title: string };
@@ -705,28 +706,15 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
       {missionView === "runs" && <ScheduledRunHistory />}
     </>;
   } else {
-    const top = A.filter((a) => sigRank(a.s2p_signal_level) <= 1 && !/coupa/i.test(str(a.existing_s2p_product))).sort((a, b) => sigRank(a.s2p_signal_level) - sigRank(b.s2p_signal_level));
-    const ACT = ["Evaluation", "RFP / Tender", "Currently Implementing", "Replacement / Transformation"];
+    // One shared definition of every dashboard count (lib/dashboardTiles.ts), also used by the Master Book's Executive Dashboard.
     const notCoupa = (a: Row) => !/coupa/i.test(str(a.existing_s2p_product));
-    const kpis: [string, Row[], Kind][] = [
-      ["Accounts (all lists)", A, "accounts"], ["ICP — Verified", A.filter((a) => a.icp_status === "ICP — Verified" && notCoupa(a)), "accounts"],
-      ["ICP — Likely", A.filter((a) => a.icp_status === "ICP — Likely" && notCoupa(a)), "accounts"],
-      ["ICP — Needs check", A.filter((a) => (a.icp_status === "ICP — Needs check" || a.icp_status === "Unknown") && notCoupa(a)), "accounts"],
-      ["Strong / very strong", top, "accounts"], ["Contacts (people)", people, "contacts"],
-      ["Confirmed by 2+ sources", people.filter((p) => p.trust === "Confirmed by 2+ sources" && notCoupa(coById[p.company_id])), "contacts"], ["Contacts with email", people.filter((p) => p.email), "contacts"],
-      ["Signals logged", data.signals.filter(inScopeSignal), "signals"], ["Conflicts retained", data.conflicts, "conflicts"],
-      ["Employment changes", data.history.filter((h) => /change/i.test(str(h.determination))), "history"],
-      ["Possible new S2P projects", A.filter((a) => ACT.includes(a.s2p_platform_status)), "accounts"],
-      ["RFPs / tenders open", A.filter((a) => a.s2p_platform_status === "RFP / Tender" && notCoupa(a)), "accounts"],
-    ];
+    const { kpis: kpiTiles, top, coupaCustomers, aribaCustomers, otherPlatformCustomers } = dashboardTiles({ A, people, coById, signals: data.signals, conflicts: data.conflicts, history: data.history });
+    const kpis: [string, Row[], Kind][] = kpiTiles.map((t) => [t.label, t.rows, t.kind]);
     // Existing platform holders get a different sales lens than a prospect: not "should we target them" (ICP
     // status) but "what do we sell them next". Coupa customers are the agent's own install base (upsell / module
     // cross-sell / managed services) and come out of Pipeline — see inPipe — since they're not a new-business
     // target. Ariba and the other platforms stay in Pipeline (still a Coupa-displacement prospect) and additionally
     // get a managed-services angle, since SCP can service any S2P platform's implementation, not only Coupa's.
-    const coupaCustomers = A.filter((a) => /coupa/i.test(str(a.existing_s2p_product)));
-    const aribaCustomers = A.filter((a) => /ariba/i.test(str(a.existing_s2p_product)));
-    const otherPlatformCustomers = A.filter((a) => /oracle procurement|ivalua|jaggaer|\bgep\b|zycus/i.test(str(a.existing_s2p_product)));
 
     view = (
       <>
