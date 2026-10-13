@@ -204,35 +204,27 @@ export async function buildWorkbook(d: AllData, icpDef?: unknown): Promise<Buffe
   table(wb, "Accounts", "ACCOUNTS — ICP & Target Lists", `Exported ${today} · sorted by ICP status, then S2P signal · gold columns are for your input${SHOW_HUBSPOT ? " · teal columns from HubSpot" : ""}`, accCols, accounts, 3, ["account_owner", "account_priority", "pitch_next_step"], accLogos);
   writeExistingCustomers(wb, tiles.customers, peopleAll, icpDef, today);
 
-  const conCols: Col[] = [
-    ["Company", "company", 26], ["Full Name", "full_name", 22], ["Nationality", "nationality", 14], ["Title (Verbatim)", "title_verbatim", 32, "wrap"],
-    ["Standardized Title", "standardized_title", 22], ["Role Family", "role_family", 14], ["Contact Tier", "contact_tier", 9], ["Research Channel", "research_channel", 12],
-    ["Channel State", "channel_state", 14], ["Channel Source", "channel_source", 18], ["Source", "source", 22, "wrap"], ["Source Type", "source_type", 18],
-    ["Source URL", "source_url", 26, "url"], ["Verification Status", "verification_status", 13], ["Email", "email", 28], ["Email Status", "email_status", 14],
-    ["Email Source", "email_source", 12], ["Email Confidence", "email_confidence", 14], ["Unverified Email Candidate", "email_candidate", 30, "wrap"],
-    ["Phone", "phone", 17], ["Phone Type", "phone_type", 11], ["Location", "location", 18], ["LinkedIn URL", "linkedin_url", 30, "url"],
-    ["Existing S2P Product", "existing_s2p_product", 16], ["Account S2P Signal", "account_s2p_signal", 18], ["Contact S2P Signal", "s2p_contact_signal", 34, "wrap"],
-    ["Notes / Intel About Contact", "notes_contact", 50, "wrap"], ["Record Status", "record_status", 18], ["Claude Check", "claude_check", 34, "wrap"],
-    ["Employment Status", "employment_status", 13], ["Previous Company", "previous_company", 18], ["Previous Title", "previous_title", 20],
-    ["Owner", "owner", 12], ["Warm Intro?", "warm_intro", 10], ["Campaign", "campaign", 16], ["Review Status", "review_status", 13], ["Reviewer Notes", "reviewer_notes", 30, "wrap"],
-  ];
-  table(wb, "Contacts", "CONTACTS — Decision Makers & Influencers", "Reference rows unchanged · Claude rows marked Channel State = Claude · emails never pattern-guessed",
-    conCols, d.contacts, 2, ["owner", "warm_intro", "campaign", "review_status", "reviewer_notes"]);
-
+  // Stakeholders: every contact row as stored (nothing merged or dropped), in one sheet. This replaces the separate Contacts and
+  // Stakeholders sheets, which held the same rows. Columns run from who they are, to how to reach them, to where it came from.
   const stkCols: Col[] = [
-    ["Company", "company", 26], ["Full Name", "full_name", 22], ["Nationality", "nationality", 14], ["Title (Verbatim)", "title_verbatim", 32, "wrap"],
-    ["Role Family", "role_family", 14], ["Contact Tier", "contact_tier", 9], ["Channel State", "channel_state", 14], ["Channel Source", "channel_source", 18],
-    ["Email", "email", 28], ["Email Status", "email_status", 14], ["Unverified Email Candidate", "email_candidate", 30, "wrap"], ["Phone", "phone", 17],
-    ["Phone Type", "phone_type", 11], ["Location", "location", 18], ["LinkedIn URL", "linkedin_url", 30, "url"], ["Existing S2P Product", "existing_s2p_product", 16],
-    ["S2P Signal", "account_s2p_signal", 18], ["Employment Status", "employment_status", 13], ["Verification Status", "verification_status", 13],
-    ["Notes / Intel about the Contact", "notes_contact", 48, "wrap"], ["Notes / Intel about the Company", "notes_company", 60, "wrap"],
-    ["Record Status", "record_status", 18], ["Claude Check", "claude_check", 34, "wrap"], ["Owner", "owner", 12], ["Warm Intro?", "warm_intro", 10],
-    ["Campaign", "campaign", 16], ["Outreach Status", "outreach_status", 14],
+    ["Company", "company", 26], ["Full Name", "full_name", 22], ["Title (Verbatim)", "title_verbatim", 32, "wrap"], ["Standardized Title", "standardized_title", 22],
+    ["Role Family", "role_family", 14], ["Contact Tier", "contact_tier", 9], ["Nationality", "nationality", 14],
+    ["Email", "email", 28], ["Email Status", "email_status", 14], ["Email Source", "email_source", 12], ["Email Confidence", "email_confidence", 14],
+    ["Unverified Email Candidate", "email_candidate", 30, "wrap"], ["Phone", "phone", 17], ["Phone Type", "phone_type", 11], ["Location", "location", 18],
+    ["LinkedIn URL", "linkedin_url", 30, "url"],
+    ["Existing S2P Product", "existing_s2p_product", 16], ["Account S2P Signal", "account_s2p_signal", 18], ["Contact S2P Signal", "s2p_contact_signal", 34, "wrap"],
+    ["Notes / Intel about the Company", "notes_company", 60, "wrap"], ["Notes / Intel about the Contact", "notes_contact", 50, "wrap"],
+    ["Research Channel", "research_channel", 12], ["Channel State", "channel_state", 14], ["Channel Source", "channel_source", 18], ["Source", "source", 22, "wrap"],
+    ["Source Type", "source_type", 18], ["Source URL", "source_url", 26, "url"], ["Verification Status", "verification_status", 13], ["Employment Status", "employment_status", 13],
+    ["Previous Company", "previous_company", 18], ["Previous Title", "previous_title", 20], ["Record Status", "record_status", 18], ["Claude Check", "claude_check", 34, "wrap"],
+    ["Owner", "owner", 12], ["Warm Intro?", "warm_intro", 10], ["Campaign", "campaign", 16], ["Outreach Status", "outreach_status", 14],
+    ["Review Status", "review_status", 13], ["Reviewer Notes", "reviewer_notes", 30, "wrap"],
   ];
   const stk = [...d.contacts].sort((a, b) => rank(a.account_s2p_signal) - rank(b.account_s2p_signal) || String(a.company).localeCompare(b.company)
     || String(a.contact_tier).localeCompare(String(b.contact_tier)) || String(a.full_name).localeCompare(b.full_name));
-  table(wb, "Stakeholders", "STAKEHOLDERS — Campaign Planning View", "Company & contact details only · sorted by S2P signal, then tier",
-    stkCols, stk, 3, ["owner", "warm_intro", "campaign", "outreach_status"]);
+  table(wb, "Stakeholders", "STAKEHOLDERS — Every contact row, sorted by S2P signal, then company and tier",
+    "Reference rows unchanged · Claude rows marked Channel State = Claude · emails never pattern-guessed · gold columns are for your input",
+    stkCols, stk, 3, ["owner", "warm_intro", "campaign", "outreach_status", "review_status", "reviewer_notes"]);
 
   table(wb, "S2P Signals", "S2P SIGNALS — Evidence-based, scoring-free", "Every signal carries its evidence and source",
     [["Company", "company", 26], ["Category", "category", 20], ["Signal", "signal", 50, "wrap"], ["Level", "level", 20], ["Platform", "platform", 12],
@@ -267,7 +259,7 @@ export async function buildWorkbook(d: AllData, icpDef?: unknown): Promise<Buffe
 
   // ---- Pivot Analysis (live COUNTIF formulas)
   const pv = wb.addWorksheet("Pivot Analysis", { properties: { tabColor: { argb: TABS[10] } }, views: [{ showGridLines: false }] });
-  banner(pv, "PIVOT ANALYSIS — Live summary tables", "Counts are formulas over the Accounts / Contacts tabs", 10);
+  banner(pv, "PIVOT ANALYSIS — Live summary tables", "Counts are formulas over the Accounts / Stakeholders tabs", 10);
   const letter = (n: number) => { let s = ""; for (n += 1; n > 0; n = Math.floor((n - 1) / 26)) s = String.fromCharCode(65 + ((n - 1) % 26)) + s; return s; };
   const LOGO_SHEETS = new Set(["Accounts", "Contact List"]); // these have a logo column after #
   const colOf = (cols: Col[], key: string, sheet = "") => letter(cols.findIndex((c) => c[1] === key) + 1 + (LOGO_SHEETS.has(sheet) ? 1 : 0)); // +1 for the leading # column
@@ -291,16 +283,16 @@ export async function buildWorkbook(d: AllData, icpDef?: unknown): Promise<Buffe
   pivot(1, "S2P Platform × Accounts", uniq(d.accounts, "existing_s2p_product"), rng("Accounts", accCols, "existing_s2p_product"));
   pivot(1, "S2P Status × Accounts", uniq(d.accounts, "s2p_platform_status"), rng("Accounts", accCols, "s2p_platform_status"));
   pivot(1, "Industry × Accounts", uniq(d.accounts, "industry"), rng("Accounts", accCols, "industry"));
-  pivot(1, "Research Channel × Contacts", uniq(d.contacts, "research_channel"), rng("Contacts", conCols, "research_channel"));
-  pivot(1, "Contact Tier × Contacts", uniq(d.contacts, "contact_tier"), rng("Contacts", conCols, "contact_tier"));
-  pivot(1, "Email Status × Contacts", uniq(d.contacts, "email_status"), rng("Contacts", conCols, "email_status"));
+  pivot(1, "Research Channel × Contacts", uniq(d.contacts, "research_channel"), rng("Stakeholders", stkCols, "research_channel"));
+  pivot(1, "Contact Tier × Contacts", uniq(d.contacts, "contact_tier"), rng("Stakeholders", stkCols, "contact_tier"));
+  pivot(1, "Email Status × Contacts", uniq(d.contacts, "email_status"), rng("Stakeholders", stkCols, "email_status"));
   pivot(1, "Coupa Opportunity Type", uniq(d.accounts, "coupa_opportunity_type"), rng("Accounts", accCols, "coupa_opportunity_type"));
   pivot(1, "Ariba Opportunity Type", uniq(d.accounts, "ariba_opportunity_type"), rng("Accounts", accCols, "ariba_opportunity_type"));
   pv.getColumn(1).width = 52; pv.getColumn(2).width = 14;
 
   // ---- Executive Dashboard: KPI cards + a clickable guide to every sheet
   banner(dash, "ACCOUNT COPILOT — Master Book", `ICP: revenue ≥ USD 250M and 100+ employees (listing not required) · exported ${today}`, 13);
-  const A = (k: string) => rng("Accounts", accCols, k), C = (k: string) => rng("Contacts", conCols, k), L = (k: string) => rng("Contact List", listCols, k);
+  const A = (k: string) => rng("Accounts", accCols, k), C = (k: string) => rng("Stakeholders", stkCols, k), L = (k: string) => rng("Contact List", listCols, k);
   // The tiles are the app's own: same definitions (lib/dashboardTiles.ts), so every number matches the app's Dashboard.
   const ACCENT = ["FF0F6E56", "FF0B6B45", "FF1D4F91", "FF8A5A00", "FF0B6B45", NAVY_2, "FF0E8C7A", "FF2E5E8C", "FF1D4F91", "FF9B1C1C", "FF6B7280", "FF8A5A00", "FF9B1C1C", "FF0E8C7A", "FF2E5E8C", "FF8A5A00"];
   const kpis: [string, number, string][] = [...tiles.kpis, ...tiles.customers].map((t, i) => [t.label, t.rows.length, ACCENT[i % ACCENT.length]]);
@@ -334,8 +326,7 @@ export async function buildWorkbook(d: AllData, icpDef?: unknown): Promise<Buffe
     ["HubSpot Deals", "Every HubSpot deal on your profiled companies: stage, amount and close date"],
     ["Accounts", "Every account with ICP status, revenue and its source, ERP, S2P platform and signals; gold columns are yours to fill"],
     ["Existing Customers", "Existing Coupa, Ariba and other-platform customers: the lists behind the dashboard's customer tiles, with the opportunity for each"],
-    ["Contacts", "Every contact row as stored, with verification, source and notes"],
-    ["Stakeholders", "Contacts sorted by S2P signal, then tier, for call planning"],
+    ["Stakeholders", "Every contact row as stored, sorted by S2P signal then tier, with verification, source and notes; gold columns are yours to fill"],
     ["S2P Signals", "Source-to-Pay signals with evidence and source"],
     ["ERP & Apps Landscape", "ERP and third-party applications with verification status"],
     ["Source Evidence", "The audit trail: every source used and what it said"],

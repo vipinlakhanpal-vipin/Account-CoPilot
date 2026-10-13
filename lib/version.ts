@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.68";
+export const APP_VERSION = "3.69";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.69", date: "2026-10-13", notes: "The Master Book's Contacts and Stakeholders sheets (the same 1,093 rows) are now one Stakeholders sheet with all the fields.", changes: [
+      { what: "Merged the Contacts and Stakeholders sheets into one Stakeholders sheet: every contact row as stored (1,093, none dropped) with 39 fields grouped as who they are, how to reach them, account context, where it came from, then the gold input columns (owner, warm intro, campaign, outreach and review status, reviewer notes). Pivot formulas and the dashboard guide now point at it", where: "lib/export/workbook.ts, app/guide/page.tsx", why: "Requested (Option A) — the two sheets held the same rows, so they are combined and the clean Contact List stays as the person-level campaign view" },
+    ] },
   { version: "3.68", date: "2026-10-13", notes: "The Master Book has a new \"Existing Customers\" sheet listing every existing Coupa, Ariba and other-platform customer, so the dashboard's customer tiles can be checked company by company.", changes: [
       { what: "Added an Existing Customers worksheet (after Accounts): platform, company, country, ICP status, net revenue in USD with local currency in brackets, revenue type, platform status, ERP, employees, HQ, contacts on file and the opportunity. The header repeats the three tile counts (Coupa 17, Ariba 13, Other 0), which come from the same shared calculation as the app's tiles", where: "lib/export/workbook.ts (writeExistingCustomers), lib/dashboardTiles.ts", why: "Requested — somewhere in the Excel to see the existing Coupa and Ariba customers behind the tiles" },
     ] },
