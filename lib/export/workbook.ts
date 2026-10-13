@@ -2,8 +2,10 @@ import { SHOW_HUBSPOT } from "@/lib/features";
 import "server-only";
 import ExcelJS from "exceljs";
 import type { AllData, Row } from "@/lib/data";
+import { buildPeople } from "@/lib/people";
 import { fetchLogos, logoDomain } from "@/lib/logo";
-import { campaignData, writeCampaignSheet, CAMPAIGN_FIRST_ROW } from "@/lib/xlsxReport";
+import { personaFit } from "@/lib/icp";
+import { rulesFor } from "@/lib/icpDefinition.mjs";
 
 type Logos = { map: Map<string, { buf: Buffer; ext: "png" | "jpeg" | "gif" }>; get: (r: Row) => string; ids: Map<string, number> };
 
@@ -123,13 +125,38 @@ export async function buildWorkbook(d: AllData, icpDef?: unknown): Promise<Buffe
   const today = new Date().toISOString().slice(0, 10);
   const logoMap = await fetchLogos(d.accounts.map(logoDomain));
   const accLogos: Logos = { map: logoMap, get: (r) => logoDomain(r), ids: new Map() };
+  const conLogos: Logos = { map: logoMap, get: (r) => String(r.__domain || ""), ids: accLogos.ids };
   const dash = wb.addWorksheet("Executive Dashboard", { properties: { tabColor: { argb: TABS[0] } }, views: [{ showGridLines: false }] });
 
-  // Contact List: the same grouped layout as Reports → Excel (company once, its contacts beneath it, totals at the top).
-  // Official emails only, never guessed; people whose sources conflict are left out.
-  const campaign = campaignData(d, d.accounts, { emailOnly: true, def: icpDef });
-  writeCampaignSheet(wb, "Contact List", campaign, { scope: "all regions you can see", emailOnly: true, tab: TABS[1] });
-
+  // Contact List — clean, outreach-ready: one row per person (all sources merged), only the nine agreed fields.
+  // Kept: people with at least one way to reach them (email, phone or LinkedIn) whose sources don't conflict.
+  // Official email only: generic mailboxes (info@, sales@ …) and personal domains (gmail, hotmail …) are left blank. Emails are never guessed.
+  const PERSONAL = /@(gmail|googlemail|hotmail|outlook|live|yahoo|icloud|me|aol|proton(mail)?|gmx|yandex|mail)\./i;
+  const GENERIC = /^(info|sales|contact|enquiries|inquiries|admin|office|hello|support|marketing|hr|careers|jobs|procurement|purchasing|finance|accounts|tenders?)@/i;
+  const coById = new Map(d.accounts.map((a) => [a.id, a]));
+  const cleanEmail = (e: unknown) => { const v = String(e || "").trim(); return v && !PERSONAL.test(v) && !GENERIC.test(v) ? v : ""; };
+  const contactRows = buildPeople(d.contacts).filter((p) => p.trust !== "Conflicting").map((p): Row => {
+    const co = coById.get(p.company_id) || {};
+    const phones = [...new Set(p.rows.map((r) => String(r.phone || "").trim()).filter(Boolean))];
+    const email = cleanEmail(p.email) || p.rows.map((r) => cleanEmail(r.email)).find(Boolean) || "";
+    const hs = co.profile?.["HubSpot"];
+    const pf = personaFit(p, rulesFor(icpDef, co.country).personas); // buyer personas from Define ICP
+    return { __domain: logoDomain(co), persona_score: pf.label === "No personas set" ? "" : pf.score, persona_label: pf.label === "No personas set" ? "" : pf.label, persona_why: pf.why,
+      company: p.company || co.company_name || "", website: co.company_website || (co.domain ? `https://${co.domain}` : ""),
+      full_name: p.full_name, title: p.title_verbatim, phone: phones.join(" / "), email,
+      location: p.location || [co.hq_city, co.country].filter(Boolean).join(", "), linkedin: p.linkedin_url || "",
+      ...hubspotCols(hs, email) };
+  }).filter((r) => r.email || r.phone || r.linkedin)
+    .sort((a, b) => String(a.company).localeCompare(String(b.company)) || (Number(b.persona_score) || 0) - (Number(a.persona_score) || 0) || String(a.full_name).localeCompare(String(b.full_name)));
+  const listColsAll: Col[] = [["Company Name", "company", 30], ["Company Website", "website", 26, "url"], ["Contact Person (Full Name)", "full_name", 26], ["Job Title", "title", 34, "wrap"], ["Persona Fit %", "persona_score", 11, "num"], ["Persona Match", "persona_label", 20],
+      ["Phone (Tel / Mobile)", "phone", 22], ["Official Email", "email", 30], ["Location", "location", 20], ["LinkedIn Profile", "linkedin", 32, "url"],
+      ["Company in HubSpot", "scp_customer", 14], ["Company Stage (HubSpot)", "hs_stage", 20], ["Company Owner (HubSpot)", "hs_owner", 22],
+      ["Deals (HubSpot)", "hs_deals", 26, "wrap"], ["Latest Deal (HubSpot)", "hs_latest", 44, "wrap"], ["Contact in HubSpot", "hs_contact", 14],
+      ["HubSpot Import Action", "hs_action", 30, "wrap"]];
+  const listCols = listColsAll.filter((c) => SHOW_HUBSPOT || !(String(c[1]).startsWith("hs_") || c[1] === "scp_customer"));
+  table(wb, "Contact List", "CONTACT LIST — Outreach-ready contacts",
+    `Exported ${today} · one row per person, best buyer-persona fit first within each company (Define ICP) · official emails only, never guessed${SHOW_HUBSPOT ? " · teal columns from SCP's HubSpot" : ""}`,
+    listCols, contactRows, 1, [], conLogos);
 
   if (SHOW_HUBSPOT) {
   // HubSpot deals linked to profiled companies (read-only copy; stays inside this app and its export).
@@ -236,7 +263,7 @@ export async function buildWorkbook(d: AllData, icpDef?: unknown): Promise<Buffe
   const pv = wb.addWorksheet("Pivot Analysis", { properties: { tabColor: { argb: TABS[10] } }, views: [{ showGridLines: false }] });
   banner(pv, "PIVOT ANALYSIS — Live summary tables", "Counts are formulas over the Accounts / Contacts tabs", 10);
   const letter = (n: number) => { let s = ""; for (n += 1; n > 0; n = Math.floor((n - 1) / 26)) s = String.fromCharCode(65 + ((n - 1) % 26)) + s; return s; };
-  const LOGO_SHEETS = new Set(["Accounts"]); // these have a logo column after #
+  const LOGO_SHEETS = new Set(["Accounts", "Contact List"]); // these have a logo column after #
   const colOf = (cols: Col[], key: string, sheet = "") => letter(cols.findIndex((c) => c[1] === key) + 1 + (LOGO_SHEETS.has(sheet) ? 1 : 0)); // +1 for the leading # column
   const rng = (sheet: string, cols: Col[], key: string) => `'${sheet}'!$${colOf(cols, key, sheet)}$${FIRST}:$${colOf(cols, key, sheet)}$${MAX}`;
   const uniq = (rows: Row[], key: string) => [...new Set(rows.map((r) => r[key] || "Unknown"))].sort();
@@ -267,13 +294,13 @@ export async function buildWorkbook(d: AllData, icpDef?: unknown): Promise<Buffe
 
   // ---- Executive Dashboard: KPI cards + a clickable guide to every sheet
   banner(dash, "ACCOUNT COPILOT — Master Book", `ICP: revenue ≥ USD 250M and 100+ employees (listing not required) · exported ${today}`, 13);
-  const A = (k: string) => rng("Accounts", accCols, k), C = (k: string) => rng("Contacts", conCols, k);
+  const A = (k: string) => rng("Accounts", accCols, k), C = (k: string) => rng("Contacts", conCols, k), L = (k: string) => rng("Contact List", listCols, k);
   const kpisAll: [string, string, string][] = [
     ["Accounts", `COUNTA(${A("company_name")})`, NAVY_2], ["ICP — Verified", `COUNTIF(${A("icp_status")},"ICP — Verified")`, "FF0B6B45"],
     ["ICP — Likely", `COUNTIF(${A("icp_status")},"ICP — Likely")`, "FF1D4F91"], ["Needs check", `COUNTIF(${A("icp_status")},"ICP — Needs check")`, "FF8A5A00"],
     ["Not ICP", `COUNTIF(${A("icp_status")},"Not ICP")`, "FF6B7280"], ["Accounts in HubSpot", `COUNTIF(${A("hs_in")},"Yes")`, HUBSPOT_HEADER],
     ["Coupa accounts", `COUNTIF(${A("existing_s2p_product")},"*Coupa*")`, "FF0E8C7A"], ["SAP Ariba accounts", `COUNTIF(${A("existing_s2p_product")},"*Ariba*")`, "FF2E5E8C"],
-    ["People to contact", `COUNTA('Contact List'!$B$${CAMPAIGN_FIRST_ROW}:$B$${MAX})`, NAVY_2],
+    ["People to contact", `COUNTA(${L("full_name")})`, NAVY_2], ["People already in HubSpot", `COUNTIF(${L("hs_contact")},"Yes")`, HUBSPOT_HEADER],
     ["Strong S2P signals", `COUNTIF(${A("s2p_signal_level")},"STRONG SIGNAL")+COUNTIF(${A("s2p_signal_level")},"VERY STRONG SIGNAL")`, "FF0B6B45"],
     ["Conflicts retained", `COUNTA('Conflicts'!$D$${FIRST}:$D$${MAX})`, "FF9B1C1C"],
   ];
@@ -298,7 +325,7 @@ export async function buildWorkbook(d: AllData, icpDef?: unknown): Promise<Buffe
   const g0 = 22;
   dash.getCell(g0, 2).value = "What's in this workbook"; dash.getCell(g0, 2).font = f({ size: 16, bold: true, color: { argb: NAVY_2 } });
   const guide: [string, string][] = [
-    ["Contact List", "Each company once with its contacts beneath it: company, contact, job title, official email, ERP, S2P platform, net revenue, employees and HQ"],
+    ["Contact List", `One row per person, ready for outreach: official emails only${SHOW_HUBSPOT ? ", plus HubSpot status and the import action for each person" : ""}`],
     ["HubSpot Deals", "Every HubSpot deal on your profiled companies: stage, amount and close date"],
     ["Accounts", "Every account with ICP status, revenue and its source, ERP, S2P platform and signals; gold columns are yours to fill"],
     ["Contacts", "Every contact row as stored, with verification, source and notes"],
@@ -360,3 +387,20 @@ export async function buildWorkbook(d: AllData, icpDef?: unknown): Promise<Buffe
   return Buffer.from(await wb.xlsx.writeBuffer());
 }
 
+/** HubSpot columns for one Contact List row. Used to avoid importing records that already exist in HubSpot. */
+function hubspotCols(hs: Row | undefined, email: string): Row {
+  if (!hs) return { scp_customer: "Not checked yet", hs_stage: "", hs_owner: "", hs_deals: "", hs_latest: "", hs_contact: "", hs_action: "" };
+  const inContact = !!email && (hs.contact_emails || []).includes(email.toLowerCase());
+  const deals: Row[] = hs.deals || [];
+  const count = (re: RegExp) => deals.filter((x) => re.test(String(x.stage))).length;
+  const won = count(/won/i), lost = count(/lost|disqualified/i), open = deals.length - won - lost - count(/inactive/i);
+  const money = (n: unknown) => (n === null || n === undefined || n === "" ? "" : ` · $${Number(n).toLocaleString("en-US")}`);
+  const latest = deals[0] ? `${deals[0].name} · ${deals[0].stage}${money(deals[0].amount)} · ${deals[0].close}` : "";
+  return {
+    scp_customer: hs.in_hubspot ? "Yes" : "No",
+    hs_stage: hs.in_hubspot ? hs.stage || "" : "", hs_owner: hs.in_hubspot ? hs.owner || "" : "",
+    hs_deals: deals.length ? `${deals.length} (${won} won, ${open} open, ${lost} lost)` : hs.in_hubspot ? "None" : "",
+    hs_latest: latest, hs_contact: email ? (inContact ? "Yes" : "No") : "",
+    hs_action: inContact ? "Skip — contact already in HubSpot" : hs.in_hubspot ? "Add contact to existing HubSpot company" : "New company + contact",
+  };
+}
