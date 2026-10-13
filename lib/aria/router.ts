@@ -176,7 +176,7 @@ export async function tryFree(question: string, ctx: AriaContext): Promise<FreeR
   }
 
   // ---- Lists ----
-  if (/\b(list|show|which|find|give me|display|top|largest|biggest|who)\b/.test(t) && (f.region || f.icp_status || f.platform || f.erp_contains || f.signal || f.has_contacts) && /\b(compan|account|customer|prospect|verified|likely)\b/.test(t)) {
+  if (/\b(list|show|which|find|give me|display|top|largest|biggest|who)\b/.test(t) && (f.region || f.icp_status || f.platform || f.erp_contains || f.signal || f.has_contacts) && /\b(compan\w*|account\w*|customer\w*|prospect\w*|verified|likely)\b/.test(t)) {
     const r = searchAccounts(ctx, { ...f, limit: Math.min(limit || 15, 25) });
     if (!r.total && !r.existing_coupa_customers) return { text: "No companies match that.", actions: [], choices: [] };
     const md = table(["Company", "Country", "ICP status", "Revenue", "ERP", "Platform", "Signal", "Contacts"],
