@@ -5,7 +5,7 @@ import ExcelJS from "exceljs";
 import type { AllData, Row } from "@/lib/data";
 import { buildPeople } from "@/lib/people";
 import { fetchLogos, logoDomain } from "@/lib/logo";
-import { personaFit } from "@/lib/icp";
+import { personaFit, revenueOf, revenueIsOfficial, fmtMoneyM } from "@/lib/icp";
 import { rulesFor } from "@/lib/icpDefinition.mjs";
 
 type Logos = { map: Map<string, { buf: Buffer; ext: "png" | "jpeg" | "gif" }>; get: (r: Row) => string; ids: Map<string, number> };
@@ -128,6 +128,10 @@ export async function buildWorkbook(d: AllData, icpDef?: unknown): Promise<Buffe
   const accLogos: Logos = { map: logoMap, get: (r) => logoDomain(r), ids: new Map() };
   const conLogos: Logos = { map: logoMap, get: (r) => String(r.__domain || ""), ids: accLogos.ids };
   const dash = wb.addWorksheet("Executive Dashboard", { properties: { tabColor: { argb: TABS[0] } }, views: [{ showGridLines: false }] });
+  // The app's dashboard tiles (lib/dashboardTiles.ts): used for the dashboard cards and for the Existing Customers sheet below.
+  const peopleAll = buildPeople(d.contacts);
+  const coByIdTiles: Record<string, Row> = Object.fromEntries(d.accounts.map((a) => [a.id, a]));
+  const tiles = dashboardTiles({ A: d.accounts, people: peopleAll, coById: coByIdTiles, signals: d.signals, conflicts: d.conflicts, history: d.history });
 
   // Contact List — clean, outreach-ready: one row per person (all sources merged), only the nine agreed fields.
   // Kept: people with at least one way to reach them (email, phone or LinkedIn) whose sources don't conflict.
@@ -198,6 +202,7 @@ export async function buildWorkbook(d: AllData, icpDef?: unknown): Promise<Buffe
     status_since: day(a.profile?.["Status changed"]?.at || a.last_verified || a.created_at) }))
     .sort((a, b) => icpRank(a.icp_status) - icpRank(b.icp_status) || rank(a.s2p_signal_level) - rank(b.s2p_signal_level) || String(a.company_name).localeCompare(b.company_name));
   table(wb, "Accounts", "ACCOUNTS — ICP & Target Lists", `Exported ${today} · sorted by ICP status, then S2P signal · gold columns are for your input${SHOW_HUBSPOT ? " · teal columns from HubSpot" : ""}`, accCols, accounts, 3, ["account_owner", "account_priority", "pitch_next_step"], accLogos);
+  writeExistingCustomers(wb, tiles.customers, peopleAll, icpDef, today);
 
   const conCols: Col[] = [
     ["Company", "company", 26], ["Full Name", "full_name", 22], ["Nationality", "nationality", 14], ["Title (Verbatim)", "title_verbatim", 32, "wrap"],
@@ -297,8 +302,6 @@ export async function buildWorkbook(d: AllData, icpDef?: unknown): Promise<Buffe
   banner(dash, "ACCOUNT COPILOT — Master Book", `ICP: revenue ≥ USD 250M and 100+ employees (listing not required) · exported ${today}`, 13);
   const A = (k: string) => rng("Accounts", accCols, k), C = (k: string) => rng("Contacts", conCols, k), L = (k: string) => rng("Contact List", listCols, k);
   // The tiles are the app's own: same definitions (lib/dashboardTiles.ts), so every number matches the app's Dashboard.
-  const coByIdTiles: Record<string, Row> = Object.fromEntries(d.accounts.map((a) => [a.id, a]));
-  const tiles = dashboardTiles({ A: d.accounts, people: buildPeople(d.contacts), coById: coByIdTiles, signals: d.signals, conflicts: d.conflicts, history: d.history });
   const ACCENT = ["FF0F6E56", "FF0B6B45", "FF1D4F91", "FF8A5A00", "FF0B6B45", NAVY_2, "FF0E8C7A", "FF2E5E8C", "FF1D4F91", "FF9B1C1C", "FF6B7280", "FF8A5A00", "FF9B1C1C", "FF0E8C7A", "FF2E5E8C", "FF8A5A00"];
   const kpis: [string, number, string][] = [...tiles.kpis, ...tiles.customers].map((t, i) => [t.label, t.rows.length, ACCENT[i % ACCENT.length]]);
   dash.getCell(4, 2).value = "At a glance"; dash.getCell(4, 2).font = f({ size: 16, bold: true, color: { argb: NAVY_2 } });
@@ -330,6 +333,7 @@ export async function buildWorkbook(d: AllData, icpDef?: unknown): Promise<Buffe
     ["Contact List", `One row per person, ready for outreach: official emails only${SHOW_HUBSPOT ? ", plus HubSpot status and the import action for each person" : ""}`],
     ["HubSpot Deals", "Every HubSpot deal on your profiled companies: stage, amount and close date"],
     ["Accounts", "Every account with ICP status, revenue and its source, ERP, S2P platform and signals; gold columns are yours to fill"],
+    ["Existing Customers", "Existing Coupa, Ariba and other-platform customers: the lists behind the dashboard's customer tiles, with the opportunity for each"],
     ["Contacts", "Every contact row as stored, with verification, source and notes"],
     ["Stakeholders", "Contacts sorted by S2P signal, then tier, for call planning"],
     ["S2P Signals", "Source-to-Pay signals with evidence and source"],
@@ -405,4 +409,50 @@ function hubspotCols(hs: Row | undefined, email: string): Row {
     hs_latest: latest, hs_contact: email ? (inContact ? "Yes" : "No") : "",
     hs_action: inContact ? "Skip — contact already in HubSpot" : hs.in_hubspot ? "Add contact to existing HubSpot company" : "New company + contact",
   };
+}
+
+/** Existing platform customers (Coupa, Ariba, other platforms): the lists behind the dashboard's customer tiles, one sheet. */
+function writeExistingCustomers(wb: ExcelJS.Workbook, groups: { label: string; rows: Row[]; note?: string }[], people: Row[], icpDef: unknown, today: string) {
+  const GREEN = "FF0F6E56", BAND = "FFF1F7F5";
+  const perCo = new Map<string, number>();
+  people.forEach((p) => perCo.set(p.company_id as string, (perCo.get(p.company_id as string) || 0) + 1));
+  const cols: [string, number][] = [["Platform", 24], ["Company Name", 34], ["Country", 11], ["ICP Status", 18], ["Net Revenue (USD, local in brackets)", 30], ["Revenue Type", 14],
+    ["Platform Status", 28], ["Existing ERP", 26], ["Total Employees", 18], ["HQ Location", 24], ["Contacts on File", 12], ["Opportunity", 52]];
+  const ws = wb.addWorksheet("Existing Customers", { properties: { tabColor: { argb: TABS[3] } }, views: [{ state: "frozen", ySplit: 4, showGridLines: false }] });
+  ws.columns = cols.map(([, width]) => ({ width }));
+  ws.mergeCells(1, 1, 1, 6);
+  ws.getCell(1, 1).value = "Existing platform customers";
+  ws.getCell(1, 1).font = { bold: true, size: 15, color: { argb: GREEN } };
+  ws.mergeCells(2, 1, 2, 12);
+  ws.getCell(2, 1).value = groups.map((g) => `${g.label}: ${g.rows.length}`).join("   |   ");
+  ws.getCell(2, 1).font = { bold: true, size: 12 };
+  ws.mergeCells(3, 1, 3, 12);
+  ws.getCell(3, 1).value = "These are the lists behind the Executive Dashboard's customer tiles. They already run an S2P platform, so they are not prospects: the question is what to sell them next. Revenue is in USD with the regional currency in brackets.";
+  ws.getCell(3, 1).font = { italic: true, color: { argb: "FF5B6670" } };
+  ws.getCell(3, 1).alignment = { wrapText: true, vertical: "top" };
+  ws.getRow(3).height = 30;
+  cols.forEach(([h], i) => { ws.getCell(4, i + 1).value = h; });
+  const head = ws.getRow(4);
+  head.height = 26;
+  head.eachCell((c) => { c.font = { bold: true, color: { argb: "FFFFFFFF" } }; c.fill = fill(GREEN); c.alignment = { vertical: "middle", wrapText: true }; });
+  let r = 5;
+  groups.forEach((g, gi) => {
+    const rows = [...g.rows].sort((a, b) => String(a.company_name).localeCompare(String(b.company_name)));
+    rows.forEach((a) => {
+      const rev = revenueOf(a), cur = rulesFor(icpDef, a.country).currency as { code: string; per_usd: number };
+      const v = [g.label, a.company_name, a.country, a.icp_status, rev ? fmtMoneyM(rev, cur) : "", rev ? (revenueIsOfficial(a) ? "Official" : "Estimate") : "",
+        a.s2p_platform_status, String(a.erp || "").replace(/\s*\(.*$/, ""), String(a.employee_range || "").replace(/\s*\(.*$/, ""),
+        [a.hq_city, a.country].filter(Boolean).join(", "), perCo.get(a.id) || 0, g.note || ""];
+      v.forEach((val, ci) => {
+        const cell = ws.getCell(r, ci + 1);
+        cell.value = val as string | number;
+        cell.fill = fill(gi % 2 ? "FFFFFFFF" : BAND);
+        cell.alignment = { vertical: "top", wrapText: true };
+      });
+      ws.getCell(r, 2).font = { bold: true };
+      r++;
+    });
+  });
+  if (r === 5) { ws.mergeCells(5, 1, 5, 12); ws.getCell(5, 1).value = "No existing platform customers on file yet."; ws.getCell(5, 1).font = { italic: true }; }
+  ws.autoFilter = { from: { row: 4, column: 1 }, to: { row: 4, column: cols.length } };
 }

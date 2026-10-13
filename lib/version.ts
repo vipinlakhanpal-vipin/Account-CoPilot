@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.67";
+export const APP_VERSION = "3.68";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.68", date: "2026-10-13", notes: "The Master Book has a new \"Existing Customers\" sheet listing every existing Coupa, Ariba and other-platform customer, so the dashboard's customer tiles can be checked company by company.", changes: [
+      { what: "Added an Existing Customers worksheet (after Accounts): platform, company, country, ICP status, net revenue in USD with local currency in brackets, revenue type, platform status, ERP, employees, HQ, contacts on file and the opportunity. The header repeats the three tile counts (Coupa 17, Ariba 13, Other 0), which come from the same shared calculation as the app's tiles", where: "lib/export/workbook.ts (writeExistingCustomers), lib/dashboardTiles.ts", why: "Requested — somewhere in the Excel to see the existing Coupa and Ariba customers behind the tiles" },
+    ] },
   { version: "3.67", date: "2026-10-13", notes: "The Master Book's Executive Dashboard now shows the same tiles as the app's Dashboard, with the same numbers (for example ICP — Verified 275, not 282). Both read one shared calculation, so they cannot drift apart again.", changes: [
       { what: "Replaced the Master Book dashboard cards with the app's 13 tiles plus Existing Coupa / Ariba / Other-platform customers (16 in total), computed by one shared function (lib/dashboardTiles.ts) that the app's Dashboard now also uses. Added a note under the tiles that explains the rules", where: "lib/dashboardTiles.ts (new), lib/export/workbook.ts, components/CoPilotApp.tsx", why: "Reported — the Master Book showed ICP — Verified as 282 while the app showed 275 (the app leaves existing Coupa customers out of prospect tiles). Requested tiles in the Excel that match the app's numbers" },
     ] },
