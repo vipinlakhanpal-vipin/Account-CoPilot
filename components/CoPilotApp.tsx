@@ -6,7 +6,7 @@ import CostNote from "@/components/CostNote";
 import CompanyLogo from "@/components/CompanyLogo";
 import { useCustomFilters, CustomFilterBar, type CustomFilter } from "@/components/CustomFilters";
 import InfoTip, { type Weights } from "@/components/InfoTip";
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useMemo, useState, useEffect, useRef, useCallback, createContext, useContext } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { parseGlobalQuery } from "@/lib/globalSearch";
 import Hero from "@/components/Hero";
@@ -25,6 +25,10 @@ import ScheduledRunHistory from "@/components/ScheduledRunHistory";
 import EngineSearchAndRefresh from "@/components/EngineSearchAndRefresh";
 import EngineActivity from "@/components/EngineActivity";
 import { SHOW_HUBSPOT } from "@/lib/features";
+
+// Lets any table open the Reports dialog for the companies it is showing, without threading a prop through every view.
+type ReportRequest = { ids: string[]; title: string };
+const ReportsCtx = createContext<((req: ReportRequest) => void) | null>(null);
 import ReportDialog, { downloadReport } from "@/components/ReportDialog";
 
 const HERO: Record<string, [string, string]> = {
@@ -281,6 +285,9 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "
   // "All <unit>" shows every row regardless of the filters above — the search box, dropdowns and custom filters
   // stay exactly as set, so switching back to "Filtered results" re-applies them instantly (nothing is cleared).
   const displayed = showAll ? rows : out;
+  // Reports cover exactly the rows shown here (so any search or filter you set narrows the report), via the company each row belongs to.
+  const openReports = useContext(ReportsCtx);
+  const reportIds = [...new Set(displayed.map((r) => (r.company_id || (r.company_name ? r.id : "")) as string).filter(Boolean))];
   // On a table whose rows are contacts/signals/sources/etc (one row per sub-entity, not per company), "All
   // Accounts" means the distinct companies behind those rows, not the row count — e.g. Reports is one row per
   // contact, so "All Accounts" is the 225 companies those 1,093 contacts belong to, shown alongside the true
@@ -300,6 +307,9 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "
         </div>
         {!isPeople && multiPerCompany && <InfoTip k="accountsVsRows" />}
         {toggleExtra}
+        {openReports && reportIds.length > 0 && (
+          <button type="button" className="btn primary tiny" onClick={() => openReports({ ids: reportIds, title })}
+            title={`Full PDF report or an Excel contact list for the ${reportIds.length.toLocaleString()} companies shown here, for a region you choose`}>📊 Reports (PDF / Excel)</button>)}
       </div>
       {isPeople && <p className="note seg-extra">All Contacts ({rows.length.toLocaleString()})</p>}
       <div className="filters">
@@ -450,6 +460,8 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
   const [perPerson, setPerPerson] = useState(true);
   const [missionView, setMissionView] = useState<"saved" | "activity" | "search" | "runs">("saved");
   const [pdfOpen, setPdfOpen] = useState(false);
+  const [pdfList, setPdfList] = useState<ReportRequest | null>(null);
+  const openReports = useCallback((req: ReportRequest) => { setPdfList(req); setPdfOpen(true); }, []);
   // ?view=activity deep-links straight to a Mission Control sub-tab (the bell uses it).
   const viewParam = params.get("view");
   useEffect(() => { if (viewParam === "activity" || viewParam === "runs" || viewParam === "saved") setMissionView(viewParam); }, [viewParam]);
@@ -501,8 +513,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
 
   let view: React.ReactNode = null;
   if (tab === "accounts") {
-    view = <FilterTable unit="companies" title="Accounts" empty={notFound}
-      toggleExtra={<button type="button" className="btn primary tiny" onClick={() => setPdfOpen(true)} title="Full PDF report, or an Excel contact list for campaigns, for a region you choose">📊 Reports (PDF / Excel)</button>} note="ICP = net revenue ≥ $250M and 100+ employees (stock listing not required). ✓ Verified: confirmed from an official source · ● Likely: your data / Seamless say ≥ $250M, not yet confirmed · ! Needs check: sources disagree about $250M · ? Unknown: no revenue figure yet · ✕ Not ICP: below $250M. Hover a status for the reason; select a row to open the account brief."
+    view = <FilterTable unit="companies" title="Accounts" empty={notFound} note="ICP = net revenue ≥ $250M and 100+ employees (stock listing not required). ✓ Verified: confirmed from an official source · ● Likely: your data / Seamless say ≥ $250M, not yet confirmed · ! Needs check: sources disagree about $250M · ? Unknown: no revenue figure yet · ✕ Not ICP: below $250M. Hover a status for the reason; select a row to open the account brief."
       rows={[...A].sort((a, b) => icpRank(a.icp_status) - icpRank(b.icp_status) || sigRank(a.s2p_signal_level) - sigRank(b.s2p_signal_level) || (bestRevenue(b).v || 0) - (bestRevenue(a).v || 0))
         .map((a) => ({ ...a, icp_match_pct: scores[a.id]?.m.total ?? null, opportunity_pct: scores[a.id]?.o.total ?? null, coupa_fit_pct: scores[a.id]?.f.total ?? null }))}
       search={(a) => [a.company_name, a.industry, a.erp, a.existing_s2p_product, a.s2p_strong_signals].join(" ")}
@@ -525,8 +536,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
       onRow={openRow} />;
   } else if (tab === "pipeline") {
     const ranked = A.filter((a) => inPipe(a, scores[a.id])).sort((a, b) => scores[b.id].rank - scores[a.id].rank);
-    view = <FilterTable unit="accounts" title="Ranked pipeline" tipW={pipe} empty={notFound}
-      toggleExtra={<button type="button" className="btn primary tiny" onClick={() => setPdfOpen(true)} title="Full PDF report, or an Excel contact list for campaigns, for a region you choose">📊 Reports (PDF / Excel)</button>} note={<>
+    view = <FilterTable unit="accounts" title="Ranked pipeline" tipW={pipe} empty={notFound} note={<>
         <div className="pipe-rank-row">
           <div><b>Rank</b> — which account to work first: <b>{pipe.w_match}% × ICP Match + {pipe.w_opportunity}% × Opportunity + {pipe.w_fit}% × Coupa Fit</b>.</div>
           {ranked[0] && (() => { const t = ranked[0], sc = scores[t.id], p1 = sc.m.total * pipe.w_match / 100, p2 = sc.o.total * pipe.w_opportunity / 100, p3 = sc.f.total * pipe.w_fit / 100;
@@ -757,7 +767,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
         </div>
         <div className="panel" style={{ marginTop: 16 }}>
           <h2 className="with-count">Priority accounts <span className="count">{top.length} {top.length === 1 ? "account" : "accounts"}</span>
-            <button type="button" className="btn primary tiny" style={{ marginLeft: 12 }} onClick={() => setPdfOpen(true)} title="Full PDF report, or an Excel contact list for campaigns, for a region you choose">📊 Reports (PDF / Excel)</button></h2>
+            <button type="button" className="btn primary tiny" style={{ marginLeft: 12 }} onClick={() => openReports({ ids: top.map((a) => a.id as string), title: "Priority accounts" })} title="Full PDF report or an Excel contact list for the priority accounts, for a region you choose">📊 Reports (PDF / Excel)</button></h2>
           <p className="note">Accounts with strong or very strong S2P signals. Select a row to open the account brief.</p>
           <div className="tablewrap"><table>
             <thead><tr><th className="num">#</th><th className="logo-cell"></th><th>Company</th><th>Signal</th><th>Existing S2P</th><th>Status</th><th>ERP</th><th>Why</th></tr></thead>
@@ -773,6 +783,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
   }
 
   return (
+    <ReportsCtx.Provider value={openReports}>
     <div className={`app-shell${collapsed ? " dp-closed" : ""}`}>
     <DiscoveryPanel criteria={criteria} onApply={setCriteria} onSave={saveCriteria} savedMeta={savedMeta} teamCriteria={teamCriteria} collapsed={collapsed} onToggle={toggle}
       country={country} researchTargets={researchTargets} onResearch={researchMore} researchMsg={researchMsg} isSuper={isSuper} />
@@ -785,13 +796,14 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
         ? <div className="panel"><h2>No {COUNTRIES.find((c) => c.code === country)?.name || country} accounts yet</h2>
             <p>This market is next on the roadmap. Add companies from the Research Queue (choose the country there), or pick another country above.</p></div>
         : view}</section>
-      {pdfOpen && <ReportDialog accounts={all.accounts} icpDef={icpDef} onClose={() => setPdfOpen(false)} />}
-      {drill && <DrillDown d={drill} byCo={byCo} coById={coById} icpDef={icpDef} onClose={() => setDrill(null)} onAccount={setOpen} onContact={setContact} />}
+      {pdfOpen && <ReportDialog accounts={all.accounts} icpDef={icpDef} companyIds={pdfList?.ids} listTitle={pdfList?.title} onClose={() => { setPdfOpen(false); setPdfList(null); }} />}
+      {drill && <DrillDown d={drill} byCo={byCo} coById={coById} onClose={() => setDrill(null)} onAccount={setOpen} onContact={setContact} />}
       {open && A.find((x) => x.id === open) && <Brief a={A.find((x) => x.id === open)!} data={data} people={byCo[open] || []} onClose={() => setOpen(null)} onContact={setContact}
         scores={scores[open]} criteria={criteria} isSuper={isSuper} />}
       {contact && (() => { const p = P.find((x) => x.id === contact); return p ? <ContactCard p={p} data={data} onClose={() => setContact(null)} onAccount={(id) => { setContact(null); setOpen(id); }} /> : null; })()}
     </div>
     </div>
+    </ReportsCtx.Provider>
   );
 }
 
@@ -1050,11 +1062,8 @@ function Profile({ profile }: { profile: Record<string, Record<string, unknown>>
 
 type Kind = "accounts" | "contacts" | "signals" | "conflicts" | "history";
 
-function DrillDown({ d, byCo, coById, icpDef, onClose, onAccount, onContact }: { d: { title: string; kind: Kind; rows: Row[] }; byCo: Record<string, Row[]>; coById: Record<string, Row>;
-  icpDef: unknown; onClose: () => void; onAccount: (id: string) => void; onContact: (id: string) => void }) {
-  const [reportOpen, setReportOpen] = useState(false);
-  // Every tile list can be reported on: accounts directly, everything else (contacts, signals, conflicts, history) through the company it belongs to.
-  const reportIds = [...new Set(d.rows.map((r) => (d.kind === "accounts" ? r.id : r.company_id) as string).filter(Boolean))];
+function DrillDown({ d, byCo, coById, onClose, onAccount, onContact }: { d: { title: string; kind: Kind; rows: Row[] }; byCo: Record<string, Row[]>; coById: Record<string, Row>;
+  onClose: () => void; onAccount: (id: string) => void; onContact: (id: string) => void }) {
   let table: React.ReactNode;
   if (d.kind === "accounts") {
     table = <FilterTable unit="companies" title={d.title} rows={[...d.rows].sort((a, b) => icpRank(a.icp_status) - icpRank(b.icp_status) || (bestRevenue(b).v || 0) - (bestRevenue(a).v || 0))}
@@ -1097,13 +1106,10 @@ function DrillDown({ d, byCo, coById, icpDef, onClose, onAccount, onContact }: {
           <div className="bh-top">
             <div><div className="muted">Dashboard drill-down</div><h3 className="bh-title">{d.title}</h3></div>
             <div className="bh-actions"><div className="bh-btns">
-              {reportIds.length > 0 && <button className="btn ghost bh-btn" type="button" onClick={() => setReportOpen(true)}
-                title="Build a full PDF report or an Excel contact list for the companies in this list">📊 Reports (PDF / Excel)</button>}
               <button className="btn ghost bh-btn" type="button" onClick={onClose}>Close</button>
             </div></div>
           </div>
         </div>
-        {reportOpen && <ReportDialog accounts={Object.values(coById)} icpDef={icpDef} companyIds={reportIds} listTitle={d.title} onClose={() => setReportOpen(false)} />}
         <div className="brief-body">{table}</div>
       </aside>
     </>

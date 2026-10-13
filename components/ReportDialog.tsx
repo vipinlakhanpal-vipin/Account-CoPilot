@@ -113,7 +113,7 @@ export default function ReportDialog({ accounts, icpDef, onClose, companyIds, li
                 </select></label>
             )}
           </div>
-          {listMode && <p className="note">This covers the {idSet.size.toLocaleString()} companies in &quot;{listTitle}&quot;, whatever their ICP status.</p>}
+          {listMode && <p className="note">This covers the {idSet.size.toLocaleString()} companies in &quot;{listTitle}&quot; as shown on screen, whatever their ICP status. To narrow it, close this and set a search or filter on the table first.</p>}
           {!listMode && <div className="pdf-status">
             {STATUSES.map((st) => (
               <label key={st}><input type="checkbox" checked={picked.includes(st)}

@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.62";
+export const APP_VERSION = "3.63";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.63", date: "2026-10-13", notes: "Reports (PDF / Excel) now sits in the \"All Accounts / Filtered results\" row of every table, including Stakeholders, Signals, ERP, Sources and all dashboard drill-downs. It covers exactly the rows on screen, so a search or filter narrows the report.", changes: [
+      { what: "Moved the Reports button into the shared table component so it appears wherever the All Accounts toggle does (Accounts, Pipeline, Stakeholders, drill-downs, Mission Control and the rest), reporting on the companies behind the rows currently shown; removed the separate buttons it replaces", where: "components/CoPilotApp.tsx (FilterTable, ReportsCtx), components/ReportDialog.tsx", why: "Reported — Accounts' All Accounts view and other tables had no way to generate a PDF or Excel file; also asked for Stakeholders" },
+    ] },
   { version: "3.62", date: "2026-10-13", notes: "Every Dashboard tile now has report options: open any tile and use Reports (PDF / Excel) in its header to build a full PDF or an Excel contact list for the companies in that list.", changes: [
       { what: "Added \"Reports (PDF / Excel)\" to the dashboard drill-down panel that every tile, chart bar and region card opens. It reports on exactly the companies in that list (contacts, signals, conflicts and history lists through the company they belong to), whatever their ICP status, and still asks which region to build it for", where: "components/CoPilotApp.tsx (DrillDown), components/ReportDialog.tsx, app/api/report/pdf/route.ts, app/api/report/xlsx/route.ts, lib/pdfReport.ts, lib/xlsxReport.ts", why: "Reported — the drill-down opened from a tile had no way to print or generate a PDF or Excel file" },
     ] },
