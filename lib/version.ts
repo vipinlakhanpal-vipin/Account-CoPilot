@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.74";
+export const APP_VERSION = "3.75";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,11 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.75", date: "2026-10-14", notes: "Aria is now a reusable copy-in package (packages/aria) and her icon is a robot face on a glowing gradient circle that ripples, and lifts and glows brighter when you point at it, with an \"Ask Aria\" label.", changes: [
+      { what: "Robot-face icon: white robot head with antenna, eyes and ear pieces on a teal-to-violet circle, a pulsing glow with a ripple ring, and a stronger glow, lift and label on hover", where: "packages/aria/AriaChat.tsx, packages/aria/aria.css", why: "Requested — a robot symbol so it reads as an AI agent, glowing, with a hover that does something and glows more" },
+      { what: "Panel headers: the small label (Dashboard drill-down, role and tier) now sits on its own line above, so the title and the Close button share one row in the drill-down, contact card and account brief", where: "components/CoPilotApp.tsx, app/globals.css (.bh-kicker, .bh-top)", why: "Requested — Close on the same row as the title, with the same logic across the app" },
+      { what: "Moved Aria's chat window, reasoning loop, types and styles into packages/aria with a README, so other apps copy one folder and supply their own tools; Account CoPilot now uses that same package through a thin wrapper (components/AriaChat.tsx) and keeps its own data tools", where: "packages/aria/*, components/AriaChat.tsx, lib/aria/agent.ts, app/layout.tsx", why: "Requested — files other apps can pick up, copied in as a folder" },
+    ] },
   { version: "3.74", date: "2026-10-14", notes: "Aria's icon is now the same circle and size as the bell and the bulb, filled with a teal-to-violet gradient and a soft pulsing glow.", changes: [
       { what: "Restyled the Aria button as a solid gradient circle that inherits the other top-bar icons' size, with a white A and sparkle and a slow glow (static for users who prefer reduced motion)", where: "components/AriaChat.tsx, app/globals.css (.aria-btn)", why: "Requested — same size as the neighbouring icons, circular for uniformity, and glowing to catch attention" },
     ] },

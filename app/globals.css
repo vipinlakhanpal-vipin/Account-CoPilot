@@ -1307,68 +1307,6 @@ th .infotip{margin-left:3px}.infotip-btn{width:15px;height:15px;font-size:10px}
 .pdf-chip[aria-pressed="true"]{background:#0F6E56;border-color:#0F6E56;color:#FFFFFF}
 .pdf-custom{width:92px;font:500 13px var(--body);color:var(--text);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
 
-/* Aria: icon beside the suggestions bulb, and her window */
-/* Same circle and size as the bell and the bulb (it inherits .bell-btn), filled and softly glowing so it catches the eye */
-.bell-btn.aria-btn{padding:0;border:1.5px solid rgba(255,255,255,.75);color:#fff;background:linear-gradient(135deg,#2EC4A6 0%,#5B7CFF 55%,#7C5CFF 100%);
-  box-shadow:0 0 10px 2px rgba(124,92,255,.55);animation:aria-glow 2.6s ease-in-out infinite}
-.bell-btn.aria-btn:hover{filter:brightness(1.12);box-shadow:0 0 16px 4px rgba(46,196,166,.65)}
-.bell-btn.aria-btn svg{width:62%;height:62%}
-.version .bell-btn.aria-btn svg{width:62%;height:62%}
-@keyframes aria-glow{0%,100%{box-shadow:0 0 8px 1px rgba(124,92,255,.5)}50%{box-shadow:0 0 15px 4px rgba(46,196,166,.6)}}
-@media (prefers-reduced-motion:reduce){.bell-btn.aria-btn{animation:none}}
-.aria-backdrop{position:fixed;inset:0;z-index:1100;background:rgba(6,14,24,.55);backdrop-filter:blur(3px);display:grid;place-items:center;padding:16px}
-.aria-window{width:min(900px,100%);height:min(760px,calc(100vh - 32px));display:flex;flex-direction:column;background:var(--bg);border:1px solid var(--line-2);border-radius:20px;
-  box-shadow:0 30px 80px rgba(3,8,20,.55);overflow:hidden;animation:aria-in .22s ease-out}
-@keyframes aria-in{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
-.aria-top{display:flex;align-items:center;gap:14px;padding:16px 20px;color:#fff;background:linear-gradient(120deg,#0F6E56 0%,#2E5E8C 60%,#5B4BC4 100%)}
-.aria-badge{flex:none;display:grid;place-items:center;width:46px;height:46px;border-radius:14px;background:#fff;color:#0F6E56;font:800 24px var(--display);box-shadow:0 4px 14px rgba(0,0,0,.25)}
-.aria-title{flex:1;min-width:0;display:flex;flex-direction:column}
-.aria-title b{font:700 22px var(--display);letter-spacing:.02em}.aria-title small{font-size:12px;opacity:.9}
-.aria-top-actions{display:flex;gap:8px;align-items:center}
-.aria-toggle{font:600 12px var(--body);color:#fff;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:6px 12px;cursor:pointer}
-.aria-toggle.on{background:#fff;color:#0F6E56}
-.aria-body{flex:1;overflow-y:auto;padding:18px 22px;display:flex;flex-direction:column;gap:14px}
-.aria-hello h2{margin:0 0 6px;font:700 24px var(--display);color:var(--text-strong)}
-.aria-hello p{margin:0 0 14px;font-size:14px;line-height:1.55;max-width:70ch}
-.aria-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
-.aria-cards button{text-align:left;display:flex;flex-direction:column;gap:4px;font:500 13.5px var(--body);color:var(--text);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer}
-.aria-cards button small{font:700 10.5px var(--body);letter-spacing:.08em;text-transform:uppercase;color:#0F6E56}
-.aria-cards button:hover{border-color:#0F6E56;transform:translateY(-1px)}
-.aria-msg{display:flex;gap:10px;align-items:flex-start;max-width:100%}
-.aria-msg.user{justify-content:flex-end}
-.aria-avatar{flex:none;display:grid;place-items:center;width:30px;height:30px;border-radius:10px;background:linear-gradient(135deg,#0F6E56,#5B4BC4);color:#fff;font:800 15px var(--display)}
-.aria-bubble{min-width:0;max-width:calc(100% - 44px);border-radius:14px;padding:10px 14px;font-size:14px;line-height:1.55}
-.aria-msg.user .aria-bubble{background:#0F6E56;color:#fff;max-width:75%}
-.aria-msg.assistant .aria-bubble{background:var(--surface);border:1px solid var(--line)}
-.aria-bubble p{margin:0 0 8px}.aria-bubble p:last-child{margin-bottom:0}
-.aria-bubble ul{margin:4px 0 8px;padding-left:20px}
-.aria-typing{color:var(--muted);font-style:italic}
-.aria-dots::after{content:"";animation:aria-dots 1.2s steps(4,end) infinite}
-@keyframes aria-dots{0%{content:""}25%{content:"."}50%{content:".."}75%,100%{content:"..."}}
-.aria-tablewrap{overflow-x:auto;margin:8px 0;border:1px solid var(--line);border-radius:10px}
-.aria-table{border-collapse:collapse;font-size:12.5px;width:100%}
-.aria-table th{background:#0F6E56;color:#fff;text-align:left;padding:7px 10px;white-space:nowrap;font-weight:600}
-.aria-table td{padding:6px 10px;border-top:1px solid var(--line);vertical-align:top}
-.aria-table tbody tr:nth-child(even) td{background:rgba(var(--ink),.035)}
-.aria-actions,.aria-choices{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-.aria-choices button{font:600 13px var(--body);color:#0F6E56;background:color-mix(in srgb,#0F6E56 10%,var(--surface));border:1.5px solid #0F6E56;border-radius:999px;padding:6px 14px;cursor:pointer}
-.aria-choices button:hover{background:#0F6E56;color:#fff}
-.aria-foot{padding:12px 18px 14px;border-top:1px solid var(--line);background:var(--surface)}
-.aria-foot form{display:flex;gap:10px;align-items:flex-end}
-.aria-foot textarea{flex:1;min-width:0;resize:none;font:14px var(--body);color:var(--text);background:rgba(var(--ink),.05);border:1.5px solid var(--line);border-radius:16px;padding:12px 16px;max-height:120px}
-.aria-foot textarea:focus{outline:none;border-color:#0F6E56}
-.aria-mic{flex:none;width:46px;height:46px;border-radius:50%;border:1.5px solid #0F6E56;background:var(--surface);color:#0F6E56;cursor:pointer;display:grid;place-items:center}
-.aria-mic svg{width:22px;height:22px}
-.aria-mic:hover:not(:disabled){background:#0F6E56;color:#fff}
-.aria-mic.on{background:#D9650D;border-color:#D9650D;color:#fff;animation:aria-pulse 1.1s ease-in-out infinite}
-.aria-mic:disabled{opacity:.45;cursor:not-allowed}
-.aria-send{height:46px;padding:0 20px;border-radius:14px}
-.aria-listening{display:flex;align-items:center;gap:8px;margin-bottom:8px;font:600 12.5px var(--body);color:#D9650D}
-.aria-pulse{width:10px;height:10px;border-radius:50%;background:#D9650D;animation:aria-pulse 1.1s ease-in-out infinite}
-@keyframes aria-pulse{0%,100%{box-shadow:0 0 0 0 rgba(217,101,13,.5)}50%{box-shadow:0 0 0 8px rgba(217,101,13,0)}}
-.aria-cost{margin-top:8px}
-@media (max-width:640px){.aria-window{height:calc(100vh - 16px);border-radius:14px}.aria-title b{font-size:18px}.aria-toggle{display:none}}
-
 /* Region tabs: clear borders, and the selected one is solid sky blue so you can see which region you are in */
 .ctile{background:var(--surface);border:1.5px solid color-mix(in srgb,#3AA0FF 40%,var(--line));color:var(--text-strong);font-weight:700}
 .ctile:hover{border-color:#1F8FE0;background:color-mix(in srgb,#3AA0FF 12%,var(--surface))}
@@ -1376,3 +1314,9 @@ th .infotip{margin-left:3px}.infotip-btn{width:15px;height:15px;font-size:10px}
 .ctile[aria-selected="true"]{background:#1F8FE0;border-color:#157AC4;color:#FFFFFF;box-shadow:0 0 0 3px color-mix(in srgb,#1F8FE0 28%,transparent),0 4px 12px rgba(21,122,196,.35)}
 .ctile[aria-selected="true"] .ccount{background:#FFFFFF;color:#0B4F86}
 .ctile.empty{opacity:.75}
+
+/* Panel headers: the small label sits on its own line above, so the title and Close share one row */
+.bh-kicker{font-size:12px;line-height:1.2;margin:0 0 -4px}
+.bh-top .bh-title{align-self:center}
+.bh-top{align-items:center}
+.bh-person{align-items:center}

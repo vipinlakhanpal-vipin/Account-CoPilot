@@ -1091,8 +1091,9 @@ function DrillDown({ d, byCo, coById, onClose, onAccount, onContact }: { d: { ti
       <div className="scrim" onClick={onClose} />
       <aside className="brief drill" aria-label={d.title}>
         <div className="brief-head bh">
+          <div className="muted bh-kicker">Dashboard drill-down</div>
           <div className="bh-top">
-            <div><div className="muted">Dashboard drill-down</div><h3 className="bh-title">{d.title}</h3></div>
+            <h3 className="bh-title">{d.title}</h3>
             <div className="bh-actions"><div className="bh-btns">
               <button className="btn ghost bh-btn btn-close" type="button" onClick={onClose}>Close</button>
             </div></div>
@@ -1116,11 +1117,11 @@ function ContactCard({ p, data, onClose, onAccount }: { p: Row; data: AllData; o
       <div className="scrim top" onClick={onClose} />
       <aside className="brief contact" aria-label={`Contact card: ${p.full_name}`}>
         <div className="brief-head bh">
+          <div className="muted bh-kicker">{p.role_family} · {p.contact_tier} · {p.channel_state}</div>
           <div className="bh-top">
             <div className="bh-person">
               <div className="avatar lg" aria-hidden="true">{str(p.full_name).split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase()}</div>
               <div style={{ minWidth: 0 }}>
-                <div className="muted">{p.role_family} · {p.contact_tier} · {p.channel_state}</div>
                 <h3 className="bh-title">{p.full_name}</h3>
                 <div className="note">{p.title_verbatim}</div>
                 {person && <div style={{ marginTop: 6 }}><TrustTag t={person.trust} why={person.trust_reason} /> <span className="muted">{person.trust_reason}</span></div>}

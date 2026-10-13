@@ -1,16 +1,13 @@
 import "server-only";
-import Anthropic from "@anthropic-ai/sdk";
+import type Anthropic from "@anthropic-ai/sdk";
+import { runAgent } from "@/packages/aria/agent";
+import type { AriaAction, AriaMessage, AriaResult } from "@/packages/aria/types";
 import { buildCampaignList } from "@/lib/xlsxReport";
 import { type AriaContext, type AccountFilter, filterAccounts, searchAccounts, countAccounts, getAccount, findAccounts, searchContacts, regionKey,
   fullTextSearch, searchSignals, searchTechnology, searchConflicts, searchHistory, icpRules, engineActivity } from "@/lib/aria/tools";
 import type { Criteria } from "@/lib/icp";
 
-const MODEL = "claude-sonnet-5";
-const MAX_STEPS = 7;
-
-export type AriaAction = { kind: "xlsx" | "pdf"; label: string; body: Record<string, unknown> };
-export type AriaMessage = { role: "user" | "assistant"; content: string };
-export type AriaResult = { text: string; actions: AriaAction[]; choices: string[]; usage: { input: number; output: number } };
+export type { AriaAction, AriaMessage, AriaResult };
 
 const FILTER_PROPS = {
   region: { type: "string", description: "Region or country: UAE, KSA, Qatar, Kuwait, UK, USA, Oman, Bahrain, Egypt..." },
@@ -130,36 +127,12 @@ async function runTool(name: string, input: Record<string, unknown>, ctx: AriaCo
   return { result: { error: `Unknown tool ${name}` } };
 }
 
+/** Account CoPilot's Aria: the shared reasoning loop (packages/aria) with this app's instructions, tools and data. */
 export async function runAria(history: AriaMessage[], ctx: AriaContext, regions: string[]): Promise<AriaResult> {
-  const client = new Anthropic();
-  const msgs: Anthropic.MessageParam[] = history.map((m) => ({ role: m.role, content: m.content }));
-  const actions: AriaAction[] = [];
-  const usage = { input: 0, output: 0 };
-  const system = SYSTEM(regions, new Date().toISOString().slice(0, 10));
-  for (let step = 0; step < MAX_STEPS; step++) {
-    const res = await client.messages.create({ model: MODEL, max_tokens: 1800, system, tools: TOOLS, messages: msgs });
-    usage.input += res.usage.input_tokens; usage.output += res.usage.output_tokens;
-    if (res.stop_reason !== "tool_use") {
-      const text = res.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("\n").trim();
-      return { text: text || "I could not put an answer together. Could you rephrase that?", actions, choices: [], usage };
-    }
-    // A clarifying question ends the turn: the app shows the options as buttons.
-    const ask = res.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use" && b.name === "ask_user");
-    if (ask) {
-      const a = (ask.input || {}) as { question?: string; options?: string[] };
-      const lead = res.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("\n").trim();
-      return { text: [lead, String(a.question || "Which one do you mean?")].filter(Boolean).join("\n\n"), actions, choices: (a.options || []).map(String).slice(0, 8), usage };
-    }
-    msgs.push({ role: "assistant", content: res.content });
-    const results: Anthropic.ToolResultBlockParam[] = [];
-    for (const b of res.content) {
-      if (b.type !== "tool_use") continue;
-      let out: Out;
-      try { out = await runTool(b.name, (b.input || {}) as Record<string, unknown>, ctx); } catch { out = { result: { error: "That lookup failed." } }; }
-      if (out.action) actions.push(out.action);
-      results.push({ type: "tool_result", tool_use_id: b.id, content: JSON.stringify(out.result).slice(0, 14000) });
-    }
-    msgs.push({ role: "user", content: results });
-  }
-  return { text: "That needs more steps than I allow in one go. Could you narrow it down, for example to one region?", actions, choices: [], usage };
+  return runAgent({
+    history,
+    system: SYSTEM(regions, new Date().toISOString().slice(0, 10)),
+    tools: TOOLS as unknown as Parameters<typeof runAgent>[0]["tools"],
+    run: (name, input) => runTool(name, input, ctx) as Promise<{ result: unknown; action?: AriaAction }>,
+  });
 }
