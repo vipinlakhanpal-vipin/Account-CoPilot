@@ -6,6 +6,10 @@ type CookieList = { name: string; value: string; options?: CookieOptions }[];
 // Keeps the Supabase session cookie fresh. Access control happens in pages and API routes (lib/auth.ts).
 export async function middleware(req: NextRequest) {
   let res = NextResponse.next({ request: req });
+  // Link prefetches fire in parallel when a page loads. If each one tried to refresh the same expired session, Supabase
+  // answers "too many concurrent token refresh requests" and the session is lost, which logs the user out. The real
+  // navigation refreshes it, so prefetches leave the cookie alone.
+  if (req.headers.get("next-router-prefetch") || req.headers.get("purpose") === "prefetch") return res;
   try {
     const sb = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!, {
       cookies: {

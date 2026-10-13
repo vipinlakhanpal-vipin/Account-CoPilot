@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.54";
+export const APP_VERSION = "3.55";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.55", date: "2026-10-13", notes: "Fixed being logged out unexpectedly. When a page loaded, the top bar's tabs all prefetched at once and each one tried to refresh the same expiring session, which Supabase rejects as concurrent refreshes and then ends the session.", changes: [
+      { what: "Tabs and sub-tabs no longer force a full prefetch, and the session middleware skips session refresh for prefetch requests", where: "components/Header.tsx, middleware.ts", why: "Reported — logged out right after a deploy. The auth log showed about 20 refresh-token requests for one session in the same second from different servers, several rejected with 409 \"Too many concurrent token refresh requests\"" },
+    ] },
   { version: "3.54", date: "2026-10-12", notes: "PDF report polish: single-company reports, USD amounts with the regional currency in brackets, spend split into tables, the Account CoPilot logo and a proper title, and no more lines through text. Lists is now called Data source.", changes: [
       { what: "Added a one-company PDF: a \"📄 PDF\" button in the account brief (next to Refresh research) builds the same report for just that company, titled \"Account CoPilot report on <company>\", with the Account CoPilot logo on page 1; the region PDF is titled \"Account CoPilot report on <region>\" and is also reachable from Pipeline", where: "components/CoPilotApp.tsx, components/PdfReportDialog.tsx, lib/pdfReport.ts, app/api/report/pdf/route.ts", why: "Requested — generate a report for one company as well as a whole region, with the logo and a named title on the first page" },
       { what: "Amounts now read $415.8B or $990M (USD as base) with the regional currency in brackets, e.g. $415.8B (SAR 1.56T), in the PDF and in the app's generated score reasons, which used to print raw figures like 415800M", where: "lib/icp.ts (fmtUsdM, ICP Match / why-selected / spend basis text), lib/pdfReport.ts", why: "Reported — the PDF showed numbers such as 415800M without a currency symbol" },

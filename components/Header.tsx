@@ -218,7 +218,7 @@ export default function Header({ meta }: { meta: string }) {
           <GlobalSearchBar />
           <nav className="tabs" aria-label="Sections">
             {GROUPS.map((g) => (
-              <Link key={g.label} href={g.items[0][0]} prefetch className="tab" aria-selected={g.items.some(([, l]) => l === current)} onClick={(e) => go(e, g.items[0][0])}>{g.label}</Link>
+              <Link key={g.label} href={g.items[0][0]} className="tab" aria-selected={g.items.some(([, l]) => l === current)} onClick={(e) => go(e, g.items[0][0])}>{g.label}</Link>
             ))}
           </nav>
           <div className="nav-actions">
@@ -237,7 +237,7 @@ export default function Header({ meta }: { meta: string }) {
               <div className="subtabs-row" ref={subRef} style={{ marginLeft: subOffset ?? 0, visibility: subOffset === null ? "hidden" : "visible" }}>
                 {g.items.length > 1
                   ? (g.hideLanding ? g.items.filter(([, l]) => l !== g.label) : g.items)
-                      .map(([href, label]) => <Link key={href} href={href} prefetch className="subtab" aria-selected={label === current} onClick={(e) => go(e, href)}>{SUB_LABEL[label] || label}</Link>)
+                      .map(([href, label]) => <Link key={href} href={href} className="subtab" aria-selected={label === current} onClick={(e) => go(e, href)}>{SUB_LABEL[label] || label}</Link>)
                   : <span className="subtab" aria-hidden="true" style={{ visibility: "hidden" }}>&nbsp;</span> /* keeps the bar's height so nothing jumps */}
               </div>
               {meta && <span className="subtabs-meta">{meta}</span>}
