@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { SHOW_HUBSPOT } from "@/lib/features";
 import { requirePageUser } from "@/lib/auth";
 import Hero from "@/components/Hero";
 import GuideNav from "@/components/GuideNav";
@@ -99,7 +100,7 @@ export default async function GuidePage() {
                   <li>The other name and website are kept as aliases, so the same company can never come back as &quot;new&quot;.</li>
                 </ul></p>
               <p className="intro-box"><b>Each person works on their own region.</b> A <b>Super Admin</b> sees every region together (a consolidated view) and each region on its own, and manages the team, the engine and every region&apos;s ICP. A <b>Standard User</b> is assigned one region, for example Europe or USA. For them the whole app works only on that region, by that region&apos;s ICP: dashboard, accounts, Pipeline, research, the daily run and the Master Book. They can change only their own region&apos;s ICP and cannot see other regions. The database enforces the same rule, so it can&apos;t be bypassed.</p>
-              <p className="intro-box">Next I <b>check SCP&apos;s HubSpot</b> (read-only) to see which companies and contacts are already there, with their stage, owner and any deals. That way your team never imports a duplicate, and knows straight away whether an account is new, being worked or already a customer. HubSpot information stays inside this app.</p>
+              {SHOW_HUBSPOT && <p className="intro-box">Next I <b>check SCP&apos;s HubSpot</b> (read-only) to see which companies and contacts are already there, with their stage, owner and any deals. That way your team never imports a duplicate, and knows straight away whether an account is new, being worked or already a customer. HubSpot information stays inside this app.</p>}
               <p className="intro-box">Along the way I work smartly and keep costs down:
                 <ul>
                   <li>I never guess an email or phone number.</li>
@@ -364,7 +365,6 @@ export default async function GuidePage() {
               <T head={["Sheet", "What's in it", "Use it for"]} rows={[
                 ["Executive Dashboard", "Headline counts and charts: accounts by ICP status, S2P signal, platform, ERP", "A one-page summary for management"],
                 ["Contact List (new)", "One row per person: Company Name, Company Website, Contact Person (full name), Job Title, Phone (tel / mobile), Official Email, Location, LinkedIn Profile, then HubSpot columns: Company in HubSpot, Company Stage, Company Owner, Deals, Latest Deal, Contact in HubSpot and HubSpot Import Action", "Outreach and campaigns, and importing into HubSpot without creating duplicates"],
-                ["HubSpot Deals (new)", "Every HubSpot deal on a profiled company: deal name, stage, amount, close date, company owner", "Seeing past wins, losses and open deals per account"],
                 ["Accounts", "Every account with ICP status, Status Since / Date Added / Last Updated, revenue and its source, listing, ERP, S2P platform and signals, opportunity notes; gold columns for owner, priority and next step", "Account planning and prioritisation"],
                 ["Contacts", "Every contact row as stored (your sheet rows and Claude rows), with verification, channel and notes", "Checking where a contact detail came from"],
                 ["Stakeholders", "Campaign view of contacts sorted by S2P signal then tier", "Building call lists by account"],
@@ -385,6 +385,7 @@ export default async function GuidePage() {
                 ["4", "Use S2P Signals and ERP & Apps to prepare the pitch; Source Evidence if someone asks how we know."],
                 ["5", "Fill the gold columns (owner, priority, next step) and share; resolve anything in Conflicts."],
               ]} />
+              {SHOW_HUBSPOT && <>
               <h3>HubSpot connection</h3>
               <p><b>SCP&apos;s HubSpot is connected</b> to the Account CoPilot agent (through Claude, read-only, using the connecting user&apos;s own HubSpot permissions). The agent looks each company and contact up in HubSpot and keeps the result inside this app only (the account page and the Master Book); nothing is changed in HubSpot and nothing goes to the public code repository.</p>
               <T head={["Information the agent can read from HubSpot", "Used today", "Where it shows"]} rows={[
@@ -402,7 +403,8 @@ export default async function GuidePage() {
                 ["Skip — contact already in HubSpot", "The email already exists in HubSpot; do not import this row"],
                 ["Add contact to existing HubSpot company", "The company exists in HubSpot but this person doesn't; import the contact and associate it with that company"],
                 ["New company + contact", "Neither exists in HubSpot; import both"],
-              ]} /></section>
+              ]} />
+              </>}</section>
 
             <section id="rules" className="panel"><h2>Data rules</h2>
               <ul className="plain">

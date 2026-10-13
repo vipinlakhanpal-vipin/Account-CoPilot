@@ -24,6 +24,7 @@ import SavedReportsList, { SaveReportButton, type SavedReport } from "@/componen
 import ScheduledRunHistory from "@/components/ScheduledRunHistory";
 import EngineSearchAndRefresh from "@/components/EngineSearchAndRefresh";
 import EngineActivity from "@/components/EngineActivity";
+import { SHOW_HUBSPOT } from "@/lib/features";
 import PdfReportDialog, { downloadReport } from "@/components/PdfReportDialog";
 
 const HERO: Record<string, [string, string]> = {
@@ -850,10 +851,10 @@ function Brief({ a, data, people, onClose, onContact, scores, criteria, isSuper 
             <h3 className="drawer-title-logo bh-title"><CompanyLogo a={a} size={34} />{a.company_name}</h3>
             <div className="bh-actions">
               <div className="bh-btns">
-                <button className="btn ghost" type="button" disabled={pdfBusy} title="PDF with everything on this page, plus how it was built from your ICP"
+                <button className="btn ghost bh-btn" type="button" disabled={pdfBusy} title="PDF with everything on this page, plus how it was built from your ICP"
                   onClick={async () => { setPdfBusy(true); await downloadReport({ companyId: a.id }); setPdfBusy(false); }}>{pdfBusy ? "Building…" : "📄 PDF"}</button>
-                <button className="btn ghost" type="button" aria-expanded={confirmRefresh} onClick={() => setConfirmRefresh((v) => !v)}>Refresh research</button>
-                <button className="btn ghost" type="button" onClick={onClose}>Close</button>
+                <button className="btn ghost bh-btn" type="button" aria-expanded={confirmRefresh} onClick={() => setConfirmRefresh((v) => !v)}>Refresh research</button>
+                <button className="btn ghost bh-btn" type="button" onClick={onClose}>Close</button>
               </div>
               {confirmRefresh && (
                 <div className="bh-confirm">
@@ -952,7 +953,7 @@ function Brief({ a, data, people, onClose, onContact, scores, criteria, isSuper 
             {a.known_implementation_partner && <p><b>Implementation partner:</b> {a.known_implementation_partner}</p>}
             {a.subsidiaries && <p className="note"><b>Subsidiaries:</b> {a.subsidiaries}</p>}
           </div>
-          {a.profile?.["HubSpot"] && <HubSpotBlock hs={a.profile["HubSpot"]} />}
+          {SHOW_HUBSPOT && a.profile?.["HubSpot"] && <HubSpotBlock hs={a.profile["HubSpot"]} />}
           {a.profile && <Profile profile={a.profile} />}
           <div className="block"><h4>Opportunity observations</h4><p>{a.potential_opportunity || "—"}</p>{a.account_notes && <p className="note">{a.account_notes}</p>}</div>
           {(() => {

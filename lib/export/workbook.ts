@@ -1,3 +1,4 @@
+import { SHOW_HUBSPOT } from "@/lib/features";
 import "server-only";
 import ExcelJS from "exceljs";
 import type { AllData, Row } from "@/lib/data";
@@ -147,15 +148,17 @@ export async function buildWorkbook(d: AllData, icpDef?: unknown): Promise<Buffe
       ...hubspotCols(hs, email) };
   }).filter((r) => r.email || r.phone || r.linkedin)
     .sort((a, b) => String(a.company).localeCompare(String(b.company)) || (Number(b.persona_score) || 0) - (Number(a.persona_score) || 0) || String(a.full_name).localeCompare(String(b.full_name)));
-  const listCols: Col[] = [["Company Name", "company", 30], ["Company Website", "website", 26, "url"], ["Contact Person (Full Name)", "full_name", 26], ["Job Title", "title", 34, "wrap"], ["Persona Fit %", "persona_score", 11, "num"], ["Persona Match", "persona_label", 20],
+  const listColsAll: Col[] = [["Company Name", "company", 30], ["Company Website", "website", 26, "url"], ["Contact Person (Full Name)", "full_name", 26], ["Job Title", "title", 34, "wrap"], ["Persona Fit %", "persona_score", 11, "num"], ["Persona Match", "persona_label", 20],
       ["Phone (Tel / Mobile)", "phone", 22], ["Official Email", "email", 30], ["Location", "location", 20], ["LinkedIn Profile", "linkedin", 32, "url"],
       ["Company in HubSpot", "scp_customer", 14], ["Company Stage (HubSpot)", "hs_stage", 20], ["Company Owner (HubSpot)", "hs_owner", 22],
       ["Deals (HubSpot)", "hs_deals", 26, "wrap"], ["Latest Deal (HubSpot)", "hs_latest", 44, "wrap"], ["Contact in HubSpot", "hs_contact", 14],
       ["HubSpot Import Action", "hs_action", 30, "wrap"]];
+  const listCols = listColsAll.filter((c) => SHOW_HUBSPOT || !(String(c[1]).startsWith("hs_") || c[1] === "scp_customer"));
   table(wb, "Contact List", "CONTACT LIST — Outreach-ready contacts",
-    `Exported ${today} · one row per person, best buyer-persona fit first within each company (Define ICP) · official emails only, never guessed · teal columns from SCP's HubSpot`,
+    `Exported ${today} · one row per person, best buyer-persona fit first within each company (Define ICP) · official emails only, never guessed${SHOW_HUBSPOT ? " · teal columns from SCP's HubSpot" : ""}`,
     listCols, contactRows, 1, [], conLogos);
 
+  if (SHOW_HUBSPOT) {
   // HubSpot deals linked to profiled companies (read-only copy; stays inside this app and its export).
   // Only deals closing (or already closed) from 2025-01-01 onward — older deals are dropped as stale.
   const DEALS_FROM = "2025-01-01";
@@ -168,8 +171,9 @@ export async function buildWorkbook(d: AllData, icpDef?: unknown): Promise<Buffe
     `Exported ${today} · read-only from SCP HubSpot · company matched by domain, then name · deals from ${DEALS_FROM} onward`,
     [["Company (app)", "company", 30], ["Company (HubSpot)", "hs_name", 28], ["Deal", "deal", 44, "wrap"], ["Deal Stage", "stage", 16], ["Amount", "amount", 14, "usd"],
       ["Close Date", "close", 12], ["Company Owner", "owner", 22]], dealRows, 2);
+  }
 
-  const accCols: Col[] = [
+  const accColsAll: Col[] = [
     ["Company", "company_name", 30], ["Website", "company_website", 24, "url"], ["Country", "country", 9], ["Exchange", "exchange", 10], ["Ticker", "ticker", 10],
     ["Industry", "industry", 20], ["ICP Status", "icp_status", 18], ["Status Since", "status_since", 12], ["Date Added", "date_added", 12], ["Last Updated", "date_updated", 12], ["ICP Reason", "icp_fit_reason", 44, "wrap"], ["Listing", "listing_status", 14], ["Lists", "lists_text", 26], ["In HubSpot", "hs_in", 11], ["HubSpot Stage", "hs_stage", 18], ["HubSpot Owner", "hs_owner", 20], ["ICP Fit", "icp_fit", 10], ["ICP Fit Reason", "icp_fit_reason", 34, "wrap"], ["Revenue (USD)", "revenue_usd_m", 13, "usd"],
     ["Revenue (Local)", "revenue_local", 16], ["Revenue FY", "revenue_fy", 10], ["Revenue Source", "revenue_source_url", 24, "url"], ["Employee Range", "employee_range", 14],
@@ -184,6 +188,7 @@ export async function buildWorkbook(d: AllData, icpDef?: unknown): Promise<Buffe
     ["First Found", "first_found", 11], ["Last Researched", "last_researched", 20], ["Confidence", "research_confidence", 11],
     ["Account Owner", "account_owner", 16], ["Account Priority", "account_priority", 12], ["Pitch Angle / Next Step", "pitch_next_step", 36, "wrap"],
   ];
+  const accCols = accColsAll.filter((c) => SHOW_HUBSPOT || !String(c[1]).startsWith("hs_"));
   const ICP_ORDER = ["ICP — Verified", "ICP — Likely", "ICP — Needs check", "Unknown", "Not ICP"];
   const icpRank = (x: string) => { const i = ICP_ORDER.indexOf(String(x)); return i < 0 ? 9 : i; };
   const day = (v: unknown) => (v ? String(v).slice(0, 10) : "");
@@ -191,7 +196,7 @@ export async function buildWorkbook(d: AllData, icpDef?: unknown): Promise<Buffe
     hs_in: a.profile?.["HubSpot"] ? (a.profile["HubSpot"].in_hubspot ? "Yes" : "No") : "", hs_stage: a.profile?.["HubSpot"]?.stage || "", hs_owner: a.profile?.["HubSpot"]?.owner || "",
     status_since: day(a.profile?.["Status changed"]?.at || a.last_verified || a.created_at) }))
     .sort((a, b) => icpRank(a.icp_status) - icpRank(b.icp_status) || rank(a.s2p_signal_level) - rank(b.s2p_signal_level) || String(a.company_name).localeCompare(b.company_name));
-  table(wb, "Accounts", "ACCOUNTS — ICP & Target Lists", `Exported ${today} · sorted by ICP status, then S2P signal · gold columns are for your input · teal columns from HubSpot`, accCols, accounts, 3, ["account_owner", "account_priority", "pitch_next_step"], accLogos);
+  table(wb, "Accounts", "ACCOUNTS — ICP & Target Lists", `Exported ${today} · sorted by ICP status, then S2P signal · gold columns are for your input${SHOW_HUBSPOT ? " · teal columns from HubSpot" : ""}`, accCols, accounts, 3, ["account_owner", "account_priority", "pitch_next_step"], accLogos);
 
   const conCols: Col[] = [
     ["Company", "company", 26], ["Full Name", "full_name", 22], ["Nationality", "nationality", 14], ["Title (Verbatim)", "title_verbatim", 32, "wrap"],
@@ -290,7 +295,7 @@ export async function buildWorkbook(d: AllData, icpDef?: unknown): Promise<Buffe
   // ---- Executive Dashboard: KPI cards + a clickable guide to every sheet
   banner(dash, "ACCOUNT COPILOT — Master Book", `ICP: revenue ≥ USD 250M and 100+ employees (listing not required) · exported ${today}`, 13);
   const A = (k: string) => rng("Accounts", accCols, k), C = (k: string) => rng("Contacts", conCols, k), L = (k: string) => rng("Contact List", listCols, k);
-  const kpis: [string, string, string][] = [
+  const kpisAll: [string, string, string][] = [
     ["Accounts", `COUNTA(${A("company_name")})`, NAVY_2], ["ICP — Verified", `COUNTIF(${A("icp_status")},"ICP — Verified")`, "FF0B6B45"],
     ["ICP — Likely", `COUNTIF(${A("icp_status")},"ICP — Likely")`, "FF1D4F91"], ["Needs check", `COUNTIF(${A("icp_status")},"ICP — Needs check")`, "FF8A5A00"],
     ["Not ICP", `COUNTIF(${A("icp_status")},"Not ICP")`, "FF6B7280"], ["Accounts in HubSpot", `COUNTIF(${A("hs_in")},"Yes")`, HUBSPOT_HEADER],
@@ -300,6 +305,7 @@ export async function buildWorkbook(d: AllData, icpDef?: unknown): Promise<Buffe
     ["Conflicts retained", `COUNTA('Conflicts'!$D$${FIRST}:$D$${MAX})`, "FF9B1C1C"],
   ];
   dash.getCell(4, 2).value = "At a glance"; dash.getCell(4, 2).font = f({ size: 16, bold: true, color: { argb: NAVY_2 } });
+  const kpis = kpisAll.filter(([label]) => SHOW_HUBSPOT || !/HubSpot/.test(label));
   kpis.forEach(([label, formula, accent], i) => {
     const row = 6 + Math.floor(i / 4) * 5, col = 2 + (i % 4) * 3;
     dash.mergeCells(row, col, row, col + 1); dash.mergeCells(row + 1, col, row + 2, col + 1);
@@ -319,7 +325,7 @@ export async function buildWorkbook(d: AllData, icpDef?: unknown): Promise<Buffe
   const g0 = 22;
   dash.getCell(g0, 2).value = "What's in this workbook"; dash.getCell(g0, 2).font = f({ size: 16, bold: true, color: { argb: NAVY_2 } });
   const guide: [string, string][] = [
-    ["Contact List", "One row per person, ready for outreach: official emails only, plus HubSpot status and the import action for each person"],
+    ["Contact List", `One row per person, ready for outreach: official emails only${SHOW_HUBSPOT ? ", plus HubSpot status and the import action for each person" : ""}`],
     ["HubSpot Deals", "Every HubSpot deal on your profiled companies: stage, amount and close date"],
     ["Accounts", "Every account with ICP status, revenue and its source, ERP, S2P platform and signals; gold columns are yours to fill"],
     ["Contacts", "Every contact row as stored, with verification, source and notes"],
@@ -346,7 +352,7 @@ export async function buildWorkbook(d: AllData, icpDef?: unknown): Promise<Buffe
 
   const legend = wb.addWorksheet("Settings & Legend", { properties: { tabColor: { argb: TABS[11] } }, views: [{ showGridLines: false }] });
   banner(legend, "LEGEND", "How to read this workbook", 3);
-  const items: [string, string, [string, string]?][] = [
+  const itemsAll: [string, string, [string, string]?][] = [
     ["ICP — Verified", "Revenue ≥ $250M from an official source (annual report, filing, company-quoted results)", TAGS["ICP — Verified"]],
     ["ICP — Likely", "≥ $250M per your data, Seamless or estimates; not yet confirmed officially", TAGS["ICP — Likely"]],
     ["ICP — Needs check", "Sources disagree across the $250M line", TAGS["ICP — Needs check"]],
@@ -363,7 +369,8 @@ export async function buildWorkbook(d: AllData, icpDef?: unknown): Promise<Buffe
     ["Unverified Email Candidate", "Catch-all domain; cannot be verified — never placed in Email"],
     ["Blank email", "Could not be reliably verified; emails are never guessed"],
     ["Nationality 'Not Publicly Verified'", "Never inferred"],
-  ];
+  ];  const items = itemsAll.filter(([n, t]) => SHOW_HUBSPOT || !/HubSpot/i.test(`${n} ${t}`));
+
   ["Label", "Meaning"].forEach((h, i) => { const c = legend.getCell(3, i + 1); c.value = h; c.fill = fill(HEADER); c.font = f({ bold: true, color: { argb: "FFFFFFFF" } }); c.alignment = { indent: 1, vertical: "middle" }; });
   legend.getRow(3).height = 30;
   items.forEach(([k, v, tag], i) => {

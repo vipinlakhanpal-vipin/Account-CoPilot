@@ -1,4 +1,5 @@
 import "server-only";
+import { SHOW_HUBSPOT } from "@/lib/features";
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import type { AllData, Row } from "@/lib/data";
 import { icpMatch, opportunity, coupaFit, procurementMaturity, estimateSpend, whySelected, recommendedActions, withDefaults, revenueOf, revenueIsOfficial, fmtUsdM, type Criteria } from "@/lib/icp";
@@ -345,7 +346,7 @@ export async function buildReport(all: AllData, def: unknown, opt: ReportOptions
       ["Implementation partner", a.known_implementation_partner], ["Subsidiaries", a.subsidiaries]].filter(([, v]) => v);
     if (trans.length) { w.h2("Transformation context"); trans.forEach(([l, v]) => w.kv(l as string, v, 150)); }
 
-    if (hs) { w.h2("HubSpot (read-only)"); w.p(hs.in_hubspot ? `${s(hs.hubspot_name)} | stage ${s(hs.stage) || "-"} | owner ${s(hs.owner) || "-"}` : "Not in HubSpot."); }
+    if (SHOW_HUBSPOT && hs) { w.h2("HubSpot (read-only)"); w.p(hs.in_hubspot ? `${s(hs.hubspot_name)} | stage ${s(hs.stage) || "-"} | owner ${s(hs.owner) || "-"}` : "Not in HubSpot."); }
 
     w.h2("Opportunity observations");
     w.p(a.potential_opportunity || "-");

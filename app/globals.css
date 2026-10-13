@@ -1283,3 +1283,8 @@ th .infotip{margin-left:3px}.infotip-btn{width:15px;height:15px;font-size:10px}
 .hchip small{font:700 10px var(--body);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
 .hchip b{font-weight:600;color:var(--text-strong)}
 .bh-confirm{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+
+/* Account brief actions: same green as the active main-nav tab, white text, in both themes */
+.bh-btns .bh-btn,.bh-btns .bh-btn:visited{background:#0F6E56;color:#FFFFFF;border-color:#0F6E56;font-weight:600}
+.bh-btns .bh-btn:hover:not(:disabled){background:#0B5A47;border-color:#0B5A47;color:#FFFFFF}
+.bh-btns .bh-btn:disabled{opacity:.7}

@@ -499,7 +499,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                     {sources.checked.includes(name) && (
                       <p className="hw-connect-note">{name} isn&apos;t connected to Account CoPilot yet — connecting it would let the Agent pull from
                         it directly instead of just knowing you subscribe to it. To connect it, ask a Super Admin to set it up as a Claude
-                        connector in Settings, the same way HubSpot and Seamless.ai are connected.</p>
+                        connector in Settings, the same way Seamless.ai is connected.</p>
                     )}
                   </div>
                 ))}

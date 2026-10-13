@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.58";
+export const APP_VERSION = "3.59";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.59", date: "2026-10-13", notes: "HubSpot is disconnected: it no longer appears in the account brief, the PDF report, the Master Book or the Guide. The stored HubSpot copy is kept, so it can be shown again. The PDF, Refresh research and Close buttons in the account brief are now green with white text.", changes: [
+      { what: "Hid every HubSpot display behind one switch (SHOW_HUBSPOT = false): the HubSpot block in the account brief, the HubSpot section in the PDF, the HubSpot columns and KPI cards, the HubSpot Deals sheet and legend entries in the Master Book, and the HubSpot sections of the Guide. The stored profile[\"HubSpot\"] data is untouched", where: "lib/features.ts (new), components/CoPilotApp.tsx, lib/pdfReport.ts, lib/export/workbook.ts, app/guide/page.tsx, components/HomeWorkspace.tsx, CLAUDE.md", why: "Requested — disconnect HubSpot from Account CoPilot; data kept so it can be restored. The claude.ai connector itself is disconnected in claude.ai Settings" },
+      { what: "PDF, Refresh research and Close in the account brief are solid green (#0F6E56, the active main-nav tab colour) with white text", where: "components/CoPilotApp.tsx, app/globals.css (.bh-btn)", why: "Requested — match the main navigation's selected tab" },
+    ] },
   { version: "3.58", date: "2026-10-13", notes: "PDF report: the first point is now \"ICP Profile\" with rules explained in brackets, a new section explains how the Match / Opportunity / Coupa Fit points are calculated, and headings stay with their content instead of being stranded at the bottom of a page.", changes: [
       { what: "Point 1 is now \"ICP Profile\", and each region's rules are written in plain language with terms explained in brackets, e.g. \"listing not required (the company does not need to be on a stock exchange; private and family groups qualify)\" and \"active (each morning the engine finds 5 new companies and re-verifies up to 25)\"", where: "lib/pdfReport.ts, lib/icpDefinition.mjs (describeRules), components/PdfReportDialog.tsx", why: "Requested — simpler heading and the meaning of 'listing not required' spelled out" },
       { what: "Added \"How the points are calculated\": a table per score (ICP Match, Opportunity) with each check, its maximum and exactly how points are earned, plus how Coupa Fit's five areas are estimated", where: "lib/pdfReport.ts (pointsExplained)", why: "Requested — the per-company points (e.g. Revenue 30 of 30) had no explanation of how they are calculated" },
