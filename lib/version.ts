@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.81";
+export const APP_VERSION = "3.82";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.82", date: "2026-10-14", notes: "Aria's tap-able answers are short: just 1, 5, 10, 25, 50 or All for how many companies, the region names, and Best ICP fit / Largest revenue / A to Z, instead of the whole sentence on every button.", changes: [
+      { what: "Choice buttons now carry a short label (what you see and what shows as your answer) and the full request behind it (what is sent), so the Excel questions read: region, then 1 / 5 / 10 / 25 / 50 / All, then how to pick", where: "packages/aria/AriaChat.tsx, packages/aria/types.ts, lib/aria/router.ts", why: "Reported — the Excel options were long sentences and looked confusing" },
+    ] },
   { version: "3.81", date: "2026-10-14", notes: "Aria answers \"which companies ... have a CFO contact\" with the CFO's name, title and email, her tables fit better, and her window can be dragged bigger from its bottom-right corner or expanded to fill the screen.", changes: [
       { what: "Questions that name a role (CFO, CPO, CEO, CIO, COO, procurement, finance) are answered at person level: company, revenue, ERP, the person's name, title and official email, combined with filters like region, status and ERP. The AI path's contact tool understands the same filters and roles. Personal and generic email addresses are never shown", where: "lib/aria/tools.ts, lib/aria/router.ts, lib/aria/agent.ts", why: "Reported — a CFO question returned companies with no CFO name or title" },
       { what: "Aria's window is resizable by dragging its bottom-right corner, has an Expand / Smaller button, and her tables are compact: short cells stay on one line, long ones wrap, with a sticky header", where: "packages/aria/aria.css, packages/aria/AriaChat.tsx", why: "Requested — fit the fields properly and let the window stretch to show broader data" },

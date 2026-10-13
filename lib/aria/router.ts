@@ -2,13 +2,13 @@ import "server-only";
 import type { Row } from "@/lib/data";
 import { type AriaContext, type AccountFilter, regionKey, filterAccounts, searchAccounts, countAccounts, getAccount, searchContacts, icpRules, findAccounts, roleKey } from "@/lib/aria/tools";
 import { runTool } from "@/lib/aria/agent";
-import type { AriaAction } from "@/packages/aria/types";
+import type { AriaAction, AriaChoice } from "@/packages/aria/types";
 import { REGIONS } from "@/lib/icpDefinition.mjs";
 
 // The free path. Most questions people ask Aria are one of a handful of shapes (counts, lists, one company, contacts, rules, a PDF or an
 // Excel). These are read by plain rules and answered straight from the database: no AI, no API cost. Anything the rules cannot read
 // confidently returns null, and only then does the question go to the AI.
-export type FreeReply = { text: string; actions: AriaAction[]; choices: string[] };
+export type FreeReply = { text: string; actions: AriaAction[]; choices: AriaChoice[] };
 
 const s = (v: unknown) => (v === null || v === undefined ? "" : String(v).trim());
 const esc = (v: unknown) => s(v).replace(/\|/g, "/").replace(/\n/g, " ");
@@ -61,9 +61,9 @@ const rowsOf = (ctx: AriaContext, f: AccountFilter, limit = 15) => {
   return { r, md: table(["Company", "Country", "ICP status", "Revenue", "ERP", "Platform", "Signal", "Contacts"],
     r.rows.map((x) => [x.company, x.country, x.icp_status.replace("ICP — ", ""), x.revenue, x.erp, x.s2p_platform, x.signal, x.contacts])) };
 };
-const nextSteps = (f: AccountFilter, region?: string): string[] => {
+const nextSteps = (f: AccountFilter, region?: string): AriaChoice[] => {
   const base = [f.icp_status?.join(" and "), "companies", region ? `in ${region}` : ""].filter(Boolean).join(" ");
-  return region ? [`Excel contact list for ${base}`, `PDF report for ${base}`] : [];
+  return region ? [{ label: "📊 Excel contact list", value: `Excel contact list for ${base}` }, { label: "📄 PDF report", value: `PDF report for ${base}` }] : [];
 };
 
 export async function tryFree(question: string, ctx: AriaContext): Promise<FreeReply | null> {
@@ -82,9 +82,9 @@ export async function tryFree(question: string, ctx: AriaContext): Promise<FreeR
   if (wantsExcel) {
     const scope = [f.icp_status?.join(" and "), f.platform && `${f.platform} customers`, f.erp_contains && `${f.erp_contains.toUpperCase()} users`].filter(Boolean).join(" ");
     const stem = (r: string) => `Excel contact list for ${scope ? `${scope} companies` : "companies"} in ${r}`;
-    if (!f.region) return { text: "Which region should the contact list cover?", actions: [], choices: (REGIONS as { key: string }[]).map((r) => r.key).filter((k) => ["UAE", "KSA", "Qatar", "Kuwait", "UK", "USA"].includes(k)).map(stem) };
-    if (!limit && !wantsAll) return { text: `How many ${f.region} companies should I include?`, actions: [], choices: ["1", "5", "10", "25", "50", "all"].map((n) => `${stem(f.region!)}, ${n === "all" ? "all companies" : `top ${n}`}`) };
-    if (!rank) return { text: "How should I pick them?", actions: [], choices: [["best ICP fit", "best fit"], ["largest revenue", "largest revenue"], ["A to Z", "A to Z"]].map(([, w]) => `${stem(f.region!)}, ${wantsAll ? "all companies" : `top ${limit}`}, by ${w}`) };
+    if (!f.region) return { text: "Which region should the contact list cover?", actions: [], choices: (REGIONS as { key: string }[]).map((r) => r.key).filter((k) => ["UAE", "KSA", "Qatar", "Kuwait", "UK", "USA"].includes(k)).map((k) => ({ label: k, value: stem(k) })) };
+    if (!limit && !wantsAll) return { text: `How many ${f.region} companies should I include?`, actions: [], choices: ["1", "5", "10", "25", "50", "all"].map((n) => ({ label: n === "all" ? "All" : n, value: `${stem(f.region!)}, ${n === "all" ? "all companies" : `top ${n}`}` })) };
+    if (!rank) return { text: "How should I pick them?", actions: [], choices: [["Best ICP fit", "best fit"], ["Largest revenue", "largest revenue"], ["A to Z", "A to Z"]].map(([label, w]) => ({ label, value: `${stem(f.region!)}, ${wantsAll ? "all companies" : `top ${limit}`}, by ${w}` })) };
     const out = await runTool("create_excel", { ...f, region: f.region, rank, ...(limit && !wantsAll ? { limit } : {}) }, ctx);
     const r = out.result as { error?: string; companies_in_file?: number; contacts_in_file?: number; companies_matching?: number };
     if (r.error || !out.action) return { text: r.error || "I could not prepare that file.", actions: [], choices: [] };
@@ -97,7 +97,7 @@ export async function tryFree(question: string, ctx: AriaContext): Promise<FreeR
       const out = await runTool("create_pdf", { company_names: [s(company.hits[0].company_name)] }, ctx);
       if (out.action) return { text: `Your PDF report on **${s(company.hits[0].company_name)}** is ready: facts, ICP reasoning, scores, signals, stakeholders and evidence.`, actions: [out.action], choices: [] };
     }
-    if (company.hits.length > 1) return { text: `Several companies match "${company.term}". Which one?`, actions: [], choices: company.hits.slice(0, 6).map((a) => `PDF report on ${s(a.company_name)}`) };
+    if (company.hits.length > 1) return { text: `Several companies match "${company.term}". Which one?`, actions: [], choices: company.hits.slice(0, 6).map((a) => ({ label: s(a.company_name), value: `PDF report on ${s(a.company_name)}` })) };
     if (f.region || f.icp_status || f.platform || f.erp_contains) {
       const n = limit || 25;
       const out = await runTool("create_pdf", { ...f, limit: n, rank: rank || "fit" }, ctx);
@@ -137,7 +137,7 @@ export async function tryFree(question: string, ctx: AriaContext): Promise<FreeR
 
   // ---- One company's detail ----
   if (company.hits.length && /\b(tell me about|about|details?|what do we know|profile|overview|summary|info on|information on|show me)\b/.test(t) && !f.icp_status) {
-    if (company.hits.length > 1) return { text: `Several companies match "${company.term}". Which one?`, actions: [], choices: company.hits.slice(0, 6).map((a) => `Tell me about ${s(a.company_name)}`) };
+    if (company.hits.length > 1) return { text: `Several companies match "${company.term}". Which one?`, actions: [], choices: company.hits.slice(0, 6).map((a) => ({ label: s(a.company_name), value: `Tell me about ${s(a.company_name)}` })) };
     const d = getAccount(ctx, { id: s(company.hits[0].id) }) as Record<string, unknown> & { signals?: { level: string; signal: string }[]; contacts?: { name: string; title: string; email: string }[]; maturity?: { level: string; why: string } };
     if (d.error) return null;
     const kv: [string, unknown][] = [["Company", d.company], ["Country / HQ", d.hq], ["ICP status", s(d.icp_status)], ["Net revenue", `${d.revenue}${d.revenue_type ? ` (${d.revenue_type})` : ""}`],
@@ -148,7 +148,7 @@ export async function tryFree(question: string, ctx: AriaContext): Promise<FreeR
     const ppl = (d.contacts || []).slice(0, 5);
     const name = s(d.company);
     return { text: `${table(["Field", "Detail"], kv)}${sig ? `\n\n**Top signals**\n${sig}` : ""}${ppl.length ? `\n\n**Contacts**\n${table(["Name", "Title", "Email"], ppl.map((p) => [p.name, p.title, p.email]))}` : ""}`,
-      actions: [], choices: [`PDF report on ${name}`, `Contacts at ${name}`] };
+      actions: [], choices: [{ label: "📄 PDF report", value: `PDF report on ${name}` }, { label: "👥 Contacts", value: `Contacts at ${name}` }] };
   }
 
   // ---- A role is named ("... have a CFO contact", "who are the procurement heads in KSA"): answer at person level, with name and title ----

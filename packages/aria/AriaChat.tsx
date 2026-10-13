@@ -1,10 +1,10 @@
 "use client";
 import { Fragment, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import type { AriaAction } from "./types";
+import type { AriaAction, AriaChoice } from "./types";
 
 type Action = AriaAction;
-type Msg = { role: "user" | "assistant"; content: string; actions?: Action[]; choices?: string[]; mode?: string; note?: string; ms?: number };
+type Msg = { role: "user" | "assistant"; content: string; display?: string; actions?: Action[]; choices?: AriaChoice[]; mode?: string; note?: string; ms?: number };
 const GIVE_UP_MS = 90_000;
 
 const DEFAULT_EXAMPLES: [string, string][] = [
@@ -107,10 +107,10 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
 
-  const send = useCallback(async (q: string) => {
+  const send = useCallback(async (q: string, shown?: string) => {
     const question = q.trim();
     if (!question || busy) return;
-    const next: Msg[] = [...msgs, { role: "user", content: question }];
+    const next: Msg[] = [...msgs, { role: "user", content: question, display: shown }];
     setMsgs(next); setText(""); setBusy(true);
     const started = Date.now(), ctl = new AbortController(), giveUp = setTimeout(() => ctl.abort(), GIVE_UP_MS);
     abortRef.current = ctl; cancelledRef.current = false;
@@ -207,7 +207,7 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
                 <div key={i} className={`aria-msg ${m.role}`}>
                   {m.role === "assistant" && <span className="aria-avatar" aria-hidden="true">{name.charAt(0)}</span>}
                   <div className="aria-bubble">
-                    {m.role === "assistant" ? <Md text={m.content} /> : <p>{m.content}</p>}
+                    {m.role === "assistant" ? <Md text={m.content} /> : <p>{m.display || m.content}</p>}
                     {m.actions && m.actions.length > 0 && (
                       <div className="aria-actions">{m.actions.map((a, j) => (
                         <button type="button" key={j} className="btn primary tiny" disabled={filing === `${i}-${j}`} onClick={() => file(a, `${i}-${j}`)}>
@@ -215,7 +215,7 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
                     )}
                     {m.note && <p className={`aria-note ${m.mode === "ai" ? "ai" : "free"}`}>{m.note}{m.ms !== undefined ? ` · ${(m.ms / 1000).toFixed(1)}s` : ""}</p>}
                     {m.choices && m.choices.length > 0 && i === msgs.length - 1 && !busy && (
-                      <div className="aria-choices">{m.choices.map((c) => <button type="button" key={c} onClick={() => send(c)}>{c}</button>)}</div>
+                      <div className="aria-choices">{m.choices.map((c) => { const label = typeof c === "string" ? c : c.label, value = typeof c === "string" ? c : c.value; return <button type="button" key={label + value} onClick={() => send(value, label)}>{label}</button>; })}</div>
                     )}
                   </div>
                 </div>
