@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.77";
+export const APP_VERSION = "3.78";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,11 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.78", date: "2026-10-14", notes: "Aria no longer appears stuck: the PIN box was opening behind her window (fixed), she shows a live timer, a Stop button, an automatic stop after 90 seconds, the time each answer took, and a Home button back to the example questions.", changes: [
+      { what: "Fixed the PIN / confirm dialogs opening behind Aria's window, which made a question wait forever for a PIN you could not see (Aria now sits below those dialogs)", where: "packages/aria/aria.css (z-index)", why: "Reported — a built-in question stayed on \"checking\"" },
+      { what: "While Aria works: live seconds counter with an expected-time hint, a moving progress bar, a Stop button that always frees the chat, and an automatic stop after 90 seconds; each reply shows how long it took", where: "packages/aria/AriaChat.tsx", why: "Requested — show the time it takes, and a way to stop an indefinite check" },
+      { what: "A Home button in the header and a \"Back to the start\" button under the conversation return to the welcome screen with the example questions; \"how many ... in all regions\" now gives the per-region breakdown, free", where: "packages/aria/AriaChat.tsx, lib/aria/router.ts", why: "Requested — a way back to the default questions after an answer" },
+    ] },
   { version: "3.77", date: "2026-10-14", notes: "Aria answers most questions for free: common ones (counts, lists, one company, contacts, ICP rules, PDF and Excel) are read by plain rules from your database with no AI and no API cost. Only questions the rules cannot read go to the AI, now on the cheaper model, and only those show a cost note.", changes: [
       { what: "Added a free-first router: counts, company lists, one company's detail, contacts, ICP rules, PDF reports and Excel contact lists (with tap-able region / how many / pick-by questions) are answered from the database with no AI, no API cost and no PIN. Each reply is tagged \"Free answer\" or \"AI answer\" and the permanent cost note under the message box is gone", where: "lib/aria/router.ts (new), app/api/aria/route.ts, packages/aria/AriaChat.tsx, components/AriaChat.tsx", why: "Requested — Aria only extracts data already in the app, so it should not cost API credit unless a question truly needs the AI" },
       { what: "The AI fallback now runs on the cheaper Haiku model (override with ARIA_MODEL) and is the only path behind the paid-actions PIN", where: "lib/aria/agent.ts, app/api/aria/route.ts", why: "Requested — option B: keep the AI but make what reaches it cheap" },

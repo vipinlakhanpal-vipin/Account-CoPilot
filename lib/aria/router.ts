@@ -117,7 +117,7 @@ export async function tryFree(question: string, ctx: AriaContext): Promise<FreeR
 
   // ---- Counts ----
   if (/\b(how many|count|number of|total)\b/.test(t)) {
-    const group = /\b(by|per|each|every) (region|country)|in each region|across regions/.test(t) ? "country" : /\b(by|per|each) (status|icp)/.test(t) ? "icp_status"
+    const group = /\b(by|per|each|every) (region|country)|in each region|across (all )?regions|(in|for|of) all (the )?regions|all regions/.test(t) ? "country" : /\b(by|per|each) (status|icp)/.test(t) ? "icp_status"
       : /\b(by|per|each) (platform)/.test(t) ? "platform" : /\b(by|per|each) erp/.test(t) ? "erp" : /\b(by|per|each) (industry|sector)/.test(t) ? "industry"
       : /\b(by|per|each) signal/.test(t) ? "signal" : f.icp_status && !f.region ? "country" : "icp_status";
     const r = countAccounts(ctx, { ...f, group_by: group });

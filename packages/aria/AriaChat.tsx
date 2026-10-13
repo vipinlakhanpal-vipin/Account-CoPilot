@@ -4,7 +4,8 @@ import { createPortal } from "react-dom";
 import type { AriaAction } from "./types";
 
 type Action = AriaAction;
-type Msg = { role: "user" | "assistant"; content: string; actions?: Action[]; choices?: string[]; mode?: string; note?: string };
+type Msg = { role: "user" | "assistant"; content: string; actions?: Action[]; choices?: string[]; mode?: string; note?: string; ms?: number };
+const GIVE_UP_MS = 90_000;
 
 const DEFAULT_EXAMPLES: [string, string][] = [
   ["Counts", "How many Verified companies do we have in each region?"],
@@ -73,6 +74,9 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [filing, setFiling] = useState("");
+  const [elapsed, setElapsed] = useState(0);
+  const abortRef = useRef<AbortController | null>(null);
+  const cancelledRef = useRef(false);
   const [listening, setListening] = useState(false);
   const [voiceOK, setVoiceOK] = useState(false);
   const [readAloud, setReadAloud] = useState(false);
@@ -86,7 +90,14 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
     setVoiceOK(!!(w.SpeechRecognition || w.webkitSpeechRecognition));
     try { setReadAloud(localStorage.getItem(storageKey) === "1"); } catch { /* optional */ }
   }, []);
-  useEffect(() => { endRef.current?.scrollIntoView({ block: "end" }); }, [msgs, busy, open]);
+  useEffect(() => { endRef.current?.scrollIntoView({ block: "end" }); }, [msgs, busy, open, elapsed]);
+  useEffect(() => {
+    if (!busy) return;
+    setElapsed(0);
+    const t0 = Date.now();
+    const id = setInterval(() => setElapsed(Math.floor((Date.now() - t0) / 1000)), 500);
+    return () => clearInterval(id);
+  }, [busy]);
   useEffect(() => { if (open) setTimeout(() => inputRef.current?.focus(), 60); }, [open]);
   useEffect(() => {
     if (!open) return;
@@ -100,15 +111,23 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
     if (!question || busy) return;
     const next: Msg[] = [...msgs, { role: "user", content: question }];
     setMsgs(next); setText(""); setBusy(true);
+    const started = Date.now(), ctl = new AbortController(), giveUp = setTimeout(() => ctl.abort(), GIVE_UP_MS);
+    abortRef.current = ctl; cancelledRef.current = false;
     let reply: Msg;
     try {
       const history = next.slice(-14).map((m) => ({ role: m.role, content: m.content }));
-      const init = { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: history }) };
-      const res = await (sendFn ? sendFn(endpoint, init) : fetch(endpoint, init));
+      const init = { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: history }), signal: ctl.signal };
+      // Stop (or the 90 second limit) must always free the chat, even while a PIN box is open or the network hangs.
+      const stopped = new Promise<never>((_, reject) => ctl.signal.addEventListener("abort", () => reject(new Error("stopped"))));
+      const res = await Promise.race([sendFn ? sendFn(endpoint, init) : fetch(endpoint, init), stopped]);
       const j = await res.json().catch(() => ({}));
       reply = res.ok ? { role: "assistant", content: String(j.text || ""), actions: j.actions || [], choices: j.choices || [], mode: j.mode, note: j.note }
         : { role: "assistant", content: j.error || "I could not answer that just now. Try again." };
-    } catch { reply = { role: "assistant", content: "I could not reach the server. Try again." }; }
+    } catch {
+      reply = { role: "assistant", content: cancelledRef.current ? "Stopped. Ask again whenever you like." : ctl.signal.aborted ? "That took longer than a minute, so I stopped. Try again, or ask something more specific." : "I could not reach the server. Try again." };
+    }
+    clearTimeout(giveUp); abortRef.current = null;
+    reply.ms = Date.now() - started;
     setMsgs([...next, reply]); setBusy(false);
     if (readAloud && "speechSynthesis" in window && reply.content) {
       window.speechSynthesis.cancel();
@@ -137,6 +156,12 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
     try { localStorage.setItem(storageKey, v ? "1" : "0"); } catch { /* optional */ }
     if (!v) window.speechSynthesis?.cancel();
   }
+  function restart() {
+    cancelledRef.current = true; abortRef.current?.abort();
+    window.speechSynthesis?.cancel(); recRef.current?.stop();
+    setMsgs([]); setText(""); setBusy(false); setListening(false);
+    setTimeout(() => inputRef.current?.focus(), 30);
+  }
   async function file(a: Action, key: string) { setFiling(key); try { await onAction?.(a); } finally { setFiling(""); } }
 
   const last = msgs[msgs.length - 1];
@@ -163,6 +188,7 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
               <span className="aria-badge" aria-hidden="true">{name.charAt(0)}</span>
               <div className="aria-title"><b>{name}</b><small>{tagline}</small></div>
               <div className="aria-top-actions">
+                {msgs.length > 0 && <button type="button" className="aria-home" onClick={restart} title="Back to the start screen with the example questions">🏠 Home</button>}
                 <button type="button" className={`aria-toggle${readAloud ? " on" : ""}`} onClick={toggleRead} aria-pressed={readAloud} title="Read answers aloud">🔊 {readAloud ? "Reading aloud" : "Read aloud"}</button>
                 <button type="button" className="btn tiny btn-close" onClick={() => setOpen(false)}>Close</button>
               </div>
@@ -185,14 +211,23 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
                         <button type="button" key={j} className="btn primary tiny" disabled={filing === `${i}-${j}`} onClick={() => file(a, `${i}-${j}`)}>
                           {filing === `${i}-${j}` ? "Building…" : `${a.kind === "xlsx" ? "📊" : "📄"} ${a.label}`}</button>))}</div>
                     )}
-                    {m.note && <p className={`aria-note ${m.mode === "ai" ? "ai" : "free"}`}>{m.note}</p>}
+                    {m.note && <p className={`aria-note ${m.mode === "ai" ? "ai" : "free"}`}>{m.note}{m.ms !== undefined ? ` · ${(m.ms / 1000).toFixed(1)}s` : ""}</p>}
                     {m.choices && m.choices.length > 0 && i === msgs.length - 1 && !busy && (
                       <div className="aria-choices">{m.choices.map((c) => <button type="button" key={c} onClick={() => send(c)}>{c}</button>)}</div>
                     )}
                   </div>
                 </div>
               ))}
-              {busy && <div className="aria-msg assistant"><span className="aria-avatar" aria-hidden="true">{name.charAt(0)}</span><div className="aria-bubble"><p className="aria-typing">{name} is checking<span className="aria-dots" /></p></div></div>}
+              {busy && (
+                <div className="aria-msg assistant"><span className="aria-avatar" aria-hidden="true">{name.charAt(0)}</span>
+                  <div className="aria-bubble aria-wait" role="status" aria-live="polite">
+                    <p className="aria-typing">{name} is checking your data<span className="aria-dots" /></p>
+                    <div className="aria-bar" aria-hidden="true"><i /></div>
+                    <span className={`aria-clock${elapsed >= 20 ? " slow" : ""}`}>{elapsed}s elapsed · {elapsed < 20 ? "free answers take about a second; AI answers usually 5 to 15 seconds" : "taking longer than usual, you can stop it"}</span>
+                    <button type="button" className="aria-cancel" onClick={() => { cancelledRef.current = true; abortRef.current?.abort(); }}>Stop</button>
+                  </div>
+                </div>)}
+              {msgs.length > 0 && !busy && <button type="button" className="aria-restart" onClick={restart}>← Back to the start (example questions)</button>}
               <div ref={endRef} />
             </div>
             <footer className="aria-foot">
