@@ -1297,3 +1297,12 @@ th .infotip{margin-left:3px}.infotip-btn{width:15px;height:15px;font-size:10px}
 .btn.btn-close:hover:not(:disabled),.bh-btns .bh-btn.btn-close:hover:not(:disabled){background:#B8530A;border-color:#B8530A;color:#FFFFFF}
 .wn-close{background:#D9650D;border-color:#D9650D;color:#FFFFFF}
 .wn-close:hover{background:#B8530A}
+
+/* Reports dialog: how many companies, and how to pick them */
+.pdf-count{display:flex;flex-direction:column;gap:6px;flex:1 1 100%}
+.pdf-count-label{font:600 12px var(--body);color:var(--muted)}
+.pdf-chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.pdf-chip{font:600 12.5px var(--body);color:var(--text);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer;min-width:38px}
+.pdf-chip:hover{border-color:#0F6E56}
+.pdf-chip[aria-pressed="true"]{background:#0F6E56;border-color:#0F6E56;color:#FFFFFF}
+.pdf-custom{width:92px;font:500 13px var(--body);color:var(--text);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 8px}

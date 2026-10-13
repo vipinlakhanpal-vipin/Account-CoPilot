@@ -15,7 +15,7 @@ const STATUS_COLOR: Record<string, ReturnType<typeof rgb>> = {
 const REPLACE: Record<string, string> = { "≥": ">=", "≤": "<=", "≈": "~", "→": "->", "←": "<-", "✓": "v", "✕": "x", "●": "-", "·": "-", "…": "...", " ": " ", "​": "" };
 
 export const REPORT_STATUSES = ["ICP — Verified", "ICP — Likely", "ICP — Needs check"] as const;
-export type ReportOptions = { statuses: string[]; region: string; limit: number; generatedBy: string; criteria?: Partial<Criteria> | null; ids?: string[]; title?: string };
+export type ReportOptions = { statuses: string[]; region: string; limit: number; generatedBy: string; criteria?: Partial<Criteria> | null; ids?: string[]; title?: string; rank?: "fit" | "revenue" | "name" };
 const s = (v: unknown) => (v === null || v === undefined ? "" : String(v));
 const usd = (m: unknown) => { const n = Number(m); return m === null || m === undefined || m === "" ? "" : fmtUsdM(n); };
 type Cur = { code: string; per_usd: number };
@@ -169,8 +169,8 @@ function howItWorks(w: Writer, regions: string[], def: unknown, opt: ReportOptio
   w.bullet(`A scheduled session runs every morning (6am Dubai): it finds new companies and re-verifies existing ones for each active region${daily.length ? ` (currently ${daily[0].engine.discover_per_day} new and up to ${daily[0].engine.verify_per_day} re-verified per region per day)` : ""}.`);
   w.bullet("It uses its own web search, never guesses emails or phones, and keeps conflicting findings rather than overwriting your reference workbook.");
   if (opt.ids?.length === 1) w.p("Selection for this report: one company, chosen from its account brief.", { size: 8.5, color: MUTED, gap: 6 });
-  else if (opt.ids?.length) w.p(`Selection for this report: the companies in the list you opened${opt.title ? ` ("${opt.title}")` : ""}, region ${opt.region}, whatever their ICP status; most promising first (by ICP Match), up to ${opt.limit} companies.`, { size: 8.5, color: MUTED, gap: 6 });
-  else w.p(`Selection for this report: region ${opt.region}; statuses ${opt.statuses.map((x) => x.replace("ICP — ", "")).join(", ")}; most promising first (by ICP Match), up to ${opt.limit} companies.`, { size: 8.5, color: MUTED, gap: 6 });
+  else if (opt.ids?.length) w.p(`Selection for this report: the companies in the list you opened${opt.title ? ` ("${opt.title}")` : ""}, region ${opt.region}, whatever their ICP status; ${opt.rank === "revenue" ? "largest revenue first" : opt.rank === "name" ? "A to Z" : "most promising first (by ICP Match)"}, up to ${opt.limit} companies.`, { size: 8.5, color: MUTED, gap: 6 });
+  else w.p(`Selection for this report: region ${opt.region}; statuses ${opt.statuses.map((x) => x.replace("ICP — ", "")).join(", ")}; ${opt.rank === "revenue" ? "largest revenue first" : opt.rank === "name" ? "A to Z" : "most promising first (by ICP Match)"}, up to ${opt.limit} companies.`, { size: 8.5, color: MUTED, gap: 6 });
 }
 
 /** How each score's points are earned, mirroring lib/icp.ts so the report explains exactly what it computed. */
@@ -220,7 +220,9 @@ export async function buildReport(all: AllData, def: unknown, opt: ReportOptions
     return { a, m: icpMatch(a, c), o: opportunity(a, hires[a.id] || 0, focus), f: coupaFit(a, focus), c };
   });
   const statusOrder = (x: string) => Math.max(0, REPORT_STATUSES.indexOf(x as typeof REPORT_STATUSES[number]));
-  scored.sort((x, y) => statusOrder(s(x.a.icp_status)) - statusOrder(s(y.a.icp_status)) || y.m.total - x.m.total);
+  if (opt.rank === "revenue") scored.sort((x, y) => (revenueOf(y.a) || 0) - (revenueOf(x.a) || 0));
+  else if (opt.rank === "name") scored.sort((x, y) => s(x.a.company_name).localeCompare(s(y.a.company_name)));
+  else scored.sort((x, y) => statusOrder(s(x.a.icp_status)) - statusOrder(s(y.a.icp_status)) || y.m.total - x.m.total);
   const total = scored.length, picked = scored.slice(0, opt.limit);
 
   const w = await Writer.create();

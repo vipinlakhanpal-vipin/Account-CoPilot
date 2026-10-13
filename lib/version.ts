@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.70";
+export const APP_VERSION = "3.71";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.71", date: "2026-10-13", notes: "Reports now ask how many companies you want and how to pick them, for both Excel and PDF. Previously the Excel ignored the number and listed every company in the tile (93), and the choice only existed for the PDF.", changes: [
+      { what: "Reports dialog: quick choices 1 / 5 / 10 / 25 / 50 / 100 / All plus a custom number, and \"Pick them by\" best ICP fit, largest revenue or name A to Z. The Excel now honours the number (it ignored it before); the PDF is capped at 150 companies", where: "components/ReportDialog.tsx, lib/xlsxReport.ts, lib/pdfReport.ts, app/api/report/xlsx/route.ts, app/api/report/pdf/route.ts", why: "Reported — chose 25 companies from the ICP Verified tile and the Excel returned 93, because the Excel route never received or applied a limit" },
+    ] },
   { version: "3.70", date: "2026-10-13", notes: "Master Book formatting: every sheet is now a proper table with visible cell borders, colour-coded header groups, status colours across all status columns, tidy row heights, and a colour legend.", changes: [
       { what: "Formatted all Master Book sheets: thin cell borders on every table; header colours by column group (dark blue = who, green = how to reach, blue = account context, grey = evidence and source, gold = your input); colour tags for contact tier, channel, existing platform, verification, email, record, employment, ERP and platform statuses; long notes capped at three lines per row instead of stretching rows; the Existing Customers sheet moved onto the same table style; colour code added to Settings & Legend", where: "lib/export/workbook.ts (table, toneOf, header groups, writeExistingCustomers)", why: "Requested — make the Excel presentable, with colour coding and a tabular format on all worksheets" },
     ] },

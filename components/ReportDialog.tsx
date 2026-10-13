@@ -5,7 +5,8 @@ import { notify } from "@/components/Confirm";
 import type { Row } from "@/lib/data";
 
 const STATUSES = ["ICP — Verified", "ICP — Likely", "ICP — Needs check"] as const;
-const LIMITS = [25, 50, 100, 150];
+const PRESETS = [1, 5, 10, 25, 50, 100, 0]; // 0 = all
+const PDF_MAX = 150;
 type Format = "pdf" | "xlsx";
 
 /** POSTs to a report API and saves the file. Shared by the region dialog and the single-company button in the account brief. */
@@ -34,7 +35,12 @@ export default function ReportDialog({ accounts, icpDef, onClose, companyIds, li
   const [format, setFormat] = useState<Format>("pdf");
   const [region, setRegion] = useState("");
   const [picked, setPicked] = useState<string[]>([...STATUSES]);
-  const [limit, setLimit] = useState(50);
+  const [limit, setLimit] = useState(10); // 0 = all
+  const [custom, setCustom] = useState("");
+  const [rank, setRank] = useState<"fit" | "revenue" | "name">("fit");
+  // The number actually used: a typed custom number wins; the PDF is capped at 150 companies (it is a long document).
+  const asked = custom.trim() ? Math.max(1, Math.floor(Number(custom)) || 1) : limit;
+  const eff = format === "pdf" ? (asked === 0 || asked > PDF_MAX ? PDF_MAX : asked) : asked; // 0 = every company with a contact
   const [emailOnly, setEmailOnly] = useState(true);
   const [busy, setBusy] = useState(false);
 
@@ -58,8 +64,8 @@ export default function ReportDialog({ accounts, icpDef, onClose, companyIds, li
     if (!ready) return;
     setBusy(true);
     const scope = listMode ? { companyIds, title: listTitle } : { statuses: picked };
-    const ok = format === "pdf" ? await downloadReport({ ...scope, region, limit })
-      : await downloadReport({ ...scope, region, emailOnly }, "xlsx");
+    const ok = format === "pdf" ? await downloadReport({ ...scope, region, limit: eff, rank })
+      : await downloadReport({ ...scope, region, emailOnly, rank, ...(eff ? { limit: eff } : {}) }, "xlsx");
     setBusy(false);
     if (ok) onClose();
   }
@@ -106,12 +112,22 @@ export default function ReportDialog({ accounts, icpDef, onClose, companyIds, li
                 {format === "pdf" && <option value="All">All regions</option>}
                 {regionKeys.map((k: string) => <option key={k} value={k}>{k}</option>)}
               </select></label>
-            {format === "pdf" && (
-              <label>Most promising first, up to
-                <select value={limit} onChange={(e) => setLimit(Number(e.target.value))}>
-                  {LIMITS.map((n) => <option key={n} value={n}>{n} companies</option>)}
-                </select></label>
-            )}
+            <div className="pdf-count" role="group" aria-label="How many companies">
+              <span className="pdf-count-label">How many companies?</span>
+              <span className="pdf-chips">
+                {PRESETS.map((n) => (
+                  <button type="button" key={n} className="pdf-chip" aria-pressed={!custom.trim() && limit === n}
+                    onClick={() => { setLimit(n); setCustom(""); }}>{n === 0 ? (format === "pdf" ? `Up to ${PDF_MAX}` : "All") : n}</button>))}
+                <input type="number" min={1} max={format === "pdf" ? PDF_MAX : 1000} className="pdf-custom" placeholder="Custom" aria-label="Custom number of companies"
+                  value={custom} onChange={(e) => setCustom(e.target.value)} />
+              </span>
+            </div>
+            <label>Pick them by
+              <select value={rank} onChange={(e) => setRank(e.target.value as "fit" | "revenue" | "name")}>
+                <option value="fit">Best ICP fit (ICP Match)</option>
+                <option value="revenue">Largest revenue</option>
+                <option value="name">Name, A to Z</option>
+              </select></label>
           </div>
           {listMode && <p className="note">This covers the {idSet.size.toLocaleString()} companies in &quot;{listTitle}&quot; as shown on screen, whatever their ICP status. To narrow it, close this and set a search or filter on the table first.</p>}
           {!listMode && <div className="pdf-status">
@@ -124,7 +140,7 @@ export default function ReportDialog({ accounts, icpDef, onClose, companyIds, li
           {format === "xlsx" && (
             <label className="pdf-check"><input type="checkbox" checked={emailOnly} onChange={(e) => setEmailOnly(e.target.checked)} /> Only people with an official email (recommended for campaigns)</label>
           )}
-          <p className="note">{!region ? "Choose a region to continue." : `${matching} companies match${format === "pdf" ? `; the PDF includes the top ${Math.min(limit, matching)}` : ""}. Free: built from data already in the app.`}</p>
+          <p className="note">{!region ? "Choose a region to continue." : `${matching} companies match. ${format === "pdf" ? `The PDF covers ${Math.min(eff, matching)}` : eff ? `The Excel lists up to ${eff} that have a contact on file` : "The Excel lists every one that has a contact on file"}, picked by ${rank === "revenue" ? "largest revenue" : rank === "name" ? "name" : "best ICP fit"}. Free: built from data already in the app.`}</p>
         </div>
         <div className="wn-foot">
           <span className="wn-actions">

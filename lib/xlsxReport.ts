@@ -2,7 +2,7 @@ import "server-only";
 import ExcelJS from "exceljs";
 import type { AllData, Row } from "@/lib/data";
 import { buildPeople } from "@/lib/people";
-import { revenueOf, revenueIsOfficial, fmtMoneyM } from "@/lib/icp";
+import { revenueOf, revenueIsOfficial, fmtMoneyM, icpMatch, withDefaults, type Criteria } from "@/lib/icp";
 import { regionOf, rulesFor } from "@/lib/icpDefinition.mjs";
 
 // Campaign contact list: the people at the companies in a region, for a CRM or mailing tool.
@@ -19,7 +19,7 @@ const splitName = (full: string) => {
   return { first: parts[0] || "", last: parts.slice(1).join(" ") };
 };
 
-export type CampaignOptions = { region: string; statuses: string[]; emailOnly: boolean; generatedBy: string; ids?: string[]; def?: unknown };
+export type CampaignOptions = { region: string; statuses: string[]; emailOnly: boolean; generatedBy: string; ids?: string[]; def?: unknown; limit?: number; rank?: "fit" | "revenue" | "name"; criteria?: Partial<Criteria> | null };
 
 const GREEN = "FF0F6E56", BAND = "FFF1F7F5", LINE = "FFD5DEDA";
 type Out = { company: string; name: string; first: string; last: string; title: string; email: string; erp: string; s2p: string;
@@ -46,7 +46,18 @@ export async function buildCampaignList(d: AllData, o: CampaignOptions) {
   // One block per company, so each company is listed once with its people beneath it.
   const groups: Out[][] = [];
   for (const r of rows) { const g = groups[groups.length - 1]; if (g && g[0].company === r.company) g.push(r); else groups.push([r]); }
-  const companies = groups.length;
+  // "Up to N companies": keep the N companies you asked for, picked by best ICP fit (default), largest revenue, or A to Z.
+  const totalWithContacts = groups.length;
+  const rank = o.rank || "fit";
+  if (o.limit || rank !== "fit") {
+    const base = withDefaults(o.criteria), score = new Map<string, number>();
+    accounts.forEach((a) => score.set(s(a.company_name), rank === "revenue" ? revenueOf(a) || 0
+      : rank === "name" ? 0 : icpMatch(a, { ...base, company: { ...base.company, countries: [s(a.country) || "UAE"], regions: [] } }).total));
+    groups.sort((x, y) => rank === "name" ? x[0].company.localeCompare(y[0].company)
+      : (score.get(y[0].company) || 0) - (score.get(x[0].company) || 0) || x[0].company.localeCompare(y[0].company));
+    if (o.limit && groups.length > o.limit) groups.length = o.limit;
+  }
+  const companies = groups.length, contacts = groups.reduce((n, g) => n + g.length, 0);
 
   const wb = new ExcelJS.Workbook();
   wb.creator = "Account CoPilot";
@@ -68,10 +79,10 @@ export async function buildCampaignList(d: AllData, o: CampaignOptions) {
   ws.getCell(1, 1).value = "Account CoPilot — campaign contact list";
   ws.getCell(1, 1).font = { bold: true, size: 15, color: { argb: GREEN } };
   ws.mergeCells(2, 1, 2, 12);
-  ws.getCell(2, 1).value = `Region: ${o.region}   |   Companies: ${companies} of ${accounts.length} selected   |   Contacts: ${rows.length}`;
+  ws.getCell(2, 1).value = `Region: ${o.region}   |   Companies: ${companies} of ${accounts.length} selected${totalWithContacts > companies ? ` (${companies} of ${totalWithContacts} with contacts, picked by ${rank === "revenue" ? "largest revenue" : rank === "name" ? "name, A to Z" : "best ICP fit"})` : ""}   |   Contacts: ${contacts}`;
   ws.getCell(2, 1).font = { bold: true, size: 12 };
   ws.mergeCells(3, 1, 3, 12);
-  ws.getCell(3, 1).value = `Each company is listed once with its contacts beneath it. Revenue is in USD, with the regional currency in brackets. ${accounts.length - companies} of the ${accounts.length} companies have no contact${o.emailOnly ? " with an official email" : ""} on file and are not listed.`;
+  ws.getCell(3, 1).value = `Each company is listed once with its contacts beneath it. Revenue is in USD, with the regional currency in brackets. ${accounts.length - totalWithContacts} of the ${accounts.length} companies have no contact${o.emailOnly ? " with an official email" : ""} on file and are not listed.`;
   ws.getCell(3, 1).font = { italic: true, color: { argb: "FF5B6670" } };
   ws.getCell(3, 1).alignment = { wrapText: true, vertical: "top" };
   ws.getRow(3).height = 30;
@@ -102,5 +113,5 @@ export async function buildCampaignList(d: AllData, o: CampaignOptions) {
   });
 
   const buf = Buffer.from(await wb.xlsx.writeBuffer());
-  return { buf, contacts: rows.length, companies, totalCompanies: accounts.length };
+  return { buf, contacts, companies, totalCompanies: accounts.length };
 }
