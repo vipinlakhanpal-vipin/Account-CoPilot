@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.60";
+export const APP_VERSION = "3.61";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.61", date: "2026-10-13", notes: "Brought in two fixes that were sitting unmerged on a GitHub branch from 7 Oct: the Discovery Criteria sections now open by default, and the criteria editor no longer collapses to nothing on a narrow or minimised window.", changes: [
+      { what: "Technology landscape, Business triggers, Financial indicators, Contact intelligence and Engagement signals now open by default under Edit criteria, like the other sections", where: "components/DiscoveryPanel.tsx", why: "Reported earlier — clicking Edit criteria to change Business triggers looked like nothing happened because those five sections were collapsed" },
+      { what: "At 1100px and below the Discovery panel's scroll area flows as normal content (no inner scroll, no fixed flex height) instead of collapsing to about zero height", where: "app/globals.css (@media max-width:1100px, .dp / .dp-scroll)", why: "Reported earlier — on a narrow or minimised window all the filter criteria vanished between the tabs and the footer" },
+    ] },
   { version: "3.60", date: "2026-10-13", notes: "New Excel contact list for campaigns next to the PDF report, available on Accounts, Pipeline and Priority accounts; the region is always asked first. Panel headers (account brief, dashboard drill-down, contact card) now share one layout with left-aligned green buttons, fixing the stretched Close button.", changes: [
       { what: "Added Reports (PDF / Excel). Excel gives one row per person for a region you choose: Company Name, Contact Name (plus First and Last Name), Contact Job Title, Email ID, Existing ERP, Existing S2P Platform, Net Revenue (USD M) with a Revenue Type, Total Employees and HQ Location, with official emails only. The region is always chosen explicitly before either report is built", where: "components/ReportDialog.tsx (was PdfReportDialog), lib/xlsxReport.ts (new), app/api/report/xlsx/route.ts (new), components/CoPilotApp.tsx", why: "Requested — a stakeholder list that can be uploaded to a CRM to run campaigns, from All Accounts, Pipeline and Priority accounts" },
       { what: "Account brief, dashboard drill-down and contact card headers now share one structure: title first, then left-aligned green buttons (white text). Fixes the Close button stretching across the whole panel in the drill-down", where: "components/CoPilotApp.tsx, app/globals.css (.brief-head.bh)", why: "Reported with a screenshot — Close was dragged across the panel; asked for uniformity and the main-nav green" },

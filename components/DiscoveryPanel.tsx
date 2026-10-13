@@ -171,15 +171,15 @@ export default function DiscoveryPanel({ criteria: applied, onApply, onSave, sav
             </div>
             <p className="dp-note">Companies don't publish spend, invoice or PO volumes. These are <b>estimates from industry benchmarks</b> applied to revenue: total addressable, direct, indirect, MRO, services and CAPEX spend, procurement budget, monthly invoices and POs, supplier counts and transactions. They are always labelled ESTIMATE.</p>
           </Section>
-          <Section title="Technology landscape">
+          <Section title="Technology landscape" open>
             <Chips label="ERP" options={OPTIONS.erp} value={co.erp} onChange={(v) => setCo("erp", v)} />
             <Chips label="Procurement platform" options={OPTIONS.procurement} value={co.procurement} onChange={(v) => setCo("procurement", v)} />
             <Chips label="Integration platform" options={OPTIONS.integration} value={co.integration} onChange={(v) => setCo("integration", v)} />
           </Section>
-          <Section title="Business triggers">
+          <Section title="Business triggers" open>
             <Chips label="Companies experiencing" options={OPTIONS.triggers} value={co.triggers} onChange={(v) => setCo("triggers", v)} />
           </Section>
-          <Section title="Financial indicators">
+          <Section title="Financial indicators" open>
             <Chips label="Look for" options={OPTIONS.financial} value={co.financial} onChange={(v) => setCo("financial", v)} />
             <p className="dp-note">Used by the Opportunity score (growth, acquisitions, expansion evidence in research).</p>
           </Section>
@@ -199,11 +199,11 @@ export default function DiscoveryPanel({ criteria: applied, onApply, onSave, sav
           <Section title="Procurement buying committee" open>
             <Chips label="Roles" options={OPTIONS.roles} value={ct.roles} onChange={(v) => setCt("roles", v)} />
           </Section>
-          <Section title="Contact intelligence">
+          <Section title="Contact intelligence" open>
             <Chips label="Buying role" options={OPTIONS.intelligence} value={ct.intelligence} onChange={(v) => setCt("intelligence", v)} />
             <p className="dp-note">Derived from title and tier (e.g. CFO = Economic Buyer; procurement head = Champion; CIO / IT = Technical Evaluator).</p>
           </Section>
-          <Section title="Engagement signals">
+          <Section title="Engagement signals" open>
             <Chips label="Signals" options={OPTIONS.engagement} value={ct.engagement} onChange={(v) => setCt("engagement", v)} disabled={UNAVAILABLE_ENGAGEMENT} />
             <p className="dp-note">Promotions, new hires and company changes come from employment checks. LinkedIn activity and event attendance need a data source the app doesn't have (LinkedIn can't be scraped).</p>
           </Section>
