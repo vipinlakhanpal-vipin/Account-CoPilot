@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.83";
+export const APP_VERSION = "3.84";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.84", date: "2026-10-14", notes: "The \"Ask Aria\" label that appears when you point at her icon is now a coloured gradient pill in the display font, instead of the browser's plain black-and-white tooltip.", changes: [
+      { what: "Removed the browser's native tooltip from Aria's icon (it was drawing a plain black and white box over her own label) and restyled her label as a teal-to-violet pill with a white bold font, a small pointer and a gold dot", where: "packages/aria/AriaChat.tsx, packages/aria/aria.css (.aria-tip)", why: "Reported — the Ask Aria tab was black and white; asked for a nicer colour and font" },
+    ] },
   { version: "3.83", date: "2026-10-14", notes: "Aria's start screen has 20 one-tap questions in four rows of five, in a smaller font. 19 are answered free from your data; the one that needs the AI is marked.", changes: [
       { what: "Expanded Aria's example questions from 6 to 20 (counts, rules, lists, people, a company brief, PDF and Excel), shown five per row with a smaller font; every tile was checked against the free router so only one (marked \"uses AI\") costs anything. Fixed lists such as \"List companies with a very strong signal\" and \"Show our existing Coupa customers\" falling through to the AI", where: "components/AriaChat.tsx, packages/aria/aria.css, lib/aria/router.ts", why: "Requested — more fixed questions, five tiles per row" },
     ] },

@@ -14,9 +14,6 @@
   box-shadow:0 0 24px 9px rgba(138,92,255,1),0 0 46px 18px rgba(25,211,176,.85),0 0 78px 30px rgba(138,92,255,.4);animation:none}
 .aria-btn:hover::after{animation:none;opacity:0}
 .aria-btn:active{transform:scale(1.05)}
-.aria-btn .aria-tip{position:absolute;top:calc(100% + 8px);right:0;white-space:nowrap;pointer-events:none;opacity:0;transform:translateY(-4px);transition:.15s;
-  background:#14283F;color:#fff;font:600 12px var(--aria-body);padding:5px 10px;border-radius:8px;z-index:5}
-.aria-btn:hover .aria-tip,.aria-btn:focus-visible .aria-tip{opacity:1;transform:none}
 @keyframes aria-glow{0%,100%{box-shadow:0 0 10px 2px rgba(138,92,255,.65),0 0 18px 4px rgba(25,211,176,.35)}50%{box-shadow:0 0 18px 6px rgba(138,92,255,.95),0 0 30px 10px rgba(25,211,176,.6)}}
 @keyframes aria-ripple{0%{transform:scale(.92);opacity:.9}100%{transform:scale(1.55);opacity:0}}
 @media (prefers-reduced-motion:reduce){.aria-btn,.aria-btn::after{animation:none}.aria-btn:hover{transform:none}}
@@ -96,3 +93,11 @@
 .aria-window.wide .aria-bubble,.aria-window .aria-msg.assistant .aria-bubble:has(.aria-table){width:calc(100% - 44px)}
 @media (max-width:900px){.aria-cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (max-width:560px){.aria-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* "Ask Aria" label under the icon: a coloured pill in the display font (the browser's plain tooltip is switched off) */
+.aria-btn .aria-tip{position:absolute;top:calc(100% + 10px);right:-6px;display:inline-flex;align-items:center;gap:7px;white-space:nowrap;pointer-events:none;z-index:6;
+  opacity:0;transform:translateY(-5px) scale(.96);transition:opacity .16s ease,transform .16s ease;
+  background:linear-gradient(120deg,#0F6E56 0%,#2E5E8C 55%,#6B4BD8 100%);color:#fff;font:700 11px/1 var(--aria-display);letter-spacing:.04em;
+  padding:6px 11px 6px 9px;border-radius:999px;border:1.5px solid rgba(255,255,255,.85);box-shadow:0 6px 18px rgba(46,94,140,.5),0 0 14px rgba(138,92,255,.45)}
+.aria-btn .aria-tip::before{content:"";position:absolute;top:-6px;right:20px;width:10px;height:10px;transform:rotate(45deg);background:#2E5E8C;border-left:1.5px solid rgba(255,255,255,.85);border-top:1.5px solid rgba(255,255,255,.85)}
+.aria-btn .aria-tip-dot{width:6px;height:6px;border-radius:50%;background:#FFE08A;box-shadow:0 0 8px 2px rgba(255,224,138,.8)}
+.aria-btn:hover .aria-tip,.aria-btn:focus-visible .aria-tip{opacity:1;transform:none}
