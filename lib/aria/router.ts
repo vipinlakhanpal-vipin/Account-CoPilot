@@ -69,6 +69,7 @@ const nextSteps = (f: AccountFilter, region?: string): string[] => {
 export async function tryFree(question: string, ctx: AriaContext): Promise<FreeReply | null> {
   const t = question.toLowerCase().replace(/\s+/g, " ").trim();
   const f = parseFilters(t);
+  if (/include (the )?(existing )?coupa/.test(t)) f.exclude_coupa_customers = false;
   const company = companyIn(t, ctx);
   const num = /\btop\s*(\d{1,3})\b|\b(\d{1,3})\s*compan/.exec(t);
   const limit = num ? Number(num[1] || num[2]) : 0;
@@ -121,9 +122,17 @@ export async function tryFree(question: string, ctx: AriaContext): Promise<FreeR
       : /\b(by|per|each) (platform)/.test(t) ? "platform" : /\b(by|per|each) erp/.test(t) ? "erp" : /\b(by|per|each) (industry|sector)/.test(t) ? "industry"
       : /\b(by|per|each) signal/.test(t) ? "signal" : f.icp_status && !f.region ? "country" : "icp_status";
     const r = countAccounts(ctx, { ...f, group_by: group });
-    const label = readable(f) || "all";
-    const coupa = r.existing_coupa_customers_in_total ? `\n\n_${r.existing_coupa_customers_in_total} of these are existing Coupa customers (the dashboard tiles leave them out)._` : "";
-    return { text: `**${r.total}** companies (${label}).\n\n${table([group.replace("_", " "), "Companies"], r.groups.map((g) => [g.key, g.count]))}${coupa}`, actions: [], choices: nextSteps(f, f.region) };
+    const label = readable(f) || "all accounts";
+    const colName = ({ country: "Region", icp_status: "ICP status", platform: "Platform", erp: "ERP", industry: "Industry", signal: "Signal" } as Record<string, string>)[group] || group;
+    if (f.platform === "coupa") { // asked about Coupa customers themselves: there is nothing to separate
+      return { text: `**${r.all_accounts}** existing Coupa customers.\n\n${table([colName, "Existing Coupa customers"], r.groups.map((g) => [g.key, g.all_accounts]))}`, actions: [], choices: [] };
+    }
+    const head = r.existing_coupa_customers
+      ? `**${r.prospects}** prospects (${label}), as on the dashboard, plus **${r.existing_coupa_customers}** existing Coupa customers = **${r.all_accounts}** accounts in total.`
+      : `**${r.all_accounts}** companies (${label}).`;
+    const rows = r.groups.map((g) => [g.key, g.prospects, g.existing_coupa_customers ? `+ ${g.existing_coupa_customers}` : "", g.all_accounts]);
+    const note = group === "icp_status" ? "\n\nNote: the dashboard's Needs check tile also counts Unknown." : "";
+    return { text: `${head}\n\n${table([colName, "Prospects (dashboard)", "Existing Coupa customers", "All accounts"], rows)}${note}`, actions: [], choices: nextSteps(f, f.region) };
   }
 
   // ---- One company's detail ----
@@ -154,9 +163,13 @@ export async function tryFree(question: string, ctx: AriaContext): Promise<FreeR
 
   // ---- Lists ----
   if (/\b(list|show|which|find|give me|display|top|largest|biggest|who)\b/.test(t) && (f.region || f.icp_status || f.platform || f.erp_contains || f.signal || f.has_contacts) && /\b(compan|account|customer|prospect|verified|likely)\b/.test(t)) {
-    const { r, md } = rowsOf(ctx, f, Math.min(limit || 15, 25));
-    if (!r.total) return { text: "No companies match that.", actions: [], choices: [] };
-    return { text: `**${r.total}** companies${readable(f) ? ` (${readable(f)})` : ""}${r.total > r.shown ? `, showing the ${r.shown} largest by revenue` : ""}:\n\n${md}`, actions: [], choices: nextSteps(f, f.region) };
+    const r = searchAccounts(ctx, { ...f, limit: Math.min(limit || 15, 25) });
+    if (!r.total && !r.existing_coupa_customers) return { text: "No companies match that.", actions: [], choices: [] };
+    const md = table(["Company", "Country", "ICP status", "Revenue", "ERP", "Platform", "Signal", "Contacts"],
+      r.rows.map((x) => [x.company, x.country, x.icp_status.replace("ICP — ", ""), x.revenue, x.erp, x.s2p_platform, x.signal, x.contacts]));
+    const coupaLine = !r.coupa_customers_included_in_rows && r.existing_coupa_customers
+      ? `\n\n+ **${r.existing_coupa_customers}** existing Coupa customers also match; they are not listed here (as on the dashboard). Say "include Coupa customers" to see them.` : "";
+    return { text: `**${r.total}** prospects${readable(f) ? ` (${readable(f)})` : ""}${r.total > r.shown ? `, showing the ${r.shown} largest by revenue` : ""}:\n\n${md}${coupaLine}`, actions: [], choices: nextSteps(f, f.region) };
   }
   return null;
 }

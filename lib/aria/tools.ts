@@ -71,13 +71,25 @@ function accountRow(ctx: AriaContext, a: Row) {
     industry: s(a.industry).replace(/_/g, " "), contacts: ctx.peopleByCo.get(a.id)?.length || 0, existing_coupa_customer: isCoupa(a) };
 }
 
+/** Prospects vs existing Coupa customers. The dashboard's tiles count prospects only (Coupa customers are the install base), so by default so does Aria,
+ *  and the Coupa customers are reported next to it rather than silently added or dropped. Asking about Coupa customers directly includes them. */
+function splitCoupa(ctx: AriaContext, f: AccountFilter) {
+  const wantsCoupa = s(f.platform).toLowerCase() === "coupa" || f.exclude_coupa_customers === false;
+  const all = filterAccounts(ctx, { ...f, exclude_coupa_customers: false });
+  const coupa = all.filter(isCoupa);
+  return { all, coupa, prospects: all.filter((a) => !isCoupa(a)), rows: wantsCoupa ? all : all.filter((a) => !isCoupa(a)), includesCoupa: wantsCoupa };
+}
+
 export function searchAccounts(ctx: AriaContext, f: AccountFilter & { sort_by?: string; limit?: number }) {
-  const rows = filterAccounts(ctx, f);
+  const sp = splitCoupa(ctx, f), rows = [...sp.rows];
   const sort = s(f.sort_by) || "revenue";
   rows.sort((x, y) => sort === "name" ? s(x.company_name).localeCompare(s(y.company_name)) : (revenueOf(y) || 0) - (revenueOf(x) || 0));
   const limit = Math.min(Math.max(Number(f.limit) || 15, 1), 40);
-  return { total: rows.length, shown: Math.min(limit, rows.length), existing_coupa_customers_in_total: rows.filter(isCoupa).length,
-    note: rows.length > limit ? `Only the first ${limit} are shown; offer an Excel or PDF for the full list.` : undefined, rows: rows.slice(0, limit).map((a) => accountRow(ctx, a)) };
+  return { total: rows.length, shown: Math.min(limit, rows.length), prospects: sp.prospects.length, existing_coupa_customers: sp.coupa.length,
+    coupa_customers_included_in_rows: sp.includesCoupa,
+    note: [rows.length > limit ? `Only the first ${limit} are shown; offer an Excel or PDF for the full list.` : "",
+      !sp.includesCoupa && sp.coupa.length ? `${sp.coupa.length} existing Coupa customers also match but are not listed (they are the install base, as on the dashboard). Say so if the user wants them included.` : ""].filter(Boolean).join(" ") || undefined,
+    rows: rows.slice(0, limit).map((a) => accountRow(ctx, a)) };
 }
 
 const GROUPS: Record<string, (a: Row) => string> = {
@@ -86,10 +98,13 @@ const GROUPS: Record<string, (a: Row) => string> = {
   entity_type: (a) => s(a.entity_type) || "Unknown",
 };
 export function countAccounts(ctx: AriaContext, f: AccountFilter & { group_by?: string }) {
-  const rows = filterAccounts(ctx, f), by = GROUPS[s(f.group_by)] ? s(f.group_by) : "icp_status", counts = new Map<string, number>();
-  rows.forEach((a) => { const k = GROUPS[by](a); counts.set(k, (counts.get(k) || 0) + 1); });
-  return { total: rows.length, group_by: by, existing_coupa_customers_in_total: rows.filter(isCoupa).length,
-    groups: [...counts.entries()].sort((x, y) => y[1] - x[1]).slice(0, 30).map(([key, count]) => ({ key, count })) };
+  const sp = splitCoupa(ctx, f), by = GROUPS[s(f.group_by)] ? s(f.group_by) : "icp_status";
+  const m = new Map<string, { prospects: number; coupa: number }>();
+  for (const a of sp.all) { const k = GROUPS[by](a), g = m.get(k) || m.set(k, { prospects: 0, coupa: 0 }).get(k)!; if (isCoupa(a)) g.coupa++; else g.prospects++; }
+  const groups = [...m.entries()].map(([key, g]) => ({ key, prospects: g.prospects, existing_coupa_customers: g.coupa, all_accounts: g.prospects + g.coupa }))
+    .sort((x, y) => y.all_accounts - x.all_accounts).slice(0, 30);
+  return { group_by: by, prospects: sp.prospects.length, existing_coupa_customers: sp.coupa.length, all_accounts: sp.all.length,
+    note: "The dashboard tiles show the prospects number. Existing Coupa customers are shown beside it, not added to it. The dashboard's Needs check tile also counts Unknown.", groups };
 }
 
 export function findAccounts(ctx: AriaContext, q: { id?: string; name?: string }) {

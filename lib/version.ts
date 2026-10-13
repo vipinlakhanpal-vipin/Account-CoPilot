@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.79";
+export const APP_VERSION = "3.80";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.80", date: "2026-10-14", notes: "Aria's numbers now match the dashboard: she shows prospects (the dashboard figure) with existing Coupa customers beside it, for example UAE 128 + 4 Coupa = 132, instead of one blended number.", changes: [
+      { what: "Counts and lists now separate prospects from existing Coupa customers: a Prospects (dashboard) column, a + Existing Coupa customers column and an All accounts column, with a headline that adds up (275 prospects + 7 Coupa = 282). Lists show prospects and say how many Coupa customers also match; asking about Coupa customers directly lists them. The AI path follows the same rule. Removed stray underscores from the note", where: "lib/aria/tools.ts, lib/aria/router.ts, lib/aria/agent.ts", why: "Reported — Aria showed UAE 132 while the dashboard shows 128, because existing Coupa customers were blended in without saying so" },
+    ] },
   { version: "3.79", date: "2026-10-14", notes: "Deleting a team member now shows it clearly: the row dims and flashes \"Deletion in progress\", other buttons lock until it finishes, and a confirmation appears when the user is gone.", changes: [
       { what: "Team: while a user is being deleted the row dims, the Delete button becomes a flashing \"Deletion in progress…\", the message above the table flashes the same, Delete / Reset password / Change are disabled until it ends, and a toast confirms the result (or the error)", where: "components/TeamSettings.tsx, app/globals.css", why: "Requested — deleting a user should flash that the deletion is in progress" },
     ] },
