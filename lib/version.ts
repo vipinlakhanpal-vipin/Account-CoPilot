@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.66";
+export const APP_VERSION = "3.67";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.67", date: "2026-10-13", notes: "The Master Book's Contact List sheet now uses the same layout as the Reports Excel: each company once with its contacts beneath it, totals at the top, revenue in M / B with the regional currency in brackets.", changes: [
+      { what: "Master Book → Contact List now follows the Campaign List format: Company Name, Contact Name (First, Last), Job Title, Email ID, Existing ERP, Existing S2P Platform, Net Revenue (USD, local currency in brackets), Revenue Type, Total Employees, HQ Location, grouped by company. Both exports share one sheet writer, so they cannot drift apart. The dashboard's People to contact count follows the new sheet", where: "lib/xlsxReport.ts (campaignData, writeCampaignSheet), lib/export/workbook.ts, app/guide/page.tsx", why: "Requested — use the same Excel format everywhere the app generates an Excel report. The full Contacts, Stakeholders and Accounts sheets are unchanged" },
+    ] },
   { version: "3.66", date: "2026-10-13", notes: "The Excel contact list is now a single sheet, Campaign List, with just the company and contact details.", changes: [
       { what: "Removed the \"Upload list (flat)\" and \"About this file\" sheets from the Excel contact list; the totals (region, companies, contacts) stay in the header of the Campaign List sheet", where: "lib/xlsxReport.ts", why: "Requested — the file is only contact and company details, so one sheet is enough" },
     ] },
