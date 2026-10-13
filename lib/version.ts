@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.78";
+export const APP_VERSION = "3.79";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.79", date: "2026-10-14", notes: "Deleting a team member now shows it clearly: the row dims and flashes \"Deletion in progress\", other buttons lock until it finishes, and a confirmation appears when the user is gone.", changes: [
+      { what: "Team: while a user is being deleted the row dims, the Delete button becomes a flashing \"Deletion in progress…\", the message above the table flashes the same, Delete / Reset password / Change are disabled until it ends, and a toast confirms the result (or the error)", where: "components/TeamSettings.tsx, app/globals.css", why: "Requested — deleting a user should flash that the deletion is in progress" },
+    ] },
   { version: "3.78", date: "2026-10-14", notes: "Aria no longer appears stuck: the PIN box was opening behind her window (fixed), she shows a live timer, a Stop button, an automatic stop after 90 seconds, the time each answer took, and a Home button back to the example questions.", changes: [
       { what: "Fixed the PIN / confirm dialogs opening behind Aria's window, which made a question wait forever for a PIN you could not see (Aria now sits below those dialogs)", where: "packages/aria/aria.css (z-index)", why: "Reported — a built-in question stayed on \"checking\"" },
       { what: "While Aria works: live seconds counter with an expected-time hint, a moving progress bar, a Stop button that always frees the chat, and an automatic stop after 90 seconds; each reply shows how long it took", where: "packages/aria/AriaChat.tsx", why: "Requested — show the time it takes, and a way to stop an indefinite check" },

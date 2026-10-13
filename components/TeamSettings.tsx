@@ -49,6 +49,7 @@ export default function TeamSettings() {
   const [role, setRole] = useState<Role>("standard");
   const [regions, setRegions] = useState<string[]>([]);
   const [msg, setMsg] = useState("");
+  const [deleting, setDeleting] = useState<string | null>(null); // id of the user being deleted
   const [temp, setTemp] = useState("");
   const [draft, setDraft] = useState<DraftEmail | null>(null);
   const [myEmail, setMyEmail] = useState("");
@@ -96,11 +97,14 @@ export default function TeamSettings() {
       points: ["Removes their Supabase Auth account and their role/region record — permanent, cannot be undone.",
         "They lose access immediately. You can invite them again from scratch afterward."],
       confirm: "Delete permanently", tone: "danger" }))) return;
-    setMsg("Working…"); setTemp(""); setDraft(null);
-    const r = await fetch("/api/team", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: u.id }) });
-    const j = await r.json();
-    setMsg(j.message || j.error || "");
-    if (r.ok) load();
+    setMsg(`Deletion in progress for ${u.email}…`); setTemp(""); setDraft(null); setDeleting(u.id);
+    try {
+      const r = await fetch("/api/team", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: u.id }) });
+      const j = await r.json().catch(() => ({}));
+      setMsg(j.message || j.error || (r.ok ? `${u.email} was deleted.` : "Could not delete that user."));
+      if (r.ok) { notify(`${u.email} was deleted.`, "ok"); load(); } else notify(j.error || "Could not delete that user.", "error");
+    } catch { setMsg("Could not reach the server. Nothing was deleted."); notify("Could not reach the server. Nothing was deleted.", "error"); }
+    finally { setDeleting(null); }
   }
   async function saveAccess(u: U) {
     const x = edit[u.id]; if (!x) return;
@@ -131,7 +135,7 @@ export default function TeamSettings() {
             <option value="password">Temporary password</option><option value="email">Email invitation</option></select></div>
         <div><button className="btn primary">Invite</button></div>
       </form>
-      {msg && <p className="note" style={{ marginTop: 8 }}>{msg}</p>}
+      {msg && <p className={`note${deleting ? " team-deleting-note" : ""}`} style={{ marginTop: 8 }} role="status" aria-live="polite">{deleting ? "⏳ " : ""}{msg}</p>}
       {temp && (
         <div className="wn-backdrop" onClick={() => { setTemp(""); setDraft(null); }}>
           <div className="wn ask ask-primary" role="dialog" aria-modal="true" aria-labelledby="temp-title" onClick={(e) => e.stopPropagation()}>
@@ -160,7 +164,7 @@ export default function TeamSettings() {
         <tbody>{users.map((u, i) => {
           const x = edit[u.id];
           return (
-            <tr key={u.id}><td className="num mono">{i + 1}</td><td><b>{u.name || "—"}</b></td><td className="mono">{u.email}</td>
+            <tr key={u.id} className={deleting === u.id ? "team-deleting" : undefined} aria-busy={deleting === u.id}><td className="num mono">{i + 1}</td><td><b>{u.name || "—"}</b></td><td className="mono">{u.email}</td>
               <td><span className={`role-tag ${u.role}`}>{ROLE[u.role]}</span></td>
               <td>{u.role === "super_admin" ? "All regions" : u.regions.join(", ") || "Not set"}</td>
               <td>{x ? <div className="team-edit"><AccessPicker role={x.role} regions={x.regions} onChange={(r, g) => setEdit((m) => ({ ...m, [u.id]: { role: r, regions: g } }))} />
@@ -168,14 +172,15 @@ export default function TeamSettings() {
                     <button type="button" className="btn tiny primary" onClick={() => saveAccess(u)}>Save</button>
                     <button type="button" className="btn tiny" onClick={() => setEdit((m) => { const n = { ...m }; delete n[u.id]; return n; })}>Cancel</button>
                   </div></div>
-                : <button type="button" className="btn-change" onClick={() => setEdit((m) => ({ ...m, [u.id]: { role: u.role, regions: u.regions } }))}>Change</button>}</td>
+                : <button type="button" className="btn-change" disabled={!!deleting} onClick={() => setEdit((m) => ({ ...m, [u.id]: { role: u.role, regions: u.regions } }))}>Change</button>}</td>
               <td className="muted">{u.invited_by || "—"}</td><td className="mono team-dt">{fmtDateTime(u.created_at)}</td>
               <td className="mono team-dt">{u.last_sign_in ? fmtDateTime(u.last_sign_in) : "Not yet"}</td>
               <td className="team-row-actions">
-                {!u.last_sign_in && <button type="button" className="btn tiny" onClick={() => resetPassword(u)} title="They haven't signed in yet — set a fresh one-time password to share with them">Reset password</button>}
+                {!u.last_sign_in && <button type="button" className="btn tiny" disabled={!!deleting} onClick={() => resetPassword(u)} title="They haven't signed in yet — set a fresh one-time password to share with them">Reset password</button>}
               </td>
               <td className="team-row-actions">
-                {u.email.toLowerCase() !== myEmail.toLowerCase() && <button type="button" className="btn tiny danger" onClick={() => deleteUser(u)}>Delete</button>}
+                {deleting === u.id ? <span className="team-del-flash" role="status">⏳ Deletion in progress…</span>
+                  : u.email.toLowerCase() !== myEmail.toLowerCase() && <button type="button" className="btn tiny danger" disabled={!!deleting} onClick={() => deleteUser(u)}>Delete</button>}
               </td></tr>);
         })}</tbody></table></div>
     </div>
