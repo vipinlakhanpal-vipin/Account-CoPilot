@@ -25,7 +25,7 @@ import ScheduledRunHistory from "@/components/ScheduledRunHistory";
 import EngineSearchAndRefresh from "@/components/EngineSearchAndRefresh";
 import EngineActivity from "@/components/EngineActivity";
 import { SHOW_HUBSPOT } from "@/lib/features";
-import PdfReportDialog, { downloadReport } from "@/components/PdfReportDialog";
+import ReportDialog, { downloadReport } from "@/components/ReportDialog";
 
 const HERO: Record<string, [string, string]> = {
   dashboard: ["Dashboard", "A live snapshot of UAE target accounts, S2P signals, ERP landscape and decision makers."],
@@ -502,7 +502,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
   let view: React.ReactNode = null;
   if (tab === "accounts") {
     view = <FilterTable unit="companies" title="Accounts" empty={notFound}
-      toggleExtra={<button type="button" className="btn primary tiny" onClick={() => setPdfOpen(true)} title="Build one PDF with the full account brief for every Verified / Likely / Needs check company in a region">📄 Region PDF report</button>} note="ICP = net revenue ≥ $250M and 100+ employees (stock listing not required). ✓ Verified: confirmed from an official source · ● Likely: your data / Seamless say ≥ $250M, not yet confirmed · ! Needs check: sources disagree about $250M · ? Unknown: no revenue figure yet · ✕ Not ICP: below $250M. Hover a status for the reason; select a row to open the account brief."
+      toggleExtra={<button type="button" className="btn primary tiny" onClick={() => setPdfOpen(true)} title="Full PDF report, or an Excel contact list for campaigns, for a region you choose">📊 Reports (PDF / Excel)</button>} note="ICP = net revenue ≥ $250M and 100+ employees (stock listing not required). ✓ Verified: confirmed from an official source · ● Likely: your data / Seamless say ≥ $250M, not yet confirmed · ! Needs check: sources disagree about $250M · ? Unknown: no revenue figure yet · ✕ Not ICP: below $250M. Hover a status for the reason; select a row to open the account brief."
       rows={[...A].sort((a, b) => icpRank(a.icp_status) - icpRank(b.icp_status) || sigRank(a.s2p_signal_level) - sigRank(b.s2p_signal_level) || (bestRevenue(b).v || 0) - (bestRevenue(a).v || 0))
         .map((a) => ({ ...a, icp_match_pct: scores[a.id]?.m.total ?? null, opportunity_pct: scores[a.id]?.o.total ?? null, coupa_fit_pct: scores[a.id]?.f.total ?? null }))}
       search={(a) => [a.company_name, a.industry, a.erp, a.existing_s2p_product, a.s2p_strong_signals].join(" ")}
@@ -526,7 +526,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
   } else if (tab === "pipeline") {
     const ranked = A.filter((a) => inPipe(a, scores[a.id])).sort((a, b) => scores[b.id].rank - scores[a.id].rank);
     view = <FilterTable unit="accounts" title="Ranked pipeline" tipW={pipe} empty={notFound}
-      toggleExtra={<button type="button" className="btn primary tiny" onClick={() => setPdfOpen(true)} title="Build one PDF with the full account brief for every Verified / Likely / Needs check company in a region">📄 Region PDF report</button>} note={<>
+      toggleExtra={<button type="button" className="btn primary tiny" onClick={() => setPdfOpen(true)} title="Full PDF report, or an Excel contact list for campaigns, for a region you choose">📊 Reports (PDF / Excel)</button>} note={<>
         <div className="pipe-rank-row">
           <div><b>Rank</b> — which account to work first: <b>{pipe.w_match}% × ICP Match + {pipe.w_opportunity}% × Opportunity + {pipe.w_fit}% × Coupa Fit</b>.</div>
           {ranked[0] && (() => { const t = ranked[0], sc = scores[t.id], p1 = sc.m.total * pipe.w_match / 100, p2 = sc.o.total * pipe.w_opportunity / 100, p3 = sc.f.total * pipe.w_fit / 100;
@@ -756,7 +756,8 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
           <div className="panel"><h2>Accounts by ICP status</h2><Bars entries={countBy(A.filter(notCoupa), (a) => a.icp_status || "Unknown")} order={(k) => icpRank(k)} /></div>
         </div>
         <div className="panel" style={{ marginTop: 16 }}>
-          <h2 className="with-count">Priority accounts <span className="count">{top.length} {top.length === 1 ? "account" : "accounts"}</span></h2>
+          <h2 className="with-count">Priority accounts <span className="count">{top.length} {top.length === 1 ? "account" : "accounts"}</span>
+            <button type="button" className="btn primary tiny" style={{ marginLeft: 12 }} onClick={() => setPdfOpen(true)} title="Full PDF report, or an Excel contact list for campaigns, for a region you choose">📊 Reports (PDF / Excel)</button></h2>
           <p className="note">Accounts with strong or very strong S2P signals. Select a row to open the account brief.</p>
           <div className="tablewrap"><table>
             <thead><tr><th className="num">#</th><th className="logo-cell"></th><th>Company</th><th>Signal</th><th>Existing S2P</th><th>Status</th><th>ERP</th><th>Why</th></tr></thead>
@@ -784,7 +785,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
         ? <div className="panel"><h2>No {COUNTRIES.find((c) => c.code === country)?.name || country} accounts yet</h2>
             <p>This market is next on the roadmap. Add companies from the Research Queue (choose the country there), or pick another country above.</p></div>
         : view}</section>
-      {pdfOpen && <PdfReportDialog accounts={all.accounts} icpDef={icpDef} defaultRegion={country === ALL ? "UAE" : regionOf(country)} onClose={() => setPdfOpen(false)} />}
+      {pdfOpen && <ReportDialog accounts={all.accounts} icpDef={icpDef} onClose={() => setPdfOpen(false)} />}
       {drill && <DrillDown d={drill} byCo={byCo} coById={coById} onClose={() => setDrill(null)} onAccount={setOpen} onContact={setContact} />}
       {open && A.find((x) => x.id === open) && <Brief a={A.find((x) => x.id === open)!} data={data} people={byCo[open] || []} onClose={() => setOpen(null)} onContact={setContact}
         scores={scores[open]} criteria={criteria} isSuper={isSuper} />}
@@ -846,7 +847,7 @@ function Brief({ a, data, people, onClose, onContact, scores, criteria, isSuper 
     <>
       <div className="scrim" onClick={onClose} />
       <aside className="brief" aria-label="Account brief">
-        <div className="brief-head">
+        <div className="brief-head bh">
           <div className="bh-top">
             <h3 className="drawer-title-logo bh-title"><CompanyLogo a={a} size={34} />{a.company_name}</h3>
             <div className="bh-actions">
@@ -1089,8 +1090,12 @@ function DrillDown({ d, byCo, coById, onClose, onAccount, onContact }: { d: { ti
     <>
       <div className="scrim" onClick={onClose} />
       <aside className="brief drill" aria-label={d.title}>
-        <div className="brief-head"><div style={{ flex: 1 }}><div className="muted">Dashboard drill-down</div><h3>{d.title}</h3></div>
-          <button className="btn ghost" type="button" onClick={onClose}>Close</button></div>
+        <div className="brief-head bh">
+          <div className="bh-top">
+            <div><div className="muted">Dashboard drill-down</div><h3 className="bh-title">{d.title}</h3></div>
+            <div className="bh-actions"><div className="bh-btns"><button className="btn ghost bh-btn" type="button" onClick={onClose}>Close</button></div></div>
+          </div>
+        </div>
         <div className="brief-body">{table}</div>
       </aside>
     </>
@@ -1108,16 +1113,22 @@ function ContactCard({ p, data, onClose, onAccount }: { p: Row; data: AllData; o
     <>
       <div className="scrim top" onClick={onClose} />
       <aside className="brief contact" aria-label={`Contact card: ${p.full_name}`}>
-        <div className="brief-head">
-          <div className="avatar lg" aria-hidden="true">{str(p.full_name).split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase()}</div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div className="muted">{p.role_family} · {p.contact_tier} · {p.channel_state}</div>
-            <h3>{p.full_name}</h3>
-            <div className="note">{p.title_verbatim}</div>
-            {person && <div style={{ marginTop: 6 }}><TrustTag t={person.trust} why={person.trust_reason} /> <span className="muted">{person.trust_reason}</span></div>}
+        <div className="brief-head bh">
+          <div className="bh-top">
+            <div className="bh-person">
+              <div className="avatar lg" aria-hidden="true">{str(p.full_name).split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase()}</div>
+              <div style={{ minWidth: 0 }}>
+                <div className="muted">{p.role_family} · {p.contact_tier} · {p.channel_state}</div>
+                <h3 className="bh-title">{p.full_name}</h3>
+                <div className="note">{p.title_verbatim}</div>
+                {person && <div style={{ marginTop: 6 }}><TrustTag t={person.trust} why={person.trust_reason} /> <span className="muted">{person.trust_reason}</span></div>}
+              </div>
+            </div>
+            <div className="bh-actions"><div className="bh-btns">
+              <button className="btn ghost bh-btn" type="button" onClick={() => onAccount(p.company_id)}>Company brief</button>
+              <button className="btn ghost bh-btn" type="button" onClick={onClose}>Close</button>
+            </div></div>
           </div>
-          <button className="btn ghost" type="button" onClick={() => onAccount(p.company_id)}>Company brief</button>
-          <button className="btn ghost" type="button" onClick={onClose}>Close</button>
         </div>
         <div className="brief-body">
           <div className="facts">

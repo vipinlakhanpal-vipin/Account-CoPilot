@@ -1269,12 +1269,13 @@ th .infotip{margin-left:3px}.infotip-btn{width:15px;height:15px;font-size:10px}
 .chip-label{font:600 10px var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-right:3px}
 
 /* Account brief header: title and actions on one row, then a single colour-coded row of labelled identifiers */
-.brief-head{flex-direction:column;align-items:stretch;gap:10px;padding-top:calc(12px + env(safe-area-inset-top,0px));padding-bottom:12px}
-.bh-top{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap}
-.bh-title{flex:1 1 320px;min-width:0;margin:0}
+.brief-head.bh{flex-direction:column;align-items:stretch;gap:10px;padding-top:calc(12px + env(safe-area-inset-top,0px));padding-bottom:12px}
+.bh-top{display:flex;flex-direction:column;align-items:flex-start;gap:10px}
+.bh-title{min-width:0;margin:0}
+.bh-person{display:flex;gap:12px;align-items:flex-start;min-width:0}
 .brief-head h3.bh-title{font-size:24px;line-height:1.2}
-.bh-actions{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:0 1 auto;max-width:100%}
-.bh-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.bh-actions{display:flex;flex-direction:column;align-items:flex-start;gap:6px;max-width:100%}
+.bh-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-start}
 .bh-actions .cost-note{max-width:380px;font-size:11px}
 .bh-chips{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .hchip{--k:#8A94A6;display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:8px;font-size:12.5px;line-height:1.4;
@@ -1282,9 +1283,11 @@ th .infotip{margin-left:3px}.infotip-btn{width:15px;height:15px;font-size:10px}
 .hchip i{width:8px;height:8px;border-radius:50%;background:var(--k);flex:none}
 .hchip small{font:700 10px var(--body);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
 .hchip b{font-weight:600;color:var(--text-strong)}
-.bh-confirm{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.bh-confirm{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-start}
 
 /* Account brief actions: same green as the active main-nav tab, white text, in both themes */
 .bh-btns .bh-btn,.bh-btns .bh-btn:visited{background:#0F6E56;color:#FFFFFF;border-color:#0F6E56;font-weight:600}
 .bh-btns .bh-btn:hover:not(:disabled){background:#0B5A47;border-color:#0B5A47;color:#FFFFFF}
 .bh-btns .bh-btn:disabled{opacity:.7}
+.pdf-cols{margin:6px 0;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:rgba(var(--ink),.03);font-size:12.5px;line-height:1.5}
+.pdf-check{display:flex;align-items:center;gap:8px;font-size:13px;margin:6px 0}

@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.59";
+export const APP_VERSION = "3.60";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.60", date: "2026-10-13", notes: "New Excel contact list for campaigns next to the PDF report, available on Accounts, Pipeline and Priority accounts; the region is always asked first. Panel headers (account brief, dashboard drill-down, contact card) now share one layout with left-aligned green buttons, fixing the stretched Close button.", changes: [
+      { what: "Added Reports (PDF / Excel). Excel gives one row per person for a region you choose: Company Name, Contact Name (plus First and Last Name), Contact Job Title, Email ID, Existing ERP, Existing S2P Platform, Net Revenue (USD M) with a Revenue Type, Total Employees and HQ Location, with official emails only. The region is always chosen explicitly before either report is built", where: "components/ReportDialog.tsx (was PdfReportDialog), lib/xlsxReport.ts (new), app/api/report/xlsx/route.ts (new), components/CoPilotApp.tsx", why: "Requested — a stakeholder list that can be uploaded to a CRM to run campaigns, from All Accounts, Pipeline and Priority accounts" },
+      { what: "Account brief, dashboard drill-down and contact card headers now share one structure: title first, then left-aligned green buttons (white text). Fixes the Close button stretching across the whole panel in the drill-down", where: "components/CoPilotApp.tsx, app/globals.css (.brief-head.bh)", why: "Reported with a screenshot — Close was dragged across the panel; asked for uniformity and the main-nav green" },
+    ] },
   { version: "3.59", date: "2026-10-13", notes: "HubSpot is disconnected: it no longer appears in the account brief, the PDF report, the Master Book or the Guide. The stored HubSpot copy is kept, so it can be shown again. The PDF, Refresh research and Close buttons in the account brief are now green with white text.", changes: [
       { what: "Hid every HubSpot display behind one switch (SHOW_HUBSPOT = false): the HubSpot block in the account brief, the HubSpot section in the PDF, the HubSpot columns and KPI cards, the HubSpot Deals sheet and legend entries in the Master Book, and the HubSpot sections of the Guide. The stored profile[\"HubSpot\"] data is untouched", where: "lib/features.ts (new), components/CoPilotApp.tsx, lib/pdfReport.ts, lib/export/workbook.ts, app/guide/page.tsx, components/HomeWorkspace.tsx, CLAUDE.md", why: "Requested — disconnect HubSpot from Account CoPilot; data kept so it can be restored. The claude.ai connector itself is disconnected in claude.ai Settings" },
       { what: "PDF, Refresh research and Close in the account brief are solid green (#0F6E56, the active main-nav tab colour) with white text", where: "components/CoPilotApp.tsx, app/globals.css (.bh-btn)", why: "Requested — match the main navigation's selected tab" },
