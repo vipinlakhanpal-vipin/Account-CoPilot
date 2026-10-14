@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.93";
+export const APP_VERSION = "3.94";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,11 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.94", date: "2026-10-14", notes: "Search Company forgives spelling and extra words: \"Ghobash Trading Enterprise\" finds Ghobash Group, and a misspelt or sound-alike name shows the closest companies to pick from.", changes: [
+      { what: "When no company matches every word typed, generic words (trading, enterprise, group, company, LLC and similar) are ignored and the distinctive words are searched, with a note saying what was ignored", where: "lib/findSearch.ts (GENERIC, collect)", why: "Reported — searching \"ghobash trading\" said there was no company, but \"ghobash\" found Ghobash Group" },
+      { what: "If still nothing matches, up to eight closest companies are offered as buttons: words that are spelt nearly the same, that sound alike (gobash / ghobash, mohammad / mohamed) or that start the same, each saying why it was suggested. Picking one runs the search for it", where: "lib/findSearch.ts (fuzzyWord), components/FindCompany.tsx", why: "Requested — analyse wrong spellings and rhyming words and show options to pick from" },
+      { what: "Find New Company's already-in-the-app check uses the same logic, so \"Al Jaidah Group\" is recognised as Jaidah Group before anything is researched", where: "lib/findSearch.ts (existingMatches)", why: "Same gap seen when a search for Al Jaidah Group ran for five minutes and found it already existed" },
+    ] },
   { version: "3.93", date: "2026-10-14", notes: "Stakeholders for every region: 409 procurement, finance and IT leaders added for KSA, Qatar, Kuwait, UK, USA and the UAE companies that had none, from Seamless.ai. 270 of 294 Verified ICP companies now have people.", changes: [
       { what: "Added 409 stakeholders as new contact rows (Claude / Claude-Seamless): up to four per company, procurement heads first, then the CFO and the IT head, each with title as published, LinkedIn URL, tenure, official email where Seamless marks it valid and the domain matches, and a mobile where confidence is 70% or more", where: "contacts table (new rows only), scripts/apply_people.mjs", why: "Requested — other regions had no stakeholder details" },
       { what: "Four sampled people were checked against public sources and marked VERIFIED with the source recorded; the rest stay LIKELY CURRENT (Seamless record agrees on title, employer and LinkedIn URL)", where: "contacts.claude_check, contacts.verification_status", why: "Requested — verify the person against their LinkedIn profile using free search" },

@@ -17,7 +17,7 @@ type Info = { regions: RegionInfo[]; jobs: Job[]; est: { update: number }; isSup
 type Item = { id: string; slug: string; company_name: string; country: string; region: string; hq_city: string; industry: string; icp_status: string; revenue: string; revenue_note: string;
   employees: string; erp: string; platform: string; signal: string; listing: string; contacts: number; coupa_customer: boolean; matched: string[] };
 type Facet = { value: string; count: number };
-type Found = { total: number; items: Item[]; ids: string[]; understood: { label: string; without: string }[]; suggestions: { company_name: string; slug: string; region: string }[];
+type Found = { total: number; items: Item[]; ids: string[]; understood: { label: string; without: string }[]; suggestions: { company_name: string; slug: string; region: string }[]; relaxed?: string; similar?: (Item & { why: string })[];
   facets: { region: Facet[]; status: Facet[]; listing: Facet[]; signal: Facet[]; platform: Facet[]; withContacts: number } };
 type Sel = { region: string[]; status: string[]; listing: string[]; signal: string[]; platform: string[]; contacts: boolean };
 const EMPTY_SEL: Sel = { region: [], status: [], listing: [], signal: [], platform: [], contacts: false };
@@ -44,7 +44,7 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
   const [region, setRegion] = useState(initialRegion);
   const [website, setWebsite] = useState("");
   const [suggestN, setSuggestN] = useState("5");
-  const [dupes, setDupes] = useState<{ input: string; match: { slug: string; company_name: string; region: string; icp_status: string } }[] | null>(null);
+  const [dupes, setDupes] = useState<{ input: string; possible?: boolean; match: { slug: string; company_name: string; region: string; icp_status: string } }[] | null>(null);
   const [pendingKind, setPendingKind] = useState<"free" | "paid" | null>(null);
   const [msg, setMsg] = useState<{ ok: boolean; text: ReactNode } | null>(null);
   const [working, setWorking] = useState(false);
@@ -130,10 +130,10 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
   async function start(kind: "free" | "paid") {
     if (!list.length) { setMsg({ ok: false, text: "Type at least one company name." }); return; }
     setMsg(null); setWorking(true);
-    let hits: { input: string; match: { slug: string; company_name: string; region: string; icp_status: string } | null }[] = [];
+    let hits: { input: string; possible?: boolean; match: { slug: string; company_name: string; region: string; icp_status: string } | null }[] = [];
     try { const r = await fetch(`/api/find?exists=${encodeURIComponent(list.join("||"))}`); if (r.ok) hits = (await r.json()).results || []; } catch {}
     setWorking(false);
-    const have = hits.filter((h) => h.match) as { input: string; match: { slug: string; company_name: string; region: string; icp_status: string } }[];
+    const have = hits.filter((h) => h.match) as { input: string; possible?: boolean; match: { slug: string; company_name: string; region: string; icp_status: string } }[];
     if (have.length) { setDupes(have); setPendingKind(kind); return; }
     kind === "free" ? queueFree(list) : runPaid(list);
   }
@@ -248,6 +248,7 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
               <p>Choose a region in the panel on the left, then search. Or just type a company, a city, an ERP or something like <i>revenue &gt; 1B</i>.</p>
             </div>)}
           {scoped && (<>
+          {found?.relaxed && <p className="find-relaxed">{found.relaxed}</p>}
           {found && found.understood.length > 0 && (
             <p className="find-understood">Understood as {found.understood.map((u) => <span key={u.label}>{u.label}<button type="button" aria-label={`Remove ${u.label}`} onClick={() => setQ(u.without)}>×</button></span>)}</p>)}
           {found && (
@@ -293,7 +294,16 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
           {found && found.total === 0 && (
             <div className="find-empty">
               <h3>{q.trim() ? <>&quot;{q.trim()}&quot; isn&apos;t in your data yet</> : "Nothing matches these filters"}</h3>
-              {found.suggestions.length > 0 && <p>Did you mean {found.suggestions.map((s, i) => <span key={s.slug}>{i > 0 && ", "}<Link href={openAccount(s)}>{s.company_name}</Link> <small>({s.region})</small></span>)}?</p>}
+              {found.similar && found.similar.length > 0 && (
+                <div className="find-options">
+                  <p>Closest companies in your data. Pick one:</p>
+                  {found.similar.map((o) => (
+                    <button type="button" key={o.id} className="find-option" onClick={() => setQ(o.company_name)}>
+                      <b>{o.company_name}</b>
+                      <span>{[o.region, o.hq_city, o.icp_status.replace("ICP — ", "")].filter(Boolean).join(" · ")}</span>
+                      <small>{o.why}</small>
+                    </button>))}
+                </div>)}
               {q.trim() && !found.understood.length && <button type="button" className="btn primary" onClick={() => goNew(q.trim())}>Find &quot;{q.trim()}&quot; as a new company →</button>}
               {(anyChip || found.understood.length > 0) && <p className="note">Nothing matches all of these together. Tap × on a chip above to drop one. Everything you typed or tapped is combined with AND.</p>}
             </div>)}
@@ -320,7 +330,7 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
             {dupes && (
               <div className="find-dupes" role="alert">
                 <b>{dupes.length === 1 ? "This company is" : `${dupes.length} of these are`} already in the app</b>
-                <ul>{dupes.map((d) => <li key={d.input}>{d.input} <small>is</small> <Link href={openAccount({ slug: d.match.slug, region: d.match.region })}>{d.match.company_name}</Link> <small>({d.match.region} · {d.match.icp_status})</small></li>)}</ul>
+                <ul>{dupes.map((d) => <li key={d.input}>{d.input} <small>{d.possible ? "looks like" : "is"}</small> <Link href={openAccount({ slug: d.match.slug, region: d.match.region })}>{d.match.company_name}</Link> <small>({d.match.region} · {d.match.icp_status})</small></li>)}</ul>
                 <span>
                   {list.length > dupes.length && <button type="button" className="btn primary" onClick={() => resume(true)}>Skip these, continue with the other {list.length - dupes.length}</button>}
                   <button type="button" className="btn" onClick={() => resume(false)}>Search anyway</button>

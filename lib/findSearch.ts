@@ -111,6 +111,33 @@ function lev(a: string, b: string): number {
   return prev[n];
 }
 
+
+// Words that rarely identify a company on their own ("Ghobash Trading Enterprise" is "Ghobash Group"). When no company matches
+// every word, these are dropped so the distinctive word can still find it.
+const GENERIC = new Set(["trading", "trade", "enterprise", "enterprises", "group", "groups", "company", "co", "llc", "ltd", "limited", "general", "international", "intl", "holding", "holdings",
+  "corporation", "corp", "establishment", "est", "services", "service", "industries", "industrial", "the", "of", "and", "al", "el", "for", "contracting", "contractors", "projects",
+  "fze", "fzco", "pjsc", "psc", "plc", "inc", "uae", "gulf", "middle", "east", "emirates", "global", "investment", "investments", "sons", "bros", "brothers", "partners", "ksa", "qatar", "kuwait"]);
+const wordsOf = (v: string) => v.toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length >= 2);
+/** Rough sound-alike key: ghobash / gobash, mohamed / muhammad, philips / fillips share a key. */
+const skeleton = (w: string) => { const x = w.toLowerCase().replace(/ph/g, "f").replace(/gh/g, "g").replace(/ck/g, "k").replace(/[cq]/g, "k").replace(/x/g, "ks").replace(/z/g, "s").replace(/w/g, "v");
+  return x[0] + x.slice(1).replace(/[aeiouy]/g, "").replace(/(.)\1+/g, "$1"); };
+/** How well a typed word matches a word of this company's name (spelling slips, sound-alikes, prefixes). */
+function fuzzyWord(a: Row, alias: string[], t: string): { score: number; word: string } {
+  const words = [...wordsOf(s(a.company_name)), ...alias.flatMap((x) => wordsOf(x)), ...wordsOf(root(s(a.domain) || s(a.company_website)))];
+  let best = { score: 0, word: "" };
+  const maxD = t.length <= 4 ? 1 : t.length <= 7 ? 2 : 3;
+  for (const w of words) {
+    let sc = 0;
+    if (w === t) sc = 100;
+    else if (t.length >= 4 && (w.startsWith(t) || (w.length >= 4 && t.startsWith(w)))) sc = 80;
+    else if (t.length >= 4 && w.length >= 4 && skeleton(w) === skeleton(t)) sc = 72;
+    else { const d = lev(w, t); if (d <= maxD && Math.abs(w.length - t.length) <= maxD && t.length >= 3) sc = 75 - 10 * d; }
+    if (sc > best.score) best = { score: sc, word: w };
+  }
+  return best;
+}
+const root = (d: string) => d.toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0].split(".")[0];
+
 export function findCompanies(data: AllData, def: unknown, qy: FindQuery) {
   const p = parseFind(qy.q || "");
   const people = buildPeople(data.contacts);
@@ -124,7 +151,8 @@ export function findCompanies(data: AllData, def: unknown, qy: FindQuery) {
       listing: listingOf(a), contacts: contactsBy.get(a.id) || 0, coupa_customer: isCoupa(a), matched };
   };
   // 1) text + parsed filters
-  type Hit = { a: Row; score: number; matched: string[] };
+  type Hit = { a: Row; score: number; matched: string[]; why?: string; n?: number };
+  const collect = (tokens: string[], fuzzy = false): Hit[] => {
   const hits: Hit[] = [];
   for (const a of data.accounts) {
     const reg = regionOf(a.country);
@@ -146,9 +174,34 @@ export function findCompanies(data: AllData, def: unknown, qy: FindQuery) {
     }
     let score = 0; const matched: string[] = []; let ok = true;
     const al = aliasesOf(a);
-    for (const t of p.tokens) { const r = tokenScore(a, t, al); if (!r.score) { ok = false; break; } score += r.score; if (r.field !== "name" && !matched.includes(r.field)) matched.push(r.field); }
-    if (!ok) continue;
-    hits.push({ a, score, matched });
+    if (!fuzzy) {
+      for (const t of tokens) { const r = tokenScore(a, t, al); if (!r.score) { ok = false; break; } score += r.score; if (r.field !== "name" && !matched.includes(r.field)) matched.push(r.field); }
+      if (!ok) continue;
+      hits.push({ a, score, matched });
+    } else {
+      // any one distinctive word may match, by spelling or by sound
+      const got = tokens.map((t) => ({ t, ...fuzzyWord(a, al, t) })).filter((g) => g.score > 0);
+      if (!got.length) continue;
+      hits.push({ a, n: got.length, score: got.reduce((x, g) => x + g.score, 0), matched, why: got.map((g) => (g.word === g.t ? `"${g.t}" is in the name` : `"${g.t}" is close to "${g.word}"`)).join("; ") });
+    }
+  }
+  return hits;
+  };
+  let hits = collect(p.tokens);
+  let relaxed = "";
+  if (!hits.length && p.tokens.length) {
+    const core = p.tokens.filter((t) => !GENERIC.has(t));
+    if (core.length && core.length < p.tokens.length) {
+      const h2 = collect(core);
+      if (h2.length) { hits = h2; relaxed = `No company matches every word, so "${p.tokens.filter((t) => GENERIC.has(t)).join(" ")}" was ignored and these match "${core.join(" ")}".`; }
+    }
+  }
+  let similar: (FindItem & { why: string })[] = [];
+  if (!hits.length && p.tokens.length) {
+    const core = p.tokens.filter((t) => !GENERIC.has(t));
+    const fz = collect(core.length ? core : p.tokens, true), top = Math.max(0, ...fz.map((h) => h.n || 0));
+    similar = fz.filter((h) => (h.n || 0) === top).sort((x, y) => y.score - x.score || (revenueOf(y.a) || 0) - (revenueOf(x.a) || 0)).slice(0, 8)
+      .map((h) => ({ ...toItem(h.a, h.matched), why: h.why || "" }));
   }
   // 2) facet filters from the chips, with counts that ignore the facet's own selection
   const f = qy;
@@ -190,7 +243,7 @@ export function findCompanies(data: AllData, def: unknown, qy: FindQuery) {
       .map((x) => ({ company_name: s(x.a.company_name), slug: s(x.a.slug), region: regionOf(x.a.country) }));
   }
   return { total: shown.length, items: shown.slice(0, limit).map((h) => toItem(h.a, h.matched)), ids: limit === 0 ? [] : shown.slice(0, 300).map((h) => h.a.id as string), facets,
-    understood: p.understood, tokens: p.tokens, suggestions };
+    understood: p.understood, tokens: p.tokens, suggestions, relaxed, similar };
 }
 
 /** For "Find New Company": which of these names is already in the app (so nothing is researched twice). */
@@ -198,7 +251,15 @@ export function existingMatches(data: AllData, names: string[]) {
   const index = data.accounts.map((a) => ({ a, keys: [norm(s(a.company_name)), ...aliasesOf(a).map(norm)].filter((k) => k.length >= 3) }));
   return names.map((input) => {
     const n = norm(input);
-    const hit = n.length >= 3 ? index.find((x) => x.keys.some((k) => k === n || (Math.min(k.length, n.length) >= 6 && (k.includes(n) || n.includes(k))))) : undefined;
-    return { input, match: hit ? { slug: s(hit.a.slug), company_name: s(hit.a.company_name), region: regionOf(hit.a.country), icp_status: s(hit.a.icp_status) || "Unknown" } : null };
+    let hit = n.length >= 3 ? index.find((x) => x.keys.some((k) => k === n || (Math.min(k.length, n.length) >= 6 && (k.includes(n) || n.includes(k))))) : undefined;
+    let possible = false;
+    if (!hit) { // same distinctive words, spelled or sounding alike ("Al Jaidah Group" ~ "Jaidah Group")
+      const core = wordsOf(input).filter((w) => !GENERIC.has(w) && w.length >= 3);
+      if (core.length) {
+        const found = data.accounts.find((a) => { const al = aliasesOf(a); return core.every((t) => fuzzyWord(a, al, t).score >= 72); });
+        if (found) { hit = { a: found, keys: [] }; possible = true; }
+      }
+    }
+    return { input, possible, match: hit ? { slug: s(hit.a.slug), company_name: s(hit.a.company_name), region: regionOf(hit.a.country), icp_status: s(hit.a.icp_status) || "Unknown" } : null };
   });
 }
