@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.95";
+export const APP_VERSION = "3.96";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.96", date: "2026-10-14", notes: "The Find company tab is now a search icon and sits first, before Home. Pointing at it shows what it is.", changes: [
+      { what: "Find company is shown as a magnifier icon at the start of the tab row, before Home, with a hover label in the same style as Aria's", where: "components/Header.tsx, app/globals.css (.tab-icon)", why: "Requested — change the Find company tab to a search icon and place it before Home" },
+    ] },
   { version: "3.95", date: "2026-10-14", notes: "The bell, the suggestions bulb and the version-history button now show a hover label in the same style as Aria's, saying what each one is.", changes: [
       { what: "Pointing at the bell shows \"Engine notifications - what the daily run did\", the bulb \"Suggestions - tell us what to improve\" and the clock \"Version history - what changed in each update\", in the same coloured pill Aria uses. The plain browser tooltips on these buttons were removed so only one label shows", where: "components/EngineBell.tsx, components/SuggestionsButton.tsx, components/Header.tsx, app/globals.css (.tip-pill)", why: "Requested — mouse hover should say what each icon is, in the same format as Aria" },
     ] },

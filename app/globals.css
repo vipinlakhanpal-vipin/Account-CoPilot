@@ -1461,3 +1461,11 @@ th .infotip{margin-left:3px}.infotip-btn{width:15px;height:15px;font-size:10px}
 .bell-btn:hover .tip-pill,.bell-btn:focus-visible .tip-pill,.history-btn:hover .tip-pill,.history-btn:focus-visible .tip-pill{opacity:1;transform:none}
 .bell-btn[aria-expanded="true"] .tip-pill{opacity:0}
 @media (prefers-reduced-motion:reduce){.tip-pill{transition:none}}
+
+/* The Find company tab is an icon, placed first */
+.navbar .tab.tab-icon{position:relative;display:inline-flex;align-items:center;justify-content:center;padding-left:14px;padding-right:14px}
+.navbar .tab.tab-icon svg{width:17px;height:17px}
+.navbar .tab.tab-icon:hover .tip-pill,.navbar .tab.tab-icon:focus-visible .tip-pill{opacity:1;transform:none}
+.navbar .tab.tab-icon .tip-pill{right:auto;left:-4px}
+.navbar .tab.tab-icon .tip-pill::before{right:auto;left:18px}
+@media (min-width:1100px){.navbar nav.tabs{overflow:visible}}

@@ -16,10 +16,10 @@ import { APP_VERSION, TAGLINE, RELEASES, RELEASE_AUTHOR } from "@/lib/version";
 // has to stay listed here so this group is found while standing on that page — hideLanding then drops it from
 // what's actually shown, for a group (like Dashboard) where that first item is just the main tab's own page
 // and has no other siblings worth presenting it alongside, unlike Accounts' 5 genuinely distinct pages.
-const GROUPS: { label: string; items: [string, string][]; hideLanding?: boolean }[] = [
+const GROUPS: { label: string; items: [string, string][]; hideLanding?: boolean; icon?: boolean }[] = [
+  { label: "Find company", items: [["/find", "Find company"]], icon: true },
   { label: "Home", items: [["/home", "Home"]] },
   { label: "Dashboard", items: [["/", "Dashboard"], ["/?tab=reports", "Mission Control"]], hideLanding: true },
-  { label: "Find company", items: [["/find", "Find company"]] },
   { label: "Accounts", items: [["/?tab=accounts", "Accounts"], ["/?tab=pipeline", "Pipeline"], ["/?tab=stakeholders", "Stakeholders"], ["/?tab=signals", "S2P Signals"], ["/?tab=erp", "ERP & Apps"]] },
   { label: "Data", items: [["/?tab=sources", "Sources"], ["/?tab=conflicts", "Conflicts"], ["/research", "Research Queue"]] },
   { label: "Setup", items: [["/icp", "Define ICP"], ["/settings", "Settings"], ["/guide", "Learn Me"], ["/team", "Team"]] },
@@ -220,7 +220,12 @@ export default function Header({ meta }: { meta: string }) {
           </div>
           <nav className="tabs" aria-label="Sections">
             {GROUPS.map((g) => (
-              <Link key={g.label} href={g.items[0][0]} className="tab" aria-selected={g.items.some(([, l]) => l === current)} onClick={(e) => go(e, g.items[0][0])}>{g.label}</Link>
+              <Link key={g.label} href={g.items[0][0]} className={`tab${g.icon ? " tab-icon" : ""}`} aria-label={g.icon ? g.label : undefined} aria-selected={g.items.some(([, l]) => l === current)} onClick={(e) => go(e, g.items[0][0])}>
+                {g.icon ? <>
+                  <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" strokeWidth="1.8" /><path d="M10.6 10.6 14 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
+                  <span className="tip-pill" role="tooltip"><span className="tip-dot" aria-hidden="true" />Find company - search or add a new one</span>
+                </> : g.label}
+              </Link>
             ))}
           </nav>
           <div className="nav-actions">
