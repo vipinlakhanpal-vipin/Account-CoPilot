@@ -111,6 +111,11 @@ Every Anthropic-API route (`/api/research`, `/api/discover`, `/api/pitch`, and `
 - **Client:** uses `paidFetch()` from `components/Confirm.tsx`, which asks for the PIN in-app and retries with the `x-paid-pin` header. The engine refresh forwards that header to the research and discovery calls it starts.
 - **Any new paid action** must use both the guard and `paidFetch`.
 
+## Find company (v3.88+)
+- **Page:** `/find` (tab right after Dashboard; `components/FindCompany.tsx`). `Search Company` = `GET /api/find` (`lib/findSearch.ts`, read-only, scoped by `scopeData`); `Find New Company` = `POST /api/engine` queue (free) or `/api/research` (paid, PIN). `GET /api/engine?only=find` returns only the user's regions and jobs (no balance or spend).
+- **Replaces the header search bar** (removed). The Mission Control "Search & refresh" tab stays for bulk jobs and the paid refresh and links here. Remove other search entry points only after the user confirms Find company works.
+- Standard users may queue, cancel, add and ignore for their own regions only (job region is checked server-side).
+
 ## Aria, the in-app assistant (v3.72+)
 - **Where:** the robot icon beside the suggestions bulb (`components/AriaChat.tsx`, a thin wrapper over the copy-in package `packages/aria`). Server: `app/api/aria/route.ts`.
 - **Free first, AI second (v3.77):** `lib/aria/router.ts` reads common questions by plain rules (counts, lists, one company, contacts, ICP rules, PDF, Excel with its region / how-many / pick-by questions) and answers from the database with **no API cost and no PIN**. Only what the rules cannot read goes to the AI (`lib/aria/agent.ts`, default model Haiku 4.5, override with `ARIA_MODEL`), which is behind `requirePaidApproval`. Every reply carries a note saying which path answered.

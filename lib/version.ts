@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.87";
+export const APP_VERSION = "3.88";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,12 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.88", date: "2026-10-14", notes: "New Find company tab, right after Dashboard: one page to search what is already in the app (Search Company) or research a company that is not there yet (Find New Company), free or paid, for your own regions. The header search bar is gone.", changes: [
+      { what: "New Find company page with two modes. Search Company: ranked search over names, former names, websites, cities, industries, ERP and platform; understands typed filters (SAP verified KSA, revenue > 1B, coupa, has contacts); tap-chips with live counts for region, ICP status, listing, S2P signal and platform; sort; per-company Open, PDF and Excel; Excel / PDF for the whole result; did-you-mean when nothing matches", where: "app/find, components/FindCompany.tsx, lib/findSearch.ts, app/api/find", why: "Requested — one dedicated, prominent place to search and to find new companies, instead of a small bar in the header" },
+      { what: "Find New Company: pick one of your regions, type one or several names, see what the engine looks for in that region, then Search free (scheduled session) or Research now (about $0.55 each, PIN). Names already in the app are caught first. A Suggest new companies button asks the engine to find 5, 10 or 30 that fit the region's ICP. Your searches show progress with Add / Ignore", where: "components/FindCompany.tsx, app/api/engine/route.ts (only=find)", why: "Requested — region-wise free or paid search for new companies, available to everyone for their own regions" },
+      { what: "Standard users can now add, ignore and cancel searches for their own regions (before, only Super Admin could act on a finished search)", where: "app/api/engine/route.ts", why: "Needed so every user can finish a search they started" },
+      { what: "Removed the search bar and filter-builder button from the main navigation. A company that is not found in an account list now links to Find company with its name filled in", where: "components/Header.tsx, components/CoPilotApp.tsx", why: "Requested — the Find company page replaces the header search" },
+    ] },
   { version: "3.87", date: "2026-10-14", notes: "Aria now shows each answer from its top: the question you asked, then the answer's heading and the green table header bar. Before, a long answer jumped to its end and you landed in the middle of the table.", changes: [
       { what: "When an answer arrives, the chat scrolls so the question you asked sits at the top of the window (so the table header is visible) instead of scrolling to the bottom of the answer; while Aria is still checking it keeps the progress line in view", where: "packages/aria/AriaChat.tsx (scroll effect, bodyRef)", why: "Reported twice — reports opened from the middle; asked that they start from the top like a normal report" },
     ] },

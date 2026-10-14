@@ -124,6 +124,18 @@ export async function GET(req: Request) {
   const access = await getAccess(user);
   // ?only=activity → Mission Control's Engine activity tab: starts from the regions that SHOULD run (Active in Define ICP)
   // so a skipped region shows as a gap, instead of only listing the runs that happened.
+  // ?only=find → the Find company page: the regions this user can search, each region's rules in plain numbers, and only
+  // that user's regions' jobs. No balance, spend or token details (those stay Super Admin only).
+  if (new URL(req.url).searchParams.get("only") === "find") {
+    const def = normalizeDefinition(await getSetting<unknown>(db, "icp_definition", null));
+    const jobs = await getSetting<{ jobs: Job[] }>(db, "engine_jobs", { jobs: [] });
+    const regions = REGIONS.filter((r: { key: string }) => canSeeRegion(access, r.key)).map((r: { key: string; name: string }) => {
+      const rl = def.regions[r.key];
+      return { key: r.key, name: r.name, status: rl?.status || "paused", revenue_min_usd_m: rl?.revenue?.min_usd_m ?? 250, employees_min: rl?.employees?.min ?? 100,
+        listing: rl?.listing || "any", entity_level: rl?.entity_level || "group_hq" };
+    });
+    return NextResponse.json({ regions, jobs: jobs.jobs.filter((j) => canSeeRegion(access, regionOf(j.region))), est: EST, isSuper: access.isSuper });
+  }
   if (new URL(req.url).searchParams.get("only") === "activity") {
     const def = normalizeDefinition(await getSetting<unknown>(db, "icp_definition", null));
     const log = await getSetting<{ entries: ActivityLogEntry[] }>(db, "engine_log", { entries: [] });
@@ -223,8 +235,14 @@ export async function POST(req: Request) {
   // Super Admin: everything. Standard user: only queue jobs / refresh in their own region (no token, no balance).
   const access = await getAccess(user);
   if (!access.isSuper) {
-    const region = "region" in b ? regionOf(b.region) : "";
-    if (!["queue", "refresh"].includes(b.action) || !canSeeRegion(access, region))
+    let region = "region" in b ? regionOf(b.region) : "";
+    const jobId = b.action === "cancel" ? b.id : "job_id" in b ? b.job_id : "";
+    if (jobId) { // acting on an existing job: it must belong to one of the user's regions
+      const js = await getSetting<{ jobs: Job[] }>(db, "engine_jobs", { jobs: [] });
+      const j = js.jobs.find((x) => x.id === jobId);
+      region = j ? regionOf(j.region) : "";
+    }
+    if (!["queue", "refresh", "cancel", "add_found", "ignore_found", "add_all_found"].includes(b.action) || !canSeeRegion(access, region))
       return NextResponse.json({ error: "Only a Super Admin can change this. Standard users can queue work for their own region." }, { status: 403 });
   }
 

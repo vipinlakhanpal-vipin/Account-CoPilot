@@ -7,7 +7,6 @@ import AriaChat from "@/components/AriaChat";
 import ProfileMenu from "@/components/ProfileMenu";
 import EngineBell from "@/components/EngineBell";
 import SuggestionsButton from "@/components/SuggestionsButton";
-import GlobalSearchBar from "@/components/GlobalSearchBar";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useNewVersionInfo } from "@/components/useVersion";
 import { notify } from "@/components/Confirm";
@@ -20,6 +19,7 @@ import { APP_VERSION, TAGLINE, RELEASES, RELEASE_AUTHOR } from "@/lib/version";
 const GROUPS: { label: string; items: [string, string][]; hideLanding?: boolean }[] = [
   { label: "Home", items: [["/home", "Home"]] },
   { label: "Dashboard", items: [["/", "Dashboard"], ["/?tab=reports", "Mission Control"]], hideLanding: true },
+  { label: "Find company", items: [["/find", "Find company"]] },
   { label: "Accounts", items: [["/?tab=accounts", "Accounts"], ["/?tab=pipeline", "Pipeline"], ["/?tab=stakeholders", "Stakeholders"], ["/?tab=signals", "S2P Signals"], ["/?tab=erp", "ERP & Apps"]] },
   { label: "Data", items: [["/?tab=sources", "Sources"], ["/?tab=conflicts", "Conflicts"], ["/research", "Research Queue"]] },
   { label: "Setup", items: [["/icp", "Define ICP"], ["/settings", "Settings"], ["/guide", "Learn Me"], ["/team", "Team"]] },
@@ -36,7 +36,7 @@ const HistoryIcon = () => (
 const TAB_LABEL: Record<string, string> = { pipeline: "Pipeline", accounts: "Accounts", stakeholders: "Stakeholders", signals: "S2P Signals", erp: "ERP & Apps",
   conflicts: "Conflicts", sources: "Sources", reports: "Mission Control" };
 
-const PAGE_LABEL: Record<string, string> = { "/research": "Research Queue", "/settings": "Settings", "/guide": "Learn Me", "/icp": "Define ICP", "/team": "Team", "/home": "Home" };
+const PAGE_LABEL: Record<string, string> = { "/research": "Research Queue", "/settings": "Settings", "/guide": "Learn Me", "/icp": "Define ICP", "/team": "Team", "/home": "Home", "/find": "Find company" };
 
 // Rendered once in the root layout, so it stays put across page changes (no rebuild, no jump).
 export default function Header({ meta }: { meta: string }) {
@@ -217,7 +217,6 @@ export default function Header({ meta }: { meta: string }) {
               <span className="brand-sub">{TAGLINE}</span>
             </div>
           </div>
-          <GlobalSearchBar />
           <nav className="tabs" aria-label="Sections">
             {GROUPS.map((g) => (
               <Link key={g.label} href={g.items[0][0]} className="tab" aria-selected={g.items.some(([, l]) => l === current)} onClick={(e) => go(e, g.items[0][0])}>{g.label}</Link>

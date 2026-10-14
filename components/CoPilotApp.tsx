@@ -485,8 +485,8 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
       <div className="search-miss">
         {inApp ? <p><b>&quot;{q}&quot;</b> is in the app as <b>{inApp.company_name}</b> ({regionOf(inApp.country)}, {inApp.icp_status}) but not in this list. {tab === "pipeline" ? "The Pipeline only shows accounts that pass your ICP — look in Accounts." : "Check the country tile and filters."}</p>
           : <><p><b>&quot;{q}&quot;</b> isn&apos;t in {cName ? `your ${cName} accounts` : "the app"} yet.</p>
-            <p className="acts"><a className="btn primary" href={`/research?company=${encodeURIComponent(q)}${cName ? `&country=${encodeURIComponent(cName)}` : ""}`}>Research &quot;{q}&quot;{cName ? ` in ${cName}` : ""} →</a>
-              <span className="note">Adds it with revenue, ICP status, contacts and signals. Uses the Anthropic API (asks for the PIN). Free alternative: ask in a Claude session.</span></p></>}
+            <p className="acts"><a className="btn primary" href={`/find?mode=new&company=${encodeURIComponent(q)}${country !== ALL ? `&region=${encodeURIComponent(country)}` : ""}`}>Find &quot;{q}&quot;{cName ? ` in ${cName}` : ""} as a new company →</a>
+              <span className="note">Opens Find company with the name filled in. Search free (a scheduled Claude session) or Research now (≈ $0.55, asks for the PIN).</span></p></>}
       </div>
     );
   };
@@ -702,7 +702,9 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
           onDelete={setSavedReportItems} />
       </div>}
       {missionView === "activity" && <EngineActivity />}
-      {missionView === "search" && isSuper && <EngineSearchAndRefresh />}
+      {missionView === "search" && isSuper && <>
+        <p className="note find-moved">Searching for companies now lives on its own page: <a href="/find">Find company →</a> (search what is in the app, or find a new company, free or paid, for any of your regions). This tab keeps the bulk jobs and the paid refresh.</p>
+        <EngineSearchAndRefresh /></>}
       {missionView === "runs" && <ScheduledRunHistory />}
     </>;
   } else {
