@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.89";
+export const APP_VERSION = "3.90";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.90", date: "2026-10-14", notes: "Find company now has a left panel for regions and filters, so the middle stays clean: just the mode switch, the search box and the results.", changes: [
+      { what: "New left panel on Find company: pick the region there (one region for Find New Company, one or several for Search Company, with company counts), and see what the engine looks for in that region. In Search Company the ICP status, listing, S2P signal, platform and has-contacts filters sit in the same panel", where: "components/FindCompany.tsx, app/globals.css (.find-side)", why: "Requested — create a left panel with the regions to select and keep the middle panel clean" },
+    ] },
   { version: "3.89", date: "2026-10-14", notes: "PDF reports now start with the company. \"How Account CoPilot produced this report\" and the points explanation moved to the end of the report.", changes: [
       { what: "In every PDF (one company or many), the company comes first: a single-company report starts right under the title with the company's facts, and a multi-company report opens with the list of companies. The explanation of how the report was produced, and how the points are calculated, is now the last pages", where: "lib/pdfReport.ts (buildReport)", why: "Requested — put the how-it-was-produced section at the bottom and start with the company" },
     ] },

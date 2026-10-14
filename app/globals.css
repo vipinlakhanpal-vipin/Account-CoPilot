@@ -1409,3 +1409,28 @@ th .infotip{margin-left:3px}.infotip-btn{width:15px;height:15px;font-size:10px}
 .find-suggest{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;max-width:820px;margin:18px auto 0;padding-top:16px;border-top:1px dashed var(--line);font-size:13px;color:var(--muted)}
 .find-jobs{max-width:820px;margin:26px auto 0}.find-jobs h3{margin:0 0 8px;font-size:15px}
 @media (max-width:700px){.find-modes,.find-cards{grid-template-columns:minmax(0,1fr)}.find-row{flex-direction:column}.find-facet-h{width:100%}}
+
+/* Find company: regions and filters on the left, a clean middle for the search itself */
+.find{max-width:1240px}
+.find-layout{display:grid;grid-template-columns:250px minmax(0,1fr);gap:28px;align-items:start}
+.find-mid{min-width:0}.find-mid .find-pane{margin-top:0}
+.find-side{position:sticky;top:12px;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.find-side h2{margin:0 0 8px;font:700 10.5px var(--body);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.find-reglist{display:flex;flex-direction:column;gap:4px}
+.find-reg{display:flex;justify-content:space-between;align-items:center;gap:8px;text-align:left;border:0;background:transparent;color:var(--text);border-radius:10px;padding:8px 11px;font:600 13.5px var(--body);cursor:pointer}
+.find-reg i{font-style:normal;font-weight:500;font-size:11px;color:var(--muted)}
+.find-reg em{font-style:normal;font-weight:600;font-size:11.5px;color:var(--muted)}
+.find-reg:hover{background:rgba(var(--ink),.06)}.find-reg.dim{opacity:.7}
+.find-reg[aria-pressed="true"]{background:#1F8FE0;color:#fff}.find-reg[aria-pressed="true"] i,.find-reg[aria-pressed="true"] em{color:rgba(255,255,255,.88)}
+.find-side .find-rules{margin:14px 0 0;padding:12px;border-radius:10px;background:rgba(var(--ink),.04);text-align:left;font-size:12.5px;color:var(--text)}
+.find-side .find-rules ul{margin:6px 0 0;padding-left:18px;color:var(--muted)}.find-side .find-rules p{margin:8px 0 0}
+.find-side .find-facets{margin:16px 0 0;padding-top:14px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:14px}
+.find-side .find-facet{flex-direction:column;align-items:flex-start;gap:6px}
+.find-side .find-facet-h{width:auto}
+.find-clearall{align-self:flex-start}
+.find-head{text-align:left}.find-head p{margin-left:0}
+.find-modes{margin-left:0;max-width:760px}
+.find-box,.find-hints,.find-names,.find-site,.find-dupes,.find-cards,.find-msg,.find-suggest,.find-jobs{margin-left:0;margin-right:0;max-width:none}
+.find-understood,.find-newhint{text-align:left}
+.find-hints{justify-content:flex-start}
+@media (max-width:900px){.find-layout{grid-template-columns:minmax(0,1fr)}.find-side{position:static}.find-reglist{flex-direction:row;flex-wrap:wrap}.find-reg{border:1px solid var(--line)}}

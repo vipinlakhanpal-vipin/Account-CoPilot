@@ -157,6 +157,52 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
   const goNew = (name: string) => { setNames(name); setMode("new"); setMsg(null); setDupes(null);
     const pick = sel.region[0] || found?.facets.region[0]?.value; if (pick && info?.regions.some((r) => r.key === pick)) setRegion(pick); };
 
+  const regionRows: { key: string; name: string; status: string }[] = info?.regions.length ? info.regions
+    : (found?.facets.region || []).map((f) => ({ key: f.value, name: f.value, status: "active" }));
+  const side = (
+    <aside className="find-side" aria-label="Regions and filters">
+      <h2>Region</h2>
+      <div className="find-reglist" role={mode === "new" ? "tablist" : undefined}>
+        {mode === "search" && (
+          <button type="button" className="find-reg" aria-pressed={sel.region.length === 0} onClick={() => { setLimit(25); setSel((x) => ({ ...x, region: [] })); }}>
+            <span>All regions</span>{found && <em>{found.facets.region.reduce((t, f) => t + f.count, 0)}</em>}
+          </button>)}
+        {regionRows.map((r) => {
+          const n = found?.facets.region.find((f) => f.value === r.key)?.count;
+          const on = mode === "search" ? sel.region.includes(r.key) : r.key === region;
+          return (
+            <button type="button" key={r.key} className={`find-reg${r.status !== "active" ? " dim" : ""}`} aria-pressed={on} role={mode === "new" ? "tab" : undefined} aria-selected={mode === "new" ? on : undefined}
+              title={STATUS_TXT[r.status] || r.status}
+              onClick={() => { if (mode === "search") toggle("region", r.key); else { setRegion(r.key); setMsg(null); setDupes(null); } }}>
+              <span>{r.name}{r.status !== "active" && <i> · {r.status === "next" ? "next phase" : "paused"}</i>}</span>
+              {mode === "search" && n !== undefined && <em>{n}</em>}
+            </button>);
+        })}
+      </div>
+      {mode === "new" && regionInfo && (
+        <div className="find-rules">
+          <b>What the engine looks for in {regionInfo.name}</b>
+          <ul>
+            <li>Revenue of ${regionInfo.revenue_min_usd_m >= 1000 ? `${regionInfo.revenue_min_usd_m / 1000}B` : `${regionInfo.revenue_min_usd_m}M`} or more</li>
+            <li>{regionInfo.employees_min}+ staff</li>
+            <li>{regionInfo.entity_level === "group_hq" ? "Group headquarters only" : regionInfo.entity_level === "any" ? "Any legal entity" : "Group HQ and major subsidiaries"}</li>
+            <li>{regionInfo.listing === "listed_only" ? "Listed companies only" : regionInfo.listing === "private_only" ? "Private companies only" : "Listing not required"}</li>
+          </ul>
+          {regionInfo.status !== "active" && <p>This region is <b>{STATUS_TXT[regionInfo.status]?.toLowerCase()}</b>. Companies found are held until a Super Admin activates it in Setup → Define ICP.</p>}
+        </div>)}
+      {mode === "search" && found && (
+        <div className="find-facets">
+          {chipGroup("ICP status", "status", found.facets.status)}
+          {chipGroup("Listing", "listing", found.facets.listing)}
+          {chipGroup("S2P signal", "signal", found.facets.signal)}
+          {chipGroup("Platform", "platform", found.facets.platform)}
+          <div className="find-facet"><span className="find-facet-h">People</span>
+            <button type="button" className="find-chip" aria-pressed={sel.contacts} onClick={() => { setLimit(25); setSel((x) => ({ ...x, contacts: !x.contacts })); }}>Has contacts <em>{found.facets.withContacts}</em></button></div>
+          {anyChip && <button type="button" className="btn tiny ghost find-clearall" onClick={() => setSel(EMPTY_SEL)}>Clear all filters</button>}
+        </div>)}
+    </aside>
+  );
+
   return (
     <div className="find">
       <div className="find-head">
@@ -168,6 +214,9 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
         </div>
       </div>
 
+      <div className="find-layout">
+      {side}
+      <div className="find-mid">
       {mode === "search" && (
         <section className="find-pane" aria-label="Search companies already in the app">
           <div className="find-box">
@@ -185,16 +234,6 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
           )}
           {found && found.understood.length > 0 && (
             <p className="find-understood">Understood as {found.understood.map((u) => <span key={u.label}>{u.label}<button type="button" aria-label={`Remove ${u.label}`} onClick={() => setQ(u.without)}>×</button></span>)}</p>)}
-          {found && (
-            <div className="find-facets">
-              {chipGroup("Region", "region", found.facets.region)}
-              {chipGroup("ICP status", "status", found.facets.status)}
-              {chipGroup("Listing", "listing", found.facets.listing)}
-              {chipGroup("S2P signal", "signal", found.facets.signal)}
-              {chipGroup("Platform", "platform", found.facets.platform)}
-              <div className="find-facet"><span className="find-facet-h">People</span>
-                <button type="button" className="find-chip" aria-pressed={sel.contacts} onClick={() => { setLimit(25); setSel((s) => ({ ...s, contacts: !s.contacts })); }}>Has contacts <em>{found.facets.withContacts}</em></button></div>
-            </div>)}
           {found && (
             <div className="find-bar">
               <span><b>{found.total.toLocaleString()}</b> {found.total === 1 ? "company" : "companies"}{found.total > found.items.length ? `, showing ${found.items.length}` : ""}</span>
@@ -252,18 +291,6 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
           {!info ? <p className="note">Loading your regions…</p> : info.regions.length === 0 ? (
             <p className="note">No region is assigned to you yet. Ask a Super Admin to add one in Setup → Team.</p>
           ) : (<>
-            <div className="find-regions" role="tablist" aria-label="Region">
-              {info.regions.map((r) => (
-                <button type="button" key={r.key} role="tab" aria-selected={r.key === region} className="find-region" onClick={() => { setRegion(r.key); setMsg(null); setDupes(null); }}
-                  title={STATUS_TXT[r.status] || r.status}>{r.name}{r.status !== "active" && <i> · {r.status === "next" ? "next phase" : "paused"}</i>}</button>))}
-            </div>
-            {regionInfo && (
-              <p className="find-rules">
-                What the engine looks for in <b>{regionInfo.name}</b>: revenue ≥ ${regionInfo.revenue_min_usd_m >= 1000 ? `${regionInfo.revenue_min_usd_m / 1000}B` : `${regionInfo.revenue_min_usd_m}M`}, {regionInfo.employees_min}+ staff,
-                {regionInfo.entity_level === "group_hq" ? " group headquarters only" : regionInfo.entity_level === "any" ? " any legal entity" : " group HQ and major subsidiaries"}
-                {regionInfo.listing === "listed_only" ? ", listed only" : regionInfo.listing === "private_only" ? ", private only" : ", listing not required"}.
-                {regionInfo.status !== "active" && <> This region is <b>{STATUS_TXT[regionInfo.status]?.toLowerCase()}</b>: companies found are held until a Super Admin activates it in Setup → Define ICP.</>}
-              </p>)}
             <div className="find-box big">
               <textarea rows={Math.min(Math.max(list.length, 2), 6)} value={names} onChange={(e) => { setNames(e.target.value); setDupes(null); }} autoFocus
                 placeholder={"One company, or several. One per line or separated by commas.\ne.g. Almarai, Gulf Steel Works, Emirates Bio Farm"} aria-label="Company names" />
@@ -339,6 +366,8 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
           </>)}
         </section>
       )}
+      </div>
+      </div>
     </div>
   );
 }
