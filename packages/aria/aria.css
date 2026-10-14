@@ -87,6 +87,7 @@
 .aria-note.ai{color:#B8530A}
 .aria-home{font:600 12px var(--aria-body);color:#fff;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:6px 12px;cursor:pointer}
 .aria-home:hover{background:#fff;color:#0F6E56}
+.aria-home.aria-close,.aria-home.aria-close:hover{background:#D9650D;border-color:#D9650D;color:#fff}.aria-home.aria-close:hover{background:#B8530A;border-color:#B8530A}
 .aria-wait{display:flex;flex-direction:column;gap:6px}
 .aria-clock{font:700 12.5px var(--aria-body);color:var(--aria-muted);font-variant-numeric:tabular-nums}
 .aria-clock.slow{color:#B8530A}

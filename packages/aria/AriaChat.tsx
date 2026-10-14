@@ -240,7 +240,7 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
                 <button type="button" className="aria-home" onClick={() => { setRect(null); setWide((w) => !w); }} aria-pressed={wide} title="Make the window fill the screen, or back to its normal size. You can also drag the header to move it and any edge to resize it.">{wide ? "⤡ Smaller" : "⤢ Expand"}</button>
                 {msgs.length > 0 && <button type="button" className="aria-home" onClick={restart} title="Back to the start screen with the example questions">🏠 Home</button>}
                 <button type="button" className={`aria-toggle${readAloud ? " on" : ""}`} onClick={toggleRead} aria-pressed={readAloud} title="Read answers aloud">🔊 {readAloud ? "Reading aloud" : "Read aloud"}</button>
-                <button type="button" className="btn tiny btn-close" onClick={() => setOpen(false)}>Close</button>
+                <button type="button" className="aria-home aria-close" onClick={() => setOpen(false)}>Close</button>
               </div>
             </header>
             <div className="aria-body">
