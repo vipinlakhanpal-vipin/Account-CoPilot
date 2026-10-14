@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.91";
+export const APP_VERSION = "3.92";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.92", date: "2026-10-14", notes: "Aria's hover label now reads \"Aria - Your interactive agent\" instead of \"Ask Aria\".", changes: [
+      { what: "The label that appears when you point at Aria's icon now says \"Aria - Your interactive agent\"", where: "packages/aria/AriaChat.tsx", why: "Requested — change Ask Aria to Aria - Your interactive agent" },
+    ] },
   { version: "3.91", date: "2026-10-14", notes: "Search Company no longer lists every company on arrival. Choose a region in the left panel (or type a search), and only then do results appear. The filter groups in the left panel can be folded with a down arrow.", changes: [
       { what: "Search Company opens with a short \"Pick a region to start\" prompt and the counts in the left panel, instead of a list of all companies. Results load once a region is chosen, something is typed or a filter is tapped", where: "components/FindCompany.tsx, app/api/find, lib/findSearch.ts (limit 0 = counts only)", why: "Requested — don't show companies the user isn't looking for; define the region first, then search" },
       { what: "Each filter group in the left panel (ICP status, Listing, S2P signal, Platform, People) folds with a down-arrow button and shows how many options are picked", where: "components/FindCompany.tsx, app/globals.css", why: "Requested — keep the panel tidy, minimise with a down arrow" },

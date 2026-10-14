@@ -227,7 +227,7 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
   const last = msgs[msgs.length - 1];
   return (
     <>
-      <button type="button" className={`aria-btn ${buttonClassName}`.trim()} onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label={`Ask ${name}`}>
+      <button type="button" className={`aria-btn ${buttonClassName}`.trim()} onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label={`${name} - Your interactive agent`}>
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <circle cx="12" cy="2.9" r="1.35" fill="#FFE08A" />
           <path d="M12 4.2v2.3" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" />
@@ -239,7 +239,7 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
           <path d="M9.4 14.9h5.2" stroke="#19D3B0" strokeWidth="1.6" strokeLinecap="round" />
           <rect x="8" y="18.4" width="8" height="2.6" rx="1.3" fill="#fff" />
         </svg>
-        <span className="aria-tip" role="tooltip"><span className="aria-tip-dot" aria-hidden="true" />Ask {name}</span>
+        <span className="aria-tip" role="tooltip"><span className="aria-tip-dot" aria-hidden="true" />{name} - Your interactive agent</span>
       </button>
       {open && typeof document !== "undefined" && createPortal(
         <div className="aria-backdrop" onClick={() => setOpen(false)}>
