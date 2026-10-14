@@ -236,8 +236,8 @@ export async function buildReport(all: AllData, def: unknown, opt: ReportOptions
   w.y = Math.min(w.y, logoTop - 54);
   w.p(`Generated ${new Date().toISOString().slice(0, 16).replace("T", " ")} UTC by ${opt.generatedBy || "a team member"}  |  ${picked.length} of ${total} matching companies`, { size: 9, color: MUTED, gap: 8 });
   const regions = opt.region === "All" ? [...new Set(picked.map((x) => regionOf(x.a.country)))] : [opt.region];
-  howItWorks(w, regions.length ? regions : [opt.region], def, opt);
-  pointsExplained(w);
+  // The company comes first. How the report was produced and how the points work are explained on the last pages.
+  w.p("How this report was produced, and how each score is calculated, is explained at the end.", { size: 8.5, color: MUTED, gap: 8 });
 
   const curOf = (a: Row) => (rulesFor(def, a.country) as Rules).currency as Cur;
   const contactCos = new Set(all.contacts.map((p) => p.company_id));
@@ -253,8 +253,8 @@ export async function buildReport(all: AllData, def: unknown, opt: ReportOptions
         `${x.m.total}%`, `${x.o.total}%`, `${x.f.total}%`]), [0.04, 0.27, 0.09, 0.1, 0.26, 0.08, 0.08, 0.08]);
   }
 
-  for (const { a, m, o, f, c } of picked) {
-    w.newPage();
+  for (const [idx, { a, m, o, f, c }] of picked.entries()) {
+    if (idx > 0 || !single) w.newPage(); // a single-company report starts right under the title
     const people = all.contacts.filter((p) => p.company_id === a.id);
     const seen = new Set<string>(), cs = people.filter((p) => { const k = `${s(p.full_name)}|${s(p.title_verbatim)}`.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; })
       .sort((x, y) => s(x.contact_tier).localeCompare(s(y.contact_tier)));
@@ -360,6 +360,11 @@ export async function buildReport(all: AllData, def: unknown, opt: ReportOptions
     srcs.slice(0, 20).forEach((x) => w.bullet(`[${s(x.source_tier)}] ${s(x.source)}${x.date_published ? ` (${s(x.date_published)})` : ""} - ${s(x.information_found)}${x.url ? ` - ${s(x.url)}` : ""}`));
     if (srcs.length > 20) w.p(`+ ${srcs.length - 20} more sources in the app.`, { size: 8.5, color: MUTED });
   }
+
+  // Bottom of the report: how it was produced and how the points are calculated.
+  w.newPage();
+  howItWorks(w, regions.length ? regions : [opt.region], def, opt);
+  pointsExplained(w);
 
   const pages = w.pdf.getPages();
   pages.forEach((pg, i) => {

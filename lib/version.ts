@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.88";
+export const APP_VERSION = "3.89";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.89", date: "2026-10-14", notes: "PDF reports now start with the company. \"How Account CoPilot produced this report\" and the points explanation moved to the end of the report.", changes: [
+      { what: "In every PDF (one company or many), the company comes first: a single-company report starts right under the title with the company's facts, and a multi-company report opens with the list of companies. The explanation of how the report was produced, and how the points are calculated, is now the last pages", where: "lib/pdfReport.ts (buildReport)", why: "Requested — put the how-it-was-produced section at the bottom and start with the company" },
+    ] },
   { version: "3.88", date: "2026-10-14", notes: "New Find company tab, right after Dashboard: one page to search what is already in the app (Search Company) or research a company that is not there yet (Find New Company), free or paid, for your own regions. The header search bar is gone.", changes: [
       { what: "New Find company page with two modes. Search Company: ranked search over names, former names, websites, cities, industries, ERP and platform; understands typed filters (SAP verified KSA, revenue > 1B, coupa, has contacts); tap-chips with live counts for region, ICP status, listing, S2P signal and platform; sort; per-company Open, PDF and Excel; Excel / PDF for the whole result; did-you-mean when nothing matches", where: "app/find, components/FindCompany.tsx, lib/findSearch.ts, app/api/find", why: "Requested — one dedicated, prominent place to search and to find new companies, instead of a small bar in the header" },
       { what: "Find New Company: pick one of your regions, type one or several names, see what the engine looks for in that region, then Search free (scheduled session) or Research now (about $0.55 each, PIN). Names already in the app are caught first. A Suggest new companies button asks the engine to find 5, 10 or 30 that fit the region's ICP. Your searches show progress with Add / Ignore", where: "components/FindCompany.tsx, app/api/engine/route.ts (only=find)", why: "Requested — region-wise free or paid search for new companies, available to everyone for their own regions" },
