@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.92";
+export const APP_VERSION = "3.93";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.93", date: "2026-10-14", notes: "Stakeholders for every region: 409 procurement, finance and IT leaders added for KSA, Qatar, Kuwait, UK, USA and the UAE companies that had none, from Seamless.ai. 270 of 294 Verified ICP companies now have people.", changes: [
+      { what: "Added 409 stakeholders as new contact rows (Claude / Claude-Seamless): up to four per company, procurement heads first, then the CFO and the IT head, each with title as published, LinkedIn URL, tenure, official email where Seamless marks it valid and the domain matches, and a mobile where confidence is 70% or more", where: "contacts table (new rows only), scripts/apply_people.mjs", why: "Requested — other regions had no stakeholder details" },
+      { what: "Four sampled people were checked against public sources and marked VERIFIED with the source recorded; the rest stay LIKELY CURRENT (Seamless record agrees on title, employer and LinkedIn URL)", where: "contacts.claude_check, contacts.verification_status", why: "Requested — verify the person against their LinkedIn profile using free search" },
+    ] },
   { version: "3.92", date: "2026-10-14", notes: "Aria's hover label now reads \"Aria - Your interactive agent\" instead of \"Ask Aria\".", changes: [
       { what: "The label that appears when you point at Aria's icon now says \"Aria - Your interactive agent\"", where: "packages/aria/AriaChat.tsx", why: "Requested — change Ask Aria to Aria - Your interactive agent" },
     ] },
