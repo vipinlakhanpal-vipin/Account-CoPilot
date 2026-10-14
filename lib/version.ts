@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.96";
+export const APP_VERSION = "3.97";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.97", date: "2026-10-14", notes: "Stakeholders added for the Likely ICP companies too: 282 more people, so 241 of 263 Likely companies now have procurement, finance or IT contacts.", changes: [
+      { what: "Added 282 stakeholders (up to three per company: procurement head, CFO, IT head) for Likely ICP companies in the UAE, Kuwait, KSA and Qatar, from Seamless.ai, under the same rules as v3.93 (official emails only, new rows only)", where: "contacts table (new rows), scripts/apply_people.mjs", why: "Requested — run the Likely companies with the remaining credits" },
+    ] },
   { version: "3.96", date: "2026-10-14", notes: "The Find company tab is now a search icon and sits first, before Home. Pointing at it shows what it is.", changes: [
       { what: "Find company is shown as a magnifier icon at the start of the tab row, before Home, with a hover label in the same style as Aria's", where: "components/Header.tsx, app/globals.css (.tab-icon)", why: "Requested — change the Find company tab to a search icon and place it before Home" },
     ] },
