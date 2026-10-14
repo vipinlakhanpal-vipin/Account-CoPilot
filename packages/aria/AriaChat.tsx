@@ -84,6 +84,7 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
   const [voiceOK, setVoiceOK] = useState(false);
   const [readAloud, setReadAloud] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
   const recRef = useRef<SR | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const sendRef = useRef<(q: string) => void>(() => {});
@@ -137,7 +138,19 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
     setVoiceOK(!!(w.SpeechRecognition || w.webkitSpeechRecognition));
     try { setReadAloud(localStorage.getItem(storageKey) === "1"); } catch { /* optional */ }
   }, []);
-  useEffect(() => { endRef.current?.scrollIntoView({ block: "end" }); }, [msgs, busy, open, elapsed]);
+  // While checking, keep the "working" line in view. When the answer lands, start at the top of it (the question
+  // that was asked, then the answer's own heading and table header) instead of jumping to the end of a long table.
+  useEffect(() => {
+    const body = bodyRef.current;
+    if (!body) return;
+    if (busy) { endRef.current?.scrollIntoView({ block: "end" }); return; }
+    const nodes = body.querySelectorAll<HTMLElement>(".aria-msg");
+    if (nodes.length === 0) return;
+    const last = msgs[msgs.length - 1];
+    const target = last?.role === "assistant" && nodes.length > 1 ? nodes[nodes.length - 2] : nodes[nodes.length - 1];
+    const top = target.getBoundingClientRect().top - body.getBoundingClientRect().top + body.scrollTop - 8;
+    body.scrollTo({ top: Math.max(0, top) });
+  }, [msgs, busy, open]);
   useEffect(() => {
     if (!busy) return;
     setElapsed(0);
@@ -243,7 +256,7 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
                 <button type="button" className="aria-home aria-close" onClick={() => setOpen(false)}>Close</button>
               </div>
             </header>
-            <div className="aria-body">
+            <div className="aria-body" ref={bodyRef}>
               {msgs.length === 0 && (
                 <div className="aria-hello">
                   <h2>How can I help?</h2>

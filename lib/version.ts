@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.86";
+export const APP_VERSION = "3.87";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.87", date: "2026-10-14", notes: "Aria now shows each answer from its top: the question you asked, then the answer's heading and the green table header bar. Before, a long answer jumped to its end and you landed in the middle of the table.", changes: [
+      { what: "When an answer arrives, the chat scrolls so the question you asked sits at the top of the window (so the table header is visible) instead of scrolling to the bottom of the answer; while Aria is still checking it keeps the progress line in view", where: "packages/aria/AriaChat.tsx (scroll effect, bodyRef)", why: "Reported twice — reports opened from the middle; asked that they start from the top like a normal report" },
+    ] },
   { version: "3.86", date: "2026-10-14", notes: "The Close button in Aria's header is now the same size and pill shape as its neighbours (Smaller / Expand, Home, Read aloud), still in orange.", changes: [
       { what: "Aria's Close button now uses the same pill style, font and height as the other header buttons instead of the smaller app-wide close button", where: "packages/aria/AriaChat.tsx, packages/aria/aria.css (.aria-close)", why: "Requested — make the Close tab the same size as its neighbours" },
     ] },
