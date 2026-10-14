@@ -51,7 +51,7 @@ export default function SuggestionsButton() {
 
   return (
     <div className="bell" ref={ref}>
-      <button type="button" className="bell-btn suggest-btn" onClick={() => setOpen((o) => !o)} aria-label="Suggest an improvement" title="Suggest an improvement">
+      <button type="button" className="bell-btn suggest-btn" onClick={() => setOpen((o) => !o)} aria-label="Suggest an improvement">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <g stroke="#F2A93B" strokeWidth="1.6" strokeLinecap="round">
             <path d="M12 1v2M4.6 4.6l1.4 1.4M1 12h2M4.6 19.4l1.4-1.4M19.4 19.4l-1.4-1.4M23 12h-2M19.4 4.6l-1.4 1.4" />
@@ -60,6 +60,7 @@ export default function SuggestionsButton() {
           <path d="M10.2 8.6 12 10.4l2.2-2.2M12 10.4v3.2" stroke="#8A5A00" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" fill="none" />
           <path d="M9.3 18.4h5.4M9.7 20h4.6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
         </svg>
+        <span className="tip-pill" role="tooltip"><span className="tip-dot" aria-hidden="true" />Suggestions - tell us what to improve</span>
       </button>
       {open && (
         <div className="bell-pop suggest-pop" role="dialog" aria-label="Suggest an improvement">

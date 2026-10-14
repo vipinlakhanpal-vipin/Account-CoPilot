@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.94";
+export const APP_VERSION = "3.95";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.95", date: "2026-10-14", notes: "The bell, the suggestions bulb and the version-history button now show a hover label in the same style as Aria's, saying what each one is.", changes: [
+      { what: "Pointing at the bell shows \"Engine notifications - what the daily run did\", the bulb \"Suggestions - tell us what to improve\" and the clock \"Version history - what changed in each update\", in the same coloured pill Aria uses. The plain browser tooltips on these buttons were removed so only one label shows", where: "components/EngineBell.tsx, components/SuggestionsButton.tsx, components/Header.tsx, app/globals.css (.tip-pill)", why: "Requested — mouse hover should say what each icon is, in the same format as Aria" },
+    ] },
   { version: "3.94", date: "2026-10-14", notes: "Search Company forgives spelling and extra words: \"Ghobash Trading Enterprise\" finds Ghobash Group, and a misspelt or sound-alike name shows the closest companies to pick from.", changes: [
       { what: "When no company matches every word typed, generic words (trading, enterprise, group, company, LLC and similar) are ignored and the distinctive words are searched, with a note saying what was ignored", where: "lib/findSearch.ts (GENERIC, collect)", why: "Reported — searching \"ghobash trading\" said there was no company, but \"ghobash\" found Ghobash Group" },
       { what: "If still nothing matches, up to eight closest companies are offered as buttons: words that are spelt nearly the same, that sound alike (gobash / ghobash, mohammad / mohamed) or that start the same, each saying why it was suggested. Picking one runs the search for it", where: "lib/findSearch.ts (fuzzyWord), components/FindCompany.tsx", why: "Requested — analyse wrong spellings and rhyming words and show options to pick from" },

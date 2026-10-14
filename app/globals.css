@@ -1449,3 +1449,15 @@ th .infotip{margin-left:3px}.infotip-btn{width:15px;height:15px;font-size:10px}
 .find-option:hover{border-color:#1F8FE0;background:color-mix(in srgb,#1F8FE0 6%,var(--surface))}
 .find-option b{font-size:14.5px}.find-option span{font-size:12.5px;color:var(--muted)}.find-option small{font-size:11.5px;color:#157AC4}
 .find-relaxed{margin:14px 0 0;padding:9px 13px;border-radius:10px;font-size:13px;background:color-mix(in srgb,var(--sig-m,#C98A00) 11%,var(--surface));border:1px solid color-mix(in srgb,var(--sig-m,#C98A00) 40%,transparent)}
+
+/* Hover labels for the header icons: same pill as Aria's, so every icon says what it is */
+.bell-btn,.history-btn{position:relative}
+.tip-pill{position:absolute;top:calc(100% + 10px);right:-6px;display:inline-flex;align-items:center;gap:7px;white-space:nowrap;pointer-events:none;z-index:60;
+  opacity:0;transform:translateY(-5px) scale(.96);transition:opacity .16s ease,transform .16s ease;
+  background:linear-gradient(120deg,#0F6E56 0%,#2E5E8C 55%,#6B4BD8 100%);color:#fff;font:700 11px/1 var(--aria-display,var(--body));letter-spacing:.04em;
+  padding:6px 11px 6px 9px;border-radius:999px;border:1.5px solid rgba(255,255,255,.85);box-shadow:0 6px 18px rgba(46,94,140,.5),0 0 14px rgba(138,92,255,.45)}
+.tip-pill::before{content:"";position:absolute;top:-6px;right:20px;width:10px;height:10px;transform:rotate(45deg);background:#2E5E8C;border-left:1.5px solid rgba(255,255,255,.85);border-top:1.5px solid rgba(255,255,255,.85)}
+.tip-dot{width:6px;height:6px;border-radius:50%;background:#FFE08A;box-shadow:0 0 8px 2px rgba(255,224,138,.8)}
+.bell-btn:hover .tip-pill,.bell-btn:focus-visible .tip-pill,.history-btn:hover .tip-pill,.history-btn:focus-visible .tip-pill{opacity:1;transform:none}
+.bell-btn[aria-expanded="true"] .tip-pill{opacity:0}
+@media (prefers-reduced-motion:reduce){.tip-pill{transition:none}}

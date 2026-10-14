@@ -206,8 +206,9 @@ export default function Header({ meta }: { meta: string }) {
                     title={latest ? `Version v${latest} is available. Click to load it.` : "Reload the latest data"}>
                     <Spin />v{APP_VERSION}{latest && <span className="dot" aria-label={`New version v${latest} available`} />}
                   </button>
-                  <button type="button" className="history-btn" onClick={() => setShowHistory(true)} title="See what changed in past updates" aria-label="Version history">
+                  <button type="button" className="history-btn" onClick={() => setShowHistory(true)} aria-label="Version history">
                     <HistoryIcon />
+                    <span className="tip-pill" role="tooltip"><span className="tip-dot" aria-hidden="true" />Version history - what changed in each update</span>
                   </button>
                   <EngineBell />
                   <SuggestionsButton />
