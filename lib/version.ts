@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.90";
+export const APP_VERSION = "3.91";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.91", date: "2026-10-14", notes: "Search Company no longer lists every company on arrival. Choose a region in the left panel (or type a search), and only then do results appear. The filter groups in the left panel can be folded with a down arrow.", changes: [
+      { what: "Search Company opens with a short \"Pick a region to start\" prompt and the counts in the left panel, instead of a list of all companies. Results load once a region is chosen, something is typed or a filter is tapped", where: "components/FindCompany.tsx, app/api/find, lib/findSearch.ts (limit 0 = counts only)", why: "Requested — don't show companies the user isn't looking for; define the region first, then search" },
+      { what: "Each filter group in the left panel (ICP status, Listing, S2P signal, Platform, People) folds with a down-arrow button and shows how many options are picked", where: "components/FindCompany.tsx, app/globals.css", why: "Requested — keep the panel tidy, minimise with a down arrow" },
+    ] },
   { version: "3.90", date: "2026-10-14", notes: "Find company now has a left panel for regions and filters, so the middle stays clean: just the mode switch, the search box and the results.", changes: [
       { what: "New left panel on Find company: pick the region there (one region for Find New Company, one or several for Search Company, with company counts), and see what the engine looks for in that region. In Search Company the ICP status, listing, S2P signal, platform and has-contacts filters sit in the same panel", where: "components/FindCompany.tsx, app/globals.css (.find-side)", why: "Requested — create a left panel with the regions to select and keep the middle panel clean" },
     ] },

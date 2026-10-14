@@ -180,7 +180,7 @@ export function findCompanies(data: AllData, def: unknown, qy: FindQuery) {
   const sort = qy.sort || "best";
   shown.sort((x, y) => sort === "name" ? s(x.a.company_name).localeCompare(s(y.a.company_name))
     : sort === "revenue" || x.score === y.score ? (revenueOf(y.a) || 0) - (revenueOf(x.a) || 0) : y.score - x.score);
-  const limit = Math.min(Math.max(qy.limit || 25, 1), 100);
+  const limit = qy.limit === 0 ? 0 : Math.min(Math.max(qy.limit || 25, 1), 100);
   // 3) nothing found → close spellings
   let suggestions: { company_name: string; slug: string; region: string }[] = [];
   if (!shown.length && p.tokens.length && !p.understood.some((u) => !u.label.startsWith("Text:"))) {
@@ -189,7 +189,7 @@ export function findCompanies(data: AllData, def: unknown, qy: FindQuery) {
       .filter((x) => x.d <= Math.max(2, Math.round(want.length * 0.3))).sort((x, y) => x.d - y.d).slice(0, 4)
       .map((x) => ({ company_name: s(x.a.company_name), slug: s(x.a.slug), region: regionOf(x.a.country) }));
   }
-  return { total: shown.length, items: shown.slice(0, limit).map((h) => toItem(h.a, h.matched)), ids: shown.slice(0, 300).map((h) => h.a.id as string), facets,
+  return { total: shown.length, items: shown.slice(0, limit).map((h) => toItem(h.a, h.matched)), ids: limit === 0 ? [] : shown.slice(0, 300).map((h) => h.a.id as string), facets,
     understood: p.understood, tokens: p.tokens, suggestions };
 }
 

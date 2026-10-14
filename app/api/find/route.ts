@@ -24,7 +24,7 @@ export async function GET(req: Request) {
   const out = findCompanies(data, def, {
     q: (sp.get("q") || "").slice(0, 200), region: list(sp.get("region")), status: list(sp.get("status")), listing: list(sp.get("listing")),
     signal: list(sp.get("signal")), platform: list(sp.get("platform")), contacts: sp.get("contacts") === "1",
-    sort: sort === "revenue" || sort === "name" ? sort : "best", limit: Number(sp.get("limit")) || 25,
+    sort: sort === "revenue" || sort === "name" ? sort : "best", limit: sp.get("limit") === "0" ? 0 : Number(sp.get("limit")) || 25,
   });
   return NextResponse.json(out);
 }

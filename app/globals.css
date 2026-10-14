@@ -1434,3 +1434,11 @@ th .infotip{margin-left:3px}.infotip-btn{width:15px;height:15px;font-size:10px}
 .find-understood,.find-newhint{text-align:left}
 .find-hints{justify-content:flex-start}
 @media (max-width:900px){.find-layout{grid-template-columns:minmax(0,1fr)}.find-side{position:static}.find-reglist{flex-direction:row;flex-wrap:wrap}.find-reg{border:1px solid var(--line)}}
+
+.find-facet-h{display:flex;justify-content:space-between;align-items:center;width:100%;background:none;border:0;padding:2px 0;cursor:pointer;color:var(--muted);font:700 10.5px var(--body);letter-spacing:.07em;text-transform:uppercase}
+.find-facet-h:hover{color:var(--text)}
+.find-picked{margin-left:6px;padding:0 6px;border-radius:999px;background:#1F8FE0;color:#fff;font:700 10px var(--body)}
+.find-chev{font-size:12px}
+.find-facet-chips{display:flex;flex-wrap:wrap;gap:6px}
+.find-prompt{margin:6px 0 0;padding:34px 24px;border:1px dashed var(--line-2,var(--line));border-radius:14px;text-align:center;color:var(--muted)}
+.find-prompt h3{margin:0 0 6px;color:var(--text);font-size:17px}.find-prompt p{margin:0 auto;max-width:48ch}

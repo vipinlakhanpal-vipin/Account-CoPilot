@@ -60,30 +60,37 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
   const remember = (v: string) => { const t = v.trim(); if (t.length < 2) return; const next = [t, ...recent.filter((x) => x !== t)].slice(0, 6);
     setRecent(next); try { localStorage.setItem("find:recent", JSON.stringify(next)); } catch {} };
 
+  // Nothing is listed until the user picks a region, types a search or taps a filter. Until then only the counts are loaded.
+  const scoped = q.trim().length > 0 || sel.region.length > 0 || sel.status.length + sel.listing.length + sel.signal.length + sel.platform.length > 0 || sel.contacts;
+  const [open, setOpen] = useState<Record<string, boolean>>({ "ICP status": true });
   // search as you type (debounced), and again whenever a chip, the sort or the page size changes
   useEffect(() => {
     if (mode !== "search") return;
     const ac = new AbortController();
     const t = setTimeout(async () => {
       setBusy(true);
-      const p = new URLSearchParams({ q, sort, limit: String(limit) });
+      const p = new URLSearchParams({ q, sort, limit: String(scoped ? limit : 0) });
       (["region", "status", "listing", "signal", "platform"] as const).forEach((k) => sel[k].length && p.set(k, sel[k].join("||")));
       if (sel.contacts) p.set("contacts", "1");
       try { const r = await fetch(`/api/find?${p}`, { signal: ac.signal }); if (r.ok) setFound(await r.json()); } catch {}
       if (!ac.signal.aborted) setBusy(false);
     }, q ? 280 : 0);
     return () => { clearTimeout(t); ac.abort(); };
-  }, [mode, q, sel, sort, limit]);
+  }, [mode, q, sel, sort, limit, scoped]);
 
   const toggle = (k: Exclude<keyof Sel, "contacts">, v: string) => { setLimit(25); setSel((s) => ({ ...s, [k]: s[k].includes(v) ? s[k].filter((x) => x !== v) : [...s[k], v] })); };
   const anyChip = sel.region.length + sel.status.length + sel.listing.length + sel.signal.length + sel.platform.length > 0 || sel.contacts;
   const chipGroup = (label: string, k: Exclude<keyof Sel, "contacts">, facet: Facet[] | undefined) => {
     const rows = (facet || []).filter((f) => f.count > 0 || sel[k].includes(f.value));
     if (!rows.length) return null;
+    const picked = sel[k].length;
     return (
-      <div className="find-facet"><span className="find-facet-h">{label}</span>
-        {rows.map((f) => <button type="button" key={f.value} className="find-chip" aria-pressed={sel[k].includes(f.value)} onClick={() => toggle(k, f.value)}>
-          {f.value.replace(/^ICP — /, "").replace(/ SIGNAL$/, "")} <em>{f.count}</em></button>)}
+      <div className="find-facet">
+        <button type="button" className="find-facet-h" aria-expanded={!!open[label]} onClick={() => setOpen((o) => ({ ...o, [label]: !o[label] }))}>
+          <span>{label}{picked > 0 && <b className="find-picked">{picked}</b>}</span><span className="find-chev" aria-hidden="true">{open[label] ? "▾" : "▸"}</span>
+        </button>
+        {open[label] && <div className="find-facet-chips">{rows.map((f) => <button type="button" key={f.value} className="find-chip" aria-pressed={sel[k].includes(f.value)} onClick={() => toggle(k, f.value)}>
+          {f.value.replace(/^ICP — /, "").replace(/ SIGNAL$/, "")} <em>{f.count}</em></button>)}</div>}
       </div>);
   };
 
@@ -196,8 +203,11 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
           {chipGroup("Listing", "listing", found.facets.listing)}
           {chipGroup("S2P signal", "signal", found.facets.signal)}
           {chipGroup("Platform", "platform", found.facets.platform)}
-          <div className="find-facet"><span className="find-facet-h">People</span>
-            <button type="button" className="find-chip" aria-pressed={sel.contacts} onClick={() => { setLimit(25); setSel((x) => ({ ...x, contacts: !x.contacts })); }}>Has contacts <em>{found.facets.withContacts}</em></button></div>
+          <div className="find-facet">
+            <button type="button" className="find-facet-h" aria-expanded={!!open.People} onClick={() => setOpen((o) => ({ ...o, People: !o.People }))}>
+              <span>People{sel.contacts && <b className="find-picked">1</b>}</span><span className="find-chev" aria-hidden="true">{open.People ? "▾" : "▸"}</span></button>
+            {open.People && <div className="find-facet-chips"><button type="button" className="find-chip" aria-pressed={sel.contacts} onClick={() => { setLimit(25); setSel((x) => ({ ...x, contacts: !x.contacts })); }}>Has contacts <em>{found.facets.withContacts}</em></button></div>}
+          </div>
           {anyChip && <button type="button" className="btn tiny ghost find-clearall" onClick={() => setSel(EMPTY_SEL)}>Clear all filters</button>}
         </div>)}
     </aside>
@@ -232,6 +242,12 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
               {recent.length > 0 && <><span className="find-hints-sep">Recent</span>{recent.map((e) => <button type="button" key={e} className="recent" onClick={() => setQ(e)}>{e}</button>)}</>}
             </div>
           )}
+          {!scoped && (
+            <div className="find-prompt">
+              <h3>Pick a region to start</h3>
+              <p>Choose a region in the panel on the left, then search. Or just type a company, a city, an ERP or something like <i>revenue &gt; 1B</i>.</p>
+            </div>)}
+          {scoped && (<>
           {found && found.understood.length > 0 && (
             <p className="find-understood">Understood as {found.understood.map((u) => <span key={u.label}>{u.label}<button type="button" aria-label={`Remove ${u.label}`} onClick={() => setQ(u.without)}>×</button></span>)}</p>)}
           {found && (
@@ -283,6 +299,7 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
             </div>)}
           {q.trim() && found && found.total > 0 && found.total <= 3 && !found.understood.length && (
             <p className="find-newhint">Not the company you meant? <button type="button" className="link" onClick={() => goNew(q.trim())}>Find &quot;{q.trim()}&quot; as a new company →</button></p>)}
+          </>)}
         </section>
       )}
 
