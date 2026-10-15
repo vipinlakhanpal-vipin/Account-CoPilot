@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.06";
+export const APP_VERSION = "4.07";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.07", date: "2026-10-15", notes: "The Search Company tab now reads \"Already in your database\".", changes: [
+      { what: "Changed the line under the Search Company tab to \"Already in your database\", to match Find New Company's \"Not in your database yet\"", where: "components/FindCompany.tsx", why: "Requested wording" },
+    ] },
   { version: "4.06", date: "2026-10-15", notes: "The Find New Company tab now reads \"Not in your database yet\".", changes: [
       { what: "Changed the line under the Find New Company tab to \"Not in your database yet\"", where: "components/FindCompany.tsx", why: "Requested wording" },
     ] },

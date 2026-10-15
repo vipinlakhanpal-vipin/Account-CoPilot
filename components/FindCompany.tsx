@@ -235,7 +235,7 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
         <h1>Find a company</h1>
         <div className="find-modes" role="tablist" aria-label="What do you want to do?">
           <button type="button" role="tab" aria-selected={mode === "new"} onClick={() => { setMode("new"); setMsg(null); }}><b>Find New Company</b><small>Not in your database yet</small></button>
-          <button type="button" role="tab" aria-selected={mode === "search"} onClick={() => { setMode("search"); setTimeout(() => inputRef.current?.focus(), 0); }}><b>Search Company</b><small>Already in your data</small></button>
+          <button type="button" role="tab" aria-selected={mode === "search"} onClick={() => { setMode("search"); setTimeout(() => inputRef.current?.focus(), 0); }}><b>Search Company</b><small>Already in your database</small></button>
         </div>
       </div>
 
