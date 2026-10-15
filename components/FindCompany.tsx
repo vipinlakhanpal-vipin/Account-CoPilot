@@ -31,6 +31,7 @@ const nextRun = () => { const n = new Date(), t = new Date(Date.UTC(n.getUTCFull
 export default function FindCompany({ initialMode, initialQuery, initialRegion }: { initialMode: Mode; initialQuery: string; initialRegion: string }) {
   const [mode, setMode] = useState<Mode>(initialMode);
   const [info, setInfo] = useState<Info | null>(null);
+  const [allRegions, setAllRegions] = useState<RegionInfo[]>([]); // includes paused regions, only used to explain why one can't be searched
   // ── Search Company
   const [q, setQ] = useState(initialMode === "search" ? initialQuery : "");
   const [sel, setSel] = useState<Sel>(EMPTY_SEL);
@@ -51,7 +52,7 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
   const inputRef = useRef<HTMLInputElement>(null);
 
   // regions this user can use, each region's rules, and only their regions' jobs
-  const loadInfo = useCallback(() => fetch("/api/engine?only=find").then((r) => (r.ok ? r.json() : null)).then((j: Info | null) => { if (j) setInfo(j); }).catch(() => {}), []);
+  const loadInfo = useCallback(() => fetch("/api/engine?only=find").then((r) => (r.ok ? r.json() : null)).then((j: Info | null) => { if (j) { setAllRegions(j.regions); setInfo({ ...j, regions: j.regions.filter((r) => r.status === "active") }); } }).catch(() => {}), []);
   useEffect(() => { loadInfo(); }, [loadInfo]);
   const busyJobs = !!info?.jobs.some((j) => j.status === "queued" || j.status === "running");
   useEffect(() => { const t = setInterval(loadInfo, busyJobs ? 8000 : 30000); return () => clearInterval(t); }, [loadInfo, busyJobs]);
@@ -315,6 +316,7 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
               {q.trim() && (found.tokens || []).length > 0 && (() => {
                 const name = /[<>=]/.test(q) ? (found.tokens || []).join(" ") : q.trim();
                 const ri = info?.regions.find((r) => r.key === region);
+                const typedPaused = allRegions.find((r) => r.status !== "active" && (emptyKey.includes(r.key.toLowerCase()) || emptyKey.includes(r.name.toLowerCase())));
                 return (
                   <div className="find-research">
                     <h4>Want me to research it and add it?</h4>
@@ -324,10 +326,11 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
                         : " your data"}.</p>
                     <div className="find-rcost">
                       <div><b>Add free</b><span>Basic profile (revenue, ICP status). Cost $0. Runs in a scheduled Claude session on your plan, usually about 2 minutes.</span>
-                        <button type="button" className="btn primary" disabled={working || !region} onClick={() => queueFree([name])}>{working ? "Working…" : "Add free - basic profile, about 2 min"}</button></div>
+                        <button type="button" className="btn primary" disabled={working || !region || !!typedPaused} onClick={() => queueFree([name])}>{working ? "Working…" : "Add free - basic profile, about 2 min"}</button></div>
                       <div><b>Research now</b><span>Full profile (revenue, ERP, signals, contacts). Cost about ${per.toFixed(2)}. Uses the Anthropic API and asks for your PIN.</span>
-                        <button type="button" className="btn" disabled={working || !region} onClick={() => runPaid([name])}>Research now - full profile, ≈ ${per.toFixed(2)}</button></div>
+                        <button type="button" className="btn" disabled={working || !region || !!typedPaused} onClick={() => runPaid([name])}>Research now - full profile, ≈ ${per.toFixed(2)}</button></div>
                     </div>
+                    {typedPaused && <p className="find-msg err" role="status"><b>{typedPaused.name}</b> is {STATUS_TXT[typedPaused.status]?.toLowerCase()}, so it can&apos;t be searched or added yet. Make it Active in Setup → Define ICP (Save &amp; apply), then search again.</p>}
                     {ri && ri.status !== "active" && <p className="note"><b>{ri.name}</b> is {STATUS_TXT[ri.status]?.toLowerCase()}. <b>Add free</b> will find the company but holds it as "pending" until a Super Admin activates {ri.name} in Setup → Define ICP; <b>Research now</b> adds it to {ri.name} accounts straight away.</p>}
                     {msg && <p className={`find-msg ${msg.ok ? "ok" : "err"}`} role="status">{msg.text}</p>}
                     <p className="note">Prefer to check the spelling or add several at once? <button type="button" className="link" onClick={() => goNew(name)}>Open Find New Company →</button></p>
@@ -344,7 +347,7 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
       {mode === "new" && (
         <section className="find-pane" aria-label="Find a company that is not in the app yet">
           {!info ? <p className="note">Loading your regions…</p> : info.regions.length === 0 ? (
-            <p className="note">No region is assigned to you yet. Ask a Super Admin to add one in Setup → Team.</p>
+            <p className="note">{allRegions.length ? "None of your regions is Active yet. A Super Admin can make one Active in Setup → Define ICP." : "No region is assigned to you yet. Ask a Super Admin to add one in Setup → Team."}</p>
           ) : (<>
             <div className="find-box big">
               <textarea rows={Math.min(Math.max(list.length, 2), 6)} value={names} onChange={(e) => { setNames(e.target.value); setDupes(null); }} autoFocus
