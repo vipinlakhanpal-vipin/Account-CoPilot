@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.05";
+export const APP_VERSION = "4.06";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.06", date: "2026-10-15", notes: "The Find New Company tab now reads \"Not in your database yet\".", changes: [
+      { what: "Changed the line under the Find New Company tab to \"Not in your database yet\"", where: "components/FindCompany.tsx", why: "Requested wording" },
+    ] },
   { version: "4.05", date: "2026-10-15", notes: "Search Company only searches your data; Find New Company is the only place that adds. A search that finds nothing shows one button, \"Find it as a new company\".", changes: [
       { what: "Removed Add free and Research now from the not-found result of Search Company. It now shows a single \"Find it as a new company\" button that opens Find New Company with the name filled in and the region chosen from what was typed (a paused region is explained there)", where: "components/FindCompany.tsx", why: "Requested — the same two options appeared in both modes, which was misleading" },
     ] },

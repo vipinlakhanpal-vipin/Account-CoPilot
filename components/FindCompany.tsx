@@ -234,7 +234,7 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
       <div className="find-head">
         <h1>Find a company</h1>
         <div className="find-modes" role="tablist" aria-label="What do you want to do?">
-          <button type="button" role="tab" aria-selected={mode === "new"} onClick={() => { setMode("new"); setMsg(null); }}><b>Find New Company</b><small>Not in your data yet</small></button>
+          <button type="button" role="tab" aria-selected={mode === "new"} onClick={() => { setMode("new"); setMsg(null); }}><b>Find New Company</b><small>Not in your database yet</small></button>
           <button type="button" role="tab" aria-selected={mode === "search"} onClick={() => { setMode("search"); setTimeout(() => inputRef.current?.focus(), 0); }}><b>Search Company</b><small>Already in your data</small></button>
         </div>
       </div>
@@ -330,7 +330,7 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
       )}
 
       {mode === "new" && (
-        <section className="find-pane" aria-label="Find a company that is not in the app yet">
+        <section className="find-pane" aria-label="Find a company that is not in your database yet">
           {!info ? <p className="note">Loading your regions…</p> : info.regions.length === 0 ? (
             <p className="note">{allRegions.length ? "None of your regions is Active yet. A Super Admin can make one Active in Setup → Define ICP." : "No region is assigned to you yet. Ask a Super Admin to add one in Setup → Team."}</p>
           ) : (<>
