@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
 import { getAccess, scopeData } from "@/lib/access";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { loadAllCached } from "@/lib/dataCache";
+import { loadFindCached } from "@/lib/dataCache";
 import { findCompanies, existingMatches } from "@/lib/findSearch";
 
 // Find company page. Search Company: ranked search over what is already in the app (scoped to the user's regions).
@@ -16,7 +16,7 @@ export async function GET(req: Request) {
   if (!user) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
   const sp = new URL(req.url).searchParams;
   const access = await getAccess(user);
-  const data = scopeData(await loadAllCached(), access);
+  const data = scopeData(await loadFindCached(), access);
   const exists = list(sp.get("exists"));
   if (exists.length) return NextResponse.json({ results: existingMatches(data, exists.slice(0, 30)) });
   const def = (await supabaseAdmin().from("settings").select("value").eq("key", "icp_definition").maybeSingle()).data?.value;

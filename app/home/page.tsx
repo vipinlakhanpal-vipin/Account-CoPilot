@@ -1,7 +1,7 @@
 import { requirePageUser } from "@/lib/auth";
-import { getAccess, scopeData } from "@/lib/access";
+import { getAccess, canSeeCountry } from "@/lib/access";
 import { supabaseServer } from "@/lib/supabase/server";
-import { loadAllCached } from "@/lib/dataCache";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { REGIONS, normalizeDefinition, regionOf } from "@/lib/icpDefinition.mjs";
 import Hero from "@/components/Hero";
 import HomeWorkspace from "@/components/HomeWorkspace";
@@ -15,10 +15,13 @@ export default async function HomePage() {
   const user = await requirePageUser();
   const access = await getAccess(user);
   const sb = await supabaseServer();
-  const [{ data: defRow }, all] = await Promise.all([
+  // Home only needs a count per region, so it reads one small column instead of loading the whole database.
+  const countries = async () => { const out: string[] = []; for (let from = 0; ; from += 1000) { const { data } = await supabaseAdmin().from("companies").select("country").range(from, from + 999); out.push(...(data || []).map((r) => String(r.country ?? ""))); if (!data || data.length < 1000) break; } return out; };
+  const [{ data: defRow }, allCountries] = await Promise.all([
     sb.from("settings").select("value").eq("key", "icp_definition").maybeSingle(),
-    loadAllCached().then((d) => scopeData(d, access)),
+    countries(),
   ]);
+  const all = { accounts: allCountries.filter((c) => canSeeCountry(access, c)).map((country) => ({ country })) };
   const def = normalizeDefinition(defRow?.value);
   const visibleRegions = REGIONS.filter((r) => access.isSuper || access.regions.includes(r.key));
   const counts: Record<string, number> = {};

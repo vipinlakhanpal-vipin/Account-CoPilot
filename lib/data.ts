@@ -6,13 +6,17 @@ export type AllData = {
   accounts: Row[]; contacts: Row[]; signals: Row[]; sources: Row[]; conflicts: Row[]; apps: Row[]; history: Row[]; runs: Row[];
 };
 
+// Pages of 1,000 rows are requested three at a time, so a table of 1,800 rows costs one round trip instead of two.
 async function fetchAll(sb: SupabaseClient, table: string, order = "created_at"): Promise<Row[]> {
   const out: Row[] = [];
-  for (let from = 0; ; from += 1000) {
-    const { data, error } = await sb.from(table).select("*").order(order, { ascending: true }).range(from, from + 999);
-    if (error) throw new Error(`${table}: ${error.message}`);
-    out.push(...(data || []));
-    if (!data || data.length < 1000) break;
+  for (let from = 0; ; from += 3000) {
+    const pages = await Promise.all([0, 1000, 2000].map(async (off) => {
+      const { data, error } = await sb.from(table).select("*").order(order, { ascending: true }).range(from + off, from + off + 999);
+      if (error) throw new Error(`${table}: ${error.message}`);
+      return data || [];
+    }));
+    for (const pg of pages) out.push(...pg);
+    if (pages[2].length < 1000) break;
   }
   return out;
 }

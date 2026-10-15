@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.97";
+export const APP_VERSION = "3.98";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,11 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.98", date: "2026-10-15", notes: "Faster page switches: Home and Find company no longer load the whole database to show a few numbers.", changes: [
+      { what: "Home now reads one small column (country) to count companies per region instead of loading all eight tables (about 10 MB) on every visit", where: "app/home/page.tsx", why: "Reported — moving from one tab to another felt slow" },
+      { what: "Find company reads only the columns it searches (no profile blobs, notes or signals) and who has contacts, about 0.8 s instead of 1.8 s on a cold start", where: "lib/dataCache.ts (loadFindCached), lib/findSearch.ts, app/api/find", why: "Same" },
+      { what: "Large tables are fetched three pages at a time, so a table of 1,800 rows needs one round trip instead of two", where: "lib/data.ts (fetchAll)", why: "Same" },
+    ] },
   { version: "3.97", date: "2026-10-14", notes: "Stakeholders added for the Likely ICP companies too: 282 more people, so 241 of 263 Likely companies now have procurement, finance or IT contacts.", changes: [
       { what: "Added 282 stakeholders (up to three per company: procurement head, CFO, IT head) for Likely ICP companies in the UAE, Kuwait, KSA and Qatar, from Seamless.ai, under the same rules as v3.93 (official emails only, new rows only)", where: "contacts table (new rows), scripts/apply_people.mjs", why: "Requested — run the Likely companies with the remaining credits" },
     ] },

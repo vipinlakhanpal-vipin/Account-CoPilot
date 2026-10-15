@@ -1,6 +1,5 @@
 import "server-only";
 import type { AllData, Row } from "@/lib/data";
-import { buildPeople } from "@/lib/people";
 import { revenueOf, revenueIsOfficial, fmtMoneyM } from "@/lib/icp";
 import { regionOf, rulesFor, REGIONS } from "@/lib/icpDefinition.mjs";
 
@@ -140,9 +139,13 @@ const root = (d: string) => d.toLowerCase().replace(/^https?:\/\//, "").replace(
 
 export function findCompanies(data: AllData, def: unknown, qy: FindQuery) {
   const p = parseFind(qy.q || "");
-  const people = buildPeople(data.contacts);
-  const contactsBy = new Map<string, number>();
-  for (const x of people) contactsBy.set(x.company_id as string, (contactsBy.get(x.company_id as string) || 0) + 1);
+  // people = distinct names per company (the same person on several sheets counts once)
+  const contactsBy = new Map<string, number>(), seenPerson = new Set<string>();
+  for (const c of data.contacts) {
+    const k = `${c.company_id}|${s(c.full_name).toLowerCase().replace(/[^a-z]/g, "")}`;
+    if (!s(c.full_name) || seenPerson.has(k)) continue;
+    seenPerson.add(k); contactsBy.set(c.company_id as string, (contactsBy.get(c.company_id as string) || 0) + 1);
+  }
   const toItem = (a: Row, matched: string[]): FindItem => {
     const rev = revenueOf(a), cur = rulesFor(def, a.country).currency as { code: string; per_usd: number };
     return { id: a.id, slug: s(a.slug), company_name: s(a.company_name), country: s(a.country), region: regionOf(a.country), hq_city: s(a.hq_city), industry: s(a.industry).replace(/_/g, " "),
