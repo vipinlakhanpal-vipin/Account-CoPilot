@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.99";
+export const APP_VERSION = "4.00";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.00", date: "2026-10-15", notes: "Find New Company buttons say what you get: \"Add free - basic profile, about 2 min\" and \"Research now - full profile, about $0.55\".", changes: [
+      { what: "Renamed Search free to Add free (basic profile) and put the depth, time and cost on each button, in the Find New Company page and in the not-found panel of Search Company", where: "components/FindCompany.tsx", why: "Requested — make the difference between the free and the paid option obvious" },
+    ] },
   { version: "3.99", date: "2026-10-15", notes: "When a company is not in your data, Search Company now offers to research it right there, with the cost of each option shown.", changes: [
       { what: "The not-found result in Search Company now has a \"Want me to research it and add it?\" panel: pick the region (pre-selected when you typed it, as in \"oman flour mills\"), then Search free ($0, scheduled session, usually a minute or two) or Research now (about $0.55, instant, asks for your PIN). A paused region says results are held until it is activated", where: "components/FindCompany.tsx (.find-research)", why: "Requested — when a search finds nothing, offer to run research and show the cost" },
       { what: "The offer also appears when the search text included a region word, which was hiding the old button (\"oman\" was read as a region filter, so nothing was left to offer)", where: "components/FindCompany.tsx", why: "Reported — searching \"oman flour mills\" gave no option" },

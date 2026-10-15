@@ -112,7 +112,7 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
   async function runPaid(use: string[]) {
     if (!region || !use.length) return;
     if (!(await ask({ title: `Research ${use.length === 1 ? use[0] : `${use.length} companies`} now?`, tone: "cost", confirm: "Run now",
-      points: [`Researches ${use.length === 1 ? "it" : "each one"} straight away (about 1–2 minutes) and adds ${use.length === 1 ? "it" : "them"} to ${region}.`, "Free alternative: Search free — done in a minute or two by a scheduled session."],
+      points: [`Researches ${use.length === 1 ? "it" : "each one"} straight away (about 1–2 minutes) and adds ${use.length === 1 ? "it" : "them"} to ${region}.`, "Free alternative: Add free (basic profile) — done in about two minutes by a scheduled session."],
       cost: `≈ $${(use.length * per).toFixed(2)} (Quick research${use.length > 1 ? ` × ${use.length}` : ""})` }))) return;
     setWorking(true);
     let ok = 0;
@@ -203,7 +203,7 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
             <li>{regionInfo.entity_level === "group_hq" ? "Group headquarters only" : regionInfo.entity_level === "any" ? "Any legal entity" : "Group HQ and major subsidiaries"}</li>
             <li>{regionInfo.listing === "listed_only" ? "Listed companies only" : regionInfo.listing === "private_only" ? "Private companies only" : "Listing not required"}</li>
           </ul>
-          {regionInfo.status !== "active" && <p>This region is <b>{STATUS_TXT[regionInfo.status]?.toLowerCase()}</b>. A free search finds the company but holds it as pending until a Super Admin activates the region in Setup → Define ICP. Research now adds it straight away.</p>}
+          {regionInfo.status !== "active" && <p>This region is <b>{STATUS_TXT[regionInfo.status]?.toLowerCase()}</b>. A free add finds the company but holds it as pending until a Super Admin activates the region in Setup → Define ICP. Research now adds it straight away.</p>}
         </div>)}
       {mode === "search" && found && (
         <div className="find-facets">
@@ -323,12 +323,12 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
                         ? <select value={region} onChange={(e) => { setRegion(e.target.value); setMsg(null); }} aria-label="Region to add it to">{info.regions.map((r) => <option key={r.key} value={r.key}>{r.name}</option>)}</select>
                         : " your data"}.</p>
                     <div className="find-rcost">
-                      <div><b>Search free</b><span>Cost $0. Runs in a scheduled Claude session on your plan, usually a minute or two.</span>
-                        <button type="button" className="btn primary" disabled={working || !region} onClick={() => queueFree([name])}>{working ? "Working…" : "Search free"}</button></div>
-                      <div><b>Research now</b><span>Cost about ${per.toFixed(2)}. Instant, full profile (revenue, ERP, signals). Uses the Anthropic API and asks for your PIN.</span>
-                        <button type="button" className="btn" disabled={working || !region} onClick={() => runPaid([name])}>Research now</button></div>
+                      <div><b>Add free</b><span>Basic profile (revenue, ICP status). Cost $0. Runs in a scheduled Claude session on your plan, usually about 2 minutes.</span>
+                        <button type="button" className="btn primary" disabled={working || !region} onClick={() => queueFree([name])}>{working ? "Working…" : "Add free - basic profile, about 2 min"}</button></div>
+                      <div><b>Research now</b><span>Full profile (revenue, ERP, signals, contacts). Cost about ${per.toFixed(2)}. Uses the Anthropic API and asks for your PIN.</span>
+                        <button type="button" className="btn" disabled={working || !region} onClick={() => runPaid([name])}>Research now - full profile, ≈ ${per.toFixed(2)}</button></div>
                     </div>
-                    {ri && ri.status !== "active" && <p className="note"><b>{ri.name}</b> is {STATUS_TXT[ri.status]?.toLowerCase()}. <b>Search free</b> will find the company but holds it as "pending" until a Super Admin activates {ri.name} in Setup → Define ICP; <b>Research now</b> adds it to {ri.name} accounts straight away.</p>}
+                    {ri && ri.status !== "active" && <p className="note"><b>{ri.name}</b> is {STATUS_TXT[ri.status]?.toLowerCase()}. <b>Add free</b> will find the company but holds it as "pending" until a Super Admin activates {ri.name} in Setup → Define ICP; <b>Research now</b> adds it to {ri.name} accounts straight away.</p>}
                     {msg && <p className={`find-msg ${msg.ok ? "ok" : "err"}`} role="status">{msg.text}</p>}
                     <p className="note">Prefer to check the spelling or add several at once? <button type="button" className="link" onClick={() => goNew(name)}>Open Find New Company →</button></p>
                   </div>);
@@ -368,14 +368,14 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
 
             <div className="find-cards">
               <div className="find-card">
-                <h3>Search free</h3>
-                <p>A scheduled Claude session checks official sources and adds the company. Included in your Claude plan, no API cost. Usually a minute or two.</p>
-                <button type="button" className="btn primary" disabled={working || !list.length} onClick={() => start("free")}>{working ? <span className="btn-spin">Working…</span> : `Search free${list.length > 1 ? ` (${list.length})` : ""}`}</button>
+                <h3>Add free</h3>
+                <p>Basic profile: a scheduled Claude session checks official sources for revenue and ICP status and adds the company. Included in your Claude plan, no API cost. Usually about 2 minutes.</p>
+                <button type="button" className="btn primary" disabled={working || !list.length} onClick={() => start("free")}>{working ? <span className="btn-spin">Working…</span> : `Add free${list.length > 1 ? ` (${list.length})` : ""} - basic profile, about 2 min`}</button>
               </div>
               <div className="find-card paid">
                 <h3>Research now</h3>
-                <p>Instant, full profile: revenue, ERP and S2P signals. Uses the Anthropic API and asks for your PIN. <b>≈ ${Math.max(list.length, 1) * per < 10 ? (Math.max(list.length, 1) * per).toFixed(2) : Math.round(list.length * per)}</b>{list.length > 1 ? ` for ${list.length} companies` : " per company"}.</p>
-                <button type="button" className="btn" disabled={working || !list.length} onClick={() => start("paid")}>Research now</button>
+                <p>Full profile, started immediately: revenue, ERP and S2P signals, sources and contacts for your persona roles. Uses the Anthropic API and asks for your PIN. <b>≈ ${Math.max(list.length, 1) * per < 10 ? (Math.max(list.length, 1) * per).toFixed(2) : Math.round(list.length * per)}</b>{list.length > 1 ? ` for ${list.length} companies` : " per company"}.</p>
+                <button type="button" className="btn" disabled={working || !list.length} onClick={() => start("paid")}>Research now - full profile, ≈ ${(Math.max(list.length, 1) * per).toFixed(2)}</button>
               </div>
             </div>
             {msg && <p className={`find-msg ${msg.ok ? "ok" : "err"}`} role="status">{msg.text}</p>}
