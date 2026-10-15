@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.02";
+export const APP_VERSION = "4.03";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.03", date: "2026-10-15", notes: "Find company is plainer: less text on every screen, one short line per option.", changes: [
+      { what: "Cut the explanatory text on the Find company page: no intro paragraph, one-line mode labels, a shorter search box and prompt, a short \"Add it?\" panel (Add free: $0, basic profile, about 2 minutes; Research now: about $0.55, full profile, asks for your PIN), shorter messages and a shorter confirmation box", where: "components/FindCompany.tsx", why: "Requested — keep it plain and simple, no confusion on any screen, too much text distracts" },
+    ] },
   { version: "4.02", date: "2026-10-15", notes: "Tidied the not-found panel in Search Company: removed the extra \"check the spelling\" link and the filter-chip note that did not apply.", changes: [
       { what: "Removed the \"Prefer to check the spelling or add several at once? Open Find New Company\" line and the \"Tap x on a chip\" note from the not-found panel, which already lets you pick the region and add the company", where: "components/FindCompany.tsx", why: "Reported — the extra link had no clear purpose" },
     ] },

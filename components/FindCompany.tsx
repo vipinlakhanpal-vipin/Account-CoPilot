@@ -21,7 +21,7 @@ type Found = { total: number; items: Item[]; ids: string[]; understood: { label:
   facets: { region: Facet[]; status: Facet[]; listing: Facet[]; signal: Facet[]; platform: Facet[]; withContacts: number } };
 type Sel = { region: string[]; status: string[]; listing: string[]; signal: string[]; platform: string[]; contacts: boolean };
 const EMPTY_SEL: Sel = { region: [], status: [], listing: [], signal: [], platform: [], contacts: false };
-const EXAMPLES = ["SAP verified KSA", "revenue > 1B", "coupa", "oracle listed", "icp = likely signal = strong", "dubai logistics", "has contacts verified"];
+const EXAMPLES = ["SAP verified KSA", "revenue > 1B", "coupa", "has contacts"];
 const ST_CLASS: Record<string, string> = { "ICP — Verified": "st-v", "ICP — Likely": "st-l", "ICP — Needs check": "st-l", "Not ICP": "st-n" };
 const parseNames = (v: string) => [...new Set(v.split(/[,\n]/).map((x) => x.trim()).filter((x) => x.length >= 2))].slice(0, 30);
 const STATUS_TXT: Record<string, string> = { active: "Active · daily run", paused: "Paused", next: "Next phase" };
@@ -107,14 +107,14 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
     const r = await fetch("/api/engine", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     const j = await r.json().catch(() => ({}));
     setWorking(false);
-    if (r.ok) { setMsg({ ok: true, text: `Searching ${use.length === 1 ? use[0] : `${use.length} companies`} in ${region} now, free. Usually a minute or two (the next daily run, ${nextRun()}, picks it up if that doesn't fire). Follow it under "Your searches" below.` }); setNames(""); setWebsite(""); loadInfo(); }
+    if (r.ok) { setMsg({ ok: true, text: `Started: ${use.length === 1 ? use[0] : `${use.length} companies`} in ${region}. Usually about 2 minutes. Progress is below.` }); setNames(""); setWebsite(""); loadInfo(); }
     else setMsg({ ok: false, text: j.error || "Could not start the search." });
   }
   async function runPaid(use: string[]) {
     if (!region || !use.length) return;
     if (!(await ask({ title: `Research ${use.length === 1 ? use[0] : `${use.length} companies`} now?`, tone: "cost", confirm: "Run now",
-      points: [`Researches ${use.length === 1 ? "it" : "each one"} straight away (about 1–2 minutes) and adds ${use.length === 1 ? "it" : "them"} to ${region}.`, "Free alternative: Add free (basic profile) — done in about two minutes by a scheduled session."],
-      cost: `≈ $${(use.length * per).toFixed(2)} (Quick research${use.length > 1 ? ` × ${use.length}` : ""})` }))) return;
+      points: [`Adds ${use.length === 1 ? "it" : "them"} to ${region} in about 2 minutes.`],
+      cost: `≈ $${(use.length * per).toFixed(2)}` }))) return;
     setWorking(true);
     let ok = 0;
     for (const name of use) {
@@ -142,7 +142,7 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
     const skip = new Set((dupes || []).map((d) => d.input));
     const use = skipExisting ? list.filter((n) => !skip.has(n)) : list;
     const kind = pendingKind; setDupes(null); setPendingKind(null);
-    if (!use.length) { setMsg({ ok: true, text: "Everything you typed is already in the app. Use Search Company to open it." }); return; }
+    if (!use.length) { setMsg({ ok: true, text: "Already in your data. Use Search Company to open it." }); return; }
     kind === "free" ? queueFree(use) : runPaid(use);
   };
   async function suggest() {
@@ -151,7 +151,7 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
     const r = await fetch("/api/engine", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "queue", region, count: Number(suggestN), mode: "discover" }) });
     const j = await r.json().catch(() => ({}));
     setWorking(false);
-    if (r.ok) { setMsg({ ok: true, text: `Looking for ${suggestN} new ${region} companies that fit the ICP, free. Usually a minute or two; results appear under "Your searches" below.` }); loadInfo(); }
+    if (r.ok) { setMsg({ ok: true, text: `Looking for ${suggestN} companies in ${region}. Results appear below.` }); loadInfo(); }
     else setMsg({ ok: false, text: j.error || "Could not start the search." });
   }
   async function act(body: unknown, ok: string) {
@@ -204,7 +204,7 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
             <li>{regionInfo.entity_level === "group_hq" ? "Group headquarters only" : regionInfo.entity_level === "any" ? "Any legal entity" : "Group HQ and major subsidiaries"}</li>
             <li>{regionInfo.listing === "listed_only" ? "Listed companies only" : regionInfo.listing === "private_only" ? "Private companies only" : "Listing not required"}</li>
           </ul>
-          {regionInfo.status !== "active" && <p>This region is <b>{STATUS_TXT[regionInfo.status]?.toLowerCase()}</b>. A free add finds the company but holds it as pending until a Super Admin activates the region in Setup → Define ICP. Research now adds it straight away.</p>}
+          
         </div>)}
       {mode === "search" && found && (
         <div className="find-facets">
@@ -226,10 +226,9 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
     <div className="find">
       <div className="find-head">
         <h1>Find a company</h1>
-        <p>The one place to search. Look through what is already in your data, or research a company that is not in the app yet.</p>
         <div className="find-modes" role="tablist" aria-label="What do you want to do?">
-          <button type="button" role="tab" aria-selected={mode === "new"} onClick={() => { setMode("new"); setMsg(null); }}><b>Find New Company</b><small>Not in the app yet. Research it and add it to a region.</small></button>
-          <button type="button" role="tab" aria-selected={mode === "search"} onClick={() => { setMode("search"); setTimeout(() => inputRef.current?.focus(), 0); }}><b>Search Company</b><small>Already in your data. Filter, open and download reports.</small></button>
+          <button type="button" role="tab" aria-selected={mode === "new"} onClick={() => { setMode("new"); setMsg(null); }}><b>Find New Company</b><small>Not in your data yet</small></button>
+          <button type="button" role="tab" aria-selected={mode === "search"} onClick={() => { setMode("search"); setTimeout(() => inputRef.current?.focus(), 0); }}><b>Search Company</b><small>Already in your data</small></button>
         </div>
       </div>
 
@@ -241,7 +240,7 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
           <div className="find-box">
             <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" strokeWidth="1.5" /><path d="M11 11l3.3 3.3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
             <input ref={inputRef} autoFocus type="search" value={q} onChange={(e) => { setQ(e.target.value); setLimit(25); }} onKeyDown={(e) => e.key === "Enter" && remember(q)}
-              placeholder="Company, city, industry, ERP… or try: SAP verified KSA, revenue > 1B" aria-label="Search companies already in the app" />
+              placeholder="Search your companies" aria-label="Search companies already in the app" />
             {busy && <span className="find-spin" aria-hidden="true" />}
             {q && <button type="button" className="find-clear" onClick={() => setQ("")} aria-label="Clear search">×</button>}
           </div>
@@ -253,8 +252,8 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
           )}
           {!scoped && (
             <div className="find-prompt">
-              <h3>Pick a region to start</h3>
-              <p>Choose a region in the panel on the left, then search. Or just type a company, a city, an ERP or something like <i>revenue &gt; 1B</i>.</p>
+              <h3>Pick a region</h3>
+              <p>Choose a region on the left, or type a company name.</p>
             </div>)}
           {scoped && (<>
           {found?.relaxed && <p className="find-relaxed">{found.relaxed}</p>}
@@ -302,10 +301,10 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
               {limit >= 100 && <span className="note"> Narrow the search with the filters above to see the rest.</span>}</p>)}
           {found && found.total === 0 && (
             <div className="find-empty">
-              <h3>{q.trim() ? <>&quot;{q.trim()}&quot; isn&apos;t in your data yet</> : "Nothing matches these filters"}</h3>
+              <h3>{q.trim() ? <>&quot;{q.trim()}&quot; isn&apos;t in your data</> : "Nothing matches these filters"}</h3>
               {found.similar && found.similar.length > 0 && (
                 <div className="find-options">
-                  <p>Closest companies in your data. Pick one:</p>
+                  <p>Did you mean:</p>
                   {found.similar.map((o) => (
                     <button type="button" key={o.id} className="find-option" onClick={() => setQ(o.company_name)}>
                       <b>{o.company_name}</b>
@@ -319,23 +318,23 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
                 const typedPaused = allRegions.find((r) => r.status !== "active" && (emptyKey.includes(r.key.toLowerCase()) || emptyKey.includes(r.name.toLowerCase())));
                 return (
                   <div className="find-research">
-                    <h4>Want me to research it and add it?</h4>
-                    <p>Look for <b>&quot;{name}&quot;</b> on the web and add it to
+                    <h4>Add it?</h4>
+                    <p>Add <b>&quot;{name}&quot;</b> to
                       {info && info.regions.length > 0
                         ? <select value={region} onChange={(e) => { setRegion(e.target.value); setMsg(null); }} aria-label="Region to add it to">{info.regions.map((r) => <option key={r.key} value={r.key}>{r.name}</option>)}</select>
                         : " your data"}</p>
                     <div className="find-rcost">
-                      <div><b>Add free</b><span>Basic profile (revenue, ICP status). Cost $0. Runs in a scheduled Claude session on your plan, usually about 2 minutes.</span>
-                        <button type="button" className="btn primary" disabled={working || !region || !!typedPaused} onClick={() => queueFree([name])}>{working ? "Working…" : "Add free - basic profile, about 2 min"}</button></div>
-                      <div><b>Research now</b><span>Full profile (revenue, ERP, signals, contacts). Cost about ${per.toFixed(2)}. Uses the Anthropic API and asks for your PIN.</span>
-                        <button type="button" className="btn" disabled={working || !region || !!typedPaused} onClick={() => runPaid([name])}>Research now - full profile, ≈ ${per.toFixed(2)}</button></div>
+                      <div><b>Add free</b><span>$0 · basic profile · about 2 minutes</span>
+                        <button type="button" className="btn primary" disabled={working || !region || !!typedPaused} onClick={() => queueFree([name])}>{working ? "Working…" : "Add free"}</button></div>
+                      <div><b>Research now</b><span>≈ ${per.toFixed(2)} · full profile · asks for your PIN</span>
+                        <button type="button" className="btn" disabled={working || !region || !!typedPaused} onClick={() => runPaid([name])}>Research now</button></div>
                     </div>
-                    {typedPaused && <p className="find-msg err" role="status"><b>{typedPaused.name}</b> is {STATUS_TXT[typedPaused.status]?.toLowerCase()}, so it can&apos;t be searched or added yet. Make it Active in Setup → Define ICP (Save &amp; apply), then search again.</p>}
-                    {ri && ri.status !== "active" && <p className="note"><b>{ri.name}</b> is {STATUS_TXT[ri.status]?.toLowerCase()}. <b>Add free</b> will find the company but holds it as "pending" until a Super Admin activates {ri.name} in Setup → Define ICP; <b>Research now</b> adds it to {ri.name} accounts straight away.</p>}
+                    {typedPaused && <p className="find-msg err" role="status"><b>{typedPaused.name}</b> is paused. Make it Active in Define ICP first.</p>}
+                    
                     {msg && <p className={`find-msg ${msg.ok ? "ok" : "err"}`} role="status">{msg.text}</p>}
                   </div>);
               })()}
-              {(anyChip || found.understood.length > 0) && !(q.trim() && (found.tokens || []).length > 0) && <p className="note">Nothing matches all of these together. Tap × on a chip above to drop one. Everything you typed or tapped is combined with AND.</p>}
+              {(anyChip || found.understood.length > 0) && !(q.trim() && (found.tokens || []).length > 0) && <p className="note">No company matches. Remove a filter.</p>}
             </div>)}
           {q.trim() && found && found.total > 0 && found.total <= 3 && !found.understood.length && (
             <p className="find-newhint">Not the company you meant? <button type="button" className="link" onClick={() => goNew(q.trim())}>Find &quot;{q.trim()}&quot; as a new company →</button></p>)}
@@ -350,12 +349,12 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
           ) : (<>
             <div className="find-box big">
               <textarea rows={Math.min(Math.max(list.length, 2), 6)} value={names} onChange={(e) => { setNames(e.target.value); setDupes(null); }} autoFocus
-                placeholder={"One company, or several. One per line or separated by commas.\ne.g. Almarai, Gulf Steel Works, Emirates Bio Farm"} aria-label="Company names" />
+                placeholder={"Company names, one per line"} aria-label="Company names" />
             </div>
             {list.length > 0 && (
               <div className="find-names">{list.map((n) => <span key={n}>{n}<button type="button" aria-label={`Remove ${n}`} onClick={() => setNames(list.filter((x) => x !== n).join("\n"))}>×</button></span>)}
                 <em>{list.length} {list.length === 1 ? "company" : "companies"} · {region}</em></div>)}
-            {list.length === 1 && <label className="find-site">Website (optional, helps find the right company)<input value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="e.g. almarai.com" /></label>}
+            {list.length === 1 && <label className="find-site">Website (optional)<input value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="e.g. almarai.com" /></label>}
 
             {dupes && (
               <div className="find-dupes" role="alert">
@@ -371,26 +370,26 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
             <div className="find-cards">
               <div className="find-card">
                 <h3>Add free</h3>
-                <p>Basic profile: a scheduled Claude session checks official sources for revenue and ICP status and adds the company. Included in your Claude plan, no API cost. Usually about 2 minutes.</p>
-                <button type="button" className="btn primary" disabled={working || !list.length} onClick={() => start("free")}>{working ? <span className="btn-spin">Working…</span> : `Add free${list.length > 1 ? ` (${list.length})` : ""} - basic profile, about 2 min`}</button>
+                <p>$0 · basic profile · about 2 minutes</p>
+                <button type="button" className="btn primary" disabled={working || !list.length} onClick={() => start("free")}>{working ? <span className="btn-spin">Working…</span> : `Add free${list.length > 1 ? ` (${list.length})` : ""}`}</button>
               </div>
               <div className="find-card paid">
                 <h3>Research now</h3>
-                <p>Full profile, started immediately: revenue, ERP and S2P signals, sources and contacts for your persona roles. Uses the Anthropic API and asks for your PIN. <b>≈ ${Math.max(list.length, 1) * per < 10 ? (Math.max(list.length, 1) * per).toFixed(2) : Math.round(list.length * per)}</b>{list.length > 1 ? ` for ${list.length} companies` : " per company"}.</p>
-                <button type="button" className="btn" disabled={working || !list.length} onClick={() => start("paid")}>Research now - full profile, ≈ ${(Math.max(list.length, 1) * per).toFixed(2)}</button>
+                <p>Full profile · asks for your PIN · <b>≈ ${Math.max(list.length, 1) * per < 10 ? (Math.max(list.length, 1) * per).toFixed(2) : Math.round(list.length * per)}</b>{list.length > 1 ? ` for ${list.length}` : ""}</p>
+                <button type="button" className="btn" disabled={working || !list.length} onClick={() => start("paid")}>Research now</button>
               </div>
             </div>
             {msg && <p className={`find-msg ${msg.ok ? "ok" : "err"}`} role="status">{msg.text}</p>}
 
             <div className="find-suggest">
-              <span>No name in mind? Let the engine suggest companies that fit {regionInfo?.name || "the region"}&apos;s ICP:</span>
+              <span>No name? Suggest companies for {regionInfo?.name || "the region"}:</span>
               <select value={suggestN} onChange={(e) => setSuggestN(e.target.value)} aria-label="How many">{["5", "10", "30"].map((n) => <option key={n} value={n}>{n} companies</option>)}</select>
-              <button type="button" className="btn" disabled={working} onClick={suggest}>Suggest new companies (free)</button>
+              <button type="button" className="btn" disabled={working} onClick={suggest}>Suggest (free)</button>
             </div>
 
             <div className="find-jobs">
               <h3>Your searches in {regionInfo?.name || region}</h3>
-              {jobs.length === 0 ? <p className="note">Nothing yet. Searches you start here show up with their progress.</p> : (
+              {jobs.length === 0 ? <p className="note">No searches yet.</p> : (
                 <div className="tablewrap"><table className="jobs-table">
                   <thead><tr><th>Company</th><th>Status</th><th>Requested</th><th>Result</th><th></th></tr></thead>
                   <tbody>{jobs.flatMap((j) => {
