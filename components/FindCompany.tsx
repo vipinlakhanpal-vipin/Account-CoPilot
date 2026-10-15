@@ -38,6 +38,7 @@ const PAID_INFO = "Full profile: revenue, ERP and S2P signals, sources and conta
 export default function FindCompany({ initialMode, initialQuery, initialRegion }: { initialMode: Mode; initialQuery: string; initialRegion: string }) {
   const [mode, setMode] = useState<Mode>(initialMode);
   const [info, setInfo] = useState<Info | null>(null);
+  const [pausedHint, setPausedHint] = useState("");
   const [allRegions, setAllRegions] = useState<RegionInfo[]>([]); // includes paused regions, only used to explain why one can't be searched
   // ── Search Company
   const [q, setQ] = useState(initialMode === "search" ? initialQuery : "");
@@ -168,17 +169,16 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
   }
   const jobs = (info?.jobs || []).filter((j) => j.region === region).slice(0, 8);
 
-  // "oman flour mills" → Oman is pre-selected for the research offer
-  const emptyKey = found && found.total === 0 ? q.trim().toLowerCase() : "";
-  useEffect(() => {
-    if (!emptyKey || !info) return;
-    const typed = info.regions.find((r) => emptyKey.includes(r.key.toLowerCase()) || emptyKey.includes(r.name.toLowerCase()));
-    const pick = typed?.key || sel.region[0];
-    if (pick && info.regions.some((r) => r.key === pick)) setRegion(pick);
-  }, [emptyKey, info]); // eslint-disable-line react-hooks/exhaustive-deps
-    const openAccount = (it: { slug: string; region: string }) => `/?open=${encodeURIComponent(it.slug)}&country=${encodeURIComponent(it.region)}`;
-  const goNew = (name: string) => { setNames(name); setMode("new"); setMsg(null); setDupes(null);
-    const pick = sel.region[0] || found?.facets.region[0]?.value; if (pick && info?.regions.some((r) => r.key === pick)) setRegion(pick); };
+  const openAccount = (it: { slug: string; region: string }) => `/?open=${encodeURIComponent(it.slug)}&country=${encodeURIComponent(it.region)}`;
+  const goNew = (name: string) => {
+    setNames(name); setMode("new"); setMsg(null); setDupes(null);
+    const low = name.toLowerCase();
+    const named = (r: RegionInfo) => low.includes(r.key.toLowerCase()) || low.includes(r.name.toLowerCase());
+    const paused = allRegions.find((r) => r.status !== "active" && named(r));
+    setPausedHint(paused ? `${paused.name} is paused. Make it Active in Setup → Define ICP first.` : "");
+    const pick = info?.regions.find(named)?.key || sel.region[0] || found?.facets.region[0]?.value;
+    if (pick && info?.regions.some((r) => r.key === pick)) setRegion(pick);
+  };
 
   const regionRows: { key: string; name: string; status: string }[] = info?.regions.length ? info.regions
     : (found?.facets.region || []).map((f) => ({ key: f.value, name: f.value, status: "active" }));
@@ -319,28 +319,8 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
                       <small>{o.why}</small>
                     </button>))}
                 </div>)}
-              {q.trim() && (found.tokens || []).length > 0 && (() => {
-                const name = /[<>=]/.test(q) ? (found.tokens || []).join(" ") : q.trim();
-                const ri = info?.regions.find((r) => r.key === region);
-                const typedPaused = allRegions.find((r) => r.status !== "active" && (emptyKey.includes(r.key.toLowerCase()) || emptyKey.includes(r.name.toLowerCase())));
-                return (
-                  <div className="find-research">
-                    <h4>Add it?</h4>
-                    <p>Add <b>&quot;{name}&quot;</b> to
-                      {info && info.regions.length > 0
-                        ? <select value={region} onChange={(e) => { setRegion(e.target.value); setMsg(null); }} aria-label="Region to add it to">{info.regions.map((r) => <option key={r.key} value={r.key}>{r.name}</option>)}</select>
-                        : " your data"}</p>
-                    <div className="find-rcost">
-                      <div><b>Add free <Info text={FREE_INFO} /></b>
-                        <button type="button" className="btn add-free" disabled={working || !region || !!typedPaused} onClick={() => queueFree([name])}>{working ? "Working…" : "Add free · $0"}</button></div>
-                      <div><b>Research now <Info text={PAID_INFO} /></b>
-                        <button type="button" className="btn research-now" disabled={working || !region || !!typedPaused} onClick={() => runPaid([name])}>Research now · ≈ ${per.toFixed(2)}</button></div>
-                    </div>
-                    {typedPaused && <p className="find-msg err" role="status"><b>{typedPaused.name}</b> is paused. Make it Active in Define ICP first.</p>}
-                    
-                    {msg && <p className={`find-msg ${msg.ok ? "ok" : "err"}`} role="status">{msg.text}</p>}
-                  </div>);
-              })()}
+              {q.trim() && (found.tokens || []).length > 0 && (
+                <p className="find-tonew"><button type="button" className="btn add-free" onClick={() => goNew(/[<>=]/.test(q) ? (found.tokens || []).join(" ") : q.trim())}>Find it as a new company →</button></p>)}
               {(anyChip || found.understood.length > 0) && !(q.trim() && (found.tokens || []).length > 0) && <p className="note">No company matches. Remove a filter.</p>}
             </div>)}
           {q.trim() && found && found.total > 0 && found.total <= 3 && !found.understood.length && (
@@ -355,9 +335,10 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
             <p className="note">{allRegions.length ? "None of your regions is Active yet. A Super Admin can make one Active in Setup → Define ICP." : "No region is assigned to you yet. Ask a Super Admin to add one in Setup → Team."}</p>
           ) : (<>
             <div className="find-box big">
-              <textarea rows={Math.min(Math.max(list.length, 2), 6)} value={names} onChange={(e) => { setNames(e.target.value); setDupes(null); }} autoFocus
+              <textarea rows={Math.min(Math.max(list.length, 2), 6)} value={names} onChange={(e) => { setNames(e.target.value); setDupes(null); setPausedHint(""); }} autoFocus
                 placeholder={"Company names, one per line"} aria-label="Company names" />
             </div>
+            {pausedHint && <p className="find-msg err" role="status">{pausedHint}</p>}
             {list.length > 0 && (
               <div className="find-names">{list.map((n) => <span key={n}>{n}<button type="button" aria-label={`Remove ${n}`} onClick={() => setNames(list.filter((x) => x !== n).join("\n"))}>×</button></span>)}
                 <em>{list.length} {list.length === 1 ? "company" : "companies"} · {region}</em></div>)}
