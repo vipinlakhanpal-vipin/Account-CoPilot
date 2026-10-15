@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.01";
+export const APP_VERSION = "4.02";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.02", date: "2026-10-15", notes: "Tidied the not-found panel in Search Company: removed the extra \"check the spelling\" link and the filter-chip note that did not apply.", changes: [
+      { what: "Removed the \"Prefer to check the spelling or add several at once? Open Find New Company\" line and the \"Tap x on a chip\" note from the not-found panel, which already lets you pick the region and add the company", where: "components/FindCompany.tsx", why: "Reported — the extra link had no clear purpose" },
+    ] },
   { version: "4.01", date: "2026-10-15", notes: "Find company lists only Active regions. Paused and Next phase regions no longer appear in the left panel or the region choices.", changes: [
       { what: "Paused and Next phase regions are hidden from the region list and the region dropdown of Find company. If you type a paused region's name in a search that finds nothing, the page says the region is paused and points to Setup → Define ICP instead of offering to add it", where: "components/FindCompany.tsx", why: "Requested — don't show paused regions in the search function" },
     ] },

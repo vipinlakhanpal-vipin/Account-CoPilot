@@ -323,7 +323,7 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
                     <p>Look for <b>&quot;{name}&quot;</b> on the web and add it to
                       {info && info.regions.length > 0
                         ? <select value={region} onChange={(e) => { setRegion(e.target.value); setMsg(null); }} aria-label="Region to add it to">{info.regions.map((r) => <option key={r.key} value={r.key}>{r.name}</option>)}</select>
-                        : " your data"}.</p>
+                        : " your data"}</p>
                     <div className="find-rcost">
                       <div><b>Add free</b><span>Basic profile (revenue, ICP status). Cost $0. Runs in a scheduled Claude session on your plan, usually about 2 minutes.</span>
                         <button type="button" className="btn primary" disabled={working || !region || !!typedPaused} onClick={() => queueFree([name])}>{working ? "Working…" : "Add free - basic profile, about 2 min"}</button></div>
@@ -333,10 +333,9 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
                     {typedPaused && <p className="find-msg err" role="status"><b>{typedPaused.name}</b> is {STATUS_TXT[typedPaused.status]?.toLowerCase()}, so it can&apos;t be searched or added yet. Make it Active in Setup → Define ICP (Save &amp; apply), then search again.</p>}
                     {ri && ri.status !== "active" && <p className="note"><b>{ri.name}</b> is {STATUS_TXT[ri.status]?.toLowerCase()}. <b>Add free</b> will find the company but holds it as "pending" until a Super Admin activates {ri.name} in Setup → Define ICP; <b>Research now</b> adds it to {ri.name} accounts straight away.</p>}
                     {msg && <p className={`find-msg ${msg.ok ? "ok" : "err"}`} role="status">{msg.text}</p>}
-                    <p className="note">Prefer to check the spelling or add several at once? <button type="button" className="link" onClick={() => goNew(name)}>Open Find New Company →</button></p>
                   </div>);
               })()}
-              {(anyChip || found.understood.length > 0) && <p className="note">Nothing matches all of these together. Tap × on a chip above to drop one. Everything you typed or tapped is combined with AND.</p>}
+              {(anyChip || found.understood.length > 0) && !(q.trim() && (found.tokens || []).length > 0) && <p className="note">Nothing matches all of these together. Tap × on a chip above to drop one. Everything you typed or tapped is combined with AND.</p>}
             </div>)}
           {q.trim() && found && found.total > 0 && found.total <= 3 && !found.understood.length && (
             <p className="find-newhint">Not the company you meant? <button type="button" className="link" onClick={() => goNew(q.trim())}>Find &quot;{q.trim()}&quot; as a new company →</button></p>)}
