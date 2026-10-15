@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "3.98";
+export const APP_VERSION = "3.99";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "3.99", date: "2026-10-15", notes: "When a company is not in your data, Search Company now offers to research it right there, with the cost of each option shown.", changes: [
+      { what: "The not-found result in Search Company now has a \"Want me to research it and add it?\" panel: pick the region (pre-selected when you typed it, as in \"oman flour mills\"), then Search free ($0, scheduled session, usually a minute or two) or Research now (about $0.55, instant, asks for your PIN). A paused region says results are held until it is activated", where: "components/FindCompany.tsx (.find-research)", why: "Requested — when a search finds nothing, offer to run research and show the cost" },
+      { what: "The offer also appears when the search text included a region word, which was hiding the old button (\"oman\" was read as a region filter, so nothing was left to offer)", where: "components/FindCompany.tsx", why: "Reported — searching \"oman flour mills\" gave no option" },
+    ] },
   { version: "3.98", date: "2026-10-15", notes: "Faster page switches: Home and Find company no longer load the whole database to show a few numbers.", changes: [
       { what: "Home now reads one small column (country) to count companies per region instead of loading all eight tables (about 10 MB) on every visit", where: "app/home/page.tsx", why: "Reported — moving from one tab to another felt slow" },
       { what: "Find company reads only the columns it searches (no profile blobs, notes or signals) and who has contacts, about 0.8 s instead of 1.8 s on a cold start", where: "lib/dataCache.ts (loadFindCached), lib/findSearch.ts, app/api/find", why: "Same" },

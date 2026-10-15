@@ -17,7 +17,7 @@ type Info = { regions: RegionInfo[]; jobs: Job[]; est: { update: number }; isSup
 type Item = { id: string; slug: string; company_name: string; country: string; region: string; hq_city: string; industry: string; icp_status: string; revenue: string; revenue_note: string;
   employees: string; erp: string; platform: string; signal: string; listing: string; contacts: number; coupa_customer: boolean; matched: string[] };
 type Facet = { value: string; count: number };
-type Found = { total: number; items: Item[]; ids: string[]; understood: { label: string; without: string }[]; suggestions: { company_name: string; slug: string; region: string }[]; relaxed?: string; similar?: (Item & { why: string })[];
+type Found = { total: number; items: Item[]; ids: string[]; understood: { label: string; without: string }[]; suggestions: { company_name: string; slug: string; region: string }[]; relaxed?: string; similar?: (Item & { why: string })[]; tokens?: string[];
   facets: { region: Facet[]; status: Facet[]; listing: Facet[]; signal: Facet[]; platform: Facet[]; withContacts: number } };
 type Sel = { region: string[]; status: string[]; listing: string[]; signal: string[]; platform: string[]; contacts: boolean };
 const EMPTY_SEL: Sel = { region: [], status: [], listing: [], signal: [], platform: [], contacts: false };
@@ -160,7 +160,15 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
   }
   const jobs = (info?.jobs || []).filter((j) => j.region === region).slice(0, 8);
 
-  const openAccount = (it: { slug: string; region: string }) => `/?open=${encodeURIComponent(it.slug)}&country=${encodeURIComponent(it.region)}`;
+  // "oman flour mills" → Oman is pre-selected for the research offer
+  const emptyKey = found && found.total === 0 ? q.trim().toLowerCase() : "";
+  useEffect(() => {
+    if (!emptyKey || !info) return;
+    const typed = info.regions.find((r) => emptyKey.includes(r.key.toLowerCase()) || emptyKey.includes(r.name.toLowerCase()));
+    const pick = typed?.key || sel.region[0];
+    if (pick && info.regions.some((r) => r.key === pick)) setRegion(pick);
+  }, [emptyKey, info]); // eslint-disable-line react-hooks/exhaustive-deps
+    const openAccount = (it: { slug: string; region: string }) => `/?open=${encodeURIComponent(it.slug)}&country=${encodeURIComponent(it.region)}`;
   const goNew = (name: string) => { setNames(name); setMode("new"); setMsg(null); setDupes(null);
     const pick = sel.region[0] || found?.facets.region[0]?.value; if (pick && info?.regions.some((r) => r.key === pick)) setRegion(pick); };
 
@@ -195,7 +203,7 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
             <li>{regionInfo.entity_level === "group_hq" ? "Group headquarters only" : regionInfo.entity_level === "any" ? "Any legal entity" : "Group HQ and major subsidiaries"}</li>
             <li>{regionInfo.listing === "listed_only" ? "Listed companies only" : regionInfo.listing === "private_only" ? "Private companies only" : "Listing not required"}</li>
           </ul>
-          {regionInfo.status !== "active" && <p>This region is <b>{STATUS_TXT[regionInfo.status]?.toLowerCase()}</b>. Companies found are held until a Super Admin activates it in Setup → Define ICP.</p>}
+          {regionInfo.status !== "active" && <p>This region is <b>{STATUS_TXT[regionInfo.status]?.toLowerCase()}</b>. A free search finds the company but holds it as pending until a Super Admin activates the region in Setup → Define ICP. Research now adds it straight away.</p>}
         </div>)}
       {mode === "search" && found && (
         <div className="find-facets">
@@ -304,7 +312,27 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
                       <small>{o.why}</small>
                     </button>))}
                 </div>)}
-              {q.trim() && !found.understood.length && <button type="button" className="btn primary" onClick={() => goNew(q.trim())}>Find &quot;{q.trim()}&quot; as a new company →</button>}
+              {q.trim() && (found.tokens || []).length > 0 && (() => {
+                const name = /[<>=]/.test(q) ? (found.tokens || []).join(" ") : q.trim();
+                const ri = info?.regions.find((r) => r.key === region);
+                return (
+                  <div className="find-research">
+                    <h4>Want me to research it and add it?</h4>
+                    <p>Look for <b>&quot;{name}&quot;</b> on the web and add it to
+                      {info && info.regions.length > 0
+                        ? <select value={region} onChange={(e) => { setRegion(e.target.value); setMsg(null); }} aria-label="Region to add it to">{info.regions.map((r) => <option key={r.key} value={r.key}>{r.name}</option>)}</select>
+                        : " your data"}.</p>
+                    <div className="find-rcost">
+                      <div><b>Search free</b><span>Cost $0. Runs in a scheduled Claude session on your plan, usually a minute or two.</span>
+                        <button type="button" className="btn primary" disabled={working || !region} onClick={() => queueFree([name])}>{working ? "Working…" : "Search free"}</button></div>
+                      <div><b>Research now</b><span>Cost about ${per.toFixed(2)}. Instant, full profile (revenue, ERP, signals). Uses the Anthropic API and asks for your PIN.</span>
+                        <button type="button" className="btn" disabled={working || !region} onClick={() => runPaid([name])}>Research now</button></div>
+                    </div>
+                    {ri && ri.status !== "active" && <p className="note"><b>{ri.name}</b> is {STATUS_TXT[ri.status]?.toLowerCase()}. <b>Search free</b> will find the company but holds it as "pending" until a Super Admin activates {ri.name} in Setup → Define ICP; <b>Research now</b> adds it to {ri.name} accounts straight away.</p>}
+                    {msg && <p className={`find-msg ${msg.ok ? "ok" : "err"}`} role="status">{msg.text}</p>}
+                    <p className="note">Prefer to check the spelling or add several at once? <button type="button" className="link" onClick={() => goNew(name)}>Open Find New Company →</button></p>
+                  </div>);
+              })()}
               {(anyChip || found.understood.length > 0) && <p className="note">Nothing matches all of these together. Tap × on a chip above to drop one. Everything you typed or tapped is combined with AND.</p>}
             </div>)}
           {q.trim() && found && found.total > 0 && found.total <= 3 && !found.understood.length && (
