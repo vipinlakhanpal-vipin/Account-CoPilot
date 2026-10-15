@@ -1478,3 +1478,16 @@ th .infotip{margin-left:3px}.infotip-btn{width:15px;height:15px;font-size:10px}
 .find-rcost b{font-size:14px}.find-rcost span{font-size:12px;color:var(--muted);flex:1}
 .find-rcost .btn{justify-content:center}
 @media (max-width:700px){.find-rcost{grid-template-columns:minmax(0,1fr)}}
+
+/* Find company: green tabs, a green free action and an orange paid one (it costs money), plain "i" help */
+.find-modes button:hover{border-color:#0F6E56}
+.find-modes button[aria-selected="true"]{background:#0F6E56;border-color:#0B5A46;box-shadow:0 4px 14px rgba(15,110,86,.3)}
+.btn.add-free{background:#0F6E56;border-color:#0F6E56;color:#fff;font-weight:600}
+.btn.add-free:hover:not(:disabled){background:#0B5A46;border-color:#0B5A46}
+.btn.research-now{background:#D9650D;border-color:#D9650D;color:#fff;font-weight:600}
+.btn.research-now:hover:not(:disabled){background:#B8530A;border-color:#B8530A}
+.find-i{position:relative;display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;margin-left:6px;border-radius:50%;border:1.5px solid var(--muted);color:var(--muted);font:700 11px/1 var(--body);cursor:help;vertical-align:1px}
+.find-i:hover,.find-i:focus-visible{border-color:#0F6E56;color:#0F6E56;outline:0}
+.find-i-pop{position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);width:240px;padding:9px 11px;border-radius:10px;background:var(--text);color:var(--surface);font:500 12px/1.4 var(--body);text-align:left;pointer-events:none;opacity:0;z-index:30}
+.find-i:hover .find-i-pop,.find-i:focus-visible .find-i-pop{opacity:1}
+.find-card h3,.find-rcost b{display:flex;align-items:center}

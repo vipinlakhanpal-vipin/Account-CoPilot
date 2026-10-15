@@ -28,6 +28,13 @@ const STATUS_TXT: Record<string, string> = { active: "Active · daily run", paus
 const nextRun = () => { const n = new Date(), t = new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate(), 2, 0, 0)); if (t <= n) t.setUTCDate(t.getUTCDate() + 1);
   return t.toLocaleString("en-US", { weekday: "short", hour: "2-digit", minute: "2-digit", hour12: true }); };
 
+/** A small "i" that explains an option on hover, focus or tap, so the cards stay plain. */
+function Info({ text }: { text: string }) {
+  return <span className="find-i" tabIndex={0} role="note" aria-label={text}>i<span className="find-i-pop">{text}</span></span>;
+}
+const FREE_INFO = "Basic profile: revenue and ICP status from official sources. Costs nothing. A scheduled Claude session does it, usually in about 2 minutes.";
+const PAID_INFO = "Full profile: revenue, ERP and S2P signals, sources and contacts for your persona roles. Uses the Anthropic API and asks for your PIN.";
+
 export default function FindCompany({ initialMode, initialQuery, initialRegion }: { initialMode: Mode; initialQuery: string; initialRegion: string }) {
   const [mode, setMode] = useState<Mode>(initialMode);
   const [info, setInfo] = useState<Info | null>(null);
@@ -324,10 +331,10 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
                         ? <select value={region} onChange={(e) => { setRegion(e.target.value); setMsg(null); }} aria-label="Region to add it to">{info.regions.map((r) => <option key={r.key} value={r.key}>{r.name}</option>)}</select>
                         : " your data"}</p>
                     <div className="find-rcost">
-                      <div><b>Add free</b><span>$0 · basic profile · about 2 minutes</span>
-                        <button type="button" className="btn primary" disabled={working || !region || !!typedPaused} onClick={() => queueFree([name])}>{working ? "Working…" : "Add free"}</button></div>
-                      <div><b>Research now</b><span>≈ ${per.toFixed(2)} · full profile · asks for your PIN</span>
-                        <button type="button" className="btn" disabled={working || !region || !!typedPaused} onClick={() => runPaid([name])}>Research now</button></div>
+                      <div><b>Add free <Info text={FREE_INFO} /></b>
+                        <button type="button" className="btn add-free" disabled={working || !region || !!typedPaused} onClick={() => queueFree([name])}>{working ? "Working…" : "Add free · $0"}</button></div>
+                      <div><b>Research now <Info text={PAID_INFO} /></b>
+                        <button type="button" className="btn research-now" disabled={working || !region || !!typedPaused} onClick={() => runPaid([name])}>Research now · ≈ ${per.toFixed(2)}</button></div>
                     </div>
                     {typedPaused && <p className="find-msg err" role="status"><b>{typedPaused.name}</b> is paused. Make it Active in Define ICP first.</p>}
                     
@@ -369,14 +376,12 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
 
             <div className="find-cards">
               <div className="find-card">
-                <h3>Add free</h3>
-                <p>$0 · basic profile · about 2 minutes</p>
-                <button type="button" className="btn primary" disabled={working || !list.length} onClick={() => start("free")}>{working ? <span className="btn-spin">Working…</span> : `Add free${list.length > 1 ? ` (${list.length})` : ""}`}</button>
+                <h3>Add free <Info text={FREE_INFO} /></h3>
+                <button type="button" className="btn add-free" disabled={working || !list.length} onClick={() => start("free")}>{working ? <span className="btn-spin">Working…</span> : `Add free${list.length > 1 ? ` (${list.length})` : ""} · $0`}</button>
               </div>
               <div className="find-card paid">
-                <h3>Research now</h3>
-                <p>Full profile · asks for your PIN · <b>≈ ${Math.max(list.length, 1) * per < 10 ? (Math.max(list.length, 1) * per).toFixed(2) : Math.round(list.length * per)}</b>{list.length > 1 ? ` for ${list.length}` : ""}</p>
-                <button type="button" className="btn" disabled={working || !list.length} onClick={() => start("paid")}>Research now</button>
+                <h3>Research now <Info text={PAID_INFO} /></h3>
+                <button type="button" className="btn research-now" disabled={working || !list.length} onClick={() => start("paid")}>Research now · ≈ ${(Math.max(list.length, 1) * per).toFixed(2)}</button>
               </div>
             </div>
             {msg && <p className={`find-msg ${msg.ok ? "ok" : "err"}`} role="status">{msg.text}</p>}
