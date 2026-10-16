@@ -14,8 +14,13 @@ const LABELS: Record<string, string> = { pipeline: "Pipeline", accounts: "Accoun
 export default async function Home({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   const user = await requirePageUser();
   const { tab = "dashboard" } = await searchParams;
-  const access = await getAccess(user);
-  const data = scopeData(await loadAllCached(), access); // a Standard user only ever receives their region's data
+  // These three do not depend on each other, so they run together (each one is a trip to the database).
+  const [access, all, { data: icpRow }] = await Promise.all([
+    getAccess(user), loadAllCached(), supabaseAdmin().from("settings").select("value").eq("key", "icp_definition").maybeSingle(),
+  ]);
+  const scoped = scopeData(all, access); // a Standard user only ever receives their region's data
+  // notes_company is only used by the Excel export (which loads its own data), so the browser never needs it.
+  const data = { ...scoped, contacts: scoped.contacts.map(({ notes_company: _n, ...r }) => r) };
   const counts: Record<string, number> = {};
   data.accounts.forEach((a) => { const c = regionOf(a.country); counts[c] = (counts[c] || 0) + 1; });
   const home = access.isSuper ? "UAE" : access.regions[0] || "UAE";
@@ -23,7 +28,6 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
     <p>Your Super Admin needs to assign you a region in Setup → Team before you can see accounts.</p></div></section></div>);
   // A region's tile shows once it's Active in Define ICP (even with 0 accounts yet — the engine just hasn't run)
   // or once it has real accounts (covers a region still "Paused" in ICP terms but already populated, like Qatar/Kuwait).
-  const { data: icpRow } = await supabaseAdmin().from("settings").select("value").eq("key", "icp_definition").maybeSingle();
   const icpRegions = (icpRow?.value as { regions?: Record<string, { status?: string }> } | null)?.regions || {};
   const active = REGIONS.map((r) => r.key).filter((k) => icpRegions[k]?.status === "active");
   return (

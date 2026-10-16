@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.07";
+export const APP_VERSION = "4.08";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,11 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.08", date: "2026-10-16", notes: "Faster tab switching: the app's servers now run in Tokyo next to the database, tabs you opened a minute ago open instantly, and the pipeline explanation sits behind an i.", changes: [
+      { what: "The app's servers now run in Tokyo (hnd1), where the database is. Before, they ran in the US and every page made several round trips across the Pacific to read the data", where: "vercel.json", why: "Reported — each tab took 4 to 8 seconds" },
+      { what: "Going back to a tab you opened in the last minute reuses it instead of loading it again, and the Dashboard looks up access, data and ICP settings together instead of one after another", where: "next.config.mjs (staleTimes), app/page.tsx", why: "Same" },
+      { what: "The Rank explanation, live example and score definitions on the Pipeline tab are now behind one i button", where: "components/CoPilotApp.tsx, components/InfoTip.tsx", why: "Requested — convert this piece into an i button" },
+    ] },
   { version: "4.07", date: "2026-10-15", notes: "The Search Company tab now reads \"Already in your database\".", changes: [
       { what: "Changed the line under the Search Company tab to \"Already in your database\", to match Find New Company's \"Not in your database yet\"", where: "components/FindCompany.tsx", why: "Requested wording" },
     ] },

@@ -44,7 +44,7 @@ export const HELP = (w: Weights = { w_match: 50, w_opportunity: 30, w_fit: 20, m
 // Popup renders through a portal at a viewport-computed position, so it always stays fully visible —
 // a table header's own overflow-x:auto scroll box would otherwise clip an absolutely-positioned popup
 // that extends past its edge (common for the leftmost columns, e.g. Rank).
-export default function InfoTip({ k, w }: { k: string; w?: Weights }) {
+export default function InfoTip({ k, w, extra }: { k: string; w?: Weights; extra?: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<{ top: number; left: number; width: number } | null>(null);
   const ref = useRef<HTMLSpanElement>(null);
@@ -76,7 +76,7 @@ export default function InfoTip({ k, w }: { k: string; w?: Weights }) {
       {open && pos && typeof document !== "undefined" && createPortal(
         <span className="infotip-pop" role="dialog" aria-label={h.title} style={{ position: "fixed", top: pos.top, left: pos.left, width: pos.width }}>
           <b className="t">{h.title}</b>
-          <div className="x">{h.text}</div>
+          <div className="x">{h.text}{extra}</div>
           <Link className="more" href={`/guide#${h.section}`}>Read more in Setup → Learn Me →</Link>
         </span>, document.body)}
     </span>

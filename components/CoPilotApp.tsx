@@ -537,20 +537,14 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
       onRow={openRow} />;
   } else if (tab === "pipeline") {
     const ranked = A.filter((a) => inPipe(a, scores[a.id])).sort((a, b) => scores[b.id].rank - scores[a.id].rank);
+    const top = ranked[0], topSc = top ? scores[top.id] : null;
+    const rankExtra = top && topSc ? (() => { const p1 = topSc.m.total * pipe.w_match / 100, p2 = topSc.o.total * pipe.w_opportunity / 100, p3 = topSc.f.total * pipe.w_fit / 100;
+      const n = (x: number) => (Math.round(x * 10) / 10).toLocaleString();
+      return <>
+        <p style={{ margin: "8px 0 0" }}><b>Live example, {top.company_name} (#1):</b> {pipe.w_match}% × {topSc.m.total}% + {pipe.w_opportunity}% × {topSc.o.total}% + {pipe.w_fit}% × {topSc.f.total}% = {n(p1)} + {n(p2)} + {n(p3)} = {n(p1 + p2 + p3)} → <b>Rank {topSc.rank}%</b>.</p>
+        <p style={{ margin: "8px 0 0" }}>Needs ICP Match {pipe.min_match}%+ to be listed. {pipe.exclude_not_icp ? "Not ICP accounts are left out. " : ""}Weights are set per region in Setup → Define ICP.</p></>; })() : null;
     view = <FilterTable unit="accounts" title="Ranked pipeline" tipW={pipe} empty={notFound} note={<>
-        <div className="pipe-rank-row">
-          <div><b>Rank</b> — which account to work first: <b>{pipe.w_match}% × ICP Match + {pipe.w_opportunity}% × Opportunity + {pipe.w_fit}% × Coupa Fit</b>.</div>
-          {ranked[0] && (() => { const t = ranked[0], sc = scores[t.id], p1 = sc.m.total * pipe.w_match / 100, p2 = sc.o.total * pipe.w_opportunity / 100, p3 = sc.f.total * pipe.w_fit / 100;
-            const n = (x: number) => (Math.round(x * 10) / 10).toLocaleString();
-            return <div className="pipe-example"><b>Live example — {t.company_name} (#1):</b> {pipe.w_match}% × {sc.m.total}% (ICP Match) + {pipe.w_opportunity}% × {sc.o.total}% (Opportunity) + {pipe.w_fit}% × {sc.f.total}% (Coupa Fit)
-              = {n(p1)} + {n(p2)} + {n(p3)} = {n(p1 + p2 + p3)} → <b>Rank {sc.rank}%</b>. Every other account is ranked the same way.</div>; })()}
-        </div>
-        <div className="pipe-def">
-          <div><b>ICP Match</b> — how well it fits your ICP (revenue, size, industry, ownership…). Needs {pipe.min_match}%+ to be listed.</div>
-          <div><b>Opportunity</b> — how likely it is to buy soon (S2P signals, transformation, your buying triggers).</div>
-          <div><b>Coupa Fit</b> — how well Coupa fits it (five value areas, its ERP and platform, your focus platforms).</div>
-        </div>
-        <p className="note">Every % = points earned ÷ points available. {pipe.exclude_not_icp ? "Not ICP accounts are left out. " : ""}Weights are set per region in Setup → Define ICP. Hover a score for its breakdown, click <InfoTip k="percent" w={pipe} /> for more, or read <a href="/guide#pipeline">Setup → Learn Me → Pipeline</a>.</p>
+        <span className="pipe-help">How accounts are ranked <InfoTip k="rank" w={pipe} extra={rankExtra} /></span>
       </>}
       rows={ranked.map((a) => ({ ...a, icp_match_pct: scores[a.id].m.total, opportunity_pct: scores[a.id].o.total, coupa_fit_pct: scores[a.id].f.total, rank_pct: scores[a.id].rank }))}
       search={(a) => [a.company_name, a.industry, a.erp, a.existing_s2p_product].join(" ")}
