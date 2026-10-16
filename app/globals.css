@@ -1748,3 +1748,9 @@ a.mkt-site i{font-style:normal;font-size:.75em;opacity:.55}
 .sig-side label.mkt-drop{border-radius:8px;padding:2px 4px;margin-left:-4px;margin-right:-4px}
 .sig-side label.mkt-drop.armed{outline:1.5px dashed var(--line-2)}
 .sig-side label.mkt-drop.over{outline:2px solid #0B7A66;background:color-mix(in srgb,#2ECC8F 18%,var(--surface))}
+.sig-cmsg{position:relative;margin-top:8px;padding:7px 28px 7px 10px;border-radius:8px;font-size:11.5px;line-height:1.45;border:1px solid var(--line)}
+.sig-cmsg.run{background:color-mix(in srgb,#F5A623 12%,var(--surface));border-color:#E6BF7E;color:#8A5300}
+.sig-cmsg.ok{background:color-mix(in srgb,#2ECC8F 12%,var(--surface));border-color:#8FD4BD;color:#0B5A47}
+.sig-cmsg.bad{background:color-mix(in srgb,#FF4D6A 10%,var(--surface));border-color:#E9A0A8;color:#B42318}
+.sig-cmsg .fcj-x{position:absolute;top:2px;right:6px;font-size:16px}
+.sig-acts .gauge{min-width:180px}

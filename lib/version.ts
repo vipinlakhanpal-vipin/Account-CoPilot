@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.68";
+export const APP_VERSION = "4.69";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.69", date: "2026-10-16", notes: "Find contacts in Buying signals stays inside the signal card.", changes: [
+      { what: "Clicking Find contacts on a signal card no longer opens the floating card at the top right. The button turns into a gauge with an orange dot and a timer, and a small message under the card's buttons says what it is doing; when it finishes the message says how many contacts were added (or that none were found) and where to see them", where: "components/BuyingSignals.tsx, app/api/signals", why: "Requested — keep the contact search inside the Buying signals window, with the button flashing and the message below it" },
+    ] },
   { version: "4.68", date: "2026-10-16", notes: "Minimize the floating windows.", changes: [
       { what: "Aria, Buying signals and Market intelligence have a Minimize button: the window shrinks to a small bar in the bottom-right corner (stacked so they do not overlap) and the page behind is fully usable. Scans keep running and updating while it is minimized; Restore (or the Aria icon) brings it back exactly as it was", where: "components/AppWindow.tsx, packages/aria/AriaChat.tsx, packages/aria/aria.css", why: "Requested — minimize so you can work on other functions" },
     ] },

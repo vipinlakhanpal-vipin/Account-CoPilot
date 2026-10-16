@@ -25,7 +25,12 @@ export async function GET(req: Request) {
   const def = normalizeDefinition((await db.from("settings").select("value").eq("key", "icp_definition").maybeSingle()).data?.value);
   const regions = Object.entries(def.regions).filter(([k, r]) => canSeeRegion(access, k) && (r as { status: string }).status === "active").map(([k]) => k);
   const jobs = ((await db.from("settings").select("value").eq("key", "engine_jobs").maybeSingle()).data?.value as { jobs: { mode: string; slug?: string; region: string; status: string; company_name?: string; result?: string; requested_at: string }[] } | null)?.jobs || [];
-  return NextResponse.json({ items: mine, regions, sweeps: st.sweeps || {}, jobs: jobs.filter((j) => j.mode === "signals" && (j.status === "queued" || (j.status === "running" && Date.now() - new Date((j as { started_at?: string }).started_at || j.requested_at).getTime() < 60 * 60000) || j.status === "done" || j.status === "error") && canSeeRegion(access, regionOf(j.region))).slice(0, 10) });
+  return NextResponse.json({ items: mine, regions, sweeps: st.sweeps || {}, jobs: [
+    ...jobs.filter((j) => j.mode === "signals" && (j.status === "queued" || (j.status === "running" && Date.now() - new Date((j as { started_at?: string }).started_at || j.requested_at).getTime() < 60 * 60000) || j.status === "done" || j.status === "error") && canSeeRegion(access, regionOf(j.region))).slice(0, 10),
+    // Find contacts searches started from a signal card: waiting or running, plus the ones that finished in the last 30 minutes (so the card can say what was found)
+    ...jobs.filter((j) => j.mode === "contacts" && !!j.slug && canSeeRegion(access, regionOf(j.region)) && (j.status === "queued" || (j.status === "running" && Date.now() - new Date((j as { started_at?: string }).started_at || j.requested_at).getTime() < 60 * 60000)
+      || ((j.status === "done" || j.status === "error") && Date.now() - new Date(j.requested_at).getTime() < 30 * 60000))).slice(0, 20),
+  ] });
 }
 
 export async function POST(req: Request) {

@@ -3,12 +3,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ask, notify } from "@/components/Confirm";
 import { ScanGauge, DoneTick } from "@/components/ScanGauge";
-import { expectedSecs } from "@/lib/scanTime";
+import { expectedSecs, clock } from "@/lib/scanTime";
 import { logActivity } from "@/lib/activityClient";
 import FindContactsButton from "@/components/FindContactsButton";
 import { LANE_LABEL, STRENGTH_ORDER, daysLeft, type Signal, type SignalLane, type SignalStatus } from "@/lib/signals";
 
-type Job = { mode: string; slug?: string; region: string; status: string; company_name?: string; result?: string; requested_at: string; started_at?: string };
+type Job = { mode: string; slug?: string; region: string; status: string; company_name?: string; result?: string; requested_at: string; started_at?: string; done_at?: string; seamless?: boolean };
 type Data = { items: Signal[]; regions: string[]; sweeps: Record<string, string>; jobs: Job[] };
 const LANES: SignalLane[] = ["rfp", "erp", "ecc"];
 const fmt = (d: string) => (d ? new Date(d).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "");
@@ -69,7 +69,10 @@ export default function BuyingSignals({ embedded = false }: { embedded?: boolean
   const shown = useMemo(() => base.filter((s) => (show === "open" ? s.status === "new" || s.status === "seen" : s.status === show))
     .filter((s) => (lane === "all" || s.lane === lane) && strengths.includes(s.strength) && (!factOnly || s.label === "FACT"))
     .sort((a, b) => STRENGTH_ORDER[a.strength] - STRENGTH_ORDER[b.strength] || (a.closes && b.closes ? a.closes.localeCompare(b.closes) : a.closes ? -1 : b.closes ? 1 : 0) || b.detected_at.localeCompare(a.detected_at)), [base, show, lane, strengths, factOnly]);
-  const pending = (data?.jobs || []).filter((j) => j.status === "queued" || j.status === "running");
+  const pending = (data?.jobs || []).filter((j) => j.mode === "signals" && (j.status === "queued" || j.status === "running"));
+  // Find contacts started from a card shows inside that card
+  const contactJob = (slug: string) => (data?.jobs || []).find((j) => j.mode === "contacts" && j.slug === slug);
+  const [hideContacts, setHideContacts] = useState<string[]>([]);
   const [finished, setFinished] = useState("");
   const hadPending = useRef(false);
   useEffect(() => {
@@ -144,11 +147,22 @@ export default function BuyingSignals({ embedded = false }: { embedded?: boolean
                   {s.doc_url ? <a className="btn tiny primary" href={s.doc_url} target="_blank" rel="noopener noreferrer">Download tender documents</a>
                     : s.needs_login ? <span className="sig-login" title="The documents sit behind a registration or login, which Account CoPilot does not bypass. Open the notice and register yourself.">Documents need registration</span> : null}
                   <a className="btn tiny" href={s.source_url} target="_blank" rel="noopener noreferrer">Open source</a>
-                  {s.slug && <FindContactsButton slug={s.slug} region={s.region} company={s.company_name} />}
+                  {s.slug && (() => { const cj = contactJob(s.slug); return cj && (cj.status === "queued" || cj.status === "running") ? <ScanGauge compact label="Searching contacts" requestedAt={cj.requested_at} startedAt={cj.started_at} expectedSecs={expectedSecs(cj)} /> : <FindContactsButton slug={s.slug} region={s.region} company={s.company_name} quiet onQueued={load} />; })()}
                   {s.slug && <button type="button" className="btn tiny" disabled={busy === s.slug} onClick={() => scan(s.region, s.slug, s.company_name)}>Rescan company</button>}
                   {s.status !== "done" && <button type="button" className="btn tiny" onClick={() => mark([s.id], "done")}>Mark done</button>}
                   {s.status !== "dismissed" ? <button type="button" className="btn tiny ghost" onClick={() => mark([s.id], "dismissed")}>Dismiss</button> : <button type="button" className="btn tiny" onClick={() => mark([s.id], "seen")}>Restore</button>}
                 </div>
+                {s.slug && (() => { const cj = contactJob(s.slug); if (!cj || hideContacts.includes(cj.slug || "")) return null;
+                  const run = cj.status === "queued" || cj.status === "running";
+                  const took = cj.started_at && cj.done_at ? Math.round((new Date(cj.done_at).getTime() - new Date(cj.started_at).getTime()) / 1000) : 0;
+                  const added = Number(cj.result?.match(/(\d+)\s+contacts?\s+added/i)?.[1] || 0), updated = Number(cj.result?.match(/(\d+)\s+updated/i)?.[1] || 0);
+                  return (
+                    <div className={`sig-cmsg${run ? " run" : cj.status === "done" ? " ok" : " bad"}`} role="status">
+                      {run ? <>Reading public web pages{cj.seamless ? " and Seamless records" : ""} for named people with an email, phone or LinkedIn link. Usually a few minutes; this card updates by itself.</>
+                        : cj.status === "done" ? (added + updated > 0 ? <><b>Done{took ? ` in ${clock(took)}` : ""}:</b> {added} new contact{added === 1 ? "" : "s"} added{updated ? `, ${updated} updated` : ""}. Open the account's Stakeholders list (look for the green NEW badge).</> : <><b>Done{took ? ` in ${clock(took)}` : ""}:</b> no new public email, phone or LinkedIn was found, so nothing was added.</>)
+                        : <>The contact search did not finish. Try Find contacts again in a few minutes.</>}
+                      {!run && <button type="button" className="fcj-x" aria-label="Dismiss" onClick={() => setHideContacts((h) => [...h, cj.slug || ""])}>×</button>}
+                    </div>); })()}
               </article>);
           })}
         </section>
