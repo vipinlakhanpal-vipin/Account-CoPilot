@@ -1713,3 +1713,11 @@ a.mkt-site i{font-style:normal;font-size:.75em;opacity:.55}
 .sig-pend-row{width:100%}
 .sig-pend-list .btn{align-self:flex-start}
 .sig-pending.done{border-color:#0B7A66;background:color-mix(in srgb,#2ECC8F 12%,var(--surface))}
+/* In a vendor tile the gauge adds no height: the clock sits in the top-right corner and the bar is a thin line along the bottom edge */
+.sig-lane{position:relative;overflow:hidden}
+.gauge.tile{position:static;display:block}
+.gauge.tile .gauge-clock{position:absolute;top:8px;right:10px;display:inline-flex;align-items:center;gap:5px;font:700 11px var(--mono);font-variant-numeric:tabular-nums;color:#8A5300}
+.gauge.tile .gauge-clock .fcj-dot{margin:0;width:8px;height:8px}
+.gauge.tile .gauge-bar{position:absolute;left:0;right:0;bottom:0;height:4px;border-radius:0}
+.gauge-done.tile{position:absolute;top:8px;right:10px;font-size:11px}
+.sig-lane .gauge,.sig-lane .gauge-done{margin-top:0}
