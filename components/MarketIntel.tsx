@@ -7,7 +7,7 @@ import { logActivity } from "@/lib/activityClient";
 import type { MContact, PCustomer, Partner, Vendor } from "@/lib/market";
 
 type Cust = PCustomer & { in_app: boolean; people_on_file: number };
-type Job = { mode: string; vendor?: string; customer?: string; slug?: string; contacts_only?: boolean; region: string; status: string; requested_at: string };
+type Job = { mode: string; vendor?: string; customer?: string; partner?: string; slug?: string; contacts_only?: boolean; region: string; status: string; requested_at: string };
 type Data = { vendors: Vendor[]; custom_vendors: string[]; is_super: boolean; defaults: string[]; regions: string[]; partners: Partner[]; customers: Cust[]; scans: Record<string, string>; jobs: Job[] };
 const ago = (iso?: string) => { if (!iso) return "never"; const h = Math.round((Date.now() - new Date(iso).getTime()) / 36e5); return h < 1 ? "just now" : h < 48 ? `${h} h ago` : `${Math.round(h / 24)} days ago`; };
 const csv = (rows: string[][]) => rows.map((r) => r.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(",")).join("\r\n");
@@ -44,7 +44,7 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
   const custOf = (p: Partner) => custs.filter((c) => c.partner_id === p.id);
   const countP = (v: Vendor) => (data?.partners || []).filter((p) => p.vendor === v && active.includes(p.region)).length;
   const allPending = (data?.jobs || []).filter((j) => j.status === "queued" || j.status === "running");
-  const pending = allPending.filter((j) => j.mode === "market" && !j.customer && !j.contacts_only); // scans, shown in the bar
+  const pending = allPending.filter((j) => j.mode === "market" && !j.customer && !j.partner && !j.contacts_only); // scans, shown in the bar
   // A contact search shows on the customer's own row (a flashing orange dot), not in the bar
   const searching = (c: Cust) => allPending.some((j) => (j.mode === "market" && j.customer === c.customer) || (j.mode === "contacts" && !!j.slug && j.slug === c.slug)
     || (j.mode === "market" && j.contacts_only && j.vendor === c.vendor && j.region === c.region && c.contacts.length === 0));
@@ -78,6 +78,14 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
     setBusy("");
     if (r.ok || r.status === 409) load(); else notify(j.error || "Could not start the search.", "error");
   };
+  const moreFor = async (p: Partner) => {
+    setBusy(`p|${p.id}`); logActivity("scan", `More customers: ${p.name}`);
+    const r = await fetch("/api/engine", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "queue", region: p.region, count: 1, mode: "market", vendor: p.vendor, partner: p.name }) });
+    const j = await r.json().catch(() => ({}));
+    setBusy("");
+    if (r.ok || r.status === 409) load(); else notify(j.error || "Could not start the search.", "error");
+  };
+  const partnerBusy = (p: Partner) => allPending.some((j) => j.mode === "market" && j.partner === p.name && !j.customer && j.region === p.region);
   const findAll = async () => {
     for (const r of active) {
       setBusy(`ca|${r}`);
@@ -204,7 +212,9 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
                 {p.services && <p className="sig-ev">{p.services}</p>}
                 <p className="sig-src">{p.website && <><a href={/^https?:/.test(p.website) ? p.website : `https://${p.website}`} target="_blank" rel="noopener noreferrer">{p.website.replace(/^https?:\/\//, "")}</a> · </>}Listed on: <a href={p.source_url} target="_blank" rel="noopener noreferrer">source</a></p>
                 {p.contacts.map((c, i) => <Who key={i} c={c} />)}
-                <div className="sig-acts"><button type="button" className="btn tiny" onClick={() => setOpenP(isOpen ? null : p.id)} aria-expanded={isOpen}>{cs.length} published customer{cs.length === 1 ? "" : "s"} {isOpen ? "▴" : "▾"}</button></div>
+                <div className="sig-acts">{partnerBusy(p) ? <span className="srch" role="status"><i className="fcj-dot" aria-hidden="true" /><b className="fcj-flash">Finding more customers…</b></span>
+                  : <button type="button" className="btn tiny" disabled={busy === `p|${p.id}`} onClick={() => moreFor(p)} title="Free: reads this partner's whole published customer list and adds the ones not saved yet">Find more customers</button>}
+                  <button type="button" className="btn tiny" onClick={() => setOpenP(isOpen ? null : p.id)} aria-expanded={isOpen}>{cs.length} published customer{cs.length === 1 ? "" : "s"} {isOpen ? "▴" : "▾"}</button></div>
                 {isOpen && (cs.length === 0 ? <p className="note">No customers published by this partner (or none match the filters).</p> : (
                   custTable(cs)))}
               </article>);

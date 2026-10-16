@@ -40,7 +40,7 @@ const setSetting = (db: ReturnType<typeof supabaseAdmin>, key: string, value: un
 async function openJobIssue(job: Job): Promise<string> {
   const token = process.env.GITHUB_JOBS_TOKEN;
   if (!token) return "not_set";
-  const title = job.mode === "market" ? `Job ${job.id}: market intelligence ${job.customer ? `contacts for "${job.customer}"` : job.contacts_only ? `customer contacts, ${job.vendor || "all vendors"}` : job.vendor || "all vendors"} (${job.region})` : job.mode === "signals" ? `Job ${job.id}: buying signals ${job.company_name ? `for "${job.company_name}"` : "scan"} (${job.region})` : job.mode === "contacts" ? `Job ${job.id}: find contacts at "${job.company_name}" (${job.region})${job.seamless ? " with Seamless" : ""}` : job.mode === "company" ? `Job ${job.id}: check "${job.company_name}" (${job.region})` : `Job ${job.id}: ${job.mode} ${job.count} in ${job.region}`;
+  const title = job.mode === "market" ? `Job ${job.id}: market intelligence ${job.customer ? `contacts for "${job.customer}"` : job.partner ? `more customers of "${job.partner}"` : job.contacts_only ? `customer contacts, ${job.vendor || "all vendors"}` : job.vendor || "all vendors"} (${job.region})` : job.mode === "signals" ? `Job ${job.id}: buying signals ${job.company_name ? `for "${job.company_name}"` : "scan"} (${job.region})` : job.mode === "contacts" ? `Job ${job.id}: find contacts at "${job.company_name}" (${job.region})${job.seamless ? " with Seamless" : ""}` : job.mode === "company" ? `Job ${job.id}: check "${job.company_name}" (${job.region})` : `Job ${job.id}: ${job.mode} ${job.count} in ${job.region}`;
   const body = `Queued by ${job.requested_by} at ${job.requested_at}.\n\nAuto-opened by Account CoPilot so the instant job runner fires now instead of waiting for the next daily run. The job itself is tracked in the app (Setup → Settings), not in this issue — closing or leaving this open makes no difference.`;
   try {
     const r = await fetch("https://api.github.com/repos/vipinlakhanpal-vipin/account-copilot-jobs/issues", {
@@ -305,10 +305,10 @@ export async function POST(req: Request) {
       // Market intelligence scan: partners of one vendor (or all four) in one region, and the customers they publish.
       const vendors = vendorList((await getSetting<{ custom?: string[] }>(db, VENDORS_KEY, {})).custom);
       const vendor = vendors.includes(b.vendor || "") ? (b.vendor as string) : "all";
-      const customer = b.customer || "";
-      if (st.jobs.some((j) => j.mode === "market" && (j.status === "queued" || j.status === "running") && j.region === b.region && (j.vendor || "all") === vendor && (j.customer || "") === customer && !!j.contacts_only === !!b.contacts_only))
-        return NextResponse.json({ error: customer ? `Contacts for ${customer} are already being searched.` : `A ${vendor === "all" ? "market" : vendor} scan for ${b.region} is already waiting.` }, { status: 409 });
-      const job: Job = { id, region: b.region, count: 1, mode: "market", vendor, ...(customer ? { customer, partner: b.partner || "" } : {}), ...(b.contacts_only ? { contacts_only: true } : {}), requested_by: user.email || "", requested_at: now, status: "queued" };
+      const customer = b.customer || "", partner = b.partner || "";
+      if (st.jobs.some((j) => j.mode === "market" && (j.status === "queued" || j.status === "running") && j.region === b.region && (j.vendor || "all") === vendor && (j.customer || "") === customer && (j.partner || "") === partner && !!j.contacts_only === !!b.contacts_only))
+        return NextResponse.json({ error: customer ? `Contacts for ${customer} are already being searched.` : partner ? `${partner} is already being searched for more customers.` : `A ${vendor === "all" ? "market" : vendor} scan for ${b.region} is already waiting.` }, { status: 409 });
+      const job: Job = { id, region: b.region, count: 1, mode: "market", vendor, ...(customer || partner ? { ...(customer ? { customer } : {}), partner } : {}), ...(b.contacts_only ? { contacts_only: true } : {}), requested_by: user.email || "", requested_at: now, status: "queued" };
       st.jobs.unshift(job);
       trigger = await openJobIssue(job);
     } else if (b.action === "queue" && b.mode === "signals") {

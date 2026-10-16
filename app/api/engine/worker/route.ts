@@ -257,7 +257,7 @@ export async function POST(req: Request) {
     const vendors = vendorList((await get<{ custom?: string[] }>(db, VENDORS_KEY, {})).custom);
     const { data } = await db.from("settings").select("key,value").like("key", "market_intel:%");
     const docs = new Map((data || []).map((r) => [r.key as string, r.value as MarketDoc]));
-    const pairs = active.filter((r) => !b.region || r === b.region).flatMap((region) => vendors.filter((v) => !b.vendor || v === b.vendor).map((vendor) => { const d = docs.get(marketKey(vendor, region)); return { vendor, region, last_scan: d?.scanned_at || null, partners_known: d?.partners?.length || 0, known: (d?.partners || []).map((p) => p.name), needs_contacts: (d?.customers || []).filter((c) => !c.contacts?.length).slice(0, 10).map((c) => ({ partner: c.partner, customer: c.customer, customer_website: c.customer_website })) }; }))
+    const pairs = active.filter((r) => !b.region || r === b.region).flatMap((region) => vendors.filter((v) => !b.vendor || v === b.vendor).map((vendor) => { const d = docs.get(marketKey(vendor, region)); return { vendor, region, last_scan: d?.scanned_at || null, partners_known: d?.partners?.length || 0, known: (d?.partners || []).map((p) => p.name), known_customers: b.vendor && b.region ? (d?.customers || []).slice(0, 1500).map((c) => ({ partner: c.partner, customer: c.customer })) : undefined, needs_contacts: (d?.customers || []).filter((c) => !c.contacts?.length).slice(0, 10).map((c) => ({ partner: c.partner, customer: c.customer, customer_website: c.customer_website })) }; }))
       .sort((x, y) => String(x.last_scan || "").localeCompare(String(y.last_scan || ""))).slice(0, b.limit);
     return NextResponse.json({ targets: pairs, vendors });
   }
