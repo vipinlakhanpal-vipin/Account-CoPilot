@@ -1534,3 +1534,4 @@ td .rev-src{font-size:10px}
 @keyframes fcj-pulse{0%,100%{transform:scale(.8);opacity:.5}50%{transform:scale(1.2);opacity:1}}
 @keyframes fcj-blink{0%,100%{opacity:1}50%{opacity:.45}}
 @media (prefers-reduced-motion:reduce){.fcj-dot,.fcj-flash{animation:none}}
+.new-tag{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:999px;background:#0B7A66;color:#fff;font:700 9px var(--body);letter-spacing:.06em;vertical-align:middle}

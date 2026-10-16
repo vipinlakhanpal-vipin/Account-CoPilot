@@ -99,6 +99,10 @@ const ICP_ORDER = ["ICP — Verified", "ICP — Likely", "ICP — Needs check", 
 const icpRank = (s?: string) => { const i = ICP_ORDER.indexOf(String(s)); return i < 0 ? 9 : i; };
 const ICP_CLS: Record<string, string> = { "ICP — Verified": "icp-v", "ICP — Likely": "icp-l", "ICP — Needs check": "icp-c", "Not ICP": "icp-n", Unknown: "icp-u" };
 const ICP_ICON: Record<string, string> = { "ICP — Verified": "✓", "ICP — Likely": "●", "ICP — Needs check": "!", "Not ICP": "✕", Unknown: "?" };
+/** A person added by Find contacts in the last 14 days (external_id WEB-…), flagged so it can be told apart from the older rows. */
+const isNewWeb = (p: Row) => [p, ...((p.rows as Row[]) || [])].some((r) => String(r.external_id || "").startsWith("WEB-") && Date.now() - new Date(String(r.created_at || 0)).getTime() < 14 * 864e5);
+const NewTag = ({ p }: { p: Row }) => isNewWeb(p) ? <span className="new-tag" title="Added by Find contacts from public web pages in the last 14 days. The source page is on the contact card.">NEW</span> : null;
+
 function IcpTag({ s, why }: { s?: string; why?: string }) {
   if (!s) return null;
   return <span className={`icp ${ICP_CLS[s] || "icp-u"}`} title={why || s}><i aria-hidden="true">{ICP_ICON[s] || "?"}</i>{s}</span>;
@@ -577,7 +581,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
       search={(p) => [p.company, p.full_name, p.title_verbatim, p.email, p.notes_contact].join(" ")}
       filters={[...(perPerson ? [{ label: "Trust", get: (p: Row) => p.trust }, { label: "Sources", get: (p: Row) => (p.sources || []).join(" + ") }] : [{ label: "Source", get: (p: Row) => simpleOrigin(coById[p.company_id]), tip: "source" }]),
         { label: "Persona fit", get: (p) => p.__pf?.label }, { label: "Tier", get: (p) => p.contact_tier }, { label: "Role family", get: (p) => famKey(p.role_family) }, { label: "Email status", get: (p) => p.email_status }]}
-      cols={[{ h: "Company", field: "company", cell: (p) => p.company }, { h: "Full name", field: "full_name", cell: (p) => <b>{p.full_name}</b> }, { h: "Title (verbatim)", field: "title_verbatim", cell: (p) => p.title_verbatim, wrap: true },
+      cols={[{ h: "Company", field: "company", cell: (p) => p.company }, { h: "Full name", field: "full_name", cell: (p) => <><b>{p.full_name}</b><NewTag p={p} /></> }, { h: "Title (verbatim)", field: "title_verbatim", cell: (p) => p.title_verbatim, wrap: true },
         { h: "Persona fit", tip: "personaFit", cell: (p) => p.__pf?.label === "No personas set" ? <span className="muted">—</span>
           : <span className={`pf ${p.__pf.score >= 99 ? "hi" : p.__pf.score >= 50 ? "mid" : "lo"}`} title={p.__pf.why}>{p.__pf.score}%<small>{p.__pf.label}</small></span> },
         ...(perPerson ? [{ h: "Trust", tip: "trust", field: "trust", cell: (p: Row) => <><TrustTag t={p.trust} why={p.trust_reason} /><div className="muted">{(p.sources || []).join(" + ")}</div></> }]
@@ -992,7 +996,7 @@ function Brief({ a, data, people, onClose, onContact, scores, criteria, isSuper 
           <div className="block"><h4>Stakeholders ({cs.length}) · select a person for their contact card</h4>
             <div className="tablewrap"><table><thead><tr><th className="num">#</th><th>Name</th><th>Title (verbatim)</th><th>Tier</th><th>Channel</th><th>Email</th><th>Phone</th><th>LinkedIn</th></tr></thead>
               <tbody>{cs.map((p, i) => (
-                <tr key={p.id} className="click" tabIndex={0} onClick={(e) => { if (!(e.target as HTMLElement).closest("a")) onContact(p.id); }} onKeyDown={(e) => e.key === "Enter" && onContact(p.id)}><td className="num mono">{i + 1}</td><td><b>{p.full_name}</b><div className="muted">{p.role_family} · {p.verification_status}</div></td><td>{p.title_verbatim}</td>
+                <tr key={p.id} className="click" tabIndex={0} onClick={(e) => { if (!(e.target as HTMLElement).closest("a")) onContact(p.id); }} onKeyDown={(e) => e.key === "Enter" && onContact(p.id)}><td className="num mono">{i + 1}</td><td><b>{p.full_name}</b><NewTag p={p} /><div className="muted">{p.role_family} · {p.verification_status}</div></td><td>{p.title_verbatim}</td>
                   <td>{p.contact_tier}</td><td>{p.channel_state}</td><td className="mono">{p.email}<div className="muted">{p.email_status}</div></td>
                   <td className="mono">{p.phone}</td><td><Ext href={p.linkedin_url}>profile</Ext></td></tr>))}
               </tbody></table></div>
@@ -1064,7 +1068,7 @@ function DrillDown({ d, byCo, coById, onClose, onAccount, onContact }: { d: { ti
     const s2p = (p: Row) => coById[p.company_id]?.existing_s2p_product || "";
     table = <FilterTable unit="contacts" title={d.title} rows={d.rows} search={(p) => [p.company, p.full_name, p.title_verbatim, p.email].join(" ")}
       filters={[{ label: "Tier", get: (p) => p.contact_tier }, { label: "Role family", get: (p) => famKey(p.role_family) }, { label: "Channel", get: (p) => p.channel_state }, { label: "S2P Platform", get: (p) => s2p(p) }]}
-      cols={[{ h: "Name", cell: (p) => <b>{p.full_name}</b> }, { h: "Company", cell: (p) => p.company }, { h: "Title", cell: (p) => p.title_verbatim, wrap: true },
+      cols={[{ h: "Name", cell: (p) => <><b>{p.full_name}</b><NewTag p={p} /></> }, { h: "Company", cell: (p) => p.company }, { h: "Title", cell: (p) => p.title_verbatim, wrap: true },
         { h: "Email", cell: (p) => <span className="mono">{p.email}</span> }, { h: "Channel", cell: (p) => p.channel_state },
         { h: "S2P Platform", cell: (p) => s2p(p) || <span className="muted">—</span> }]}
       onRow={(p) => onContact(p.id)} />;

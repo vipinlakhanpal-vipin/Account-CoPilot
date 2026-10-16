@@ -92,12 +92,12 @@ export default function ContactsJobTracker() {
               {added + updated > 0 ? <>
                 <span>{added} new contact{added === 1 ? "" : "s"} added{updated ? `, ${updated} existing updated` : ""} in your database. Each has its source page saved. You will find {added + updated === 1 ? "it" : "them"}:</span>
                 <ul>
-                  <li>On the account page, in the <b>Stakeholders</b> list (channel &quot;Claude&quot;)</li>
-                  <li>In <b>Accounts → Stakeholders</b></li>
+                  <li>On the account page, in the <b>Stakeholders</b> list: look for the green <b className="new-tag">NEW</b> badge beside the name (source: Public web)</li>
+                  <li>In <b>Accounts → Stakeholders</b>, with the same NEW badge (or filter Source / Channel)</li>
                   <li>In the PDF report and the Excel contact list for this company, and when you ask Aria</li>
                 </ul>
                 <Link className="fcj-open" href={open} onClick={() => save(items.filter((x) => x.slug !== it.slug))}>Open {it.company} →</Link>
-              </> : <span>No new public contact details were found, so nothing was added. {it.result ? `(${it.result})` : ""}</span>}
+              </> : <span>No new public email, phone or LinkedIn was found, so nothing was added. People already on file are never duplicated, and Claude never guesses an email.</span>}
             </div>{close}
           </div>);
       })}
