@@ -57,7 +57,7 @@ function Glyph({ g }: { g?: string }) {
     case "dashboard": return svg(<><rect x="2" y="2" width="5" height="6" rx="1" /><rect x="9" y="2" width="5" height="3.5" rx="1" /><rect x="9" y="7.5" width="5" height="6.5" rx="1" /><rect x="2" y="10" width="5" height="4" rx="1" /></>, 1.5);
     case "accounts": return svg(<><path d="M2.5 14V3.2h6.2V14M8.7 7h4.8V14M1.5 14h13" /><path d="M5 5.6h1.2M5 8.2h1.2M5 10.8h1.2" /></>, 1.5);
     case "data": return svg(<><ellipse cx="8" cy="4" rx="5" ry="2" /><path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4M3 8c0 1.1 2.2 2 5 2s5-.9 5-2" /></>, 1.5);
-    case "setup": return svg(<path d="M2 4.5h6M11 4.5h3M8 3v3M2 11.5h2M7 11.5h7M4 10v3" />, 1.6);
+    case "setup": return <svg viewBox="0 0 24 24" aria-hidden="true" strokeWidth={1.8} {...P}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></svg>;
     default: return svg(<><circle cx="7" cy="7" r="4.6" strokeWidth={1.8} /><path d="M10.6 10.6 14 14" strokeWidth={1.8} /></>);
   }
 }
