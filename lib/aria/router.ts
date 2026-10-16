@@ -83,6 +83,9 @@ function parseFilters(t: string): AccountFilter {
     const er = [...ex[2].replace(/sap ariba/g, " ").matchAll(/\b(sap|oracle|dynamics|microsoft|infor|workday)\b/g)].map((m) => (m[1] === "microsoft" ? "dynamics" : m[1])); if (er.length) f.exclude_erp = er;
   }
   t = tin.replace(/sap ariba/g, "ariba");
+  // "potential prospects", "target accounts", "where Coupa can be positioned": companies not already on Coupa or SAP Ariba. The word Coupa there is the vendor being pitched, not a platform to include.
+  const prospect = /\b(potential (prospects?|customers?|clients?|accounts?)|prospects? for coupa|target accounts|where coupa can be (positioned|pitched|sold)|can position coupa|coupa (opportunit(y|ies)|white ?space))\b/.test(t);
+  if (prospect) t = t.replace(/\b(where coupa can be (positioned|pitched|sold)|can position coupa|prospects? for coupa|for coupa|coupa (opportunit(y|ies)|white ?space))\b/g, " ");
   const region = findRegionIn(t); if (region) f.region = region;
   parseRevenue(t, f);
   const st: string[] = [];
@@ -96,6 +99,7 @@ function parseFilters(t: string): AccountFilter {
   const erp = /\b(sap|oracle|dynamics|microsoft|infor|workday)\b/.exec(t); if (erp) f.erp_contains = erp[1] === "microsoft" ? "dynamics" : erp[1];
   const sig = /\b(very strong|strong|moderate|weak)\b/.exec(t); if (sig && /signal/.test(t)) f.signal = [sig[1].toUpperCase()];
   if (/\bwith (a )?(contact|email)|have (a )?contact/.test(t)) f.has_contacts = true;
+  if (prospect && !f.exclude_platform) f.exclude_platform = ["coupa", "ariba"]; // not already on Coupa or SAP Ariba
   return f;
 }
 export const readable = (f: AccountFilter) => [f.icp_status?.join("/"), f.exclude_platform?.length || f.exclude_erp?.length ? `excluding ${[...(f.exclude_platform || []).map((x) => (x === "ariba" ? "SAP Ariba" : "Coupa")), ...(f.exclude_erp || []).map((x) => x.toUpperCase())].join(" and ")}` : "", f.platform && `${f.platform} customers`, f.erp_contains && `running ${f.erp_contains.toUpperCase()}`, f.region && `in ${f.region}`].filter(Boolean).join(" ");
@@ -162,7 +166,8 @@ export async function tryFree(question: string, ctx: AriaContext): Promise<FreeR
     const label = (k: string) => (k === "xlsx" ? "Excel contact list" : "PDF report");
     const scope = [f.icp_status?.join(" and "), f.platform && `${f.platform} customers`, f.erp_contains && `${f.erp_contains.toUpperCase()} users`].filter(Boolean).join(" ");
     const rev = revenuePhrase(f);
-    const stem = (k: string, r: string) => `${label(k || "pdf")} for ${scope ? `${scope} companies` : "companies"} in ${r}${rev ? ` with ${rev}` : ""}`;
+    const excl = f.exclude_platform?.length || f.exclude_erp?.length ? `, excluding ${[...(f.exclude_platform || []).map((x) => (x === "ariba" ? "sap ariba" : "coupa")), ...(f.exclude_erp || [])].join(" and ")}` : "";
+    const stem = (k: string, r: string) => `${label(k || "pdf")} for ${scope ? `${scope} companies` : "companies"} in ${r}${rev ? ` with ${rev}` : ""}${excl}`;
     const heard = [f.region, scope, rev].filter(Boolean).join(", ");
     if (!f.region) return { text: "Which region should it cover?", actions: [], choices: (REGIONS as { key: string }[]).map((r) => r.key).filter((k) => ["UAE", "KSA", "Qatar", "Kuwait", "UK", "USA"].includes(k)).map((k) => ({ label: k, value: stem(kind, k) })) };
     if (!kind) return { text: `Which format for ${heard}?`, actions: [], choices: [{ label: "📄 PDF report", value: stem("pdf", f.region) }, { label: "📊 Excel contact list", value: stem("xlsx", f.region) }] };
