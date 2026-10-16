@@ -39,6 +39,15 @@ export default function BuyingSignals({ embedded = false }: { embedded?: boolean
   };
 
   const regionList = data?.regions || [];
+  // "Scan now" in the window header: scan every active region, one after another (each queue call rewrites the shared job list)
+  const scanAllRef = { current: async () => {} };
+  scanAllRef.current = async () => { for (const r of regionList) await scan(r); };
+  useEffect(() => {
+    if (!embedded) return;
+    const on = (e: Event) => { if ((e as CustomEvent<string>).detail === "signals") scanAllRef.current(); };
+    window.addEventListener("appwin-scan", on);
+    return () => window.removeEventListener("appwin-scan", on);
+  });
   const active = regions.length ? regions : regionList;
   const base = useMemo(() => (data?.items || []).filter((s) => active.includes(s.region) || !regionList.length), [data, active, regionList.length]);
   const open = base.filter((s) => s.status === "new" || s.status === "seen");

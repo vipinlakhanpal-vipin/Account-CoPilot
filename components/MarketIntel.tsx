@@ -53,6 +53,12 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
   };
   // one after another: each queue call rewrites the shared job list, so parallel calls could overwrite each other
   const scanAll = async (pairs: [string, string][]) => { for (const [r, v] of pairs) await scan(r, v); };
+  useEffect(() => {
+    if (!embedded) return;
+    const on = (e: Event) => { if ((e as CustomEvent<string>).detail === "market") scanAll(active.map((r) => [r, vendor] as [string, string])); };
+    window.addEventListener("appwin-scan", on);
+    return () => window.removeEventListener("appwin-scan", on);
+  });
   const download = () => {
     const rows = [["Vendor", "Region", "Partner", "Customer", "Project", "Customer in your app database", "Contact", "Title", "Email", "Phone", "LinkedIn", "Source"]];
     for (const c of custs) { if (c.contacts.length) for (const k of c.contacts) rows.push([c.vendor, c.region, c.partner, c.customer, c.project, c.in_app ? "Yes" : "No", k.name, k.title, k.email, k.phone, k.linkedin_url, c.source_url]);

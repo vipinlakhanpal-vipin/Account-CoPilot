@@ -1627,3 +1627,5 @@ button.tab[aria-expanded="true"]{color:var(--text-strong);background:linear-grad
 .used-cell{display:flex;align-items:center;gap:8px;min-width:120px;cursor:help}
 .used-bar{flex:1;height:8px;border-radius:999px;background:rgba(var(--ink),.12);overflow:hidden}
 .used-bar i{display:block;height:100%;background:#0B7A66}
+.aria-home.aria-scan,.aria-home.aria-scan:hover{background:#2ECC8F;border-color:#2ECC8F;color:#04342C;font-weight:700}
+.aria-home.aria-scan:hover{background:#5DDDAB;border-color:#5DDDAB}

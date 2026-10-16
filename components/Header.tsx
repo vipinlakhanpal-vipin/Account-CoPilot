@@ -188,8 +188,8 @@ export default function Header({ meta }: { meta: string }) {
           </div>
         </div>
       )}
-      <AppWindow open={win === "signals"} onClose={() => setWin(null)} title="Buying signals" subtitle="Tenders, RFPs, ERP and S2P intent, ECC to S/4HANA" badge="B"><BuyingSignals embedded /></AppWindow>
-      <AppWindow open={win === "market"} onClose={() => setWin(null)} title="Market intelligence" subtitle="SAP, Coupa, Oracle and Microsoft partners and their customers" badge="M"><MarketIntel embedded /></AppWindow>
+      <AppWindow open={win === "signals"} onClose={() => setWin(null)} title="Buying signals" subtitle="Tenders, RFPs, ERP and S2P intent, ECC to S/4HANA" badge="B" actions={<button type="button" className="aria-home aria-scan" title="Start a free scan now instead of waiting for the daily run" onClick={() => window.dispatchEvent(new CustomEvent("appwin-scan", { detail: "signals" }))}>Scan now</button>}><BuyingSignals embedded /></AppWindow>
+      <AppWindow open={win === "market"} onClose={() => setWin(null)} title="Market intelligence" subtitle="SAP, Coupa, Oracle and Microsoft partners and their customers" badge="M" actions={<button type="button" className="aria-home aria-scan" title="Start a free scan now instead of waiting for the daily run" onClick={() => window.dispatchEvent(new CustomEvent("appwin-scan", { detail: "market" }))}>Scan now</button>}><MarketIntel embedded /></AppWindow>
       {showHistory && (
         <div className="wn-backdrop" onClick={() => setShowHistory(false)}>
           <div className="wn" role="dialog" aria-modal="true" aria-labelledby="vh-title" onClick={(e) => e.stopPropagation()}>

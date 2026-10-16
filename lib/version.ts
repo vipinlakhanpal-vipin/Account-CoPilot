@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.24";
+export const APP_VERSION = "4.25";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.25", date: "2026-10-16", notes: "A green Scan now button in the window header, before Expand.", changes: [
+      { what: "Buying signals and Market intelligence have a green Scan now button in the window header, before Expand. Buying signals scans every active region; Market intelligence scans the selected vendor in the ticked regions", where: "components/AppWindow.tsx, components/Header.tsx", why: "Requested — make Scan now more visible" },
+    ] },
   { version: "4.24", date: "2026-10-16", notes: "Clearer wording in Market intelligence.", changes: [
       { what: "In Market intelligence the view is now By partner or All Partners' Customers, the filter group is called Partner Customers, and Not in my accounts now reads Not in my app database. Customer tags read In your app database or Not in your database · Add", where: "components/MarketIntel.tsx", why: "Requested — more meaningful labels" },
     ] },

@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 
 // A floating window in Aria's style: drag the header, drag any edge or corner to resize, Expand to fill the screen, Close. It does not dim or block the page behind it,
 // so a list can stay open beside the account pages. Used by Buying signals and Market intelligence.
-export default function AppWindow({ open, onClose, title, subtitle, badge, children }: { open: boolean; onClose: () => void; title: string; subtitle: string; badge: string; children: ReactNode }) {
+export default function AppWindow({ open, onClose, title, subtitle, badge, actions, children }: { open: boolean; onClose: () => void; title: string; subtitle: string; badge: string; actions?: ReactNode; children: ReactNode }) {
   const [wide, setWide] = useState(false);
   const [rect, setRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
   const winRef = useRef<HTMLElement>(null);
@@ -57,6 +57,7 @@ export default function AppWindow({ open, onClose, title, subtitle, badge, child
           <span className="aria-badge" aria-hidden="true">{badge}</span>
           <div className="aria-title"><b>{title}</b><small>{subtitle}</small></div>
           <div className="aria-top-actions">
+            {actions}
             <button type="button" className="aria-home" onClick={() => { setRect(null); setWide((w) => !w); }} aria-pressed={wide} title="Make the window fill the screen, or back to its normal size">{wide ? "Shrink" : "Expand"}</button>
             <button type="button" className="aria-home aria-close" onClick={onClose}>Close</button>
           </div>
