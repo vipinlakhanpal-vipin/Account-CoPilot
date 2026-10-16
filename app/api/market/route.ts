@@ -3,7 +3,8 @@ import { requireUser } from "@/lib/auth";
 import { getAccess, canSeeRegion } from "@/lib/access";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { normalizeDefinition } from "@/lib/icpDefinition.mjs";
-import { vendorList, VENDORS_KEY, cleanVendor, validVendor, DEFAULT_VENDORS, type MarketDoc } from "@/lib/market";
+import { partnerId } from "@/lib/marketServer";
+import { vendorList, VENDORS_KEY, marketKey, cleanVendor, validVendor, DEFAULT_VENDORS, type MarketDoc } from "@/lib/market";
 
 // Market intelligence: partners of SAP, Coupa, Oracle and Microsoft per region and the customers they publish. Read-only, scoped to the user's regions.
 export const dynamic = "force-dynamic";
@@ -39,12 +40,34 @@ export async function GET() {
   });
 }
 
+// Anyone with access to the region can add a partner the scans missed. It joins the list like a found one and "Find more customers" then searches its customers.
+async function addPartner(user: { email?: string | null }, b: { name?: string; vendor?: string; region?: string; website?: string; tier?: string; services?: string; source_url?: string }) {
+  const access = await getAccess(user as Parameters<typeof getAccess>[0]);
+  const db = supabaseAdmin();
+  const vendor = String(b.vendor || ""), region = String(b.region || ""), name = String(b.name || "").trim().replace(/\s+/g, " ").slice(0, 140);
+  const custom = ((await db.from("settings").select("value").eq("key", VENDORS_KEY).maybeSingle()).data?.value as { custom?: string[] } | null)?.custom || [];
+  if (!vendorList(custom).includes(vendor)) return NextResponse.json({ error: "Unknown vendor." }, { status: 400 });
+  if (!canSeeRegion(access, region)) return NextResponse.json({ error: "That region is outside your access." }, { status: 403 });
+  if (name.length < 2) return NextResponse.json({ error: "Enter the partner's name." }, { status: 400 });
+  const key = marketKey(vendor, region);
+  const doc = ((await db.from("settings").select("value").eq("key", key).maybeSingle()).data?.value as MarketDoc | null) || { vendor, region, partners: [], customers: [], scanned_at: "" };
+  doc.partners ||= []; doc.customers ||= [];
+  const id = partnerId(vendor, region, name);
+  if (doc.partners.some((p) => p.id === id)) return NextResponse.json({ error: `${name} is already on the ${vendor} list for ${region}.` }, { status: 409 });
+  const site = String(b.website || "").trim().slice(0, 200);
+  const src = /^https?:\/\//.test(String(b.source_url || "")) ? String(b.source_url) : site ? (/^https?:\/\//.test(site) ? site : `https://${site}`) : "https://www.google.com/search?q=" + encodeURIComponent(`${name} ${vendor} partner ${region}`);
+  doc.partners.unshift({ id, vendor, region, name, website: site, tier: String(b.tier || "").slice(0, 80), services: String(b.services || "").slice(0, 300), hq_city: "", source_url: src, label: "LIKELY", contacts: [], found_at: new Date().toISOString(), added_by: user.email || "" });
+  await db.from("settings").upsert({ key, value: doc, updated_at: new Date().toISOString() });
+  return NextResponse.json({ ok: true, id });
+}
+
 // Super Admin: add a vendor to the list (or remove one that was added). The built-in vendors stay.
 export async function POST(req: Request) {
   const user = await requireUser();
   if (!user) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
+  const b = (await req.json().catch(() => ({}))) as { action?: string; name?: string; vendor?: string; region?: string; website?: string; tier?: string; services?: string; source_url?: string };
+  if (b.action === "add_partner") return addPartner(user, b);
   if (!(await getAccess(user)).isSuper) return NextResponse.json({ error: "Only a Super Admin can change the vendor list." }, { status: 403 });
-  const b = (await req.json().catch(() => ({}))) as { action?: string; name?: string };
   const name = cleanVendor(String(b.name || ""));
   const db = supabaseAdmin();
   const cur = ((await db.from("settings").select("value").eq("key", VENDORS_KEY).maybeSingle()).data?.value as { custom?: string[] } | null)?.custom || [];

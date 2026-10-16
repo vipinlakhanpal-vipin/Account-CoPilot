@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.38";
+export const APP_VERSION = "4.39";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.39", date: "2026-10-16", notes: "Add a partner the scans missed, and MDSap added to SAP.", changes: [
+      { what: "A + Add partner button in Market intelligence adds a partner by name (website and region optional) to the vendor you are on; its card then has Find more customers to search its customers. Anyone with access to the region can use it", where: "components/MarketIntel.tsx, app/api/market, lib/marketServer.ts", why: "Requested — MDSap was missing from the SAP partners" },
+      { what: "MDSap (SAP Gold partner, Midis Group, headquartered in Abu Dhabi, with offices in Dubai, Riyadh and Kuwait City) was added to the SAP list for UAE, KSA and Kuwait", where: "Market intelligence data", why: "Requested" },
+    ] },
   { version: "4.38", date: "2026-10-16", notes: "Customer search covers each partner's go-lives, press and LinkedIn snippets.", changes: [
       { what: "For every partner the scan now searches its website (customers, case studies, projects), its news and press pages (go-lives, new customer wins), the vendor's own stories naming the partner, business press, and the partner's LinkedIn page through public search snippets only (never logging in or scraping)", where: "ENGINE.md (Market intelligence)", why: "Requested — partners publish their primary customers, go-lives and acquisitions" },
     ] },

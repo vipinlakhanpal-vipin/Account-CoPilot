@@ -24,6 +24,8 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
   const [vendor, setVendor] = useState<Vendor>("SAP");
   const [adding, setAdding] = useState(false);
   const [newVendor, setNewVendor] = useState("");
+  const [addingP, setAddingP] = useState(false);
+  const [pf, setPf] = useState({ name: "", website: "", region: "" });
   const [regions, setRegions] = useState<string[] | null>(null); // null = not chosen yet: UAE is ticked by default
   const [q, setQ] = useState("");
   const [view, setView] = useState<"partners" | "customers">("partners");
@@ -77,6 +79,16 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
     const j = await r.json().catch(() => ({}));
     setBusy("");
     if (r.ok || r.status === 409) load(); else notify(j.error || "Could not start the search.", "error");
+  };
+  const addPartner = async () => {
+    const region = pf.region || active[0] || "";
+    const r = await fetch("/api/market", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "add_partner", vendor, region, name: pf.name, website: pf.website }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) { notify(j.error || "Could not add the partner.", "error"); return; }
+    logActivity("scan", `Added partner ${pf.name} (${vendor} · ${region})`);
+    setAddingP(false); setPf({ name: "", website: "", region: "" }); await load();
+    if (!active.includes(region)) setRegions([...active, region]);
+    notify(`${pf.name} added to ${vendor} · ${region}. Click Find more customers on its card to search its customers.`, "ok");
   };
   const moreFor = async (p: Partner) => {
     setBusy(`p|${p.id}`); logActivity("scan", `More customers: ${p.name}`);
@@ -190,10 +202,19 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
             <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={`Search ${vendor} partners, customers, projects`} aria-label="Search" />
             <button type="button" className="btn tiny primary" disabled={!!busy || regionList.length === 0} onClick={() => scanAll(active.map((r) => [r, vendor] as [string, string]))}>Scan {vendor} now</button>
             <button type="button" className="btn tiny" disabled={!!busy || regionList.length === 0} onClick={scanEvery} title="Queue a free scan for every vendor on the list in the ticked regions">Scan all vendors</button>
+            <button type="button" className="btn tiny" onClick={() => setAddingP((v) => !v)} aria-expanded={addingP} title="Add a partner the scans missed">+ Add partner</button>
             <button type="button" className="btn tiny" disabled={!custs.length || !!busy} onClick={findAll} title="Free: searches for contacts at up to 10 customers of this vendor that have none yet">Find customer contacts</button>
             <button type="button" className="btn tiny" disabled={!custs.length} onClick={download}>Download customers (CSV)</button>
             <span className="note">{partners.length} partners · {custs.length} customers</span>
           </div>
+          {addingP && (
+            <form className="mkt-addp" onSubmit={(e) => { e.preventDefault(); addPartner(); }}>
+              <b>Add a {vendor} partner</b>
+              <input autoFocus value={pf.name} onChange={(e) => setPf({ ...pf, name: e.target.value })} placeholder="Partner name, e.g. MDSap" aria-label="Partner name" maxLength={140} />
+              <input value={pf.website} onChange={(e) => setPf({ ...pf, website: e.target.value })} placeholder="Website (optional)" aria-label="Website" maxLength={200} />
+              <select value={pf.region || active[0] || ""} onChange={(e) => setPf({ ...pf, region: e.target.value })} aria-label="Region">{regionList.map((r) => <option key={r}>{r}</option>)}</select>
+              <button type="submit" className="btn tiny primary">Add</button><button type="button" className="btn tiny" onClick={() => setAddingP(false)}>Cancel</button>
+            </form>)}
           {pending.length > 0 && <div className="sig-pending" role="status"><span className="fcj-dot" aria-hidden="true" /> <b className="fcj-flash">Scanning {pending.map((j) => (j.customer ? `contacts for ${j.customer}` : `${j.vendor === "all" || !j.vendor ? "all vendors" : j.vendor} · ${j.region}`)).join(", ")}…</b> Results appear here by themselves.</div>}
           {!data && <p className="note">Loading…</p>}
           {data && active.length === 0 && <div className="sig-empty"><h3>Tick a region</h3><p>Choose one or more regions on the left to see their partners and customers.</p></div>}

@@ -6,6 +6,7 @@ import { invalidateAllData } from "@/lib/dataCache";
 import { statusPatch, applyRevenueResult } from "@/lib/icpStatus.mjs";
 import { normalizeDefinition, rulesFor, regionOf, summarizeRules } from "@/lib/icpDefinition.mjs";
 import { EMPTY_STORE, type Signal, type SignalStore } from "@/lib/signals";
+import { nk as marketNk, partnerId } from "@/lib/marketServer";
 import { vendorList, VENDORS_KEY, marketKey, type MarketDoc, type MContact, type Partner, type PCustomer } from "@/lib/market";
 
 // Limited API for scheduled Claude sessions (no Supabase key needed in the cloud environment).
@@ -269,7 +270,7 @@ export async function POST(req: Request) {
     const doc = await get<MarketDoc>(db, key, { vendor: b.vendor, region: b.region, partners: [], customers: [], scanned_at: "" });
     doc.partners ||= []; doc.customers ||= [];
     const { data: have } = await db.from("companies").select("slug,company_name,domain");
-    const nk = (t: string) => t.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, " ").replace(/\b(llc|ltd|limited|fz|fze|fzco|co|company|inc|pjsc|plc|group|holding|holdings|the)\b/g, " ").replace(/\s+/g, " ").trim();
+    const nk = marketNk;
     const added = { partners: 0, customers: 0, contacts: 0 }, updated = { partners: 0, customers: 0 }, skipped: { name: string; why: string }[] = [], dropped: string[] = [];
     const vet = (list: MContact[] | undefined, site: string, who: string): MContact[] => {
       const d = dom(site), out: MContact[] = [];
@@ -284,7 +285,7 @@ export async function POST(req: Request) {
       return out;
     };
     for (const p of b.partners) {
-      const id = createHash("sha1").update(`${b.vendor}|${b.region}|${nk(p.name)}`).digest("hex").slice(0, 14);
+      const id = partnerId(b.vendor, b.region, p.name);
       const row: Partner = { id, vendor: b.vendor, region: b.region, name: p.name, website: p.website, tier: p.tier, services: p.services, hq_city: p.hq_city, source_url: p.source_url, label: p.label, contacts: vet(p.contacts, p.website, p.name), found_at: now };
       const old = doc.partners.find((x) => x.id === id);
       if (old) { Object.assign(old, { website: row.website || old.website, tier: row.tier || old.tier, services: row.services || old.services, hq_city: row.hq_city || old.hq_city, contacts: row.contacts.length ? row.contacts : old.contacts }); updated.partners++; }
