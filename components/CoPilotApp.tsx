@@ -120,9 +120,17 @@ const bestRevenue = (a: Row): { v: number | null; src: string } => {
   return { v: null, src: "" };
 };
 
-function Pill({ s }: { s?: string }) {
+const SIG_BARS: Record<string, number> = { VERY: 4, STRONG: 3, MODERATE: 2, WEAK: 1, NO: 0 };
+// In a table the signal is a small four-bar meter (more bars, stronger); the words are the tooltip. Elsewhere it stays a text pill.
+function Pill({ s, icon }: { s?: string; icon?: boolean }) {
   if (!s) return null;
-  return <span className={`pill s-${s.split(" ")[0]}`}>{s.replace(" SIGNAL", "")}</span>;
+  const k = s.split(" ")[0], label = s.replace(" SIGNAL", "");
+  if (icon) {
+    if (k === "CONFLICTING") return <span className={`sigmeter s-${k}`} title={`${label} signal`} aria-label={`${label} signal`}><b>!</b></span>;
+    const n = SIG_BARS[k] ?? 0;
+    return <span className={`sigmeter s-${k}`} title={`${label} signal`} aria-label={`${label} signal`}>{[1, 2, 3, 4].map((i) => <i key={i} className={i <= n ? "on" : ""} style={{ height: 4 + i * 3 }} />)}</span>;
+  }
+  return <span className={`pill s-${k}`}>{label}</span>;
 }
 function Ext({ href, children }: { href?: string; children: React.ReactNode }) {
   return href && /^https?:/.test(href) ? <a href={href} target="_blank" rel="noopener noreferrer">{children}</a> : null;
@@ -542,7 +550,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
         { h: "Opportunity", tip: "opportunity", field: "opportunity_pct", cell: (a) => scores[a.id] && <ScoreChip s={scores[a.id].o} label="Opportunity" /> },
         { h: "Coupa fit", tip: "coupaFit", field: "coupa_fit_pct", cell: (a) => scores[a.id] && <ScoreChip s={scores[a.id].f} label="Coupa Fit" /> },
         { h: "Updated", field: "updated_at", cell: (a) => <Dates a={a} /> }, { h: "Lists", field: "lists", cell: (a) => <span className="muted">{(a.lists || []).join(", ")}</span> },
-        { h: "Signal", field: "s2p_signal_level", cell: (a) => <Pill s={a.s2p_signal_level} /> },
+        { h: "Signal", field: "s2p_signal_level", cell: (a) => <Pill icon s={a.s2p_signal_level} /> },
         { h: "S2P status", field: "s2p_platform_status", cell: (a) => a.s2p_platform_status }, { h: "ERP", field: "erp", cell: (a) => a.erp }, { h: "Contacts", cell: (a) => <span className="mono">{(byCo[a.id] || []).length}</span> }]}
       onRow={openRow} />;
   } else if (tab === "pipeline") {
@@ -594,7 +602,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
         { h: "Role family", field: "role_family", cell: (p) => p.role_family }, { h: "Tier", field: "contact_tier", cell: (p) => p.contact_tier },
         { h: "Email", field: "email", cell: (p) => <span className="mono">{p.email}</span> }, { h: "Email status", field: "email_status", cell: (p) => p.email_status },
         { h: "Phone", field: "phone", cell: (p) => <><span className="mono">{p.phone}</span> <span className="muted">{p.phone_type}</span></> },
-        { h: "LinkedIn", field: "linkedin_url", cell: (p) => <Ext href={p.linkedin_url}>profile</Ext> }, { h: "S2P signal", field: "account_s2p_signal", cell: (p) => <Pill s={p.account_s2p_signal} /> }]}
+        { h: "LinkedIn", field: "linkedin_url", cell: (p) => <Ext href={p.linkedin_url}>profile</Ext> }, { h: "S2P signal", field: "account_s2p_signal", cell: (p) => <Pill icon s={p.account_s2p_signal} /> }]}
       onRow={(p) => setContact(p.best_id || p.id)} /></>;
   } else if (tab === "signals") {
     view = <FilterTable unit="signals" title="S2P signals" note="Every signal carries its evidence and source. Follows the country tab above; existing Coupa customers are excluded — see Existing Coupa Customers on the Dashboard instead."
@@ -698,7 +706,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
             cols={[{ h: "Company", field: "company", cell: (p) => <b><Sn n={p.company} /></b> }, { h: "Contact Name", field: "full_name", cell: (p) => p.full_name }, { h: "Job Title", field: "title_verbatim", cell: (p) => p.title_verbatim, wrap: true },
               { h: "Email", field: "email", cell: (p) => <span className="mono">{p.email}</span> }, { h: "Phone", field: "phone", cell: (p) => <span className="mono">{p.phone}</span> },
               { h: "Country", field: "r_country", cell: (p) => p.r_country }, { h: "ICP Status", field: "r_icp", cell: (p) => p.r_icp }, { h: "Revenue", field: "r_revenue", cell: (p) => p.r_revenue },
-              { h: "Employees", field: "r_employees", cell: (p) => p.r_employees }, { h: "S2P Signal", field: "r_signal", cell: (p) => <Pill s={p.r_signal} /> }, { h: "ERP", field: "r_erp", cell: (p) => p.r_erp }]}
+              { h: "Employees", field: "r_employees", cell: (p) => p.r_employees }, { h: "S2P Signal", field: "r_signal", cell: (p) => <Pill icon s={p.r_signal} /> }, { h: "ERP", field: "r_erp", cell: (p) => p.r_erp }]}
             onRow={(p) => setContact(p.best_id || p.id)} />
         </div>
         <SavedReportsList items={savedReportItems}
@@ -767,7 +775,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
             <thead><tr><th className="num">#</th><th className="logo-cell"></th><th>Company</th><th>Signal</th><th>Existing S2P</th><th>Status</th><th>ERP</th><th>Why</th></tr></thead>
             <tbody>{top.map((a, i) => (
               <tr key={a.id} className="click" tabIndex={0} onClick={() => setOpen(a.id)} onKeyDown={(e) => e.key === "Enter" && setOpen(a.id)}>
-                <td className="num mono">{i + 1}</td><td className="logo-cell"><CompanyLogo a={a} /></td><td><b><Sn n={a.company_name} /></b></td><td><Pill s={a.s2p_signal_level} /></td><td>{a.existing_s2p_product}</td><td>{a.s2p_platform_status}</td>
+                <td className="num mono">{i + 1}</td><td className="logo-cell"><CompanyLogo a={a} /></td><td><b><Sn n={a.company_name} /></b></td><td><Pill icon s={a.s2p_signal_level} /></td><td>{a.existing_s2p_product}</td><td>{a.s2p_platform_status}</td>
                 <td>{a.erp}</td><td className="wrap">{str(a.s2p_strong_signals).slice(0, 260)}</td>
               </tr>))}
             </tbody></table></div>
@@ -1066,7 +1074,7 @@ function DrillDown({ d, byCo, coById, onClose, onAccount, onContact }: { d: { ti
       search={(a) => [a.company_name, a.industry, a.erp, a.existing_s2p_product].join(" ")}
       filters={[{ label: "ICP status", get: (a) => a.icp_status }, { label: "Signal", get: (a) => a.s2p_signal_level }, { label: "Industry", get: (a) => a.industry }, { label: "Platform", get: (a) => a.existing_s2p_product }]}
       cols={[{ h: "", cls: "logo-cell", cell: (a) => <CompanyLogo a={a} /> }, { h: "Company", cell: (a) => <b><Sn n={a.company_name} /></b> }, { h: "Revenue", cell: (a) => <span className="mono">{usd(bestRevenue(a).v)}</span> },
-        { h: "ICP status", cell: (a) => <IcpTag s={a.icp_status} why={a.icp_fit_reason} /> }, { h: "Updated", cell: (a) => <Dates a={a} /> }, { h: "Signal", cell: (a) => <Pill s={a.s2p_signal_level} /> },
+        { h: "ICP status", cell: (a) => <IcpTag s={a.icp_status} why={a.icp_fit_reason} /> }, { h: "Updated", cell: (a) => <Dates a={a} /> }, { h: "Signal", cell: (a) => <Pill icon s={a.s2p_signal_level} /> },
         { h: "S2P", cell: (a) => a.existing_s2p_product }, { h: "ERP", cell: (a) => a.erp }, { h: "Contacts", cell: (a) => <span className="mono">{(byCo[a.id] || []).length}</span> }]}
       onRow={(a) => onAccount(a.id)} />;
   } else if (d.kind === "contacts") {

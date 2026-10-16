@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.83";
+export const APP_VERSION = "4.84";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.84", date: "2026-10-16", notes: "S2P signal as a small meter in tables.", changes: [
+      { what: "In the Accounts, Pipeline, Stakeholders, Mission Control and Dashboard tables the S2P signal is a four-bar meter (Very strong 4 bars, Strong 3, Moderate 2, Weak 1, No signal 0, Conflicting !) in the signal colour, with the words on hover; it takes a fraction of the width of the old pill. The Signals tab and account page keep the words", where: "components/CoPilotApp.tsx (Pill), app/globals.css", why: "Requested — use an icon for the S2P signal to save space" },
+    ] },
   { version: "4.83", date: "2026-10-16", notes: "Short company names and plain ICP status text in tables.", changes: [
       { what: "Company names in the tables are short: ADNOC (Abu Dhabi National Oil Company) shows as ADNOC, Emirates Telecommunications Group Company PJSC (e&) as e&, and legal endings such as PJSC, LLC and PLC are dropped. The full name is the tooltip and is on the account page when clicked", where: "lib/shortName.ts, components/CoPilotApp.tsx", why: "Requested — do not expand company names; the user knows them anyway" },
       { what: "ICP status is short coloured text instead of a pill (✓ Verified in green, Likely blue, Needs check amber, Unknown purple, Not ICP red), so it no longer wraps into a circle in narrow columns", where: "components/CoPilotApp.tsx (IcpTag), app/globals.css", why: "Reported — ICP Verified showed in a big circle" },

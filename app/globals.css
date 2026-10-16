@@ -1801,3 +1801,8 @@ td .mono{white-space:nowrap}
 .icp-txt.icp-c{color:var(--warn-text)}
 .icp-txt.icp-u{color:var(--icp-u)}
 .icp-txt.icp-n{color:var(--bad-text)}
+/* v4.84: the S2P signal in a table is a four-bar meter (hover for the words) */
+.sigmeter{display:inline-flex;align-items:flex-end;gap:2px;height:16px;vertical-align:middle;cursor:help}
+.sigmeter i{display:block;width:4px;border-radius:1px;background:rgba(var(--ink),.18)}
+.sigmeter i.on{background:var(--c)}
+.sigmeter b{font:700 14px/1 var(--body);color:var(--c)}
