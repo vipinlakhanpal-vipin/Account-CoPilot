@@ -155,10 +155,10 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
             <div className="sig-empty"><h3>No {vendor} partners yet</h3><p>Nothing has been scanned yet. The daily 6am run adds four vendor and region pairs each day, so all regions take about nine days. You do not have to wait: scan now (free, usually a few minutes per region).</p>
               <div className="sig-scanbar">{regionList.map((r) => <button type="button" key={r} className="btn primary" disabled={busy === `${vendor}|${r}`} onClick={() => scan(r, vendor)}>{busy === `${vendor}|${r}` ? "Queuing…" : `Scan ${vendor} · ${r} now`}</button>)}
                 <button type="button" className="btn" onClick={() => scanAll(regionList.map((r) => [r, "all"] as [string, string]))}>All vendors, all regions</button></div></div>)}
-          {view === "partners" && partners.map((p) => {
+          {view === "partners" && <div className="mkt-grid">{partners.map((p) => {
             const cs = custOf(p), isOpen = openP === p.id;
             return (
-              <article key={p.id} className="sig-card mkt-card">
+              <article key={p.id} className={`sig-card mkt-card${isOpen ? " open" : ""}`}>
                 <div className="sig-row">
                   <b className="sig-co">{p.name}</b><span className="sig-meta">{p.region}{p.hq_city ? ` · ${p.hq_city}` : ""}</span>
                   {p.tier && <span className="sig-pill">{p.tier}</span>}<span className={`sig-pill lab-${p.label.toLowerCase()}`}>{p.label}</span>
@@ -175,7 +175,7 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
                         <td><a href={c.source_url} target="_blank" rel="noopener noreferrer">open</a></td></tr>))}
                   </tbody></table></div>))}
               </article>);
-          })}
+          })}</div>}
           {view === "customers" && (custs.length === 0 ? <div className="sig-empty"><h3>No partner customers to show</h3><p>Partners often publish few customers. Try another vendor or loosen the filters.</p></div> : (
             partners.filter((p) => custOf(p).length > 0).sort((x, y) => custOf(y).length - custOf(x).length).map((p, i) => {
               const cs = custOf(p);

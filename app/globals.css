@@ -1652,3 +1652,6 @@ button.tab[aria-expanded="true"]{color:var(--text-strong);background:linear-grad
 .mkt-group[open]>summary::before{transform:rotate(90deg)}
 .mkt-group>summary em{margin-left:auto;font-style:normal;font:600 11px var(--body);padding:2px 9px;border-radius:999px;background:color-mix(in srgb,#2ECC8F 16%,var(--surface));color:#0B5A47}
 .mkt-group .tablewrap{border:0;border-top:1px solid var(--line);border-radius:0}
+.mkt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:10px;align-items:start}
+.mkt-card.open{grid-column:1/-1}
+.mkt-card{min-width:0}

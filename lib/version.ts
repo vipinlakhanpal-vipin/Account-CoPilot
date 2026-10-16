@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.28";
+export const APP_VERSION = "4.29";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.29", date: "2026-10-16", notes: "Market intelligence shows partners in two columns.", changes: [
+      { what: "In Market intelligence, By partner now lays the partner cards out in as many columns as fit (two in a normal window). A card whose customers are opened takes the full row", where: "components/MarketIntel.tsx, app/globals.css", why: "Requested — the right side of the window was empty" },
+    ] },
   { version: "4.28", date: "2026-10-16", notes: "Market intelligence: customers grouped under each partner, customer contact search, deeper partner scans, a slimmer left panel.", changes: [
       { what: "All Partners' Customers now shows one collapsible section per partner (partner name, region, number of customers) instead of one mixed list, each with its customers, project, contact details and source", where: "components/MarketIntel.tsx", why: "Requested — customers partner-wise, not mixed" },
       { what: "Each customer has contact details or a Find contacts button (free). Customers in your database use the account's Find contacts; others queue a market contact search. A toolbar button finds contacts for up to 10 customers of the vendor that have none. In-database customers show how many people are already on file", where: "components/MarketIntel.tsx, app/api/market, app/api/engine, ENGINE.md", why: "Requested — contact details for the customers listed under each partner" },
