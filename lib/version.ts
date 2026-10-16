@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.20";
+export const APP_VERSION = "4.21";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.21", date: "2026-10-16", notes: "Online now refreshes sooner after you open the app.", changes: [
+      { what: "The Online now chip looks again 4 seconds after the app opens and then every 20 seconds, so you appear in it straight away instead of after the next refresh", where: "components/OnlineNow.tsx", why: "It showed no one active right after opening, although the first heartbeat had just been recorded" },
+    ] },
   { version: "4.20", date: "2026-10-16", notes: "Activity log and a live Online now chip, for Super Admins.", changes: [
       { what: "A green Online now chip in the top bar (Super Admins only) shows how many people were active in the last 2 minutes; click it to see who they are and which page they are on", where: "components/OnlineNow.tsx, components/ActivityTracker.tsx, app/api/activity", why: "Requested — see active users at any time" },
       { what: "Setup → Team has an Activity section: a per-person summary (last seen, last sign-in, visits, actions, most used pages) and a day-by-day feed of page opens, searches, report downloads, Find contacts, scans and Aria questions, with a period and person filter", where: "components/ActivityLog.tsx, supabase/migrations/0007_activity_log.sql", why: "Requested — know who logged in and explored the app" },

@@ -10,8 +10,8 @@ export default function OnlineNow() {
   useEffect(() => {
     let off = false;
     const load = () => fetch("/api/activity?view=active", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((j) => { if (!off) setActive(j?.ready ? j.active : null); }).catch(() => {});
-    load(); const t = setInterval(load, 30000);
-    return () => { off = true; clearInterval(t); };
+    load(); const first = setTimeout(load, 4000); const t = setInterval(load, 20000); // second look soon after opening: the first heartbeat may land after the first read
+    return () => { off = true; clearTimeout(first); clearInterval(t); };
   }, []);
   useEffect(() => {
     if (!open) return;
