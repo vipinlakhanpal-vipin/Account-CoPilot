@@ -125,7 +125,7 @@ export async function tryFree(question: string, ctx: AriaContext): Promise<FreeR
     const heard = [f.region, scope, rev].filter(Boolean).join(", ");
     if (!f.region) return { text: "Which region should it cover?", actions: [], choices: (REGIONS as { key: string }[]).map((r) => r.key).filter((k) => ["UAE", "KSA", "Qatar", "Kuwait", "UK", "USA"].includes(k)).map((k) => ({ label: k, value: stem(kind, k) })) };
     if (!kind) return { text: `Which format for ${heard}?`, actions: [], choices: [{ label: "📄 PDF report", value: stem("pdf", f.region) }, { label: "📊 Excel contact list", value: stem("xlsx", f.region) }] };
-    if (!limit && !wantsAll) return { text: `How many ${f.region} companies should I include?`, actions: [], choices: ["1", "5", "10", "25", "50", "all"].map((n) => ({ label: n === "all" ? "All" : n, value: `${stem(kind, f.region!)}, ${n === "all" ? "all companies" : `top ${n}`}` })) };
+    if (!limit && !wantsAll) return { text: `How many ${f.region} companies should I include?`, actions: [], choices: [...["1", "5", "10", "25", "50", "all"].map((n) => ({ label: n === "all" ? "All" : n, value: `${stem(kind, f.region!)}, ${n === "all" ? "all companies" : `top ${n}`}` })), { label: "Other number", value: `${stem(kind, f.region!)}, top {n}`, number: true }] };
     if (!rank) return { text: "How should I pick them?", actions: [], choices: [["Best ICP fit", "best fit"], ["Largest revenue", "largest revenue"], ["A to Z", "A to Z"]].map(([l, w]) => ({ label: l, value: `${stem(kind, f.region!)}, ${wantsAll ? "all companies" : `top ${limit}`}, by ${w}` })) };
     const how = rank === "revenue" ? "largest revenue" : rank === "name" ? "name" : "best ICP fit";
     if (kind === "xlsx") {

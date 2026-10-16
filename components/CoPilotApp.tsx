@@ -31,6 +31,7 @@ import { dashboardTiles } from "@/lib/dashboardTiles";
 type ReportRequest = { ids: string[]; title: string };
 const ReportsCtx = createContext<((req: ReportRequest) => void) | null>(null);
 import ReportDialog, { downloadReport } from "@/components/ReportDialog";
+import { queueFindContacts } from "@/lib/findContactsClient";
 
 const HERO: Record<string, [string, string]> = {
   dashboard: ["Dashboard", "A live snapshot of UAE target accounts, S2P signals, ERP landscape and decision makers."],
@@ -850,6 +851,8 @@ function Brief({ a, data, people, onClose, onContact, scores, criteria, isSuper 
               <div className="bh-btns">
                 <button className="btn ghost bh-btn" type="button" disabled={pdfBusy} title="PDF with everything on this page, plus how it was built from your ICP"
                   onClick={async () => { setPdfBusy(true); await downloadReport({ companyId: a.id }); setPdfBusy(false); }}>{pdfBusy ? "Building…" : "📄 PDF"}</button>
+                <button className="btn ghost bh-btn" type="button" title="Free: searches public web pages for named contacts with an email, phone or LinkedIn link, and saves them here. No API cost."
+                  onClick={() => queueFindContacts(a.slug, regionOf(a.country), a.company_name)}>🔎 Find contacts</button>
                 <button className="btn ghost bh-btn" type="button" aria-expanded={confirmRefresh} onClick={() => setConfirmRefresh((v) => !v)}>Refresh research</button>
                 <button className="btn ghost bh-btn btn-close" type="button" onClick={onClose}>Close</button>
               </div>

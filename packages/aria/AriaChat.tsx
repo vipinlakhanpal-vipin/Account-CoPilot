@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import type { AriaAction, AriaChoice } from "./types";
 
 type Action = AriaAction;
+type Conv = { id: string; at: number; title: string; msgs: { role: "user" | "assistant"; content: string; display?: string; mode?: string; note?: string; ms?: number }[] };
 type Msg = { role: "user" | "assistant"; content: string; display?: string; actions?: Action[]; choices?: AriaChoice[]; mode?: string; note?: string; ms?: number };
 const GIVE_UP_MS = 90_000;
 
@@ -74,6 +75,10 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
   const [rect, setRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
   const winRef = useRef<HTMLElement>(null);
   const [msgs, setMsgs] = useState<Msg[]>([]);
+  const [view, setView] = useState<"chat" | "history">("chat");
+  const [history, setHistory] = useState<Conv[]>([]);
+  const convId = useRef<string | null>(null);
+  const loaded = useRef<unknown>(null); // a chat just opened from History is not re-dated until something is added
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [filing, setFiling] = useState("");
@@ -166,6 +171,37 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
 
+  const histKey = `${storageKey}-history`;
+  useEffect(() => {
+    try { const raw = JSON.parse(localStorage.getItem(histKey) || "[]"); if (Array.isArray(raw)) setHistory(raw); } catch { /* optional */ }
+  }, [histKey]);
+  const saveHistory = useCallback((list: Conv[]) => {
+    setHistory(list);
+    try { localStorage.setItem(histKey, JSON.stringify(list)); } catch { /* optional: private mode or full */ }
+  }, [histKey]);
+  // Every finished exchange is kept (without download buttons, which can't be reused later). Older than 90 days or beyond 100 chats is dropped.
+  useEffect(() => {
+    if (busy || msgs.length === 0 || msgs === loaded.current || !msgs.some((m) => m.role === "user")) return;
+    if (!convId.current) convId.current = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+    const first = msgs.find((m) => m.role === "user")!;
+    const conv: Conv = { id: convId.current, at: Date.now(), title: (first.display || first.content).slice(0, 120),
+      msgs: msgs.map(({ role, content, display, mode, note, ms }) => ({ role, content, display, mode, note, ms })) };
+    const keep = history.filter((h) => h.id !== conv.id && Date.now() - h.at < 90 * 864e5).slice(0, 99);
+    saveHistory([conv, ...keep]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [msgs, busy]);
+  function fresh() {
+    cancelledRef.current = true; abortRef.current?.abort();
+    window.speechSynthesis?.cancel();
+    convId.current = null; setMsgs([]); setText(""); setBusy(false); setListening(false); setView("chat");
+  }
+  function openConv(c: Conv) { convId.current = c.id; loaded.current = c.msgs; setMsgs(c.msgs as Msg[]); setView("chat"); }
+  const dayLabel = (t: number) => {
+    const d = new Date(t), n = new Date(), start = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+    const diff = Math.round((start(n) - start(d)) / 864e5);
+    return diff === 0 ? "Today" : diff === 1 ? "Yesterday" : d.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  };
+
   const send = useCallback(async (q: string, shown?: string) => {
     const question = q.trim();
     if (!question || busy) return;
@@ -219,7 +255,7 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
   function restart() {
     cancelledRef.current = true; abortRef.current?.abort();
     window.speechSynthesis?.cancel(); recRef.current?.stop();
-    setMsgs([]); setText(""); setBusy(false); setListening(false);
+    convId.current = null; setMsgs([]); setText(""); setBusy(false); setListening(false); setView("chat");
     setTimeout(() => inputRef.current?.focus(), 30);
   }
   async function file(a: Action, key: string) { setFiling(key); try { await onAction?.(a); } finally { setFiling(""); } }
@@ -227,7 +263,7 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
   const last = msgs[msgs.length - 1];
   return (
     <>
-      <button type="button" className={`aria-btn ${buttonClassName}`.trim()} onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label={`${name} - Your interactive agent`}>
+      <button type="button" className={`aria-btn ${buttonClassName}`.trim()} onClick={() => { if (!open) fresh(); setOpen((o) => !o); }} aria-expanded={open} aria-label={`${name} - Your interactive agent`}>
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <circle cx="12" cy="2.9" r="1.35" fill="#FFE08A" />
           <path d="M12 4.2v2.3" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" />
@@ -250,21 +286,39 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
               <span className="aria-badge" aria-hidden="true">{name.charAt(0)}</span>
               <div className="aria-title"><b>{name}</b><small>{tagline}</small></div>
               <div className="aria-top-actions">
+                <button type="button" className={`aria-home${view === "history" ? " on" : ""}`} onClick={() => setView((v) => (v === "history" ? "chat" : "history"))} aria-pressed={view === "history"} title="Your earlier chats, by date">🕘 History</button>
                 <button type="button" className="aria-home" onClick={() => { setRect(null); setWide((w) => !w); }} aria-pressed={wide} title="Make the window fill the screen, or back to its normal size. You can also drag the header to move it and any edge to resize it.">{wide ? "⤡ Smaller" : "⤢ Expand"}</button>
-                {msgs.length > 0 && <button type="button" className="aria-home" onClick={restart} title="Back to the start screen with the example questions">🏠 Home</button>}
+                {(msgs.length > 0 || view === "history") && <button type="button" className="aria-home" onClick={restart} title="Back to the start screen with the example questions">🏠 Home</button>}
                 <button type="button" className={`aria-toggle${readAloud ? " on" : ""}`} onClick={toggleRead} aria-pressed={readAloud} title="Read answers aloud">🔊 {readAloud ? "Reading aloud" : "Read aloud"}</button>
                 <button type="button" className="aria-home aria-close" onClick={() => setOpen(false)}>Close</button>
               </div>
             </header>
             <div className="aria-body" ref={bodyRef}>
-              {msgs.length === 0 && (
+              {view === "history" && (
+                <div className="aria-hist">
+                  <div className="aria-hist-head"><h2>Chat history</h2>{history.length > 0 && <button type="button" className="aria-home" onClick={() => { if (window.confirm("Delete all saved chats on this browser?")) saveHistory([]); }}>Clear all</button>}</div>
+                  {history.length === 0 ? <p className="aria-hist-empty">Nothing here yet. Your questions are saved as you ask them.</p>
+                    : history.map((c, i) => (
+                      <Fragment key={c.id}>
+                        {(i === 0 || dayLabel(history[i - 1].at) !== dayLabel(c.at)) && <h3 className="aria-hist-day">{dayLabel(c.at)}</h3>}
+                        <div className="aria-hist-row">
+                          <button type="button" onClick={() => openConv(c)} title="Open this chat">
+                            <b>{c.title}</b>
+                            <small>{new Date(c.at).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })} · {c.msgs.filter((m) => m.role === "user").length} question{c.msgs.filter((m) => m.role === "user").length === 1 ? "" : "s"}</small>
+                          </button>
+                          <button type="button" className="aria-hist-del" aria-label="Delete this chat" title="Delete this chat" onClick={() => saveHistory(history.filter((h) => h.id !== c.id))}>×</button>
+                        </div>
+                      </Fragment>))}
+                </div>
+              )}
+              {view === "chat" && msgs.length === 0 && (
                 <div className="aria-hello">
                   <h2>How can I help?</h2>
                   <p>{welcomeText || "Ask me anything and I will answer in tables. Type below, or tap the microphone and speak."}</p>
                   <div className="aria-cards">{examples.map(([k, q]) => <button type="button" key={q} onClick={() => send(q)}><small>{k}</small>{q}</button>)}</div>
                 </div>
               )}
-              {msgs.map((m, i) => (
+              {view === "chat" && msgs.map((m, i) => (
                 <div key={i} className={`aria-msg ${m.role}`}>
                   {m.role === "assistant" && <span className="aria-avatar" aria-hidden="true">{name.charAt(0)}</span>}
                   <div className="aria-bubble">
@@ -276,12 +330,15 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
                     )}
                     {m.note && <p className={`aria-note ${m.mode === "ai" ? "ai" : "free"}`}>{m.note}{m.ms !== undefined ? ` · ${(m.ms / 1000).toFixed(1)}s` : ""}</p>}
                     {m.choices && m.choices.length > 0 && i === msgs.length - 1 && !busy && (
-                      <div className="aria-choices">{m.choices.map((c) => { const label = typeof c === "string" ? c : c.label, value = typeof c === "string" ? c : c.value; return <button type="button" key={label + value} onClick={() => send(value, label)}>{label}</button>; })}</div>
+                      <div className="aria-choices">{m.choices.map((c) => { const label = typeof c === "string" ? c : c.label, value = typeof c === "string" ? c : c.value;
+                        if (typeof c !== "string" && c.number) return <form key={label + value} className="aria-num" onSubmit={(e) => { e.preventDefault(); const n = Math.floor(Number(new FormData(e.currentTarget).get("n"))); if (n >= 1 && n <= 500) send(value.replace("{n}", String(n)), `${n}`); }}>
+                          <input name="n" type="number" min={1} max={500} inputMode="numeric" placeholder="Other number" aria-label="Enter how many companies" /><button type="submit">Go</button></form>;
+                        return <button type="button" key={label + value} onClick={() => send(value, label)}>{label}</button>; })}</div>
                     )}
                   </div>
                 </div>
               ))}
-              {busy && (
+              {view === "chat" && busy && (
                 <div className="aria-msg assistant"><span className="aria-avatar" aria-hidden="true">{name.charAt(0)}</span>
                   <div className="aria-bubble aria-wait" role="status" aria-live="polite">
                     <p className="aria-typing">{name} is checking your data<span className="aria-dots" /></p>
@@ -290,7 +347,7 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
                     <button type="button" className="aria-cancel" onClick={() => { cancelledRef.current = true; abortRef.current?.abort(); }}>Stop</button>
                   </div>
                 </div>)}
-              {msgs.length > 0 && !busy && <button type="button" className="aria-restart" onClick={restart}>← Back to the start (example questions)</button>}
+              {view === "chat" && msgs.length > 0 && !busy && <button type="button" className="aria-restart" onClick={restart}>← Back to the start (example questions)</button>}
               <div ref={endRef} />
             </div>
             <footer className="aria-foot">

@@ -116,6 +116,12 @@ Every Anthropic-API route (`/api/research`, `/api/discover`, `/api/pitch`, and `
 - **Replaces the header search bar** (removed). The Mission Control "Search & refresh" tab stays for bulk jobs and the paid refresh and links here. Remove other search entry points only after the user confirms Find company works.
 - Standard users may queue, cancel, add and ignore for their own regions only (job region is checked server-side).
 
+## Find contacts (v4.12)
+- **Button:** "Find contacts" on the account page and in each Search Company result (`lib/findContactsClient.ts`) → `POST /api/engine` `{action:"queue", mode:"contacts", slug}`. The server looks the company up (region, domain), checks the user's region, and refuses a duplicate while one is queued or running.
+- **Free:** a scheduled Claude session follows the **contacts** job in `ENGINE.md` (public web search only; no Seamless credits, no LinkedIn login) and saves people with `engine_client.mjs add_contacts <slug> <file>` → worker action `add_contacts`.
+- **Server-side rules (worker):** email only if named and on the company's domain (generic mailboxes and personal domains dropped); LinkedIn must be a `/in/` profile; phone format checked; source URL required; dedupe by name, email or LinkedIn. New rows are `channel_state "Claude"`, `external_id` WEB-<hash>; only Claude-owned rows may get empty fields filled; reference rows are never touched. Like all `ENGINE.md` changes, it reaches the routines only after the user pushes.
+- **Aria history (v4.12):** the History button (before Expand) lists chats saved in the browser's localStorage by day; Aria opens clean each time. History is per browser, not in the database.
+
 ## Aria, the in-app assistant (v3.72+)
 - **Where:** the robot icon beside the suggestions bulb (`components/AriaChat.tsx`, a thin wrapper over the copy-in package `packages/aria`). Server: `app/api/aria/route.ts`.
 - **Free first, AI second (v3.77):** `lib/aria/router.ts` reads common questions by plain rules (counts, lists, one company, contacts, ICP rules, PDF, Excel with its region / how-many / pick-by questions) and answers from the database with **no API cost and no PIN**. Only what the rules cannot read goes to the AI (`lib/aria/agent.ts`, default model Haiku 4.5, override with `ARIA_MODEL`), which is behind `requirePaidApproval`. Every reply carries a note saying which path answered.

@@ -13,6 +13,7 @@
 //                                                                                                region is the region(s) worked this run (e.g. "UAE", or "UAE, KSA" if more than one — optional, omit if none applies); also
 //                                                                                                sends data/verification/run_details.json if present: [{"name","status","revenue"}]
 //                                                                                                (one row per company checked this run), for the bell's table
+//   node scripts/engine_client.mjs add_contacts <slug> <file.json>      → saves people found on the public web for ONE company (a "contacts" job; format: see ENGINE.md "Find contacts")
 //   node scripts/engine_client.mjs uploads                              → writes data/verification/uploaded_lists.json: [{"id","filename","region","url"}] waiting to be read
 //   node scripts/engine_client.mjs add_upload <file.json> <filename>    → imports one upload's extracted rows (format: see ENGINE.md "Reading an uploaded list")
 //   node scripts/engine_client.mjs upload_done <id> done|error "<summary>"
@@ -57,6 +58,12 @@ else if (cmd === "queue") {
   held.forEach((x) => console.log(`held ${x.name} — queued for ${x.region} (not Active yet)`));
   skipped_detail.forEach((x) => console.log(`SKIPPED ${x.name}: already in the app or already held as "${x.matches}"`));
   console.log(`${held.length} held, ${skipped} already in the app or already held`);
+} else if (cmd === "add_contacts") {
+  const list = JSON.parse(fs.readFileSync(b || "data/verification/new_contacts.json", "utf8"));
+  const { added, updated, skipped, dropped } = await call({ action: "add_contacts", slug: a, contacts: list });
+  added.forEach((x) => console.log(`added ${x}`)); updated.forEach((x) => console.log(`filled empty details for ${x}`));
+  skipped.forEach((x) => console.log(`SKIPPED ${x.name}: ${x.why}`)); dropped.forEach((x) => console.log(`DROPPED ${x}`));
+  console.log(`${added.length} added, ${updated.length} updated, ${skipped.length} skipped`);
 } else if (cmd === "icp") {
   const j = await call({ action: "icp" });
   fs.mkdirSync("data/verification", { recursive: true });

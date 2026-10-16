@@ -66,6 +66,8 @@
 .aria-actions,.aria-choices{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .aria-choices button{font:600 13px var(--aria-body);color:#0F6E56;background:color-mix(in srgb,#0F6E56 10%,var(--aria-surface));border:1.5px solid #0F6E56;border-radius:999px;padding:6px 14px;cursor:pointer}
 .aria-choices button:hover{background:#0F6E56;color:#fff}
+.aria-num{display:inline-flex;gap:6px;align-items:center}
+.aria-num input{font:600 13px var(--aria-body);width:120px;border:1.5px solid #0F6E56;border-radius:999px;padding:6px 12px;background:var(--aria-surface);color:inherit}
 .aria-foot{padding:12px 18px 14px;border-top:1px solid var(--aria-line);background:var(--aria-surface)}
 .aria-foot form{display:flex;gap:10px;align-items:flex-end}
 .aria-foot textarea{flex:1;min-width:0;resize:none;font:14px var(--aria-body);color:var(--aria-text);background:rgba(var(--aria-ink),.05);border:1.5px solid var(--aria-line);border-radius:16px;padding:12px 16px;max-height:120px}
@@ -111,3 +113,16 @@
 .aria-btn .aria-tip::before{content:"";position:absolute;top:-6px;right:20px;width:10px;height:10px;transform:rotate(45deg);background:#2E5E8C;border-left:1.5px solid rgba(255,255,255,.85);border-top:1.5px solid rgba(255,255,255,.85)}
 .aria-btn .aria-tip-dot{width:6px;height:6px;border-radius:50%;background:#FFE08A;box-shadow:0 0 8px 2px rgba(255,224,138,.8)}
 .aria-btn:hover .aria-tip,.aria-btn:focus-visible .aria-tip{opacity:1;transform:none}
+
+.aria-home.on{background:#0F6E56;color:#fff;border-color:#0F6E56}
+.aria-hist{display:flex;flex-direction:column;gap:6px;padding:4px 2px}
+.aria-hist-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.aria-hist-head h2{margin:0;font-size:18px}
+.aria-hist-day{margin:14px 0 2px;font:700 12px var(--aria-body);letter-spacing:.06em;text-transform:uppercase;opacity:.65}
+.aria-hist-empty{opacity:.7;font-size:14px}
+.aria-hist-row{display:flex;gap:6px;align-items:stretch}
+.aria-hist-row>button:first-child{flex:1;text-align:left;display:flex;flex-direction:column;gap:2px;padding:9px 12px;border:1px solid var(--aria-line,rgba(128,128,128,.3));border-radius:10px;background:var(--aria-surface);color:inherit;cursor:pointer;font:500 14px var(--aria-body)}
+.aria-hist-row>button:first-child:hover{border-color:#0F6E56}
+.aria-hist-row small{opacity:.65;font-size:12px}
+.aria-hist-del{width:32px;border:1px solid var(--aria-line,rgba(128,128,128,.3));border-radius:10px;background:var(--aria-surface);color:inherit;cursor:pointer;font-size:18px}
+.aria-hist-del:hover{color:#b3261e;border-color:#b3261e}

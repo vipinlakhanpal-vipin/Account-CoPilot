@@ -78,6 +78,18 @@ typed in) — see "Multi-name discover jobs" under step 2.
   (The slug makes a "View" link in the app; omit it for a held company — there is no account yet.) Research and record it even if it looks below the ICP or its region
   is inactive (the user asked for it); its status or hold note will say so.
 
+- **contacts** — "Find contacts" for ONE existing company (`company_name`, `slug`, `website`). Free: public web search only, no Seamless credits, no LinkedIn login.
+  Find up to 6 named people who matter to buying (procurement/purchasing/supply chain heads first, then CFO/finance, then IT/digital) at THIS company, using the company's own
+  website (team, leadership, contact and press pages), annual reports, exchange filings, press releases, conference speaker lists and search-result snippets. Rules (the app also enforces them):
+  - Titles exactly as published. Never infer nationality. Never guess or pattern-build an email or phone.
+  - `email` only if it is printed on a public page, belongs to a named person (no info@, sales@, hr@ ...), and is on the company's own domain. Otherwise leave it empty.
+  - `phone` only if printed for that person (set `phone_type` Direct / Mobile) or the company switchboard on its own site (`Switchboard`, attach to the person only if the page names them).
+  - `linkedin_url` only a `linkedin.com/in/...` link that appears in a search-result snippet or on a public page. Do not open LinkedIn, log in or scrape.
+  - Every person needs `source_url` (the page that shows them) and, ideally, a short `source_note`. A person with no email, phone or LinkedIn is not saved.
+  Write `data/verification/new_contacts.json` as `[{"full_name","title_verbatim","email","phone","phone_type","linkedin_url","source_url","source_note"}]`, then run
+  `node scripts/engine_client.mjs add_contacts <slug> data/verification/new_contacts.json` (people already on file are skipped; empty fields of Claude-added rows may be filled).
+  Finish with `finish <id> done "<Company> (<Region>): N contacts added, M updated"` or, if nothing public was found, `finish <id> done "<Company> (<Region>): no public contact details found"`. Do not run `add`, `hold` or revenue steps for this job.
+
 ## 3. Finish and notify
 `node scripts/engine_client.mjs finish <id> done "<N verified: X Verified, Y Likely, Z Needs check, W Not ICP; M new companies added>"`
 (or `finish <id> error "<reason>"`). Claim the next job if time allows. Then ALWAYS, at the very end:

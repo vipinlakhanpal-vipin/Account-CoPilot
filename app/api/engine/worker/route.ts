@@ -9,6 +9,7 @@ import { normalizeDefinition, rulesFor, regionOf, summarizeRules } from "@/lib/i
 // Limited API for scheduled Claude sessions (no Supabase key needed in the cloud environment).
 // Auth: "Authorization: Bearer <ENGINE_TOKEN>"; only the SHA-256 hash is stored (settings.engine_token). Revoke/regenerate in Settings.
 // Allowed: read the ICP definition, claim/finish queued jobs, read the verification queue, submit revenue results, add discovered companies, post a notification.
+// Also allowed: add_contacts (new people found on the public web for ONE company; written only after server-side checks, never read back).
 // Not allowed: reading contacts, deleting anything, or any other table access.
 export const maxDuration = 60;
 type Db = ReturnType<typeof supabaseAdmin>;
@@ -36,6 +37,9 @@ const NewCo = z.object({ name: z.string().min(2), website: z.string().optional()
   hq_city: z.string().optional().default(""), why_icp: z.string().optional().default(""), source_url: z.string().optional().default(""), entity_type: EntityType });
 const NewCoUpload = z.object({ name: z.string().min(2), website: z.string().optional().default(""), country: z.string().default("UAE"), industry: z.string().optional().default(""),
   hq_city: z.string().optional().default(""), notes: z.string().optional().default("") });
+const NewContact = z.object({ full_name: z.string().trim().min(3).max(120), title_verbatim: z.string().trim().min(2).max(200),
+  email: z.string().trim().max(160).optional().default(""), phone: z.string().trim().max(40).optional().default(""), phone_type: z.enum(["Direct", "Mobile", "Switchboard", ""]).optional().default(""),
+  linkedin_url: z.string().trim().max(240).optional().default(""), source_url: z.string().trim().url().max(500), source_note: z.string().trim().max(400).optional().default("") });
 const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("claim") }),
   z.object({ action: z.literal("finish"), id: z.string(), status: z.enum(["done", "error"]), result: z.string().max(2000), slug: z.string().max(120).optional(),
@@ -46,6 +50,7 @@ const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("submit"), results: z.array(Result).max(50) }),
   z.object({ action: z.literal("add_companies"), companies: z.array(NewCo).max(50) }),
   z.object({ action: z.literal("hold_companies"), companies: z.array(NewCo).max(50) }),
+  z.object({ action: z.literal("add_contacts"), slug: z.string().min(2).max(120), contacts: z.array(NewContact).max(25) }),
   z.object({ action: z.literal("names") }),
   z.object({ action: z.literal("icp") }),
   z.object({ action: z.literal("uploads") }),
@@ -131,6 +136,56 @@ export async function POST(req: Request) {
       .filter((c) => { const at = c.profile?.["Revenue check"]?.at; return !at || Date.now() - new Date(at).getTime() > 7 * 864e5; })
       .map((c) => ({ slug: c.slug, company_name: c.company_name, website: c.company_website || c.domain || "", industry: c.industry || "", country: c.country, current_status: c.icp_status, recheck: true }));
     return NextResponse.json({ queue: due });
+  }
+  if (b.action === "add_contacts") {
+    // People found on the public web by a free session. New rows only (channel "Claude"); a Claude-owned row may get empty fields filled; reference rows are never touched.
+    const { data: co } = await db.from("companies").select("id,company_name,domain").eq("slug", b.slug).maybeSingle();
+    if (!co) return NextResponse.json({ error: "Company not found." }, { status: 404 });
+    const cdom = String(co.domain || "").toLowerCase().replace(/^www\./, "");
+    const { data: have } = await db.from("contacts").select("id,full_name,email,phone,linkedin_url,channel_state,claude_check").eq("company_id", co.id);
+    const key = (n: string) => n.toLowerCase().normalize("NFKD").replace(/[^a-z]+/g, " ").trim();
+    const GENERIC_LOCAL = /^(info|sales|contact|contacts|admin|hello|hi|support|office|enquiries|enquiry|inquiries|inquiry|mail|service|services|help|hr|careers|jobs|recruitment|procurement|purchasing|accounts|finance|marketing|media|press|pr|customercare|customer\.care|reception|webmaster|noreply|no-reply|team)$/i;
+    const PERSONAL = /(^|\.)(gmail|googlemail|yahoo|hotmail|outlook|live|msn|icloud|aol|proton|protonmail|gmx|mail|yandex|zoho)\./i;
+    const added: string[] = [], updated: string[] = [], skipped: { name: string; why: string }[] = [], dropped: string[] = [];
+    for (const c of b.contacts) {
+      const notes: string[] = [];
+      let email = c.email.toLowerCase(), phone = c.phone, linkedin = c.linkedin_url;
+      if (email) {
+        const [local, host = ""] = email.split("@"); const h = host.replace(/^www\./, "");
+        if (!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/.test(email) || GENERIC_LOCAL.test(local) || PERSONAL.test(h) || !cdom || !(h === cdom || h.endsWith("." + cdom))) { dropped.push(`${c.full_name}: email ${email} (not a named address on ${cdom || "the company domain"})`); email = ""; }
+      }
+      if (phone && !/^\+?[\d\s().-]{7,24}$/.test(phone)) { dropped.push(`${c.full_name}: phone ${phone} (format)`); phone = ""; }
+      if (linkedin) {
+        const m = linkedin.match(/^https?:\/\/([a-z]{2,3}\.)?linkedin\.com\/in\/([^/?#\s]+)/i);
+        if (!m) { dropped.push(`${c.full_name}: LinkedIn ${linkedin} (not a profile URL)`); linkedin = ""; } else linkedin = `https://www.linkedin.com/in/${m[2]}`;
+      }
+      if (!email && !phone && !linkedin) { skipped.push({ name: c.full_name, why: "no usable email, phone or LinkedIn" }); continue; }
+      const same = (have || []).find((x) => key(x.full_name) === key(c.full_name) || (email && x.email?.toLowerCase() === email) || (linkedin && x.linkedin_url?.toLowerCase().replace(/\/$/, "") === linkedin.toLowerCase()));
+      if (same) {
+        const fill: Record<string, unknown> = {};
+        if (same.channel_state === "Claude") {
+          if (email && !same.email) Object.assign(fill, { email, email_status: "Published", email_source: c.source_url, email_confidence: "FACT" });
+          if (phone && !same.phone) Object.assign(fill, { phone, phone_type: c.phone_type || null, phone_source: c.source_url });
+          if (linkedin && !same.linkedin_url) fill.linkedin_url = linkedin;
+        }
+        if (Object.keys(fill).length) {
+          await db.from("contacts").update({ ...fill, claude_check: `${same.claude_check ? same.claude_check + " | " : ""}Public web ${now.slice(0, 10)}: ${c.source_url}`, updated_at: now }).eq("id", same.id);
+          updated.push(c.full_name);
+        } else skipped.push({ name: c.full_name, why: "already on file" });
+        continue;
+      }
+      const day = now.slice(0, 10);
+      const ext = "WEB-" + createHash("sha1").update(`${co.id}|${key(c.full_name)}`).digest("hex").slice(0, 12);
+      const { error } = await db.from("contacts").upsert([{ external_id: ext, company_id: co.id, full_name: c.full_name, title_verbatim: c.title_verbatim, research_channel: "Claude", channel_state: "Claude",
+        channel_source: "Claude public web search", source: c.source_url, source_type: "Public web (free session)", source_url: c.source_url, verification_status: email || linkedin ? "LIKELY CURRENT" : "UNVERIFIED",
+        email: email || null, email_status: email ? "Published" : null, email_source: email ? c.source_url : null, email_confidence: email ? "FACT" : null,
+        phone: phone || null, phone_type: phone ? c.phone_type || null : null, phone_source: phone ? c.source_url : null, linkedin_url: linkedin || null, employment_status: "Current (per source)",
+        notes_contact: `Found by a free Claude session on ${day} from public web pages. ${c.source_note || ""} LinkedIn URLs are from search results only; profiles were not opened.`.trim(),
+        claude_check: `Public web ${day}: ${c.source_url}`, record_status: `Claude — added (public web, ${day})`, company_ref_name: co.company_name }], { onConflict: "external_id", ignoreDuplicates: true });
+      if (error) skipped.push({ name: c.full_name, why: error.message }); else { added.push(c.full_name); (have || []).push({ id: "", full_name: c.full_name, email, phone, linkedin_url: linkedin, channel_state: "Claude", claude_check: "" }); }
+    }
+    invalidateAllData();
+    return NextResponse.json({ added, updated, skipped, dropped });
   }
   if (b.action === "names") {
     // Existing company names and domains, so a session can skip them before searching (no contacts, nothing else)

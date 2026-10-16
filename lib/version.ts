@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.11";
+export const APP_VERSION = "4.12";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,12 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.12", date: "2026-10-16", notes: "Find contacts button (free, public web search), Aria chat history by date with a clean window each time, and a custom number for how many companies a report includes.", changes: [
+      { what: "Find contacts button on every account page and in each Search Company result. It queues a free job: a scheduled Claude session searches public web pages for named people with a published email, phone or LinkedIn link and saves them as new contacts with the source page", where: "Account page, Find company → Search Company, ENGINE.md (contacts job), app/api/engine/worker (add_contacts)", why: "Requested — find contact details with standard resources at no cost and update the database" },
+      { what: "The worker checks every saved contact: an email must be a named address on the company's own domain (no info@, sales@ or personal domains), LinkedIn must be a profile link, nothing is guessed, and existing reference people are never edited", where: "app/api/engine/worker/route.ts", why: "Keeps the data rules: no invented emails or phones" },
+      { what: "Aria has a History button before Expand. Chats are saved on this browser, grouped by day (Today, Yesterday, then the date), and Aria opens clean every time", where: "packages/aria/AriaChat.tsx", why: "Requested — chat history tab and a clean window on the next open" },
+      { what: "When Aria asks how many companies, there is now an Other number box (for example 22 or 35) next to 1, 5, 10, 25, 50 and All", where: "lib/aria/router.ts, packages/aria/AriaChat.tsx", why: "Requested — a custom number for reports" },
+    ] },
   { version: "4.11", date: "2026-10-16", notes: "Aria now understands a revenue range (\"KSA companies with net revenue between 500m and 1b\"), asks the format, how many and how to pick before building any PDF or Excel, and every report carries email, phone and LinkedIn.", changes: [
       { what: "Aria reads revenue ranges (between X and Y, above X, below X, in millions or billions) as a filter for reports, counts and lists, and no longer mistakes the word revenue in a range for a request to rank by revenue", where: "lib/aria/router.ts (parseRevenue)", why: "Requested — a report on KSA companies with net revenue between so and so" },
       { what: "For a set of companies Aria always asks, as tap buttons, the region, the format (PDF or Excel when you only said report), how many, and how to pick them, then builds with the filter applied. A PDF on one named company is still built straight away", where: "lib/aria/router.ts, lib/aria/agent.ts", why: "Requested — ask questions before generating a PDF or Excel" },

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { ask, paidFetch, notify } from "@/components/Confirm";
+import { queueFindContacts } from "@/lib/findContactsClient";
 import { downloadReport } from "@/components/ReportDialog";
 import { fmtDateTime } from "@/lib/dates";
 
@@ -299,6 +300,7 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
                   <div className="find-acts">
                     <Link className="btn tiny" href={openAccount(it)}>Open</Link>
                     <button type="button" className="btn tiny" onClick={() => downloadReport({ companyId: it.id }, "pdf")}>PDF</button>
+                    <button type="button" className="btn tiny" title="Free: searches public web pages for this company's contacts and saves them" onClick={() => queueFindContacts(it.slug, it.region, it.company_name)}>Find contacts</button>
                     {it.contacts > 0 && <button type="button" className="btn tiny" onClick={() => downloadReport({ companyIds: [it.id], region: "All", emailOnly: true }, "xlsx")}>Excel</button>}
                   </div>
                 </li>))}
@@ -396,7 +398,7 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
                         </tr>)),
                         pending > 1 && <tr key={`${j.id}-all`}><td colSpan={5} className="jobs-addall"><button type="button" className="btn tiny" onClick={() => act({ action: "add_all_found", job_id: j.id }, `${pending} companies added.`)}>Add all {pending} to the app</button></td></tr>];
                     }
-                    const label = j.mode === "company" ? j.company_name || "One company" : j.company_names?.length ? `${j.company_names.length} companies` : `Suggest ${j.count} new`;
+                    const label = j.mode === "contacts" ? `Contacts: ${j.company_name || "one company"}` : j.mode === "company" ? j.company_name || "One company" : j.company_names?.length ? `${j.company_names.length} companies` : `Suggest ${j.count} new`;
                     const parsed = String(j.result || "").match(/^(.+)\(([A-Za-z ]+)\):\s*(.+)$/);
                     return [<tr key={j.id}>
                       <td className="wrap">{parsed ? parsed[1].trim() : label}</td><td>{st}{j.status === "queued" && <div className="muted">usually a minute or two</div>}</td><td className="muted">{when}</td>
