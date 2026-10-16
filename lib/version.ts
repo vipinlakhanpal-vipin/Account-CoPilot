@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.72";
+export const APP_VERSION = "4.73";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.73", date: "2026-10-16", notes: "Aria says how it read your question and never silently drops part of it.", changes: [
+      { what: "When a list, count or report request contains a limit the quick free search cannot apply (an industry such as pharma, a staff-size limit, ownership or listing type, a city, a time period), Aria no longer ignores it and shows unfiltered results. It says how it read the question and what it cannot apply, and offers two choices: Ask the AI to handle it (uses API credit) or Run it without that part. The AI path now starts every answer with I read this as: and the filters it applied, and asks you to confirm when something is ambiguous or it had to assume", where: "lib/aria/router.ts (understanding guard), lib/aria/agent.ts, app/api/aria/route.ts", why: "Requested — a more capable Aria that understands plain English and confirms its reading when unsure" },
+    ] },
   { version: "4.72", date: "2026-10-16", notes: "Aria keeps one topic per chat and asks before starting a new one.", changes: [
       { what: "Aria now remembers the chat's topic. A follow-up such as only verified, also with Coupa, or revenue above 400m refines the earlier question instead of starting a new search (a newer revenue range or status replaces the older one). When you type a brand-new question while a topic is open, Aria asks first: Close this chat, start a new one (the old chat stays in History), or Keep going in this chat and use the earlier criteria too. Answers to Aria's own buttons are never questioned", where: "lib/aria/router.ts (conversation), app/api/aria/route.ts, packages/aria/AriaChat.tsx", why: "Requested — Aria should stay on one topic until the person completes it, and ask before closing it into History" },
     ] },

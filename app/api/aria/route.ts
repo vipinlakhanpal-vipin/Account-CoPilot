@@ -35,13 +35,16 @@ export async function POST(req: Request) {
     const regions = access.isSuper ? ALL_REGIONS : access.regions;
     const ctx = makeContext(data, def, crit, log);
     const msgs = parsed.data.messages;
-    const typed = msgs[msgs.length - 1].content;
+    let typed = msgs[msgs.length - 1].content;
+    // Buttons from the understanding guard: §ai: = hand it to the AI (paid), §plain: = run the reduced question
+    const forceAi = typed.startsWith("§ai:");
+    typed = typed.replace(/^§(ai|plain):\s*/, "");
     // The chat is one topic until the person completes it: refinements build on the earlier questions, a new topic is confirmed first.
     const conv = conversation(typed, msgs.slice(0, -1).filter((m) => m.role === "user").map((m) => m.content), !!parsed.data.flow);
     if (conv.ask) return NextResponse.json({ ...conv.ask, mode: "free", note: "Free answer · no API cost" });
     const question = conv.question;
     // 1) Free first: plain rules answer the common questions straight from the database, with no AI and no API cost, so no PIN either.
-    const free = await tryFree(question, ctx);
+    const free = forceAi ? null : await tryFree(question, ctx);
     if (free) return NextResponse.json({ ...free, mode: "free", note: "Free answer · read from your data, no API cost" });
     // 2) Only what the rules cannot read goes to the AI (the cheaper model), behind the paid-actions PIN.
     const blocked = await requirePaidApproval(req, user); if (blocked) return blocked;

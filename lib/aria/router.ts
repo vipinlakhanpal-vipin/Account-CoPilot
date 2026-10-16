@@ -57,6 +57,21 @@ const money = (m: number) => (m >= 1000 && m % 1000 === 0 ? `${m / 1000}b` : m >
 const revenuePhrase = (f: AccountFilter) => f.min_revenue_usd_m !== undefined && f.max_revenue_usd_m !== undefined ? `net revenue between ${money(f.min_revenue_usd_m)} and ${money(f.max_revenue_usd_m)}`
   : f.min_revenue_usd_m !== undefined ? `net revenue above ${money(f.min_revenue_usd_m)}` : f.max_revenue_usd_m !== undefined ? `net revenue below ${money(f.max_revenue_usd_m)}` : "";
 
+
+// ---- Understanding guard: say what could not be applied instead of silently ignoring it ----
+const GAPS: { label: string; re: RegExp }[] = [
+  { label: "an industry", re: /\b(pharma(ceuticals?)?|retail|logistics|banking|banks?|insurance|real estate|construction|oil and gas|oil & gas|energy|utilities|food|beverages?|fmcg|hospitality|healthcare|hospitals?|telecom(munications)?|manufacturing|automotive|aviation|airlines?|mining|steel|cement|education|shipping|ports?)\b(?= (companies|sector|industry|firms|players))|\b(in|from|within) (the )?[a-z&\- ]{3,28} (industry|sector)\b|\b(industry|sector) (is|of|=|:)\s*[a-z&\-]+/ },
+  { label: "a staff-size limit", re: /\b\d[\d,]*\+?\s*(employees|staff|headcount|people)\b|\b(employees|staff|headcount)\s*(above|over|more than|below|under|at least|of)\s*\d/ },
+  { label: "a listing or ownership type", re: /\b(unlisted|private(ly)?[- ]held|publicly listed|government[- ]owned|state[- ]owned|family[- ]owned|subsidiar(y|ies))\b|\blisted companies\b/ },
+  { label: "a city", re: /\b(in|from|based in|headquartered in)\s+(dubai|abu dhabi|sharjah|ajman|riyadh|jeddah|dammam|doha|muscat|manama|cairo|casablanca|nairobi|london)\b/ },
+  { label: "a time period", re: /\b(since (19|20)\d\d|last (year|month|quarter|week)|this (year|quarter|month)|recently|in 20\d\d|newly added|added (today|this week|this month))\b/ },
+];
+function unhandled(t: string): { label: string; phrase: string }[] {
+  const out: { label: string; phrase: string }[] = [];
+  for (const g of GAPS) { const m = g.re.exec(t); if (m) out.push({ label: g.label, phrase: m[0] }); }
+  return out;
+}
+
 function parseFilters(t: string): AccountFilter {
   const f: AccountFilter = {};
   const region = findRegionIn(t); if (region) f.region = region;
@@ -104,6 +119,16 @@ export async function tryFree(question: string, ctx: AriaContext): Promise<FreeR
   const f = parseFilters(t);
   if (/include (the )?(existing )?coupa/.test(t)) f.exclude_coupa_customers = false;
   const company = companyIn(t, ctx);
+  // A list, count or report request that carries a limit the quick free path cannot apply: say so and let the person choose (never return unfiltered results as if they matched)
+  if (!company.hits.length && /\b(list|show|find|give me|how many|count|number of|report|pdf|excel|which|who)\b/.test(t)) {
+    const gaps = unhandled(t);
+    if (gaps.length) {
+      const understood = [readable(f), revenuePhrase(f)].filter(Boolean).join(", ") || "all companies you can see";
+      const plain = gaps.reduce((x, g) => x.replace(g.phrase, " "), t).replace(/\s+/g, " ").trim();
+      return { text: `**I read your question as:** ${understood}.\n\nBut I cannot apply **${gaps.map((g) => `${g.label} ("${g.phrase.trim()}")`).join(" and ")}** in the quick, free search, so the results would not be limited by it. How should I continue?`, actions: [],
+        choices: [{ label: "Ask the AI to handle it (uses API credit)", value: `§ai:${question}` }, { label: "Run it without that part", value: `§plain:${plain}` }] };
+    }
+  }
   const num = /\btop\s*(\d{1,3})\b|\b(\d{1,3})\s*compan/.exec(t);
   const limit = num ? Number(num[1] || num[2]) : 0;
   const wantsAll = /\ball\b|\bevery\b|\bfull\b/.test(t);
