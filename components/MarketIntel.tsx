@@ -46,7 +46,16 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
   const custOf = (p: Partner) => custs.filter((c) => c.partner_id === p.id);
   const countP = (v: Vendor) => (data?.partners || []).filter((p) => p.vendor === v && active.includes(p.region)).length;
   const allPending = (data?.jobs || []).filter((j) => j.status === "queued" || j.status === "running");
-  const pending = allPending.filter((j) => j.mode === "market" && !j.customer && !j.partner && !j.contacts_only); // scans, shown in the bar
+  const pending = allPending.filter((j) => j.mode === "market" && !j.customer && !j.partner && !j.contacts_only); // vendor scans: shown on the vendor tile
+  const scanningRegions = (v: string) => [...new Set(pending.filter((j) => j.vendor === v || j.vendor === "all" || !j.vendor).map((j) => j.region))];
+  const wasScanning = useRef<Record<string, boolean>>({});
+  useEffect(() => {
+    const now: Record<string, boolean> = {};
+    for (const v of data?.vendors || []) if (scanningRegions(v).length) now[v] = true;
+    for (const v of Object.keys(wasScanning.current)) if (!now[v]) notify(`${v} scan finished.`, "ok");
+    wasScanning.current = now;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data]);
   // A contact search shows on the customer's own row (a flashing orange dot), not in the bar
   const searching = (c: Cust) => allPending.some((j) => (j.mode === "market" && j.customer === c.customer) || (j.mode === "contacts" && !!j.slug && j.slug === c.slug)
     || (j.mode === "market" && j.contacts_only && j.vendor === c.vendor && j.region === c.region && c.contacts.length === 0));
@@ -173,7 +182,7 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
           const custom = !!data?.custom_vendors?.includes(v);
           return (
             <span key={v} className="vendor-tile">
-              <button type="button" className={`sig-lane ${["c1", "c2", "c6", "c7", "c3", "c4", "c5", "c8"][i % 8]}`} aria-pressed={vendor === v} onClick={() => { setVendor(v); setOpenP(null); }}><b>{countP(v)}</b><span>{v} partners</span></button>
+              <button type="button" className={`sig-lane ${["c1", "c2", "c6", "c7", "c3", "c4", "c5", "c8"][i % 8]}`} aria-pressed={vendor === v} onClick={() => { setVendor(v); setOpenP(null); }}><b>{countP(v)}</b><span>{v} partners</span>{scanningRegions(v).length > 0 && <span className="srch" role="status"><i className="fcj-dot" aria-hidden="true" /><b className="fcj-flash">Scanning {scanningRegions(v).join(", ")}…</b></span>}</button>
               {custom && data?.is_super && <button type="button" className="vendor-x" aria-label={`Remove ${v}`} title={`Remove ${v} from the list`} onClick={() => removeVendor(v)}>×</button>}
             </span>);
         })}
@@ -215,7 +224,6 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
               <select value={pf.region || active[0] || ""} onChange={(e) => setPf({ ...pf, region: e.target.value })} aria-label="Region">{regionList.map((r) => <option key={r}>{r}</option>)}</select>
               <button type="submit" className="btn tiny primary">Add</button><button type="button" className="btn tiny" onClick={() => setAddingP(false)}>Cancel</button>
             </form>)}
-          {pending.length > 0 && <div className="sig-pending" role="status"><span className="fcj-dot" aria-hidden="true" /> <b className="fcj-flash">Scanning {pending.map((j) => (j.customer ? `contacts for ${j.customer}` : `${j.vendor === "all" || !j.vendor ? "all vendors" : j.vendor} · ${j.region}`)).join(", ")}…</b> Results appear here by themselves.</div>}
           {!data && <p className="note">Loading…</p>}
           {data && active.length === 0 && <div className="sig-empty"><h3>Tick a region</h3><p>Choose one or more regions on the left to see their partners and customers.</p></div>}
           {data && partners.length === 0 && view === "partners" && (
