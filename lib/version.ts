@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.37";
+export const APP_VERSION = "4.38";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.38", date: "2026-10-16", notes: "Customer search covers each partner's go-lives, press and LinkedIn snippets.", changes: [
+      { what: "For every partner the scan now searches its website (customers, case studies, projects), its news and press pages (go-lives, new customer wins), the vendor's own stories naming the partner, business press, and the partner's LinkedIn page through public search snippets only (never logging in or scraping)", where: "ENGINE.md (Market intelligence)", why: "Requested — partners publish their primary customers, go-lives and acquisitions" },
+    ] },
   { version: "4.37", date: "2026-10-16", notes: "Deeper customer lists: every published customer, and a Find more customers button on each partner.", changes: [
       { what: "The scan instructions no longer stop at 10 customers per partner: the session reads the partner's whole published customer list and adds every customer not yet saved, and a repeat scan continues where the last one stopped", where: "ENGINE.md (Market intelligence), app/api/engine/worker (market_targets known_customers)", why: "Reported — WMS Middle East has more than 50 customers and only a few were found" },
       { what: "Each partner card has a Find more customers button (free). It queues a deep dive into that one partner's customer list; the button flashes an orange dot while it runs", where: "components/MarketIntel.tsx, app/api/engine", why: "Reported — very few customers listed" },
