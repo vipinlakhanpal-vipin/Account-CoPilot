@@ -19,7 +19,7 @@ export default function BuyingSignals({ embedded = false }: { embedded?: boolean
   const [lane, setLane] = useState<"all" | SignalLane>("all");
   const [strengths, setStrengths] = useState<string[]>(["Hot", "Warm"]);
   const [factOnly, setFactOnly] = useState(false);
-  const [regions, setRegions] = useState<string[]>([]);
+  const [regions, setRegions] = useState<string[] | null>(null); // null = not chosen yet: UAE is ticked by default
   const [show, setShow] = useState<"open" | "done" | "dismissed">("open");
   const [busy, setBusy] = useState("");
 
@@ -31,12 +31,12 @@ export default function BuyingSignals({ embedded = false }: { embedded?: boolean
     if (r.ok) { setData((d) => d && { ...d, items: d.items.map((s) => (ids.includes(s.id) ? { ...s, status } : s)) }); window.dispatchEvent(new Event("signals-changed")); }
     else notify("Could not update that signal.", "error");
   };
-  const scan = async (region: string, slug?: string, company?: string) => {
+  const scan = async (region: string, slug?: string, company?: string, quiet = false) => {
     const key = slug || region; setBusy(key); logActivity("scan", `Buying signals: ${company || region}`);
-    const r = await fetch("/api/engine", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "queue", region, count: 10, mode: "signals", ...(slug ? { slug } : {}) }) });
+    const r = await fetch("/api/engine", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "queue", region, count: 10, mode: "signals", ...(lane !== "all" && !slug ? { lane } : {}), ...(slug ? { slug } : {}) }) });
     const j = await r.json().catch(() => ({}));
     setBusy("");
-    if (r.ok || r.status === 409) { notify(r.ok ? `${company || region} scan queued. New signals appear here when it finishes.` : j.error, r.ok ? "ok" : "error"); load(); }
+    if (r.ok || r.status === 409) { if (!quiet) notify(r.ok ? `${company || region} scan queued. New signals appear here when it finishes.` : j.error, r.ok ? "ok" : "error"); load(); }
     else notify(j.error || "Could not start the scan.", "error");
   };
 
@@ -47,16 +47,22 @@ export default function BuyingSignals({ embedded = false }: { embedded?: boolean
     if (r.ok) { notify(`Stopped: ${j.removed || 0} waiting removed, ${j.stopped || 0} running marked stopped.`, "ok"); load(); } else notify(j.error || "Could not stop the scans.", "error");
   };
   const regionList = data?.regions || [];
-  // "Scan now" in the window header: scan every active region, one after another (each queue call rewrites the shared job list)
+  // "Scan now": the ticked regions and the lane you have selected (All signals = every lane), one after another, after a confirmation
+  const laneName = lane === "all" ? "all signals" : LANE_LABEL[lane];
   const scanAllRef = { current: async () => {} };
-  scanAllRef.current = async () => { for (const r of regionList) await scan(r); };
+  scanAllRef.current = async () => {
+    if (!active.length) { notify("Tick a region first.", "error"); return; }
+    if (!(await ask({ title: "Scan now?", body: `This queues ${active.length} free scan${active.length === 1 ? "" : "s"} for ${laneName} in ${active.join(", ")}. Each takes a few minutes and they run one after another. Tick fewer regions or pick a lane first to scan less.`, confirm: "Queue them" }))) return;
+    for (const r of active) await scan(r, undefined, undefined, true);
+    notify(`${active.length} scan${active.length === 1 ? "" : "s"} queued for ${laneName}. New signals appear here when they finish.`, "ok");
+  };
   useEffect(() => {
     if (!embedded) return;
     const on = (e: Event) => { if ((e as CustomEvent<string>).detail === "signals") scanAllRef.current(); };
     window.addEventListener("appwin-scan", on);
     return () => window.removeEventListener("appwin-scan", on);
   });
-  const active = regions.length ? regions : regionList;
+  const active = regions ?? (regionList.includes("UAE") ? ["UAE"] : regionList.slice(0, 1));
   const base = useMemo(() => (data?.items || []).filter((s) => active.includes(s.region) || !regionList.length), [data, active, regionList.length]);
   const open = base.filter((s) => s.status === "new" || s.status === "seen");
   const count = (l: SignalLane | "all") => open.filter((s) => l === "all" || s.lane === l).length;
@@ -97,7 +103,7 @@ export default function BuyingSignals({ embedded = false }: { embedded?: boolean
           {([["open", "Open"], ["done", "Done"], ["dismissed", "Dismissed"]] as const).map(([k, l]) => (
             <label key={k}><input type="radio" name="sigshow" checked={show === k} onChange={() => setShow(k)} /> {l}</label>))}
           <h3>Scan now</h3>
-          {regionList.slice(0, 4).map((r) => <button type="button" key={r} className="btn tiny" disabled={busy === r} onClick={() => scan(r)}>Scan {r}</button>)}
+          {active.map((r) => <button type="button" key={r} className="btn tiny" disabled={busy === r} onClick={() => scan(r)} title={`Scan ${r} for ${laneName}`}>Scan {r}</button>)}
           <p className="note">Free. Runs as a scheduled Claude session, usually a few minutes.</p>
         </aside>
 

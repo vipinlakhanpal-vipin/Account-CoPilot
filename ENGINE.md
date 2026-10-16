@@ -103,6 +103,7 @@ Goal: find companies that are *seriously looking* for an ERP, a source-to-pay (S
 Free: public web search only (no API key, no logins, no CAPTCHAs). Phase 1 regions: **UAE and KSA** only (skip any other region).
 Save signals with `node scripts/engine_client.mjs add_signals data/verification/new_signals.json`, a file shaped
 `{"scanned":["<slug>",...],"sweep_region":"UAE","signals":[{"lane","strength","label","company_name","slug","region","title","evidence","why","source_name","source_url","doc_url","needs_login","published","closes"}]}`.
+- A job with `lane` (`rfp`, `erp` or `ecc`) means search ONLY that lane; a job without `lane` covers all three.
 - `lane`: `rfp` (tender or RFP), `erp` (ERP / S2P / procurement-consulting intent), `ecc` (SAP ECC owner heading to S/4HANA; the company MUST already be in the app and its ERP field or evidence must show ECC).
 - `label`: FACT (a document you read: tender notice, annual report, press release, job post) · LIKELY (credible but indirect) · UNVERIFIED. Never invent. Every signal needs `source_url` (the page itself) and a dated `published` when the page shows one.
 - `strength`: **Hot** = a live tender/RFP, or an announced programme with a named scope or date (needs FACT; the app downgrades otherwise) · **Warm** = executive statement or press plus hiring, or an ECC owner with a named S/4HANA plan but no partner · **Watch** = hiring only, or ECC owner with no announcement.

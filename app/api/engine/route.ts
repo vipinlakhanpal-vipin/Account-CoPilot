@@ -19,7 +19,7 @@ export const dynamic = "force-dynamic";
 const EST = { update: 0.55, discovery: 0.75, profile: 0.55 }; // USD per Quick research / discovery search / new-company profile
 
 type JobDetail = { name: string; status?: string; revenue?: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; country?: string; decided?: "added" | "ignored"; entity_type?: "Regional HQ" | "Branch" | "Foreign Branch" | "Unknown" };
-type Job = { id: string; region: string; count: number | "max"; mode: "verify" | "discover" | "both" | "company" | "contacts" | "signals" | "market"; vendor?: string; customer?: string; partner?: string; contacts_only?: boolean; phase?: "partners" | "customers"; company_name?: string; slug?: string; seamless?: boolean; website?: string; company_names?: string[]; requested_by: string; requested_at: string;
+type Job = { id: string; region: string; count: number | "max"; mode: "verify" | "discover" | "both" | "company" | "contacts" | "signals" | "market"; vendor?: string; customer?: string; partner?: string; contacts_only?: boolean; phase?: "partners" | "customers"; lane?: "erp" | "rfp" | "ecc"; company_name?: string; slug?: string; seamless?: boolean; website?: string; company_names?: string[]; requested_by: string; requested_at: string;
   status: "queued" | "running" | "done" | "error"; done_at?: string; result?: string; details?: JobDetail[] };
 type IgnoredCo = { id: string; name: string; country: string; region: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; ignored_at: string; ignored_by: string; recheck_at: string };
 type Batch = { id: string; region: string; update_count: number; new_count: number; budget: number; available: number; planned_update: number; planned_new: number;
@@ -203,7 +203,7 @@ export async function GET(req: Request) {
 }
 
 const Body = z.discriminatedUnion("action", [
-  z.object({ action: z.literal("queue"), region: z.string().min(2).max(40), count: z.union([z.number().int().min(1).max(500), z.literal("max")]), mode: z.enum(["verify", "discover", "both", "company", "contacts", "signals", "market"]), vendor: z.string().trim().max(30).optional(), customer: z.string().trim().max(160).optional(), partner: z.string().trim().max(140).optional(), contacts_only: z.boolean().optional(), phase: z.enum(["partners", "customers"]).optional(),
+  z.object({ action: z.literal("queue"), region: z.string().min(2).max(40), count: z.union([z.number().int().min(1).max(500), z.literal("max")]), mode: z.enum(["verify", "discover", "both", "company", "contacts", "signals", "market"]), vendor: z.string().trim().max(30).optional(), customer: z.string().trim().max(160).optional(), partner: z.string().trim().max(140).optional(), contacts_only: z.boolean().optional(), phase: z.enum(["partners", "customers"]).optional(), lane: z.enum(["erp", "rfp", "ecc"]).optional(),
     slug: z.string().trim().max(120).optional(), seamless: z.boolean().optional(), company_name: z.string().trim().max(120).optional(), website: z.string().trim().max(200).optional(), company_names: z.array(z.string().trim().min(2).max(120)).max(30).optional() }),
   z.object({ action: z.literal("add_found"), job_id: z.string(), name: z.string() }),
   z.object({ action: z.literal("ignore_found"), job_id: z.string(), name: z.string() }),
@@ -342,9 +342,9 @@ export async function POST(req: Request) {
         if (!canSeeCountry(access, co.country)) return NextResponse.json({ error: "That company is outside your regions." }, { status: 403 });
         name = co.company_name; slug = co.slug; region = regionOf(co.country); site = co.company_website || co.domain || "";
       }
-      if (st.jobs.some((j) => j.mode === "signals" && (j.status === "queued" || j.status === "running") && (slug ? j.slug === slug : !j.slug && j.region === region)))
+      if (st.jobs.some((j) => j.mode === "signals" && (j.status === "queued" || j.status === "running") && (slug ? j.slug === slug : !j.slug && j.region === region && (j.lane || "") === (b.lane || ""))))
         return NextResponse.json({ error: slug ? `${name} is already being scanned.` : `A ${region} scan is already waiting.` }, { status: 409 });
-      const job: Job = { id, region, count: slug ? 1 : typeof b.count === "number" ? Math.min(b.count, 30) : 10, mode: "signals", ...(slug ? { company_name: name, slug, website: site } : {}),
+      const job: Job = { id, region, count: slug ? 1 : typeof b.count === "number" ? Math.min(b.count, 30) : 10, mode: "signals", ...(b.lane ? { lane: b.lane } : {}), ...(slug ? { company_name: name, slug, website: site } : {}),
         requested_by: user.email || "", requested_at: now, status: "queued" };
       st.jobs.unshift(job);
       trigger = await wake(job, st.jobs);

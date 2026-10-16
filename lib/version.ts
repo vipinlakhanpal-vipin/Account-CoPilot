@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.66";
+export const APP_VERSION = "4.67";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.67", date: "2026-10-16", notes: "Buying signals scans only what you ticked and selected.", changes: [
+      { what: "Scan now in Buying signals now scans only the ticked regions and only the lane you selected (All signals = every lane), after a confirmation that says how many scans it queues. Before, it scanned every active region whatever was ticked, which queued nine scans at once. The window opens with only UAE ticked, like Market intelligence", where: "components/BuyingSignals.tsx, app/api/engine, ENGINE.md", why: "Reported — nine searches started with only the ERP and S2P buying tile selected" },
+    ] },
   { version: "4.66", date: "2026-10-16", notes: "Drag a partner tile to Other regions.", changes: [
       { what: "A partner tile can be dragged onto the Other regions row in the left panel when it is listed under the wrong region (the row appears while you drag); the tile also has a Move to Other regions button. In Other regions the same tile can be dragged back onto its own region, or use its Back to region button. Nothing is deleted", where: "components/MarketIntel.tsx, app/api/market", why: "Requested — drag wrongly placed partners to Other regions" },
     ] },
