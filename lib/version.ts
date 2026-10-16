@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.76";
+export const APP_VERSION = "4.77";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.77", date: "2026-10-16", notes: "Aria understands excluding, and this list means the chat so far.", changes: [
+      { what: "excluding, except and without are now understood as leaving something out. give me this list of customers excluding SAP Ariba and Coupa takes the earlier criteria and removes companies on those platforms, instead of treating SAP and Coupa as things to include. SAP Ariba is read as the Ariba platform, not the SAP ERP. The answer states what was excluded", where: "lib/aria/router.ts, lib/aria/tools.ts, lib/aria/interpret.ts", why: "Reported — a request to exclude Ariba and Coupa returned Coupa customers running SAP" },
+      { what: "Phrases such as this list, that list, the same results, above, excluding or except are treated as a follow-up on the current chat, so Aria no longer asks whether to start a new chat for them", where: "lib/aria/router.ts", why: "Reported — Aria asked about a new chat for a clear follow-up" },
+    ] },
   { version: "4.76", date: "2026-10-16", notes: "Download buttons are sky-blue pills everywhere.", changes: [
       { what: "Every download button now looks the same: a sky-blue pill with a download arrow, bigger in Aria and in the report window. Used for Aria's PDF and Excel buttons, Master Book, account and search-result PDF and Excel, Reports (PDF / Excel), the Market intelligence CSV, tender document downloads and the Setup Wizard template", where: "app/globals.css (.btn-dl) and the buttons in Aria, Header, CoPilotApp, FindCompany, MarketIntel, BuyingSignals, HomeWorkspace, ReportDialog", why: "Requested — the Aria download button was hard to see; one clear style for all downloads" },
     ] },

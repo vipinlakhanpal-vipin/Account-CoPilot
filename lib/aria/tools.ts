@@ -18,7 +18,7 @@ const isCoupa = (a: Row) => /coupa/i.test(s(a.existing_s2p_product));
 
 export type AccountFilter = {
   region?: string; icp_status?: string[]; platform?: string; erp_contains?: string; industry_contains?: string; signal?: string[];
-  name_contains?: string; min_revenue_usd_m?: number; max_revenue_usd_m?: number; has_contacts?: boolean; exclude_coupa_customers?: boolean;
+  name_contains?: string; exclude_platform?: string[]; exclude_erp?: string[]; min_revenue_usd_m?: number; max_revenue_usd_m?: number; has_contacts?: boolean; exclude_coupa_customers?: boolean;
 };
 
 export type AriaContext = { data: AllData; def: unknown; criteria: unknown; people: Person[]; peopleByCo: Map<string, Person[]>; engineLog: Row[] };
@@ -54,6 +54,9 @@ export function filterAccounts(ctx: AriaContext, f: AccountFilter): Row[] {
     if (platform === "ariba" && !/ariba/i.test(s(a.existing_s2p_product))) return false;
     if (platform === "other" && !other.test(s(a.existing_s2p_product))) return false;
     if (platform === "none" && (/coupa|ariba/i.test(s(a.existing_s2p_product)) || other.test(s(a.existing_s2p_product)))) return false;
+    if (f.exclude_platform?.includes("coupa") && isCoupa(a)) return false;
+    if (f.exclude_platform?.includes("ariba") && /ariba/i.test(s(a.existing_s2p_product))) return false;
+    if (f.exclude_erp?.some((e) => s(a.erp).toLowerCase().includes(e.toLowerCase()))) return false;
     if (f.erp_contains && !s(a.erp).toLowerCase().includes(f.erp_contains.toLowerCase())) return false;
     if (f.industry_contains && !s(a.industry).toLowerCase().includes(f.industry_contains.toLowerCase())) return false;
     if (f.name_contains && !s(a.company_name).toLowerCase().includes(f.name_contains.toLowerCase())) return false;

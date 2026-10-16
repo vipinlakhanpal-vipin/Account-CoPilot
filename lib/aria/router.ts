@@ -74,6 +74,15 @@ function unhandled(t: string): { label: string; phrase: string }[] {
 
 function parseFilters(t: string): AccountFilter {
   const f: AccountFilter = {};
+  // "excluding SAP Ariba and Coupa", "without Oracle": what follows is left out, never added (the clause ends at a comma or full stop)
+  let tin = t;
+  const ex = /\b(excluding|exclude|except|without|other than|but not|not including)\s+([^,.;]+)/.exec(t);
+  if (ex) {
+    tin = t.replace(ex[0], " ");
+    const pl: string[] = []; if (/\bcoupa\b/.test(ex[2])) pl.push("coupa"); if (/\bariba\b/.test(ex[2])) pl.push("ariba"); if (pl.length) f.exclude_platform = pl;
+    const er = [...ex[2].replace(/sap ariba/g, " ").matchAll(/\b(sap|oracle|dynamics|microsoft|infor|workday)\b/g)].map((m) => (m[1] === "microsoft" ? "dynamics" : m[1])); if (er.length) f.exclude_erp = er;
+  }
+  t = tin.replace(/sap ariba/g, "ariba");
   const region = findRegionIn(t); if (region) f.region = region;
   parseRevenue(t, f);
   const st: string[] = [];
@@ -89,7 +98,7 @@ function parseFilters(t: string): AccountFilter {
   if (/\bwith (a )?(contact|email)|have (a )?contact/.test(t)) f.has_contacts = true;
   return f;
 }
-export const readable = (f: AccountFilter) => [f.icp_status?.join("/"), f.platform && `${f.platform} customers`, f.erp_contains && `running ${f.erp_contains.toUpperCase()}`, f.region && `in ${f.region}`].filter(Boolean).join(" ");
+export const readable = (f: AccountFilter) => [f.icp_status?.join("/"), f.exclude_platform?.length || f.exclude_erp?.length ? `excluding ${[...(f.exclude_platform || []).map((x) => (x === "ariba" ? "SAP Ariba" : "Coupa")), ...(f.exclude_erp || []).map((x) => x.toUpperCase())].join(" and ")}` : "", f.platform && `${f.platform} customers`, f.erp_contains && `running ${f.erp_contains.toUpperCase()}`, f.region && `in ${f.region}`].filter(Boolean).join(" ");
 
 function companyIn(t: string, ctx: AriaContext): { hits: Row[]; term: string } {
   const quoted = /["“]([^"”]+)["”]/.exec(t);
@@ -260,7 +269,7 @@ export { parseRevenue as parseRevenueText }; // exported so the range reading ca
 
 // ---- Conversation memory: a chat is one topic until the person completes it ----
 const REFINE_START = /^(only|also|just|now|then|and|but|with|without|exclude|instead|make it|narrow|add|remove|same|those|them|these|filter|sort|rank|order|limit|change|what about|how about)\b/;
-const REFINE_REF = /\b(from (those|them|these|that)|of (those|them|these)|among (those|them)|in that (list|set)|the same)\b/;
+const REFINE_REF = /\b(from (those|them|these|that)|of (those|them|these)|among (those|them)|in that (list|set)|the same|(this|that|the|same|above|previous|earlier|last) (list|results?|companies|customers|set)|excluding|exclude|except|without)\b/;
 const FILTER_WORD = /\b(verified|likely|needs check|unknown|not icp|coupa|ariba|sap|oracle|dynamics|revenue|above|below|between|only|contacts?|email|phone|top \d+)\b/;
 const ASKS = /\b(list|show|find|give me|how many|count|number of|report|pdf|excel|tell me about|who|which|top \d+|what is|what are)\b/;
 const clean = (m: string) => m.replace(/^§(keep|new):\s*/, "").trim();
@@ -293,3 +302,5 @@ function withTopic(q: string, earlier: string[]): string {
   if (/\b(verified|likely|needs? check|not icp|unknown)\b/.test(ql) && !/\bunverified\b/.test(ql)) e = e.replace(/\b(verified|likely|needs? check|not icp|unknown)\b/g, " ");
   return `${q}, ${e.replace(/\s+/g, " ").trim()}`;
 }
+
+export { parseFilters as parseFiltersText }; // exported so the reading can be tested
