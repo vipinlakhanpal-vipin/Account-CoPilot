@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.14";
+export const APP_VERSION = "4.15";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.15", date: "2026-10-16", notes: "Find contacts shows a flashing Searching card until the search finishes, then says what was added and where to see it.", changes: [
+      { what: "After Find contacts is clicked, an amber card with a pulsing dot reads Searching <company> contacts… and updates by itself. When the session finishes it turns into a green Search completed card with the number of contacts added and where to find them (account page Stakeholders list, Accounts → Stakeholders, PDF, Excel, Aria), plus an Open account link. The card survives page changes and reloads", where: "components/ContactsJobTracker.tsx, lib/findContactsClient.ts", why: "Requested — the green tick message looked finished while the search was still running" },
+    ] },
   { version: "4.14", date: "2026-10-16", notes: "One table size across the app, and wide tables such as the Pipeline now fit the screen without cutting columns like Exchange.", changes: [
       { what: "Every table uses the same type size (11.5 px cells, 9.5 px headings), tighter cell padding, and headings and cells wrap instead of forcing a sideways scroll", where: "app/globals.css (table standard)", why: "Requested — Exchange was cut off in the Pipeline; fit all columns and keep one font size across tables" },
     ] },

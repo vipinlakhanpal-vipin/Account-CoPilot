@@ -1511,3 +1511,26 @@ td .pill,td .icp,td .status-plain,td .trust,td .job-st,td .role-tag{font-size:10
 td .icp{gap:4px;white-space:normal}
 td .rev-src{font-size:10px}
 .tablewrap td b,.tablewrap td strong{font-size:var(--tbl-font)}
+
+/* Find contacts progress cards (ContactsJobTracker) */
+.fcj-stack{position:fixed;top:78px;right:18px;z-index:1090;display:flex;flex-direction:column;gap:10px;width:min(420px,calc(100% - 32px))}
+.fcj-card{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:14px;background:var(--surface);color:var(--text);border:1.5px solid var(--line-2);box-shadow:0 16px 40px rgba(0,0,0,.28);font:400 13px/1.45 var(--body)}
+.fcj-card.busy{border-color:#E08A00;background:color-mix(in srgb,#F5A623 12%,var(--surface))}
+.fcj-card.wait{border-color:#8A94A6}
+.fcj-card.done{border-color:#0B7A66;background:color-mix(in srgb,#2ECC8F 12%,var(--surface))}
+.fcj-card.bad{border-color:#B42318;background:color-mix(in srgb,#FF4D6A 10%,var(--surface))}
+.fcj-body{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}
+.fcj-body b{font-size:14px;color:var(--text-strong)}
+.fcj-body ul{margin:2px 0 4px;padding-left:18px}
+.fcj-open{align-self:flex-start;font-weight:700;color:#0B7A66;text-decoration:none}
+.fcj-open:hover{text-decoration:underline}
+.fcj-icon{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;background:#0B7A66}
+.fcj-card.bad .fcj-icon{background:#B42318}
+.fcj-dot{flex:none;width:14px;height:14px;margin-top:3px;border-radius:50%;background:#E08A00;animation:fcj-pulse 1s ease-in-out infinite}
+.fcj-card.wait .fcj-dot{background:#8A94A6}
+.fcj-flash{animation:fcj-blink 1.2s ease-in-out infinite}
+.fcj-x{flex:none;border:0;background:transparent;color:inherit;font-size:20px;line-height:1;cursor:pointer;opacity:.6}
+.fcj-x:hover{opacity:1}
+@keyframes fcj-pulse{0%,100%{transform:scale(.8);opacity:.5}50%{transform:scale(1.2);opacity:1}}
+@keyframes fcj-blink{0%,100%{opacity:1}50%{opacity:.45}}
+@media (prefers-reduced-motion:reduce){.fcj-dot,.fcj-flash{animation:none}}
