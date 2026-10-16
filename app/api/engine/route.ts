@@ -37,6 +37,12 @@ const setSetting = (db: ReturnType<typeof supabaseAdmin>, key: string, value: un
 // away, instead of waiting for the next 6am run. Needs GITHUB_JOBS_TOKEN (a fine-grained PAT, Issues: write only, scoped
 // to that one repo) in Vercel's environment variables. Best-effort: if it's not set or the call fails, the job still
 // sits in the free queue and gets picked up at the next scheduled run — nothing here is required for queueing to work.
+// One session works through the whole queue (it claims job after job until none is left). So a new job only wakes a new session when no session has been busy for the last 20 minutes;
+// otherwise nine queued scans started nine sessions at once, which used up the Claude plan's usage limit within minutes.
+async function wake(job: Job, jobs: Job[]): Promise<string> {
+  const busy = jobs.some((j) => j.id !== job.id && j.status === "running" && Date.now() - new Date((j as Job & { started_at?: string }).started_at || j.requested_at).getTime() < 20 * 60000);
+  return busy ? "ok" : openJobIssue(job);
+}
 async function openJobIssue(job: Job): Promise<string> {
   const token = process.env.GITHUB_JOBS_TOKEN;
   if (!token) return "not_set";
@@ -326,7 +332,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: customer ? `Contacts for ${customer} are already being searched.` : partner ? `${partner} is already being searched for more customers.` : `A ${vendor === "all" ? "market" : vendor} scan for ${b.region} is already waiting.` }, { status: 409 });
       const job: Job = { id, region: b.region, count: 1, mode: "market", vendor, ...(customer || partner ? { ...(customer ? { customer } : {}), partner } : {}), ...(b.contacts_only ? { contacts_only: true } : {}), ...(b.phase ? { phase: b.phase } : {}), requested_by: user.email || "", requested_at: now, status: "queued" };
       st.jobs.unshift(job);
-      trigger = await openJobIssue(job);
+      trigger = await wake(job, st.jobs);
     } else if (b.action === "queue" && b.mode === "signals") {
       // Buying signals scan: one company (slug) or a region sweep (tenders plus the next companies due a scan).
       let name = "", region = b.region, slug = "", site = "";
@@ -341,7 +347,7 @@ export async function POST(req: Request) {
       const job: Job = { id, region, count: slug ? 1 : typeof b.count === "number" ? Math.min(b.count, 30) : 10, mode: "signals", ...(slug ? { company_name: name, slug, website: site } : {}),
         requested_by: user.email || "", requested_at: now, status: "queued" };
       st.jobs.unshift(job);
-      trigger = await openJobIssue(job);
+      trigger = await wake(job, st.jobs);
     } else if (b.action === "queue" && b.mode === "contacts") {
       // Find contacts: a free job for ONE existing company. The company is looked up here, so its region and domain can't be spoofed.
       const { data: co } = await db.from("companies").select("slug,company_name,country,domain,company_website").eq("slug", b.slug || "").maybeSingle();
@@ -352,14 +358,14 @@ export async function POST(req: Request) {
       const job: Job = { id, region: regionOf(co.country), count: 1, mode: "contacts", company_name: co.company_name, slug: co.slug, ...(b.seamless ? { seamless: true } : {}), website: co.company_website || co.domain || "",
         requested_by: user.email || "", requested_at: now, status: "queued" };
       st.jobs.unshift(job);
-      trigger = await openJobIssue(job);
+      trigger = await wake(job, st.jobs);
     } else if (b.action === "queue") {
       const names = b.mode === "discover" ? (b.company_names || []).filter((n) => n.length >= 2) : [];
       const job: Job = { id, region: b.region, count: b.mode === "company" ? 1 : names.length ? names.length : b.count, mode: b.mode,
         ...(b.mode === "company" ? { company_name: b.company_name, website: b.website || "" } : {}), ...(names.length ? { company_names: names } : {}),
         requested_by: user.email || "", requested_at: now, status: "queued" };
       st.jobs.unshift(job);
-      trigger = await openJobIssue(job);
+      trigger = await wake(job, st.jobs);
     } else st.jobs = st.jobs.filter((j) => !(j.id === b.id && j.status === "queued"));
     await setSetting(db, "engine_jobs", { jobs: st.jobs.slice(0, 50) });
   } else if (b.action === "balance") {
