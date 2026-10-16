@@ -5,6 +5,8 @@ import Link from "next/link";
 import { ask, paidFetch, notify } from "@/components/Confirm";
 import { logActivity } from "@/lib/activityClient";
 import FindContactsButton from "@/components/FindContactsButton";
+import { ScanGauge } from "@/components/ScanGauge";
+import { expectedSecs, clock } from "@/lib/scanTime";
 import { downloadReport } from "@/components/ReportDialog";
 import { fmtDateTime } from "@/lib/dates";
 
@@ -14,7 +16,7 @@ import { fmtDateTime } from "@/lib/dates";
 type Mode = "search" | "new";
 type RegionInfo = { key: string; name: string; status: string; revenue_min_usd_m: number; employees_min: number; listing: string; entity_level: string };
 type Detail = { name: string; status?: string; why_icp?: string; revenue?: string; decided?: "added" | "ignored" };
-type Job = { id: string; region: string; count: number | "max"; mode: string; company_name?: string; slug?: string; requested_by: string; requested_at: string; status: string; result?: string; details?: Detail[]; company_names?: string[] };
+type Job = { id: string; region: string; count: number | "max"; mode: string; company_name?: string; slug?: string; requested_by: string; requested_at: string; started_at?: string; done_at?: string; status: string; result?: string; details?: Detail[]; company_names?: string[] };
 type Info = { regions: RegionInfo[]; jobs: Job[]; est: { update: number }; isSuper: boolean };
 type Item = { id: string; slug: string; company_name: string; country: string; region: string; hq_city: string; industry: string; icp_status: string; revenue: string; revenue_note: string;
   employees: string; erp: string; platform: string; signal: string; listing: string; contacts: number; coupa_customer: boolean; matched: string[] };
@@ -383,7 +385,10 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
                 <div className="tablewrap"><table className="jobs-table">
                   <thead><tr><th>Company</th><th>Status</th><th>Requested</th><th>Result</th><th></th></tr></thead>
                   <tbody>{jobs.flatMap((j) => {
-                    const st = <span className={`job-st ${j.status}`}>{j.status === "queued" ? "Waiting" : j.status === "running" ? "In progress" : j.status === "done" ? "Completed" : j.status === "error" ? "Failed" : j.status === "cancelled" ? "Cancelled" : j.status}</span>;
+                    const took = j.started_at && j.done_at ? Math.round((new Date(j.done_at).getTime() - new Date(j.started_at).getTime()) / 1000) : 0;
+                    const st = j.status === "queued" || j.status === "running"
+                      ? <ScanGauge compact label={j.mode === "contacts" ? "Searching contacts" : "Searching"} requestedAt={j.requested_at} startedAt={j.started_at} expectedSecs={expectedSecs(j)} />
+                      : <span className={`job-st ${j.status}`}>{j.status === "done" ? `✓ Completed${took ? ` in ${clock(took)}` : ""}` : j.status === "error" ? "Failed" : j.status === "cancelled" ? "Cancelled" : j.status}</span>;
                     const when = <>{fmtDateTime(j.requested_at)}<div className="muted">{j.requested_by}</div></>;
                     if (j.mode === "discover" && j.details && j.details.length > 0) {
                       const pending = j.details.filter((d) => !d.decided).length;
@@ -403,7 +408,7 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
                     const label = j.mode === "contacts" ? `Contacts: ${j.company_name || "one company"}` : j.mode === "company" ? j.company_name || "One company" : j.company_names?.length ? `${j.company_names.length} companies` : `Suggest ${j.count} new`;
                     const parsed = String(j.result || "").match(/^(.+)\(([A-Za-z ]+)\):\s*(.+)$/);
                     return [<tr key={j.id}>
-                      <td className="wrap">{parsed ? parsed[1].trim() : label}</td><td>{st}{j.status === "queued" && <div className="muted">usually a minute or two</div>}</td><td className="muted">{when}</td>
+                      <td className="wrap">{parsed ? parsed[1].trim() : label}</td><td>{st}</td><td className="muted">{when}</td>
                       <td className="wrap">{j.result}{j.status === "done" && j.slug && <div><Link className="job-link" href={openAccount({ slug: j.slug, region: parsed ? parsed[2].trim() : j.region })}>View account →</Link></div>}</td>
                       <td>{j.status === "queued" && <button type="button" className="btn tiny ghost" onClick={() => act({ action: "cancel", id: j.id }, "Search cancelled.")}>Cancel</button>}</td></tr>];
                   })}</tbody>

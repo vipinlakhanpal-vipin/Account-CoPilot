@@ -1,12 +1,14 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { ScanGauge } from "@/components/ScanGauge";
+import { expectedSecs, clock } from "@/lib/scanTime";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 // Follows every "Find contacts" job from click to finish: a flashing "Searching…" card while it runs, then a completion card that says what was added and where to see it.
 // Tracked jobs are kept in localStorage so the card survives page changes and reloads.
-type Tracked = { slug: string; company: string; region: string; at: number; trigger: string; seamless?: boolean; state?: "done" | "error"; result?: string };
-type Job = { mode: string; slug?: string; status: string; requested_at: string; result?: string };
+type Tracked = { slug: string; company: string; region: string; at: number; trigger: string; seamless?: boolean; state?: "done" | "error"; result?: string; took?: number };
+type Job = { mode: string; slug?: string; status: string; requested_at: string; started_at?: string; done_at?: string; seamless?: boolean; result?: string };
 const KEY = "fc-contacts-jobs";
 export const FIND_CONTACTS_EVENT = "find-contacts-queued";
 
@@ -15,7 +17,7 @@ const num = (s: string, re: RegExp) => Number(s.match(re)?.[1] || 0);
 
 export default function ContactsJobTracker() {
   const [items, setItems] = useState<Tracked[]>([]);
-  const [phase, setPhase] = useState<Record<string, string>>({});
+  const [phase, setPhase] = useState<Record<string, Job>>({});
   const router = useRouter();
   const itemsRef = useRef<Tracked[]>([]);
   itemsRef.current = items;
@@ -41,13 +43,13 @@ export default function ContactsJobTracker() {
         const r = await fetch("/api/engine?only=find", { cache: "no-store" });
         if (!r.ok || stop) return;
         const { jobs = [] } = (await r.json()) as { jobs?: Job[] };
-        let changed = false; const ph: Record<string, string> = {};
+        let changed = false; const ph: Record<string, Job> = {};
         const next = itemsRef.current.map((it) => {
           if (it.state) return it;
           const j = jobs.find((x) => x.mode === "contacts" && x.slug === it.slug && new Date(x.requested_at).getTime() >= it.at - 180000);
           if (!j) return it;
-          ph[it.slug] = j.status;
-          if (j.status === "done") { changed = true; return { ...it, state: "done" as const, result: j.result || "" }; }
+          ph[it.slug] = j;
+          if (j.status === "done") { changed = true; return { ...it, state: "done" as const, result: j.result || "", took: j.started_at && j.done_at ? Math.round((new Date(j.done_at).getTime() - new Date(j.started_at).getTime()) / 1000) : undefined }; }
           if (j.status === "error" || j.status === "cancelled") { changed = true; return { ...it, state: "error" as const, result: j.result || "" }; }
           return it;
         });
@@ -67,12 +69,12 @@ export default function ContactsJobTracker() {
         const open = `/?open=${encodeURIComponent(it.slug)}&country=${encodeURIComponent(it.region)}`;
         const close = <button type="button" className="fcj-x" aria-label="Dismiss" onClick={() => save(items.filter((x) => x.slug !== it.slug))}>×</button>;
         if (!it.state) {
-          const daily = it.trigger !== "ok" && phase[it.slug] !== "running";
+          const pj = phase[it.slug]; const daily = it.trigger !== "ok" && pj?.status !== "running";
           return (
             <div key={it.slug} className={`fcj-card ${daily ? "wait" : "busy"}`} role="status" aria-live="polite">
-              <span className="fcj-dot" aria-hidden="true" />
               <div className="fcj-body">
-                <b className="fcj-flash">{phase[it.slug] === "running" || it.trigger === "ok" ? `Searching ${it.company} contacts${it.seamless ? " (web + Seamless)" : ""}…` : `Waiting to search ${it.company} contacts…`}</b>
+                <ScanGauge label={`Searching ${it.company} contacts${it.seamless ? " (web + Seamless)" : ""}`} requestedAt={pj?.requested_at || new Date(it.at).toISOString()} startedAt={pj?.started_at}
+                  expectedSecs={expectedSecs({ mode: "contacts", seamless: it.seamless })} />
                 <span>{daily ? "The instant trigger is off, so this starts at the next daily run (6am Dubai)." : `${it.seamless ? "Reading public web pages and Seamless records" : "Reading public web pages"} for named people with an email, phone or LinkedIn link. Usually a few minutes. You can keep working; this card updates by itself.`}</span>
               </div>
               {close}
@@ -88,7 +90,7 @@ export default function ContactsJobTracker() {
           <div key={it.slug} className="fcj-card done" role="status">
             <span className="fcj-icon">✓</span>
             <div className="fcj-body">
-              <b>Search completed for {it.company}</b>
+              <b>Search completed for {it.company}{it.took ? ` · took ${clock(it.took)}` : ""}</b>
               {added + updated > 0 ? <>
                 <span>{added} new contact{added === 1 ? "" : "s"} added{updated ? `, ${updated} existing updated` : ""} in your database. Each has its source page saved. You will find {added + updated === 1 ? "it" : "them"}:</span>
                 <ul>

@@ -3,11 +3,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ask, notify } from "@/components/Confirm";
 import FindContactsButton from "@/components/FindContactsButton";
+import { ScanGauge, DoneTick } from "@/components/ScanGauge";
+import { expectedSecs } from "@/lib/scanTime";
 import { logActivity } from "@/lib/activityClient";
 import { PARTNERS_TIP, CUSTOMERS_TIP, type MContact, type PCustomer, type Partner, type Vendor } from "@/lib/market";
 
 type Cust = PCustomer & { in_app: boolean; people_on_file: number };
-type Job = { mode: string; vendor?: string; customer?: string; partner?: string; slug?: string; contacts_only?: boolean; region: string; status: string; requested_at: string };
+type Job = { mode: string; started_at?: string; phase?: string; seamless?: boolean; vendor?: string; customer?: string; partner?: string; slug?: string; contacts_only?: boolean; region: string; status: string; requested_at: string };
 type Data = { vendors: Vendor[]; custom_vendors: string[]; is_super: boolean; defaults: string[]; regions: string[]; partners: Partner[]; customers: Cust[]; scans: Record<string, string>; jobs: Job[] };
 const webUrl = (w: string) => (/^https?:\/\//.test(w) ? w : `https://${w}`);
 const ago = (iso?: string) => { if (!iso) return "never"; const h = Math.round((Date.now() - new Date(iso).getTime()) / 36e5); return h < 1 ? "just now" : h < 48 ? `${h} h ago` : `${Math.round(h / 24)} days ago`; };
@@ -37,6 +39,9 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
   const [withContacts, setWithContacts] = useState(false);
   const [openP, setOpenP] = useState<string | null>(null);
   const [busy, setBusy] = useState("");
+  // A green tick that stays for 12 seconds when a search finishes
+  const [flash, setFlash] = useState<Record<string, string>>({});
+  const showFlash = (key: string, text: string) => { setFlash((f) => ({ ...f, [key]: text })); setTimeout(() => setFlash((f) => { const n = { ...f }; delete n[key]; return n; }), 12000); };
 
   const load = useCallback(() => fetch("/api/market", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((j: Data | null) => { if (j) setData(j); }).catch(() => {}), []);
   useEffect(() => { load(); const t = setInterval(load, 25000); return () => clearInterval(t); }, [load]);
@@ -52,22 +57,24 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
   const allPending = (data?.jobs || []).filter((j) => j.status === "queued" || j.status === "running");
   const pending = allPending.filter((j) => j.mode === "market" && !j.customer && !j.partner && !j.contacts_only); // vendor scans: shown on the vendor tile
   const scanningRegions = (v: string) => [...new Set(pending.filter((j) => j.vendor === v || j.vendor === "all" || !j.vendor).map((j) => j.region))];
+  const jobOfVendor = (v: string) => { const js = pending.filter((j) => j.vendor === v || j.vendor === "all" || !j.vendor); return js.find((j) => j.status === "running") || js[0]; };
   const wasScanning = useRef<Record<string, boolean>>({});
   useEffect(() => {
     const now: Record<string, boolean> = {};
     for (const v of data?.vendors || []) if (scanningRegions(v).length) now[v] = true;
-    for (const v of Object.keys(wasScanning.current)) if (!now[v]) notify(`${v} scan finished.`, "ok");
+    for (const v of Object.keys(wasScanning.current)) if (!now[v]) showFlash(`v:${v}`, "Scan finished");
     wasScanning.current = now;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
   // A contact search shows on the customer's own row (a flashing orange dot), not in the bar
-  const searching = (c: Cust) => allPending.some((j) => (j.mode === "market" && j.customer === c.customer) || (j.mode === "contacts" && !!j.slug && j.slug === c.slug)
+  const jobFor = (c: Cust) => allPending.find((j) => (j.mode === "market" && j.customer === c.customer) || (j.mode === "contacts" && !!j.slug && j.slug === c.slug)
     || (j.mode === "market" && j.contacts_only && j.vendor === c.vendor && j.region === c.region && c.contacts.length === 0));
+  const searching = (c: Cust) => !!jobFor(c);
   const wasSearching = useRef<Record<string, string>>({});
   useEffect(() => {
     const now: Record<string, string> = {};
     for (const c of data?.customers || []) if (searching(c)) now[c.id] = c.customer;
-    for (const [id, name] of Object.entries(wasSearching.current)) if (!(id in now)) { const c = data?.customers.find((x) => x.id === id); notify(c && (c.contacts.length || c.people_on_file) ? `Contact search finished for ${name}.` : `Contact search finished for ${name}. No public contact details found.`, "ok"); }
+    for (const [id, name] of Object.entries(wasSearching.current)) if (!(id in now)) { const c = data?.customers.find((x) => x.id === id); showFlash(`c:${id}`, c && (c.contacts.length || c.people_on_file) ? "Done" : "Done · none found"); void name; }
     wasSearching.current = now;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
@@ -118,7 +125,15 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
     setBusy("");
     if (r.ok || r.status === 409) load(); else notify(j.error || "Could not start the search.", "error");
   };
-  const partnerBusy = (p: Partner) => allPending.some((j) => j.mode === "market" && j.partner === p.name && !j.customer && j.region === p.region);
+  const partnerJob = (p: Partner) => allPending.find((j) => j.mode === "market" && j.partner === p.name && !j.customer && j.region === p.region);
+  const wasPartner = useRef<Record<string, boolean>>({});
+  useEffect(() => {
+    const now: Record<string, boolean> = {};
+    for (const p of data?.partners || []) if (partnerJob(p)) now[p.id] = true;
+    for (const id of Object.keys(wasPartner.current)) if (!now[id]) showFlash(`p:${id}`, "Customers updated");
+    wasPartner.current = now;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data]);
   const findAll = async () => {
     for (const r of active) {
       setBusy(`ca|${r}`);
@@ -145,7 +160,8 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
             <td>{c.contacts.length > 0 ? c.contacts.map((k, i) => <Who key={i} c={k} />)
               : c.in_app && c.people_on_file > 0 ? <span className="muted">{c.people_on_file} people on file · <Link href={`/?open=${encodeURIComponent(c.slug)}&country=${encodeURIComponent(c.region)}`}>see account</Link></span>
               : <span className="muted">None yet</span>}</td>
-            <td>{searching(c) ? <span className="srch" role="status"><i className="fcj-dot" aria-hidden="true" /><b className="fcj-flash">Searching…</b></span>
+            <td>{(() => { const j = jobFor(c); return j ? <ScanGauge compact label="Searching" requestedAt={j.requested_at} startedAt={j.started_at} expectedSecs={expectedSecs(j)} /> : flash[`c:${c.id}`] ? <DoneTick compact text={flash[`c:${c.id}`]} /> : null; })()}
+              {searching(c) || flash[`c:${c.id}`] ? null
               : noOne ? (c.in_app ? <FindContactsButton slug={c.slug} region={c.region} company={c.customer} quiet onQueued={load} />
               : <button type="button" className="btn tiny nowrap" disabled={busy === `c|${c.id}`} onClick={() => findFor(c)} title="Free: searches public web pages for named people at this customer">{busy === `c|${c.id}` ? "Queuing…" : "Find contacts"}</button>) : <span className="muted">—</span>}</td>
             <td><a href={c.source_url} target="_blank" rel="noopener noreferrer" title={c.source_url}>{host(c.source_url)}</a></td>
@@ -204,7 +220,9 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
           const custom = !!data?.custom_vendors?.includes(v);
           return (
             <span key={v} className="vendor-tile">
-              <button type="button" className={`sig-lane ${["c1", "c2", "c6", "c7", "c3", "c4", "c5", "c8"][i % 8]}`} aria-pressed={vendor === v} onClick={() => { setVendor(v); setOpenP(null); }}><b>{countP(v)}</b><span>{v} partners</span>{scanningRegions(v).length > 0 && <span className="srch" role="status"><i className="fcj-dot" aria-hidden="true" /><em className="fcj-flash">{(() => { const r = scanningRegions(v); return `Scanning ${r.length <= 2 ? r.join(", ") : `${r[0]} +${r.length - 1} more`}…`; })()}</em></span>}</button>
+              <button type="button" className={`sig-lane ${["c1", "c2", "c6", "c7", "c3", "c4", "c5", "c8"][i % 8]}`} aria-pressed={vendor === v} onClick={() => { setVendor(v); setOpenP(null); }}><b>{countP(v)}</b><span>{v} partners</span>{(() => { const j = jobOfVendor(v); const n = pending.filter((x) => x.vendor === v || x.vendor === "all" || !x.vendor).length; const r = scanningRegions(v);
+                  return j ? <ScanGauge label={`Scanning ${r.length <= 2 ? r.join(", ") : `${r[0]} +${r.length - 1}`}`} requestedAt={j.requested_at} startedAt={j.started_at} expectedSecs={expectedSecs(j)} extra={n > 1 ? ` · ${n - 1} more waiting` : ""} />
+                    : flash[`v:${v}`] ? <DoneTick text={flash[`v:${v}`]} /> : null; })()}</button>
               {custom && data?.is_super && <button type="button" className="vendor-x" aria-label={`Remove ${v}`} title={`Remove ${v} from the list`} onClick={() => removeVendor(v)}>×</button>}
             </span>);
         })}
@@ -268,7 +286,8 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
                 {p.services && <p className="sig-ev">{p.services}</p>}
                 <p className="sig-src">{p.website && <><a href={/^https?:/.test(p.website) ? p.website : `https://${p.website}`} target="_blank" rel="noopener noreferrer">{p.website.replace(/^https?:\/\//, "")}</a> · </>}Listed on: <a href={p.source_url} target="_blank" rel="noopener noreferrer">source</a></p>
                 {p.contacts.map((c, i) => <Who key={i} c={c} />)}
-                <div className="sig-acts">{partnerBusy(p) ? <span className="srch" role="status"><i className="fcj-dot" aria-hidden="true" /><b className="fcj-flash">Finding more customers…</b></span>
+                <div className="sig-acts">{partnerJob(p) ? <ScanGauge compact label="Finding customers" requestedAt={partnerJob(p)!.requested_at} startedAt={partnerJob(p)!.started_at} expectedSecs={expectedSecs(partnerJob(p)!)} />
+                  : flash[`p:${p.id}`] ? <DoneTick compact text={flash[`p:${p.id}`]} />
                   : <button type="button" className="btn tiny" disabled={busy === `p|${p.id}`} onClick={() => moreFor(p)} title="Free: reads this partner's whole published customer list and adds the ones not saved yet">Find more customers</button>}
                   <button type="button" className="btn tiny" onClick={() => setOpenP(isOpen ? null : p.id)} aria-expanded={isOpen}>{cs.length} published customer{cs.length === 1 ? "" : "s"} {isOpen ? "▴" : "▾"}</button></div>
                 {isOpen && (cs.length === 0 ? <p className="note">No customers published by this partner (or none match the filters).</p> : (

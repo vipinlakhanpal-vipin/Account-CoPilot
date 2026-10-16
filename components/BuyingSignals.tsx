@@ -1,12 +1,14 @@
 "use client";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ask, notify } from "@/components/Confirm";
+import { ScanGauge, DoneTick } from "@/components/ScanGauge";
+import { expectedSecs } from "@/lib/scanTime";
 import { logActivity } from "@/lib/activityClient";
 import FindContactsButton from "@/components/FindContactsButton";
 import { LANE_LABEL, STRENGTH_ORDER, daysLeft, type Signal, type SignalLane, type SignalStatus } from "@/lib/signals";
 
-type Job = { mode: string; slug?: string; region: string; status: string; company_name?: string; result?: string; requested_at: string };
+type Job = { mode: string; slug?: string; region: string; status: string; company_name?: string; result?: string; requested_at: string; started_at?: string };
 type Data = { items: Signal[]; regions: string[]; sweeps: Record<string, string>; jobs: Job[] };
 const LANES: SignalLane[] = ["rfp", "erp", "ecc"];
 const fmt = (d: string) => (d ? new Date(d).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "");
@@ -62,6 +64,12 @@ export default function BuyingSignals({ embedded = false }: { embedded?: boolean
     .filter((s) => (lane === "all" || s.lane === lane) && strengths.includes(s.strength) && (!factOnly || s.label === "FACT"))
     .sort((a, b) => STRENGTH_ORDER[a.strength] - STRENGTH_ORDER[b.strength] || (a.closes && b.closes ? a.closes.localeCompare(b.closes) : a.closes ? -1 : b.closes ? 1 : 0) || b.detected_at.localeCompare(a.detected_at)), [base, show, lane, strengths, factOnly]);
   const pending = (data?.jobs || []).filter((j) => j.status === "queued" || j.status === "running");
+  const [finished, setFinished] = useState("");
+  const hadPending = useRef(false);
+  useEffect(() => {
+    if (hadPending.current && pending.length === 0) { setFinished("Scan finished. New signals are listed below."); const t = setTimeout(() => setFinished(""), 12000); hadPending.current = false; return () => clearTimeout(t); }
+    hadPending.current = pending.length > 0;
+  });
   const toggle = <T,>(arr: T[], v: T) => (arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
 
   return (
@@ -95,7 +103,11 @@ export default function BuyingSignals({ embedded = false }: { embedded?: boolean
 
         <section className="sig-main">
           {pending.length > 0 && (
-            <div className="sig-pending" role="status"><span className="fcj-dot" aria-hidden="true" /> <b className="fcj-flash">Scanning {pending.map((j) => j.company_name || `${j.region} tenders and companies`).join(", ")}…</b> New signals appear here by themselves. <button type="button" className="btn tiny danger" onClick={stopScans}>■ Stop scanning</button></div>)}
+            <div className="sig-pending sig-pend-list" role="status">
+              {pending.map((j, i) => <div key={i} className="sig-pend-row"><ScanGauge label={`Scanning ${j.company_name || `${j.region} tenders and companies`}`} requestedAt={j.requested_at} startedAt={j.started_at} expectedSecs={expectedSecs(j)} /></div>)}
+              <button type="button" className="btn tiny danger" onClick={stopScans}>■ Stop scanning</button>
+            </div>)}
+          {finished && pending.length === 0 && <div className="sig-pending done" role="status"><DoneTick text={finished} /></div>}
           {!data && <p className="note">Loading…</p>}
           {data && shown.length === 0 && (
             <div className="sig-empty">

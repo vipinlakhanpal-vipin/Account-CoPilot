@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.49";
+export const APP_VERSION = "4.50";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.50", date: "2026-10-16", notes: "Every free cloud search shows a timer, a green progress gauge and a green tick when done.", changes: [
+      { what: "Free searches now look the same everywhere: a running timer, a green gauge that fills towards the usual running time (never past 95% until the job really finishes), the usual time in minutes, and a green tick with the time taken when done. Used on the Market intelligence vendor tiles, partner cards (Find more customers) and customer rows, the Buying signals scanning bar, the Find contacts card, and the Your searches table in Find company", where: "components/ScanGauge.tsx, lib/scanTime.ts, components/MarketIntel.tsx, components/BuyingSignals.tsx, components/ContactsJobTracker.tsx, components/FindCompany.tsx", why: "Requested — approximate time, timer, green gauge and a tick for all searches" },
+    ] },
   { version: "4.49", date: "2026-10-16", notes: "Every partner name is a link.", changes: [
       { what: "A partner's name is always clickable: it opens its website, or the page that lists it when no website was saved. BRINGVAS now has its website (www.bringvas.com, from its Coupa listing). Scans are told to save the website whenever the listing shows one", where: "components/MarketIntel.tsx, ENGINE.md", why: "Reported — the Coupa partner name was not clickable" },
     ] },
