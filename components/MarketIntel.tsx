@@ -11,6 +11,13 @@ import { PARTNERS_TIP, CUSTOMERS_TIP, type MContact, type PCustomer, type Partne
 type Cust = PCustomer & { in_app: boolean; people_on_file: number };
 type Job = { mode: string; started_at?: string; phase?: string; seamless?: boolean; vendor?: string; customer?: string; partner?: string; slug?: string; contacts_only?: boolean; region: string; status: string; requested_at: string };
 type Data = { vendors: Vendor[]; custom_vendors: string[]; is_super: boolean; defaults: string[]; regions: string[]; partners: Partner[]; customers: Cust[]; scans: Record<string, string>; jobs: Job[] };
+// One place format for every partner: Region-City, for example UAE-Dubai. A city that is just the country name becomes the capital; no city shows as Unknown until a scan finds it.
+const CAPITAL: Record<string, string> = { Kuwait: "Kuwait City", Qatar: "Doha", Bahrain: "Manama", Oman: "Muscat" };
+const place = (region: string, city?: string) => {
+  let c = (city || "").split(/[,(]/)[0].trim();
+  if (c.toLowerCase() === region.toLowerCase()) c = CAPITAL[region] || "";
+  return `${region}-${c || "Unknown"}`;
+};
 const webUrl = (w: string) => (/^https?:\/\//.test(w) ? w : `https://${w}`);
 const ago = (iso?: string) => { if (!iso) return "never"; const h = Math.round((Date.now() - new Date(iso).getTime()) / 36e5); return h < 1 ? "just now" : h < 48 ? `${h} h ago` : `${Math.round(h / 24)} days ago`; };
 const csv = (rows: string[][]) => rows.map((r) => r.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(",")).join("\r\n");
@@ -280,7 +287,7 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
             return (
               <article key={p.id} className={`sig-card mkt-card${isOpen ? " open" : ""}`}>
                 <div className="sig-row">
-                  <a className="sig-co mkt-site" href={p.website ? webUrl(p.website) : p.source_url} target="_blank" rel="noopener noreferrer" title={p.website ? `Open ${p.website.replace(/^https?:\/\//, "")} in a new tab` : "No website saved; opens the page that lists this partner"}>{p.name}<i aria-hidden="true">↗</i></a><span className="sig-meta">{p.region}{p.hq_city ? ` · ${p.hq_city}` : ""}</span>
+                  <a className="sig-co mkt-site" href={p.website ? webUrl(p.website) : p.source_url} target="_blank" rel="noopener noreferrer" title={p.website ? `Open ${p.website.replace(/^https?:\/\//, "")} in a new tab` : "No website saved; opens the page that lists this partner"}>{p.name}<i aria-hidden="true">↗</i></a><span className="sig-meta">{place(p.region, p.hq_city)}</span>
                   {p.tier && <span className="sig-pill">{p.tier}</span>}<span className={`sig-pill lab-${p.label.toLowerCase()}`}>{p.label}</span>
                 </div>
                 {p.services && <p className="sig-ev">{p.services}</p>}
@@ -299,7 +306,7 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
               const cs = custOf(p);
               return (
                 <details key={p.id} className="mkt-group" open={i === 0 || !!needle}>
-                  <summary><a className="mkt-site" href={p.website ? webUrl(p.website) : p.source_url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} title={p.website ? `Open ${p.website.replace(/^https?:\/\//, "")} in a new tab` : "No website saved; opens the page that lists this partner"}><b>{p.name}</b><i aria-hidden="true">↗</i></a><span className="sig-meta">{p.region}{p.tier ? ` · ${p.tier}` : ""}</span><em>{cs.length} customer{cs.length === 1 ? "" : "s"}</em></summary>
+                  <summary><a className="mkt-site" href={p.website ? webUrl(p.website) : p.source_url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} title={p.website ? `Open ${p.website.replace(/^https?:\/\//, "")} in a new tab` : "No website saved; opens the page that lists this partner"}><b>{p.name}</b><i aria-hidden="true">↗</i></a><span className="sig-meta">{place(p.region, p.hq_city)}{p.tier ? ` · ${p.tier}` : ""}</span><em>{cs.length} customer{cs.length === 1 ? "" : "s"}</em></summary>
                   {custTable(cs)}
                 </details>);
             })))}
