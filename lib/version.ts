@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.33";
+export const APP_VERSION = "4.34";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.34", date: "2026-10-16", notes: "A clearer customers table in Market intelligence.", changes: [
+      { what: "The partner customers table now reads Customer, Project (wrapped to two lines), In database? (In database or Not in database with a + Add link), Contact (None yet, or the people found), Find contacts (shown only when there is nobody yet) and Source (the website name instead of open)", where: "components/MarketIntel.tsx, app/globals.css", why: "Requested — a more meaningful table layout" },
+    ] },
   { version: "4.33", date: "2026-10-16", notes: "Finer type in the filter panels of Buying signals and Market intelligence.", changes: [
       { what: "The option labels in the left filter panels (regions, view, filters) now use light 11.5 px type like the help text, with small tick boxes in the app's green, so the options are easy to tell apart from the headings", where: "app/globals.css (.sig-side)", why: "Requested — finer font in the left panel" },
     ] },

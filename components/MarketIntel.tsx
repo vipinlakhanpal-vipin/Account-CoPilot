@@ -75,15 +75,28 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
     }
     setBusy(""); notify(`Searching contacts for ${vendor} customers that have none. They appear here when it finishes.`, "ok"); load();
   };
-  const contactCell = (c: Cust) => (
-    <>
-      {c.contacts.map((k, i) => <Who key={i} c={k} />)}
-      {c.contacts.length === 0 && (c.in_app && c.people_on_file > 0
-        ? <span className="muted">{c.people_on_file} people on file · <Link href={`/?open=${encodeURIComponent(c.slug)}&country=${encodeURIComponent(c.region)}`}>see in account</Link></span>
-        : <span className="muted">none yet</span>)}
-      {c.in_app ? <div><FindContactsButton slug={c.slug} region={c.region} company={c.customer} /></div>
-        : <div><button type="button" className="btn tiny" disabled={busy === `c|${c.id}`} onClick={() => findFor(c)} title="Free: searches public web pages for named people at this customer">{busy === `c|${c.id}` ? "Queuing…" : "Find contacts"}</button></div>}
-    </>
+  const host = (u: string) => { try { return new URL(u).hostname.replace(/^www\./, ""); } catch { return "source"; } };
+  // One table for every partner's customers: Customer | Project (two lines) | In database? | Contact | Find contacts (only when there is nobody yet) | Source (the website)
+  const custTable = (cs: Cust[]) => (
+    <div className="tablewrap"><table className="mkt-table">
+      <colgroup><col style={{ width: "17%" }} /><col style={{ width: "27%" }} /><col style={{ width: "13%" }} /><col style={{ width: "20%" }} /><col style={{ width: "11%" }} /><col style={{ width: "12%" }} /></colgroup>
+      <thead><tr><th>Customer</th><th>Project</th><th>In database?</th><th>Contact</th><th>Find contacts</th><th>Source</th></tr></thead>
+      <tbody>{cs.map((c) => {
+        const noOne = c.contacts.length === 0 && !(c.in_app && c.people_on_file > 0);
+        return (
+          <tr key={c.id}>
+            <td><b>{c.customer}</b><div className="muted">{c.region}</div></td>
+            <td><div className="clamp2" title={c.project}>{c.project || <span className="muted">—</span>}</div></td>
+            <td>{c.in_app ? <Link className="mkt-in" href={`/?open=${encodeURIComponent(c.slug)}&country=${encodeURIComponent(c.region)}`}>In database</Link>
+              : <><span className="mkt-add">Not in database</span><div><Link className="mkt-addlink" href={addLink(c)}>+ Add</Link></div></>}</td>
+            <td>{c.contacts.length > 0 ? c.contacts.map((k, i) => <Who key={i} c={k} />)
+              : c.in_app && c.people_on_file > 0 ? <span className="muted">{c.people_on_file} people on file · <Link href={`/?open=${encodeURIComponent(c.slug)}&country=${encodeURIComponent(c.region)}`}>see account</Link></span>
+              : <span className="muted">None yet</span>}</td>
+            <td>{noOne ? (c.in_app ? <FindContactsButton slug={c.slug} region={c.region} company={c.customer} />
+              : <button type="button" className="btn tiny nowrap" disabled={busy === `c|${c.id}`} onClick={() => findFor(c)} title="Free: searches public web pages for named people at this customer">{busy === `c|${c.id}` ? "Queuing…" : "Find contacts"}</button>) : <span className="muted">—</span>}</td>
+            <td><a href={c.source_url} target="_blank" rel="noopener noreferrer" title={c.source_url}>{host(c.source_url)}</a></td>
+          </tr>);
+      })}</tbody></table></div>
   );
   const scan = async (region: string, v: string) => {
     setBusy(`${v}|${region}`); logActivity("scan", `Market intelligence: ${v} · ${region}`);
@@ -179,12 +192,7 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
                 {p.contacts.map((c, i) => <Who key={i} c={c} />)}
                 <div className="sig-acts"><button type="button" className="btn tiny" onClick={() => setOpenP(isOpen ? null : p.id)} aria-expanded={isOpen}>{cs.length} published customer{cs.length === 1 ? "" : "s"} {isOpen ? "▴" : "▾"}</button></div>
                 {isOpen && (cs.length === 0 ? <p className="note">No customers published by this partner (or none match the filters).</p> : (
-                  <div className="tablewrap"><table><thead><tr><th>Customer</th><th>Project</th><th>Contact</th><th>Source</th></tr></thead><tbody>
-                    {cs.map((c) => (
-                      <tr key={c.id}><td><b>{c.customer}</b> {c.in_app ? <Link className="mkt-in" href={`/?open=${encodeURIComponent(c.slug)}&country=${encodeURIComponent(c.region)}`}>In your app database</Link> : <Link className="mkt-add" href={addLink(c)}>Not in your database · Add</Link>}</td>
-                        <td>{c.project}</td><td>{contactCell(c)}</td>
-                        <td><a href={c.source_url} target="_blank" rel="noopener noreferrer">open</a></td></tr>))}
-                  </tbody></table></div>))}
+                  custTable(cs)))}
               </article>);
           })}</div>}
           {view === "customers" && (custs.length === 0 ? <div className="sig-empty"><h3>No partner customers to show</h3><p>Partners often publish few customers. Try another vendor or loosen the filters.</p></div> : (
@@ -193,11 +201,7 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
               return (
                 <details key={p.id} className="mkt-group" open={i === 0 || !!needle}>
                   <summary><b>{p.name}</b><span className="sig-meta">{p.region}{p.tier ? ` · ${p.tier}` : ""}</span><em>{cs.length} customer{cs.length === 1 ? "" : "s"}</em></summary>
-                  <div className="tablewrap"><table><thead><tr><th>Customer</th><th>Project</th><th>Contact details</th><th>Source</th></tr></thead><tbody>
-                    {cs.map((c) => (
-                      <tr key={c.id}><td><b>{c.customer}</b><div className="muted">{c.region}</div>{c.in_app ? <Link className="mkt-in" href={`/?open=${encodeURIComponent(c.slug)}&country=${encodeURIComponent(c.region)}`}>In your app database</Link> : <Link className="mkt-add" href={addLink(c)}>Not in your database · Add</Link>}</td>
-                        <td>{c.project}</td><td>{contactCell(c)}</td><td><a href={c.source_url} target="_blank" rel="noopener noreferrer">open</a></td></tr>))}
-                  </tbody></table></div>
+                  {custTable(cs)}
                 </details>);
             })))}
         </section>
