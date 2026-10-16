@@ -1495,3 +1495,19 @@ th .infotip{margin-left:3px}.infotip-btn{width:15px;height:15px;font-size:10px}
 .find-tonew{margin:16px 0 0;text-align:center}
 
 .pipe-help{display:inline-flex;align-items:center;gap:4px;font-size:13px;color:var(--muted)}
+
+/* One table standard for the whole app (v4.14): the same type size everywhere, cells wrap instead of forcing a sideways scroll,
+   so a wide table such as the Pipeline fits the screen. Component-specific tables below only differ in colour, never in size. */
+:root{--tbl-font:11.5px;--tbl-head:9.5px}
+table,.bell-table,.suggest-table{font-size:var(--tbl-font)}
+th,.bell-table th,.suggest-table th{font-size:var(--tbl-head);letter-spacing:.04em;line-height:1.25;padding:8px 6px;white-space:normal;vertical-align:bottom}
+td,.bell-table td,.suggest-table td{padding:7px 6px;line-height:1.35;overflow-wrap:anywhere}
+th .infotip-btn{width:13px;height:13px;font-size:9px}
+.mono,td .mono{font-size:var(--tbl-font)}
+td.logo-cell,th.logo-cell{width:34px;padding-left:2px;padding-right:2px}
+td.co-cell{min-width:140px;max-width:220px}
+td.wrap{min-width:140px;max-width:260px}
+td .pill,td .icp,td .status-plain,td .trust,td .job-st,td .role-tag{font-size:10px;padding-left:6px;padding-right:7px}
+td .icp{gap:4px;white-space:normal}
+td .rev-src{font-size:10px}
+.tablewrap td b,.tablewrap td strong{font-size:var(--tbl-font)}
