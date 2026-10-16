@@ -59,7 +59,7 @@ const NewSignal = z.object({ lane: z.enum(["erp", "rfp", "ecc"]), strength: z.en
 const MContactIn = z.object({ name: z.string().trim().min(3).max(120), title: z.string().trim().max(200).optional().default(""), email: z.string().trim().max(160).optional().default(""),
   phone: z.string().trim().max(40).optional().default(""), linkedin_url: z.string().trim().max(240).optional().default(""), source_url: Url });
 const MPartnerIn = z.object({ name: z.string().trim().min(2).max(140), website: z.string().trim().max(200).optional().default(""), tier: z.string().trim().max(80).optional().default(""),
-  services: z.string().trim().max(300).optional().default(""), hq_city: z.string().trim().max(80).optional().default(""), source_url: Url, label: z.enum(["FACT", "LIKELY"]).optional().default("FACT"),
+  services: z.string().trim().max(300).optional().default(""), hq_city: z.string().trim().max(80).optional().default(""), hq_country: z.string().trim().max(60).optional().default(""), source_url: Url, label: z.enum(["FACT", "LIKELY"]).optional().default("FACT"),
   contacts: z.array(MContactIn).max(3).optional().default([]) });
 const MCustomerIn = z.object({ partner: z.string().trim().min(2).max(140), customer: z.string().trim().min(2).max(160), customer_website: z.string().trim().max(200).optional().default(""),
   project: z.string().trim().max(240).optional().default(""), source_url: Url, published: Day, contacts: z.array(MContactIn).max(3).optional().default([]) });
@@ -286,9 +286,9 @@ export async function POST(req: Request) {
     };
     for (const p of b.partners) {
       const id = partnerId(b.vendor, b.region, p.name);
-      const row: Partner = { id, vendor: b.vendor, region: b.region, name: p.name, website: p.website, tier: p.tier, services: p.services, hq_city: p.hq_city, source_url: p.source_url, label: p.label, contacts: vet(p.contacts, p.website, p.name), found_at: now };
+      const row: Partner = { id, vendor: b.vendor, region: b.region, name: p.name, website: p.website, tier: p.tier, services: p.services, hq_city: p.hq_city, hq_country: p.hq_country, source_url: p.source_url, label: p.label, contacts: vet(p.contacts, p.website, p.name), found_at: now };
       const old = doc.partners.find((x) => x.id === id);
-      if (old) { Object.assign(old, { website: row.website || old.website, tier: row.tier || old.tier, services: row.services || old.services, hq_city: row.hq_city || old.hq_city, contacts: row.contacts.length ? row.contacts : old.contacts }); updated.partners++; }
+      if (old) { Object.assign(old, { website: row.website || old.website, tier: row.tier || old.tier, services: row.services || old.services, hq_city: row.hq_city || old.hq_city, hq_country: row.hq_country || old.hq_country, contacts: row.contacts.length ? row.contacts : old.contacts }); updated.partners++; }
       else { doc.partners.unshift(row); added.partners++; added.contacts += row.contacts.length; }
     }
     for (const c of b.customers) {
