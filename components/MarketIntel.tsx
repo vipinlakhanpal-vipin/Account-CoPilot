@@ -12,6 +12,9 @@ type Data = { vendors: Vendor[]; custom_vendors: string[]; is_super: boolean; de
 const ago = (iso?: string) => { if (!iso) return "never"; const h = Math.round((Date.now() - new Date(iso).getTime()) / 36e5); return h < 1 ? "just now" : h < 48 ? `${h} h ago` : `${Math.round(h / 24)} days ago`; };
 const csv = (rows: string[][]) => rows.map((r) => r.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(",")).join("\r\n");
 
+function Tip({ text }: { text: string }) {
+  return <span className="find-i" tabIndex={0} role="note" aria-label={text}>i<span className="find-i-pop">{text}</span></span>;
+}
 function Who({ c }: { c: MContact }) {
   return (
     <div className="mkt-contact"><b>{c.name}</b>{c.title && <span> · {c.title}</span>}
@@ -156,15 +159,22 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
     window.addEventListener("appwin-scan", on);
     return () => window.removeEventListener("appwin-scan", on);
   });
-  // Every vendor on the list in the ticked regions: one job per vendor and region, queued one after another, with a single message at the end
-  const scanEvery = async () => {
-    const pairs = active.flatMap((r) => (data?.vendors || []).map((v) => [r, v] as [string, string]));
-    if (!pairs.length) return;
-    if (!(await ask({ title: `Scan all ${data?.vendors.length} vendors?`, body: `This queues ${pairs.length} free scans (${active.join(", ")}). Each takes a few minutes and they run one after another, so the lists fill in over the next hour or so. Tick fewer regions first to scan fewer.`, confirm: "Queue them" }))) return;
-    setBusy("every"); logActivity("scan", `Market intelligence: all vendors, ${active.join(", ")}`);
+  // Scan Partners / Scan Customers: the ticked regions and either this vendor or every vendor. One job per vendor and region for partners; for customers
+  // one job per batch of 8 partners whose customers were never searched (or not in 45 days), at most 6 batches per vendor and region per click.
+  const [allVendors, setAllVendors] = useState(false);
+  const due = (v: string, r: string) => (data?.partners || []).filter((p) => p.vendor === v && p.region === r && (!p.customers_scanned_at || Date.now() - new Date(p.customers_scanned_at).getTime() > 45 * 864e5)).length;
+  const scanPhase = async (phase: "partners" | "customers") => {
+    const vs = allVendors ? data?.vendors || [] : [vendor];
+    const jobs: [string, string][] = active.flatMap((r) => vs.flatMap((v) => phase === "partners" ? [[r, v] as [string, string]] : Array.from({ length: Math.min(6, Math.ceil(due(v, r) / 8)) }, () => [r, v] as [string, string])));
+    if (!jobs.length) { notify(phase === "customers" ? "Every partner shown already has its customers searched. Use Scan Partners to find more partners first." : "Tick a region first.", "ok"); return; }
+    if (!(await ask({ title: phase === "partners" ? "Scan partners?" : "Scan customers?",
+      body: phase === "partners" ? `This queues ${jobs.length} free scan${jobs.length === 1 ? "" : "s"} that find ${allVendors ? "every vendor's" : `${vendor}'s`} partners in ${active.join(", ")}. Customers are not searched in this step.`
+        : `This queues ${jobs.length} free scan${jobs.length === 1 ? "" : "s"}. Each searches the published customers of up to 8 partners (${allVendors ? "all vendors" : vendor}, ${active.join(", ")}) that have not been searched yet. Click again for the next batch.`,
+      confirm: "Queue them" }))) return;
+    setBusy(`phase|${phase}`); logActivity("scan", `Market intelligence: ${phase}, ${allVendors ? "all vendors" : vendor}, ${active.join(", ")}`);
     let ok = 0;
-    for (const [r, v] of pairs) { const res = await fetch("/api/engine", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "queue", region: r, count: 1, mode: "market", vendor: v }) }); if (res.ok || res.status === 409) ok++; }
-    setBusy(""); notify(`${ok} scans queued. Partners appear here as each one finishes.`, "ok"); load();
+    for (const [r, v] of jobs) { const res = await fetch("/api/engine", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "queue", region: r, count: 1, mode: "market", vendor: v, phase }) }); if (res.ok || res.status === 409) ok++; }
+    setBusy(""); notify(`${ok} scan${ok === 1 ? "" : "s"} queued. The vendor tiles flash while they run.`, "ok"); load();
   };
   const download = () => {
     const rows = [["Vendor", "Region", "Partner", "Customer", "Project", "Customer in your app database", "Contact", "Title", "Email", "Phone", "LinkedIn", "Source"]];
@@ -209,8 +219,13 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
         <section className="sig-main">
           <div className="mkt-tools">
             <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={`Search ${vendor} partners, customers, projects`} aria-label="Search" />
-            <button type="button" className="btn tiny primary" disabled={!!busy || regionList.length === 0} onClick={() => scanAll(active.map((r) => [r, vendor] as [string, string]))}>Scan {vendor} now</button>
-            <button type="button" className="btn tiny" disabled={!!busy || regionList.length === 0} onClick={scanEvery} title="Queue a free scan for every vendor on the list in the ticked regions">Scan all vendors</button>
+            <span className="mkt-phase">
+              <button type="button" className="btn tiny primary" disabled={!!busy || regionList.length === 0} onClick={() => scanPhase("partners")}>Scan Partners</button>
+              <Tip text={`Finds the vendor's partners in the ticked regions from its partner directory and the partners' websites. It does not look for customers. Tick "All vendors" to do every vendor. Free; each scan takes a few minutes.`} />
+              <button type="button" className="btn tiny primary" disabled={!!busy || regionList.length === 0} onClick={() => scanPhase("customers")}>Scan Customers</button>
+              <Tip text="For partners already on the list, reads their published customers: customer pages, case studies, go-lives, press and LinkedIn snippets. It works in batches of 8 partners per scan, skips partners done in the last 45 days, and you can click again for the next batch. Run Scan Partners first." />
+              <label className="mkt-allv"><input type="checkbox" checked={allVendors} onChange={() => setAllVendors(!allVendors)} /> All vendors</label>
+            </span>
             <button type="button" className="btn tiny" onClick={() => setAddingP((v) => !v)} aria-expanded={addingP} title="Add a partner the scans missed">+ Add partner</button>
             <button type="button" className="btn tiny" disabled={!custs.length || !!busy} onClick={findAll} title="Free: searches for contacts at up to 10 customers of this vendor that have none yet">Find customer contacts</button>
             <button type="button" className="btn tiny" disabled={!custs.length} onClick={download}>Download customers (CSV)</button>

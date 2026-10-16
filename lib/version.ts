@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.43";
+export const APP_VERSION = "4.44";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.44", date: "2026-10-16", notes: "Market intelligence has separate Scan Partners and Scan Customers buttons.", changes: [
+      { what: "Two buttons in the Market intelligence toolbar, each with an i explaining it. Scan Partners finds the vendor's partners in the ticked regions without searching customers. Scan Customers reads the published customers of partners whose customers were never searched (or not in 45 days), in batches of 8 partners per scan, and you click again for the next batch. An All vendors box applies either button to every vendor. Each asks to confirm and says how many scans it queues; the vendor tiles flash while they run", where: "components/MarketIntel.tsx, app/api/engine, app/api/engine/worker (checked_partners, partners_due), ENGINE.md", why: "Requested — scan all partners and all their customers, in two steps" },
+    ] },
   { version: "4.43", date: "2026-10-16", notes: "Market intelligence scan buttons follow the ticked regions.", changes: [
       { what: "The Scan buttons shown when a vendor has no data now offer only the ticked regions, and the All vendors, all regions button is gone from there (Scan all vendors in the toolbar already uses the ticked regions). Before, that button queued every region at once", where: "components/MarketIntel.tsx", why: "Reported — a tile showed Scanning Kenya +8 more because all nine regions had been queued" },
     ] },

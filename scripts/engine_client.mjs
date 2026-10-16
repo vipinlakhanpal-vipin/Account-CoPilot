@@ -86,7 +86,7 @@ else if (cmd === "queue") {
   j.targets.forEach((t) => console.log(`  ${t.vendor} · ${t.region} · last scan ${t.last_scan || "never"} · ${t.partners_known} partners known`));
 } else if (cmd === "add_market") {
   const body = JSON.parse(fs.readFileSync(a || "data/verification/new_market.json", "utf8"));
-  const r = await call({ action: "add_market", vendor: body.vendor, region: body.region, partners: body.partners || [], customers: body.customers || [] });
+  const r = await call({ action: "add_market", vendor: body.vendor, region: body.region, partners: body.partners || [], customers: body.customers || [], checked_partners: body.checked_partners || [] });
   r.skipped.forEach((x) => console.log(`SKIPPED ${x.name}: ${x.why}`)); r.dropped.forEach((x) => console.log(`DROPPED ${x}`));
   console.log(`partners +${r.added.partners} (~${r.updated.partners}), customers +${r.added.customers} (~${r.updated.customers}), contacts +${r.added.contacts}; totals ${r.totals.partners} partners / ${r.totals.customers} customers`);
 } else if (cmd === "icp") {
