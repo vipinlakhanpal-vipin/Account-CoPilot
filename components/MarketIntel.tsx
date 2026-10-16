@@ -262,7 +262,7 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
             return (
               <article key={p.id} className={`sig-card mkt-card${isOpen ? " open" : ""}`}>
                 <div className="sig-row">
-                  {p.website ? <a className="sig-co mkt-site" href={webUrl(p.website)} target="_blank" rel="noopener noreferrer" title={`Open ${p.website.replace(/^https?:\/\//, "")} in a new tab`}>{p.name}<i aria-hidden="true">↗</i></a> : <b className="sig-co">{p.name}</b>}<span className="sig-meta">{p.region}{p.hq_city ? ` · ${p.hq_city}` : ""}</span>
+                  <a className="sig-co mkt-site" href={p.website ? webUrl(p.website) : p.source_url} target="_blank" rel="noopener noreferrer" title={p.website ? `Open ${p.website.replace(/^https?:\/\//, "")} in a new tab` : "No website saved; opens the page that lists this partner"}>{p.name}<i aria-hidden="true">↗</i></a><span className="sig-meta">{p.region}{p.hq_city ? ` · ${p.hq_city}` : ""}</span>
                   {p.tier && <span className="sig-pill">{p.tier}</span>}<span className={`sig-pill lab-${p.label.toLowerCase()}`}>{p.label}</span>
                 </div>
                 {p.services && <p className="sig-ev">{p.services}</p>}
@@ -280,7 +280,7 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
               const cs = custOf(p);
               return (
                 <details key={p.id} className="mkt-group" open={i === 0 || !!needle}>
-                  <summary>{p.website ? <a className="mkt-site" href={webUrl(p.website)} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} title={`Open ${p.website.replace(/^https?:\/\//, "")} in a new tab`}><b>{p.name}</b><i aria-hidden="true">↗</i></a> : <b>{p.name}</b>}<span className="sig-meta">{p.region}{p.tier ? ` · ${p.tier}` : ""}</span><em>{cs.length} customer{cs.length === 1 ? "" : "s"}</em></summary>
+                  <summary><a className="mkt-site" href={p.website ? webUrl(p.website) : p.source_url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} title={p.website ? `Open ${p.website.replace(/^https?:\/\//, "")} in a new tab` : "No website saved; opens the page that lists this partner"}><b>{p.name}</b><i aria-hidden="true">↗</i></a><span className="sig-meta">{p.region}{p.tier ? ` · ${p.tier}` : ""}</span><em>{cs.length} customer{cs.length === 1 ? "" : "s"}</em></summary>
                   {custTable(cs)}
                 </details>);
             })))}

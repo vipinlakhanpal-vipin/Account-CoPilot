@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.48";
+export const APP_VERSION = "4.49";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.49", date: "2026-10-16", notes: "Every partner name is a link.", changes: [
+      { what: "A partner's name is always clickable: it opens its website, or the page that lists it when no website was saved. BRINGVAS now has its website (www.bringvas.com, from its Coupa listing). Scans are told to save the website whenever the listing shows one", where: "components/MarketIntel.tsx, ENGINE.md", why: "Reported — the Coupa partner name was not clickable" },
+    ] },
   { version: "4.48", date: "2026-10-16", notes: "Queued scans share one session instead of starting one each.", changes: [
       { what: "A new job now starts a cloud session only when none has been working for the last 20 minutes; a running session picks up the next waiting job itself. Before, nine queued scans started nine sessions at once and used up the Claude plan's usage limit within minutes, so most scans never saved anything", where: "app/api/engine/route.ts", why: "Reported — only one Coupa partner and nothing for the other vendors" },
     ] },
