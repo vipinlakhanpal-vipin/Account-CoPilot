@@ -16,8 +16,9 @@ import { APP_VERSION, TAGLINE, RELEASES, RELEASE_AUTHOR } from "@/lib/version";
 // has to stay listed here so this group is found while standing on that page — hideLanding then drops it from
 // what's actually shown, for a group (like Dashboard) where that first item is just the main tab's own page
 // and has no other siblings worth presenting it alongside, unlike Accounts' 5 genuinely distinct pages.
-const GROUPS: { label: string; items: [string, string][]; hideLanding?: boolean; icon?: boolean }[] = [
-  { label: "Find company", items: [["/find", "Find company"]], icon: true },
+const GROUPS: { label: string; items: [string, string][]; hideLanding?: boolean; icon?: boolean; tip?: string; glyph?: "search" | "pulse" }[] = [
+  { label: "Find company", items: [["/find", "Find company"]], icon: true, tip: "Find company - search or add a new one", glyph: "search" },
+  { label: "Buying signals", items: [["/signals", "Buying signals"]], icon: true, tip: "Buying signals - tenders, RFPs, ERP and S2P intent, ECC to S/4HANA", glyph: "pulse" },
   { label: "Home", items: [["/home", "Home"]] },
   { label: "Dashboard", items: [["/", "Dashboard"], ["/?tab=reports", "Mission Control"]], hideLanding: true },
   { label: "Accounts", items: [["/?tab=accounts", "Accounts"], ["/?tab=pipeline", "Pipeline"], ["/?tab=stakeholders", "Stakeholders"], ["/?tab=signals", "S2P Signals"], ["/?tab=erp", "ERP & Apps"]] },
@@ -36,13 +37,21 @@ const HistoryIcon = () => (
 const TAB_LABEL: Record<string, string> = { pipeline: "Pipeline", accounts: "Accounts", stakeholders: "Stakeholders", signals: "S2P Signals", erp: "ERP & Apps",
   conflicts: "Conflicts", sources: "Sources", reports: "Mission Control" };
 
-const PAGE_LABEL: Record<string, string> = { "/research": "Research Queue", "/settings": "Settings", "/guide": "Learn Me", "/icp": "Define ICP", "/team": "Team", "/home": "Home", "/find": "Find company" };
+const PAGE_LABEL: Record<string, string> = { "/research": "Research Queue", "/settings": "Settings", "/guide": "Learn Me", "/icp": "Define ICP", "/team": "Team", "/home": "Home", "/find": "Find company", "/signals": "Buying signals" };
 
 // Rendered once in the root layout, so it stays put across page changes (no rebuild, no jump).
 export default function Header({ meta }: { meta: string }) {
   const { latest, releases, author } = useNewVersionInfo();
   const [showChanges, setShowChanges] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [sig, setSig] = useState({ new: 0, hot: 0 });
+  // In-app alert: how many unseen Hot / Warm buying signals are waiting in the user's regions.
+  useEffect(() => {
+    let off = false;
+    const load = () => fetch("/api/signals?count=1", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((j) => { if (j && !off) setSig({ new: j.new || 0, hot: j.hot || 0 }); }).catch(() => {});
+    load(); const t = setInterval(load, 120000); window.addEventListener("signals-changed", load);
+    return () => { off = true; clearInterval(t); window.removeEventListener("signals-changed", load); };
+  }, []);
   const history = RELEASES.filter((r) => r.changes?.length).slice(0, 60);
   // Open the "what's new" window once per new version (per browser session); the user can close it and reopen it from the banner.
   useEffect(() => {
@@ -222,8 +231,11 @@ export default function Header({ meta }: { meta: string }) {
             {GROUPS.map((g) => (
               <Link key={g.label} href={g.items[0][0]} className={`tab${g.icon ? " tab-icon" : ""}`} aria-label={g.icon ? g.label : undefined} aria-selected={g.items.some(([, l]) => l === current)} onClick={(e) => go(e, g.items[0][0])}>
                 {g.icon ? <>
-                  <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" strokeWidth="1.8" /><path d="M10.6 10.6 14 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
-                  <span className="tip-pill" role="tooltip"><span className="tip-dot" aria-hidden="true" />Find company - search or add a new one</span>
+                  {g.glyph === "pulse"
+                    ? <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 8h3l1.6-4.5 3 9L11 8h3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                    : <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" strokeWidth="1.8" /><path d="M10.6 10.6 14 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>}
+                  {g.glyph === "pulse" && sig.new > 0 && <span className={`sig-badge${sig.hot ? " hot" : ""}`} aria-label={`${sig.new} new buying signals`}>{sig.new > 99 ? "99+" : sig.new}</span>}
+                  <span className="tip-pill" role="tooltip"><span className="tip-dot" aria-hidden="true" />{g.tip}{g.glyph === "pulse" && sig.new > 0 ? ` (${sig.new} new${sig.hot ? `, ${sig.hot} hot` : ""})` : ""}</span>
                 </> : g.label}
               </Link>
             ))}

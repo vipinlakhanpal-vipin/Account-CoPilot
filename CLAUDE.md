@@ -116,6 +116,12 @@ Every Anthropic-API route (`/api/research`, `/api/discover`, `/api/pitch`, and `
 - **Replaces the header search bar** (removed). The Mission Control "Search & refresh" tab stays for bulk jobs and the paid refresh and links here. Remove other search entry points only after the user confirms Find company works.
 - Standard users may queue, cancel, add and ignore for their own regions only (job region is checked server-side).
 
+## Buying signals (v4.18)
+- **Where:** pulse icon beside Find company → `/signals` (`components/BuyingSignals.tsx`); alert badge in `components/Header.tsx` (new Hot/Warm signals, polled from `GET /api/signals?count=1`). Data is in `settings.buying_signals` {items, scans, sweeps} (no table), types in `lib/signals.ts`; scoped by region in `app/api/signals`.
+- **Three lanes:** tenders and RFPs (`rfp`), ERP/S2P/procurement-consulting intent (`erp`), SAP ECC owners heading to S/4HANA (`ecc`, only for companies already in the app). Strength Hot/Warm/Watch (Hot needs FACT; the worker downgrades otherwise); labels FACT/LIKELY/UNVERIFIED; every signal has a source URL.
+- **Free:** scheduled sessions follow the "Buying signals" section of `ENGINE.md` (job mode `signals`, plus daily step 5, UAE and KSA only in phase 1) and save through worker actions `signal_targets` / `add_signals`. The daily routine's own prompt overrides ENGINE.md, so step 5 only runs once that prompt mentions it.
+- **Tenders:** `doc_url` is a link only when the documents open without a login; otherwise `needs_login` and the notice page is the source. Never log in, register, bypass or re-host documents.
+
 ## Find contacts (v4.12)
 - **Button:** "Find contacts" on the account page and in each Search Company result (`lib/findContactsClient.ts`) → `POST /api/engine` `{action:"queue", mode:"contacts", slug}`. The server looks the company up (region, domain), checks the user's region, and refuses a duplicate while one is queued or running.
 - **Free:** a scheduled Claude session follows the **contacts** job in `ENGINE.md` (public web search only; no Seamless credits, no LinkedIn login) and saves people with `engine_client.mjs add_contacts <slug> <file>` → worker action `add_contacts`.

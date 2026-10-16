@@ -5,11 +5,13 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { invalidateAllData } from "@/lib/dataCache";
 import { statusPatch, applyRevenueResult } from "@/lib/icpStatus.mjs";
 import { normalizeDefinition, rulesFor, regionOf, summarizeRules } from "@/lib/icpDefinition.mjs";
+import { EMPTY_STORE, type Signal, type SignalStore } from "@/lib/signals";
 
 // Limited API for scheduled Claude sessions (no Supabase key needed in the cloud environment).
 // Auth: "Authorization: Bearer <ENGINE_TOKEN>"; only the SHA-256 hash is stored (settings.engine_token). Revoke/regenerate in Settings.
 // Allowed: read the ICP definition, claim/finish queued jobs, read the verification queue, submit revenue results, add discovered companies, post a notification.
 // Also allowed: add_contacts (new people found on the public web for ONE company; written only after server-side checks, never read back).
+// Also allowed: signal_targets / add_signals (buying signals: tenders, ERP and S2P intent, ECC to S/4HANA; stored in settings.buying_signals).
 // Not allowed: reading contacts, deleting anything, or any other table access.
 export const maxDuration = 60;
 type Db = ReturnType<typeof supabaseAdmin>;
@@ -42,6 +44,13 @@ const NewContact = z.object({ full_name: z.string().trim().min(3).max(120), titl
   linkedin_url: z.string().trim().max(240).optional().default(""), via: z.enum(["web", "seamless"]).optional().default("web"), seamless_id: z.string().trim().max(40).optional().default(""),
   source_url: z.string().trim().max(500).optional().default(""), source_note: z.string().trim().max(400).optional().default("") })
   .refine((c) => (c.via === "seamless" ? !!c.seamless_id : /^https?:\/\//.test(c.source_url)), { message: "A public-web contact needs source_url; a Seamless contact needs seamless_id." });
+const Day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).or(z.literal("")).optional().default("");
+const Url = z.string().url().max(600);
+const NewSignal = z.object({ lane: z.enum(["erp", "rfp", "ecc"]), strength: z.enum(["Hot", "Warm", "Watch"]), label: z.enum(["FACT", "LIKELY", "UNVERIFIED"]),
+  company_name: z.string().trim().min(2).max(160), slug: z.string().trim().max(120).optional().default(""), region: z.string().trim().min(2).max(40),
+  title: z.string().trim().min(5).max(200), evidence: z.string().trim().min(10).max(700), why: z.string().trim().max(300).optional().default(""),
+  source_name: z.string().trim().max(120).optional().default(""), source_url: Url, doc_url: Url.or(z.literal("")).optional().default(""), needs_login: z.boolean().optional().default(false),
+  published: Day, closes: Day });
 const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("claim") }),
   z.object({ action: z.literal("finish"), id: z.string(), status: z.enum(["done", "error"]), result: z.string().max(2000), slug: z.string().max(120).optional(),
@@ -53,6 +62,8 @@ const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("add_companies"), companies: z.array(NewCo).max(50) }),
   z.object({ action: z.literal("hold_companies"), companies: z.array(NewCo).max(50) }),
   z.object({ action: z.literal("add_contacts"), slug: z.string().min(2).max(120), contacts: z.array(NewContact).max(25) }),
+  z.object({ action: z.literal("signal_targets"), region: z.string().default("UAE"), limit: z.number().int().min(1).max(30).default(10) }),
+  z.object({ action: z.literal("add_signals"), scanned: z.array(z.string().max(120)).max(40).optional().default([]), sweep_region: z.string().max(40).optional().default(""), signals: z.array(NewSignal).max(40) }),
   z.object({ action: z.literal("names") }),
   z.object({ action: z.literal("icp") }),
   z.object({ action: z.literal("uploads") }),
@@ -192,6 +203,42 @@ export async function POST(req: Request) {
     }
     invalidateAllData();
     return NextResponse.json({ added, updated, skipped, dropped });
+  }
+  if (b.action === "signal_targets") {
+    // Companies due a buying-signals scan: Verified / Likely ICP in the region, never-scanned first, then oldest scan. Existing Coupa customers are skipped.
+    const st = await get<SignalStore>(db, "buying_signals", EMPTY_STORE);
+    const { data } = await db.from("companies").select("slug,company_name,domain,company_website,country,industry,erp,existing_s2p_product,icp_status").in("icp_status", ["ICP — Verified", "ICP — Likely"]);
+    const list = (data || []).filter((c) => regionOf(c.country) === b.region && !/coupa/i.test(String(c.existing_s2p_product || "")))
+      .sort((x, y) => String(st.scans?.[x.slug] || "").localeCompare(String(st.scans?.[y.slug] || "")) || (x.icp_status === y.icp_status ? 0 : x.icp_status === "ICP — Verified" ? -1 : 1)).slice(0, b.limit);
+    return NextResponse.json({ companies: list.map((c) => ({ slug: c.slug, name: c.company_name, domain: c.domain || "", website: c.company_website || "", industry: c.industry || "", erp: c.erp || "", existing_s2p: c.existing_s2p_product || "", icp_status: c.icp_status, last_scan: st.scans?.[c.slug] || null })),
+      last_sweep: st.sweeps?.[b.region] || null });
+  }
+  if (b.action === "add_signals") {
+    const st = await get<SignalStore>(db, "buying_signals", EMPTY_STORE);
+    st.items ||= []; st.scans ||= {}; st.sweeps ||= {};
+    const { data: have } = await db.from("companies").select("slug,company_name,domain,country,industry,erp");
+    const today = now.slice(0, 10), added: string[] = [], updated: string[] = [], skipped: { title: string; why: string }[] = [];
+    const norm = (t: string) => t.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, " ").trim();
+    for (const x of b.signals) {
+      const co = (x.slug && (have || []).find((c) => c.slug === x.slug)) || (have || []).find((c) => sameCompany(x.company_name, "", c.company_name, c.domain || ""));
+      if (x.lane === "ecc" && !co) { skipped.push({ title: x.title, why: "ECC to S/4HANA needs a company that is already in the app" }); continue; }
+      if (x.lane === "rfp" && x.closes && x.closes < today) { skipped.push({ title: x.title, why: "tender already closed" }); continue; }
+      const strength = x.strength === "Hot" && x.label !== "FACT" ? "Warm" : x.strength; // Hot is reserved for documented facts
+      const slug = co?.slug || "", region = co ? regionOf(co.country) : regionOf(x.region);
+      const key = createHash("sha1").update(`${x.lane}|${slug || norm(x.company_name)}|${x.source_url.replace(/[#?].*$/, "")}`).digest("hex").slice(0, 16);
+      const old = st.items.find((i) => i.id === key);
+      if (old) { Object.assign(old, { strength, label: x.label, evidence: x.evidence, why: x.why || old.why, closes: x.closes || old.closes, doc_url: x.doc_url || old.doc_url }); updated.push(x.title); continue; }
+      const item: Signal = { id: key, lane: x.lane, strength, label: x.label, company_name: co?.company_name || x.company_name, slug, region, title: x.title, evidence: x.evidence, why: x.why,
+        source_name: x.source_name, source_url: x.source_url, doc_url: x.doc_url, needs_login: x.needs_login, published: x.published, closes: x.closes, detected_at: now, status: "new" };
+      st.items.unshift(item); added.push(x.title);
+    }
+    for (const sl of b.scanned) st.scans[sl] = now;
+    if (b.sweep_region) st.sweeps[regionOf(b.sweep_region)] = now;
+    // Housekeeping: drop tenders closed over a week ago, then keep the newest 1,500.
+    const cutoff = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
+    st.items = st.items.filter((i) => !(i.lane === "rfp" && i.closes && i.closes < cutoff)).slice(0, 1500);
+    await put(db, "buying_signals", st);
+    return NextResponse.json({ added, updated, skipped });
   }
   if (b.action === "names") {
     // Existing company names and domains, so a session can skip them before searching (no contacts, nothing else)

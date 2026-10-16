@@ -14,6 +14,8 @@
 //                                                                                                sends data/verification/run_details.json if present: [{"name","status","revenue"}]
 //                                                                                                (one row per company checked this run), for the bell's table
 //   node scripts/engine_client.mjs add_contacts <slug> <file.json>      → saves people found on the public web for ONE company (a "contacts" job; format: see ENGINE.md "Find contacts")
+//   node scripts/engine_client.mjs signal_targets <REGION> [N]        → writes data/verification/signal_targets.json: the N companies (default 10) due a buying-signals scan
+//   node scripts/engine_client.mjs add_signals <file.json>             → saves buying signals: {"scanned":[slugs],"sweep_region":"UAE","signals":[...]} (format: see ENGINE.md "Buying signals")
 //   node scripts/engine_client.mjs uploads                              → writes data/verification/uploaded_lists.json: [{"id","filename","region","url"}] waiting to be read
 //   node scripts/engine_client.mjs add_upload <file.json> <filename>    → imports one upload's extracted rows (format: see ENGINE.md "Reading an uploaded list")
 //   node scripts/engine_client.mjs upload_done <id> done|error "<summary>"
@@ -63,6 +65,16 @@ else if (cmd === "queue") {
   const { added, updated, skipped, dropped } = await call({ action: "add_contacts", slug: a, contacts: list });
   added.forEach((x) => console.log(`added ${x}`)); updated.forEach((x) => console.log(`filled empty details for ${x}`));
   skipped.forEach((x) => console.log(`SKIPPED ${x.name}: ${x.why}`)); dropped.forEach((x) => console.log(`DROPPED ${x}`));
+  console.log(`${added.length} added, ${updated.length} updated, ${skipped.length} skipped`);
+} else if (cmd === "signal_targets") {
+  const j = await call({ action: "signal_targets", region: a || "UAE", limit: Number(b) || 10 });
+  fs.mkdirSync("data/verification", { recursive: true });
+  fs.writeFileSync("data/verification/signal_targets.json", JSON.stringify(j.companies, null, 1));
+  console.log(`${j.companies.length} companies due a scan → data/verification/signal_targets.json (last region sweep: ${j.last_sweep || "never"})`);
+} else if (cmd === "add_signals") {
+  const body = JSON.parse(fs.readFileSync(a || "data/verification/new_signals.json", "utf8"));
+  const { added, updated, skipped } = await call({ action: "add_signals", scanned: body.scanned || [], sweep_region: body.sweep_region || "", signals: body.signals || [] });
+  added.forEach((x) => console.log(`added: ${x}`)); updated.forEach((x) => console.log(`updated: ${x}`)); skipped.forEach((x) => console.log(`SKIPPED ${x.title}: ${x.why}`));
   console.log(`${added.length} added, ${updated.length} updated, ${skipped.length} skipped`);
 } else if (cmd === "icp") {
   const j = await call({ action: "icp" });

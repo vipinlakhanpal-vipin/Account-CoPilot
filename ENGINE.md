@@ -95,6 +95,28 @@ typed in) — see "Multi-name discover jobs" under step 2.
     with `source_url`) can go in the same file. If the session has NO Seamless tools, do the free web search only and end the result with " (Seamless was not available in this session)". Add "Seamless credits used: K" to the result text when used.
   Finish with `finish <id> done "<Company> (<Region>): N contacts added, M updated"` or, if nothing public was found, `finish <id> done "<Company> (<Region>): no public contact details found"`. Do not run `add`, `hold` or revenue steps for this job.
 
+- **signals** — buying signals (Buying signals tab). A job with `slug` = scan that one company; a job without `slug` = a region sweep (`region`, `count` companies). The work is the **Buying signals** procedure below.
+
+## Buying signals (job `signals`, and the daily step in section 4)
+Goal: find companies that are *seriously looking* for an ERP, a source-to-pay (S2P) solution or procurement consulting, public tenders and RFPs for those, and SAP ECC owners who will need an S/4HANA partner.
+Free: public web search only (no API key, no logins, no CAPTCHAs). Phase 1 regions: **UAE and KSA** only (skip any other region).
+Save signals with `node scripts/engine_client.mjs add_signals data/verification/new_signals.json`, a file shaped
+`{"scanned":["<slug>",...],"sweep_region":"UAE","signals":[{"lane","strength","label","company_name","slug","region","title","evidence","why","source_name","source_url","doc_url","needs_login","published","closes"}]}`.
+- `lane`: `rfp` (tender or RFP), `erp` (ERP / S2P / procurement-consulting intent), `ecc` (SAP ECC owner heading to S/4HANA; the company MUST already be in the app and its ERP field or evidence must show ECC).
+- `label`: FACT (a document you read: tender notice, annual report, press release, job post) · LIKELY (credible but indirect) · UNVERIFIED. Never invent. Every signal needs `source_url` (the page itself) and a dated `published` when the page shows one.
+- `strength`: **Hot** = a live tender/RFP, or an announced programme with a named scope or date (needs FACT; the app downgrades otherwise) · **Warm** = executive statement or press plus hiring, or an ECC owner with a named S/4HANA plan but no partner · **Watch** = hiring only, or ECC owner with no announcement.
+- `evidence`: what the page says, in your own words, 1-3 sentences (no long quotes). `why`: one line on why it matters to SCP (a Coupa / SAP Ariba implementation and managed-services partner) and what to do first.
+- `slug`: the app's slug when the company is in the app (from `signal_targets`, `names` or the job); otherwise leave empty and give `company_name` exactly as the issuer states it, and the `region`.
+**Tender sweep** (once per region per run, `sweep_region` set): search for open tenders and RFPs for ERP implementation or replacement, SAP S/4HANA migration or support, source-to-pay or procurement platform
+(Coupa, SAP Ariba), procurement transformation or consulting, managed procurement services. Look at the public tender sections of government entities and large private companies, national tender portals
+(KSA: Etimad; UAE: federal and emirate e-procurement and entity "tenders" pages), and business press. Only tenders that are still open (`closes` today or later) and issued in that region.
+`doc_url`: a direct link to the tender documents or the notice's download page, ONLY if it opens without logging in; if documents need registration or payment, put the notice page in `source_url`,
+leave `doc_url` empty and set `needs_login` true. Never log in, register, bypass a paywall or CAPTCHA, or download and re-host a document.
+**Company scan** (`node scripts/engine_client.mjs signal_targets <REGION> <N>` writes `data/verification/signal_targets.json`; or the job's own company): for each company search its website, annual report,
+press (last 12 months), and job posts for the three lanes. Typical queries: "<company> ERP implementation", "<company> procurement transformation", "<company> S/4HANA", "<company> SAP ECC", "<company> tender
+ERP", "<company> careers Coupa OR Ariba OR SAP". A company with nothing found is simply listed in `scanned` (so it rotates to the back of the queue).
+Finish a job with `finish <id> done "<Company or Region>: N signals added (X Hot)"` or `"... no signals found"`. Never add signals for a company outside UAE/KSA in phase 1.
+
 ## 3. Finish and notify
 `node scripts/engine_client.mjs finish <id> done "<N verified: X Verified, Y Likely, Z Needs check, W Not ICP; M new companies added>"`
 (or `finish <id> error "<reason>"`). Claim the next job if time allows. Then ALWAYS, at the very end:
@@ -140,3 +162,5 @@ For **each region in `active`** of `icp_rules.json` (default: UAE, find 5, verif
    (counts are the ICP status of the checked companies after the check; mention any duplicates skipped). If a region's planned count can't be reached normally
    (e.g. its queue is empty) and you pad it with extra new companies to still hit the day's target, say so plainly in that region's own summary and flag it as
    over quota — the user reviews these.
+5. **Buying signals (UAE and KSA only, after the rest, if time allows)**: for each of UAE and KSA that is in `active`, run the **Buying signals** procedure: one tender sweep, then
+   `signal_targets <REGION> 10` and scan those companies; save with `add_signals`. Skip it silently if the session is short on time; never let it delay the revenue work above.
