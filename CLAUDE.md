@@ -150,6 +150,9 @@ Every Anthropic-API route (`/api/research`, `/api/discover`, `/api/pitch`, and `
 - **Plan first (v4.74):** when the free rules cannot answer, `lib/aria/interpret.ts` makes one small call to the Aria model (Haiku, `ARIA_MODEL`) with a forced `plan` tool; `lib/aria/plan.ts` shows "I read this as:" and asks for confirmation when the plan is unsure, has assumptions, has unsupported limits or is a report, then runs it with the app's own tools (`§plan:` carries a confirmed plan, `§rephrase` asks again). `intent: other` falls back to the full agent (`runAria`).
 - **Voice** uses the browser's speech recognition; nothing extra to configure. Aria's spend is not yet added to the Settings spend total.
 
+## Free pitch plan (v4.81)
+- Account page → Pitch planner: **Draft pitch plan (free)** (`components/FreePitch.tsx`) queues job mode `pitch`; a scheduled session reads `pitch_facts` (`lib/pitchFacts.ts`, contacts as names and titles only), may search public news, writes the plan and saves it with `save_pitch` into `companies.profile["Pitch plan"]` (read back by `GET /api/pitch?slug=`). The paid **Draft now (instant)** button (`/api/pitch` POST, Opus, PIN) is kept for when the answer is needed at once. The free one adds public-news research and an opening message; it takes minutes and uses the routine's model (Sonnet).
+
 ## Guide & Research more (v1.14)
 - `/guide` documents every feature, the point system and the engine steps. Update it whenever a feature or rule changes (the spend table reads `SPEND_BENCHMARKS` from `lib/icp.ts`).
 - **Research more** (left panel) → `app/api/discover` → `discoverCompanies()` in `lib/research/engine.ts`. It is paid and user-triggered with a confirmation: it adds companies as list "Claude discovery" and, optionally, runs a Quick research per company. `app/api/research` now sets ICP status from the researched revenue (same rule as recompute).

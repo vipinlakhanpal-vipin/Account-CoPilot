@@ -19,7 +19,7 @@ export const dynamic = "force-dynamic";
 const EST = { update: 0.55, discovery: 0.75, profile: 0.55 }; // USD per Quick research / discovery search / new-company profile
 
 type JobDetail = { name: string; status?: string; revenue?: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; country?: string; decided?: "added" | "ignored"; entity_type?: "Regional HQ" | "Branch" | "Foreign Branch" | "Unknown" };
-type Job = { id: string; region: string; count: number | "max"; mode: "verify" | "discover" | "both" | "company" | "contacts" | "signals" | "market"; vendor?: string; customer?: string; partner?: string; contacts_only?: boolean; phase?: "partners" | "customers"; lane?: "erp" | "rfp" | "ecc"; company_name?: string; slug?: string; seamless?: boolean; website?: string; company_names?: string[]; requested_by: string; requested_at: string;
+type Job = { id: string; region: string; count: number | "max"; mode: "verify" | "discover" | "both" | "company" | "contacts" | "signals" | "market" | "pitch"; vendor?: string; customer?: string; partner?: string; contacts_only?: boolean; phase?: "partners" | "customers"; lane?: "erp" | "rfp" | "ecc"; company_name?: string; slug?: string; seamless?: boolean; website?: string; company_names?: string[]; requested_by: string; requested_at: string;
   status: "queued" | "running" | "done" | "error"; done_at?: string; result?: string; details?: JobDetail[] };
 type IgnoredCo = { id: string; name: string; country: string; region: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; ignored_at: string; ignored_by: string; recheck_at: string };
 type Batch = { id: string; region: string; update_count: number; new_count: number; budget: number; available: number; planned_update: number; planned_new: number;
@@ -46,7 +46,7 @@ async function wake(job: Job, jobs: Job[]): Promise<string> {
 async function openJobIssue(job: Job): Promise<string> {
   const token = process.env.GITHUB_JOBS_TOKEN;
   if (!token) return "not_set";
-  const title = job.mode === "market" ? `Job ${job.id}: market intelligence ${job.phase ? `${job.phase} only, ` : ""}${job.customer ? `contacts for "${job.customer}"` : job.partner ? `more customers of "${job.partner}"` : job.contacts_only ? `customer contacts, ${job.vendor || "all vendors"}` : job.vendor || "all vendors"} (${job.region})` : job.mode === "signals" ? `Job ${job.id}: buying signals ${job.company_name ? `for "${job.company_name}"` : "scan"} (${job.region})` : job.mode === "contacts" ? `Job ${job.id}: find contacts at "${job.company_name}" (${job.region})${job.seamless ? " with Seamless" : ""}` : job.mode === "company" ? `Job ${job.id}: check "${job.company_name}" (${job.region})` : `Job ${job.id}: ${job.mode} ${job.count} in ${job.region}`;
+  const title = job.mode === "pitch" ? `Job ${job.id}: pitch plan for "${job.company_name}" (${job.region})` : job.mode === "market" ? `Job ${job.id}: market intelligence ${job.phase ? `${job.phase} only, ` : ""}${job.customer ? `contacts for "${job.customer}"` : job.partner ? `more customers of "${job.partner}"` : job.contacts_only ? `customer contacts, ${job.vendor || "all vendors"}` : job.vendor || "all vendors"} (${job.region})` : job.mode === "signals" ? `Job ${job.id}: buying signals ${job.company_name ? `for "${job.company_name}"` : "scan"} (${job.region})` : job.mode === "contacts" ? `Job ${job.id}: find contacts at "${job.company_name}" (${job.region})${job.seamless ? " with Seamless" : ""}` : job.mode === "company" ? `Job ${job.id}: check "${job.company_name}" (${job.region})` : `Job ${job.id}: ${job.mode} ${job.count} in ${job.region}`;
   const body = `Queued by ${job.requested_by} at ${job.requested_at}.\n\nAuto-opened by Account CoPilot so the instant job runner fires now instead of waiting for the next daily run. The job itself is tracked in the app (Setup → Settings), not in this issue — closing or leaving this open makes no difference.`;
   try {
     const r = await fetch("https://api.github.com/repos/vipinlakhanpal-vipin/account-copilot-jobs/issues", {
@@ -203,7 +203,7 @@ export async function GET(req: Request) {
 }
 
 const Body = z.discriminatedUnion("action", [
-  z.object({ action: z.literal("queue"), region: z.string().min(2).max(40), count: z.union([z.number().int().min(1).max(500), z.literal("max")]), mode: z.enum(["verify", "discover", "both", "company", "contacts", "signals", "market"]), vendor: z.string().trim().max(30).optional(), customer: z.string().trim().max(160).optional(), partner: z.string().trim().max(140).optional(), contacts_only: z.boolean().optional(), phase: z.enum(["partners", "customers"]).optional(), lane: z.enum(["erp", "rfp", "ecc"]).optional(),
+  z.object({ action: z.literal("queue"), region: z.string().min(2).max(40), count: z.union([z.number().int().min(1).max(500), z.literal("max")]), mode: z.enum(["verify", "discover", "both", "company", "contacts", "signals", "market", "pitch"]), vendor: z.string().trim().max(30).optional(), customer: z.string().trim().max(160).optional(), partner: z.string().trim().max(140).optional(), contacts_only: z.boolean().optional(), phase: z.enum(["partners", "customers"]).optional(), lane: z.enum(["erp", "rfp", "ecc"]).optional(),
     slug: z.string().trim().max(120).optional(), seamless: z.boolean().optional(), company_name: z.string().trim().max(120).optional(), website: z.string().trim().max(200).optional(), company_names: z.array(z.string().trim().min(2).max(120)).max(30).optional() }),
   z.object({ action: z.literal("add_found"), job_id: z.string(), name: z.string() }),
   z.object({ action: z.literal("ignore_found"), job_id: z.string(), name: z.string() }),
@@ -323,7 +323,17 @@ export async function POST(req: Request) {
     // A job still "running" an hour after it started has lost its session (often the plan's usage limit): close it so it stops blocking a new scan.
     for (const j of st.jobs) if (j.status === "running" && Date.now() - new Date((j as Job & { started_at?: string }).started_at || j.requested_at).getTime() > 60 * 60000) { j.status = "error"; j.done_at = now; j.result = "Timed out: the session ended before it finished (often the Claude plan's usage limit). Scan again."; }
     if (b.action === "queue" && b.mode === "company" && !(b.company_name && b.company_name.length >= 2)) return NextResponse.json({ error: "Enter the company name." }, { status: 400 });
-    if (b.action === "queue" && b.mode === "market") {
+    if (b.action === "queue" && b.mode === "pitch") {
+      // A free pitch plan for ONE existing company, written by a scheduled session and saved on the account
+      const { data: co } = await db.from("companies").select("slug,company_name,country").eq("slug", b.slug || "").maybeSingle();
+      if (!co) return NextResponse.json({ error: "Company not found." }, { status: 404 });
+      if (!canSeeCountry(access, co.country)) return NextResponse.json({ error: "That company is outside your regions." }, { status: 403 });
+      if (st.jobs.some((j) => j.mode === "pitch" && j.slug === co.slug && (j.status === "queued" || j.status === "running")))
+        return NextResponse.json({ error: `A pitch plan for ${co.company_name} is already being written.` }, { status: 409 });
+      const job: Job = { id, region: regionOf(co.country), count: 1, mode: "pitch", company_name: co.company_name, slug: co.slug, requested_by: user.email || "", requested_at: now, status: "queued" };
+      st.jobs.unshift(job);
+      trigger = await wake(job, st.jobs);
+    } else if (b.action === "queue" && b.mode === "market") {
       // Market intelligence scan: partners of one vendor (or all four) in one region, and the customers they publish.
       const vendors = vendorList((await getSetting<{ custom?: string[] }>(db, VENDORS_KEY, {})).custom);
       const vendor = vendors.includes(b.vendor || "") ? (b.vendor as string) : "all";

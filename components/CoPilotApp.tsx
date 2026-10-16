@@ -31,6 +31,7 @@ import { dashboardTiles } from "@/lib/dashboardTiles";
 type ReportRequest = { ids: string[]; title: string };
 const ReportsCtx = createContext<((req: ReportRequest) => void) | null>(null);
 import ReportDialog, { downloadReport } from "@/components/ReportDialog";
+import FreePitch from "@/components/FreePitch";
 import FindContactsButton from "@/components/FindContactsButton";
 
 const HERO: Record<string, [string, string]> = {
@@ -1002,7 +1003,8 @@ function Brief({ a, data, people, onClose, onContact, scores, criteria, isSuper 
           </div>
           <div className="pitch"><h4 style={{ margin: "0 0 6px", font: "600 12px var(--body)", letterSpacing: ".1em", textTransform: "uppercase" }}>Pitch planner</h4>
             <p className="note">Claude drafts a pitch plan from the evidence on this page: what to lead with, who to approach first, and what to validate on the first call.</p>
-            <button className="btn primary" type="button" disabled={busy} onClick={draftPitch}>{busy ? "Drafting…" : "Draft pitch plan"}</button> <CostNote cost="≈ $0.05–0.10" />
+            <FreePitch slug={a.slug} region={regionOf(a.country)} company={a.company_name} />
+            <p className="note" style={{ marginTop: 10 }}>Need it this second? <button className="btn tiny" type="button" disabled={busy} onClick={draftPitch}>{busy ? "Drafting…" : "Draft now (instant)"}</button> <CostNote cost="≈ $0.05–0.10" /></p>
             {pitch && <div className="pitch-out">{pitch}</div>}
           </div>
           {conf.length > 0 && <div className="block"><h4>Conflicts retained ({conf.length})</h4>

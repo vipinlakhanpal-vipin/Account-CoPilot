@@ -18,6 +18,8 @@
 //   node scripts/engine_client.mjs add_signals <file.json>             → saves buying signals: {"scanned":[slugs],"sweep_region":"UAE","signals":[...]} (format: see ENGINE.md "Buying signals")
 //   node scripts/engine_client.mjs market_targets [N] [VENDOR] [REGION]  → writes data/verification/market_targets.json: the vendor x region pairs due a market-intelligence scan (oldest first)
 //   node scripts/engine_client.mjs add_market <file.json>              → saves partners and their published customers: {"vendor","region","partners":[...],"customers":[...]} (format: see ENGINE.md "Market intelligence")
+//   node scripts/engine_client.mjs pitch_facts <slug>                  → writes data/verification/pitch_facts.json: the facts on one account for a pitch plan (a "pitch" job)
+//   node scripts/engine_client.mjs save_pitch <slug> <file.txt>        → saves the written pitch plan on the account
 //   node scripts/engine_client.mjs uploads                              → writes data/verification/uploaded_lists.json: [{"id","filename","region","url"}] waiting to be read
 //   node scripts/engine_client.mjs add_upload <file.json> <filename>    → imports one upload's extracted rows (format: see ENGINE.md "Reading an uploaded list")
 //   node scripts/engine_client.mjs upload_done <id> done|error "<summary>"
@@ -89,6 +91,14 @@ else if (cmd === "queue") {
   const r = await call({ action: "add_market", vendor: body.vendor, region: body.region, partners: body.partners || [], customers: body.customers || [], checked_partners: body.checked_partners || [] });
   r.skipped.forEach((x) => console.log(`SKIPPED ${x.name}: ${x.why}`)); r.dropped.forEach((x) => console.log(`DROPPED ${x}`));
   console.log(`partners +${r.added.partners} (~${r.updated.partners}), customers +${r.added.customers} (~${r.updated.customers}), contacts +${r.added.contacts}; totals ${r.totals.partners} partners / ${r.totals.customers} customers`);
+} else if (cmd === "pitch_facts") {
+  const j = await call({ action: "pitch_facts", slug: a });
+  fs.mkdirSync("data/verification", { recursive: true });
+  fs.writeFileSync("data/verification/pitch_facts.json", JSON.stringify(j.facts, null, 1));
+  console.log(`facts for ${j.facts.company} → data/verification/pitch_facts.json`);
+} else if (cmd === "save_pitch") {
+  await call({ action: "save_pitch", slug: a, text: fs.readFileSync(b || "data/verification/pitch.txt", "utf8") });
+  console.log("pitch plan saved on the account");
 } else if (cmd === "icp") {
   const j = await call({ action: "icp" });
   fs.mkdirSync("data/verification", { recursive: true });

@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.80";
+export const APP_VERSION = "4.81";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.81", date: "2026-10-16", notes: "A free pitch plan, written by a scheduled Claude session.", changes: [
+      { what: "On an account page, Draft pitch plan (free) queues a job that a scheduled Claude session on your plan writes in a few minutes, with no API credit. It reads the account's facts, can check public news, writes the five-part plan and adds a short opening message, and saves it on the account (shown there, with the time). The button shows the timer and green gauge, then a tick. The instant paid version stays as Draft now (instant), about $0.05 to $0.10", where: "components/FreePitch.tsx, app/api/pitch, app/api/engine (pitch job), app/api/engine/worker (pitch_facts, save_pitch), lib/pitchFacts.ts, ENGINE.md", why: "Requested — make the pitch plan free, since a Claude session can write it" },
+    ] },
   { version: "4.80", date: "2026-10-16", notes: "Excel and PDF choices in Aria are sky-blue, and 20 potential prospects shows 20.", changes: [
       { what: "The Excel contact list and PDF report choices Aria offers under an answer are now sky-blue pills, like the other download buttons", where: "packages/aria/AriaChat.tsx, packages/aria/aria.css", why: "Requested — sky blue for the Excel and PDF tabs" },
       { what: "A request such as give me 20 potential prospects now shows 20 (before, only 20 companies was read as a count, so the list stopped at 15)", where: "lib/aria/router.ts", why: "Reported — asked for 20 prospects and 15 were shown" },

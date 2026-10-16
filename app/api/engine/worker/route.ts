@@ -7,6 +7,7 @@ import { statusPatch, applyRevenueResult } from "@/lib/icpStatus.mjs";
 import { normalizeDefinition, rulesFor, regionOf, summarizeRules } from "@/lib/icpDefinition.mjs";
 import { EMPTY_STORE, type Signal, type SignalStore } from "@/lib/signals";
 import { nk as marketNk, partnerId } from "@/lib/marketServer";
+import { pitchFacts } from "@/lib/pitchFacts";
 import { presenceOk, vendorList, VENDORS_KEY, marketKey, type MarketDoc, type MContact, type Partner, type PCustomer } from "@/lib/market";
 
 // Limited API for scheduled Claude sessions (no Supabase key needed in the cloud environment).
@@ -78,6 +79,8 @@ const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("add_signals"), scanned: z.array(z.string().max(120)).max(40).optional().default([]), sweep_region: z.string().max(40).optional().default(""), signals: z.array(NewSignal).max(40) }),
   z.object({ action: z.literal("market_targets"), limit: z.number().int().min(1).max(12).default(4), vendor: z.string().max(30).optional().default(""), region: z.string().max(40).optional().default("") }),
   z.object({ action: z.literal("add_market"), vendor: z.string().trim().min(2).max(30), region: z.string().min(2).max(40), partners: z.array(MPartnerIn).max(40).optional().default([]), customers: z.array(MCustomerIn).max(120).optional().default([]), checked_partners: z.array(z.string().trim().max(140)).max(60).optional().default([]) }),
+  z.object({ action: z.literal("pitch_facts"), slug: z.string().min(2).max(120) }),
+  z.object({ action: z.literal("save_pitch"), slug: z.string().min(2).max(120), text: z.string().min(60).max(9000) }),
   z.object({ action: z.literal("names") }),
   z.object({ action: z.literal("icp") }),
   z.object({ action: z.literal("uploads") }),
@@ -308,6 +311,20 @@ export async function POST(req: Request) {
     doc.partners = doc.partners.slice(0, 300); doc.customers = doc.customers.slice(0, 2500); doc.scanned_at = now;
     await put(db, key, doc);
     return NextResponse.json({ added, updated, skipped, dropped, totals: { partners: doc.partners.length, customers: doc.customers.length } });
+  }
+  if (b.action === "pitch_facts") {
+    const f = await pitchFacts(db, b.slug);
+    return f ? NextResponse.json({ facts: f }) : NextResponse.json({ error: "Company not found." }, { status: 404 });
+  }
+  if (b.action === "save_pitch") {
+    // The pitch plan a free scheduled session wrote; shown on the account page next to the paid button
+    const { data: co } = await db.from("companies").select("id,profile").eq("slug", b.slug).maybeSingle();
+    if (!co) return NextResponse.json({ error: "Company not found." }, { status: 404 });
+    const profile = { ...((co.profile as Record<string, unknown>) || {}), "Pitch plan": { text: b.text, at: now, via: "Free scheduled Claude session (no API cost)" } };
+    const { error } = await db.from("companies").update({ profile }).eq("id", co.id);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    invalidateAllData();
+    return NextResponse.json({ ok: true });
   }
   if (b.action === "names") {
     // Existing company names and domains, so a session can skip them before searching (no contacts, nothing else)
