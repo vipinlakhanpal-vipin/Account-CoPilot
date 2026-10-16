@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.35";
+export const APP_VERSION = "4.36";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.36", date: "2026-10-16", notes: "Market intelligence opens on UAE.", changes: [
+      { what: "Market intelligence now opens with only UAE ticked; tick other regions to add their partners and customers. Scan now and Scan all vendors follow the ticked regions", where: "components/MarketIntel.tsx", why: "Requested — UAE by default, the rest chosen by you" },
+    ] },
   { version: "4.35", date: "2026-10-16", notes: "In Market intelligence a contact search flashes on the customer's own row.", changes: [
       { what: "Clicking Find contacts on a partner's customer now turns that row's button into a flashing orange dot with Searching…, and the bar at the top no longer shows contact searches. When the search ends the row updates by itself and a short message says it finished", where: "components/MarketIntel.tsx, app/api/market, components/FindContactsButton.tsx", why: "Requested — flash an orange dot on the row instead of showing a bar" },
     ] },

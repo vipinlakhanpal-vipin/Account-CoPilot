@@ -24,7 +24,7 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
   const [vendor, setVendor] = useState<Vendor>("SAP");
   const [adding, setAdding] = useState(false);
   const [newVendor, setNewVendor] = useState("");
-  const [regions, setRegions] = useState<string[]>([]);
+  const [regions, setRegions] = useState<string[] | null>(null); // null = not chosen yet: UAE is ticked by default
   const [q, setQ] = useState("");
   const [view, setView] = useState<"partners" | "customers">("partners");
   const [notInApp, setNotInApp] = useState(false);
@@ -36,7 +36,7 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
   useEffect(() => { load(); const t = setInterval(load, 25000); return () => clearInterval(t); }, [load]);
 
   const regionList = data?.regions || [];
-  const active = regions.length ? regions : regionList;
+  const active = regions ?? (regionList.includes("UAE") ? ["UAE"] : regionList.slice(0, 1));
   const needle = q.trim().toLowerCase();
   const partners = useMemo(() => (data?.partners || []).filter((p) => p.vendor === vendor && active.includes(p.region) && (!needle || `${p.name} ${p.services} ${p.tier}`.toLowerCase().includes(needle))), [data, vendor, active, needle]);
   const custs = useMemo(() => (data?.customers || []).filter((c) => c.vendor === vendor && active.includes(c.region) && (!notInApp || !c.in_app) && (!withContacts || c.contacts.length > 0)
@@ -188,6 +188,7 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
           </div>
           {pending.length > 0 && <div className="sig-pending" role="status"><span className="fcj-dot" aria-hidden="true" /> <b className="fcj-flash">Scanning {pending.map((j) => (j.customer ? `contacts for ${j.customer}` : `${j.vendor === "all" || !j.vendor ? "all vendors" : j.vendor} · ${j.region}`)).join(", ")}…</b> Results appear here by themselves.</div>}
           {!data && <p className="note">Loading…</p>}
+          {data && active.length === 0 && <div className="sig-empty"><h3>Tick a region</h3><p>Choose one or more regions on the left to see their partners and customers.</p></div>}
           {data && partners.length === 0 && view === "partners" && (
             <div className="sig-empty"><h3>No {vendor} partners yet</h3><p>Nothing has been scanned yet. The daily 6am run adds four vendor and region pairs each day, so all regions take about nine days. You do not have to wait: scan now (free, usually a few minutes per region).</p>
               <div className="sig-scanbar">{regionList.map((r) => <button type="button" key={r} className="btn primary" disabled={busy === `${vendor}|${r}`} onClick={() => scan(r, vendor)}>{busy === `${vendor}|${r}` ? "Queuing…" : `Scan ${vendor} · ${r} now`}</button>)}
