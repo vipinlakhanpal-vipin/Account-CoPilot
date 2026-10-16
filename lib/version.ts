@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.45";
+export const APP_VERSION = "4.46";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.46", date: "2026-10-16", notes: "Scan Partners and Scan Customers sit in the Market intelligence window header.", changes: [
+      { what: "Scan Partners and Scan Customers moved to the window header, before Expand, each with an i button (only these two have one). They replace the Scan now button in this window and are gone from the toolbar; the All vendors option is now Include all vendors under Scan scope in the left panel. The full-page /market view keeps them in its toolbar", where: "components/Header.tsx, components/MarketIntel.tsx, lib/market.ts", why: "Requested — put them where Scan now and Expand are, and remove them from the toolbar" },
+    ] },
   { version: "4.45", date: "2026-10-16", notes: "Stop scanning, and scans that lose their session no longer flash forever.", changes: [
       { what: "A Stop scanning button appears above the vendor tiles (and in the Buying signals scanning bar) while scans run or wait. It removes waiting scans and marks running ones stopped", where: "components/MarketIntel.tsx, components/BuyingSignals.tsx, app/api/engine (stop_scans)", why: "Requested — a way to stop scanning" },
       { what: "A scan still marked running an hour after it started is closed as timed out, and no longer flashes or blocks a new scan. The cause here was the Claude plan's session limit ending ten sessions at once", where: "app/api/engine, app/api/market, app/api/signals", why: "Reported — vendor scanning was still showing after 8-10 minutes" },

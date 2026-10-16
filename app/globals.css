@@ -1683,3 +1683,7 @@ button.tab[aria-expanded="true"]{color:var(--text-strong);background:linear-grad
 .mkt-stopbar{display:flex;align-items:center;gap:10px;padding:8px 12px;margin-bottom:10px;border-radius:10px;border:1.5px solid #E08A00;background:color-mix(in srgb,#F5A623 12%,var(--surface));font-size:12.5px}
 .mkt-stopbar .fcj-dot{margin:0}
 .mkt-stopbar .btn{margin-left:auto}
+/* the i beside Scan Partners / Scan Customers in the window header: white, and the note opens downward inside the window */
+.find-i.hdr{border-color:rgba(255,255,255,.7);color:#fff;margin-left:2px;margin-right:6px}
+.find-i.hdr:hover,.find-i.hdr:focus-visible{background:#fff;color:#0F6E56;border-color:#fff}
+.find-i.hdr .find-i-pop{bottom:auto;top:calc(100% + 8px);left:auto;right:-4px;transform:none;z-index:50}

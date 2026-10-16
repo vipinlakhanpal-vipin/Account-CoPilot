@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ask, notify } from "@/components/Confirm";
 import FindContactsButton from "@/components/FindContactsButton";
 import { logActivity } from "@/lib/activityClient";
-import type { MContact, PCustomer, Partner, Vendor } from "@/lib/market";
+import { PARTNERS_TIP, CUSTOMERS_TIP, type MContact, type PCustomer, type Partner, type Vendor } from "@/lib/market";
 
 type Cust = PCustomer & { in_app: boolean; people_on_file: number };
 type Job = { mode: string; vendor?: string; customer?: string; partner?: string; slug?: string; contacts_only?: boolean; region: string; status: string; requested_at: string };
@@ -161,13 +161,7 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
   };
   // one after another: each queue call rewrites the shared job list, so parallel calls could overwrite each other
   const scanAll = async (pairs: [string, string][]) => { for (const [r, v] of pairs) await scan(r, v); };
-  useEffect(() => {
-    if (!embedded) return;
-    const on = (e: Event) => { if ((e as CustomEvent<string>).detail === "market") scanAll(active.map((r) => [r, vendor] as [string, string])); };
-    window.addEventListener("appwin-scan", on);
-    return () => window.removeEventListener("appwin-scan", on);
-  });
-  // Scan Partners / Scan Customers: the ticked regions and either this vendor or every vendor. One job per vendor and region for partners; for customers
+  // Scan Partners / Scan Customers (header buttons): the ticked regions and either this vendor or every vendor. One job per vendor and region for partners; for customers
   // one job per batch of 8 partners whose customers were never searched (or not in 45 days), at most 6 batches per vendor and region per click.
   const [allVendors, setAllVendors] = useState(false);
   const due = (v: string, r: string) => (data?.partners || []).filter((p) => p.vendor === v && p.region === r && (!p.customers_scanned_at || Date.now() - new Date(p.customers_scanned_at).getTime() > 45 * 864e5)).length;
@@ -184,6 +178,12 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
     for (const [r, v] of jobs) { const res = await fetch("/api/engine", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "queue", region: r, count: 1, mode: "market", vendor: v, phase }) }); if (res.ok || res.status === 409) ok++; }
     setBusy(""); notify(`${ok} scan${ok === 1 ? "" : "s"} queued. The vendor tiles flash while they run.`, "ok"); load();
   };
+  useEffect(() => {
+    if (!embedded) return;
+    const on = (e: Event) => { const d = (e as CustomEvent<string>).detail; if (d === "market-partners") scanPhase("partners"); else if (d === "market-customers") scanPhase("customers"); };
+    window.addEventListener("appwin-scan", on);
+    return () => window.removeEventListener("appwin-scan", on);
+  });
   const download = () => {
     const rows = [["Vendor", "Region", "Partner", "Customer", "Project", "Customer in your app database", "Contact", "Title", "Email", "Phone", "LinkedIn", "Source"]];
     for (const c of custs) { if (c.contacts.length) for (const k of c.contacts) rows.push([c.vendor, c.region, c.partner, c.customer, c.project, c.in_app ? "Yes" : "No", k.name, k.title, k.email, k.phone, k.linkedin_url, c.source_url]);
@@ -225,18 +225,19 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
           <h3>Partner Customers</h3>
           <label><input type="checkbox" checked={notInApp} onChange={() => setNotInApp(!notInApp)} /> Not in my app database</label>
           <label><input type="checkbox" checked={withContacts} onChange={() => setWithContacts(!withContacts)} /> With contact details</label>
-          <p className="note">Free. Public web pages only. Use Scan now at the top. Scan again to find more: each scan adds partners it had not found before.</p>
+          <h3>Scan scope</h3>
+          <label><input type="checkbox" checked={allVendors} onChange={() => setAllVendors(!allVendors)} /> Include all vendors</label>
+          <p className="note">Free. Public web pages only. Use Scan Partners and Scan Customers at the top. Scan again to find more: each scan adds partners it had not found before.</p>
         </aside>
         <section className="sig-main">
           <div className="mkt-tools">
             <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={`Search ${vendor} partners, customers, projects`} aria-label="Search" />
-            <span className="mkt-phase">
+            {!embedded && <span className="mkt-phase">
               <button type="button" className="btn tiny primary" disabled={!!busy || regionList.length === 0} onClick={() => scanPhase("partners")}>Scan Partners</button>
-              <Tip text={`Finds the vendor's partners in the ticked regions from its partner directory and the partners' websites. It does not look for customers. Tick "All vendors" to do every vendor. Free; each scan takes a few minutes.`} />
+              <Tip text={PARTNERS_TIP} />
               <button type="button" className="btn tiny primary" disabled={!!busy || regionList.length === 0} onClick={() => scanPhase("customers")}>Scan Customers</button>
-              <Tip text="For partners already on the list, reads their published customers: customer pages, case studies, go-lives, press and LinkedIn snippets. It works in batches of 8 partners per scan, skips partners done in the last 45 days, and you can click again for the next batch. Run Scan Partners first." />
-              <label className="mkt-allv"><input type="checkbox" checked={allVendors} onChange={() => setAllVendors(!allVendors)} /> All vendors</label>
-            </span>
+              <Tip text={CUSTOMERS_TIP} />
+            </span>}
             <button type="button" className="btn tiny" onClick={() => setAddingP((v) => !v)} aria-expanded={addingP} title="Add a partner the scans missed">+ Add partner</button>
             <button type="button" className="btn tiny" disabled={!custs.length || !!busy} onClick={findAll} title="Free: searches for contacts at up to 10 customers of this vendor that have none yet">Find customer contacts</button>
             <button type="button" className="btn tiny" disabled={!custs.length} onClick={download}>Download customers (CSV)</button>

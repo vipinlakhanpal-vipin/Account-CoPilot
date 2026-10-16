@@ -19,3 +19,7 @@ export type PCustomer = { id: string; partner_id: string; partner: string; vendo
   source_url: string; published: string; contacts: MContact[]; found_at: string };
 export type MarketDoc = { vendor: Vendor; region: string; partners: Partner[]; customers: PCustomer[]; scanned_at: string };
 export const marketKey = (vendor: string, region: string) => `market_intel:${vendor}:${region}`;
+
+/** Help text for the two scan buttons in the Market intelligence window header. */
+export const PARTNERS_TIP = "Finds the vendor's partners in the ticked regions, from its partner directory and the partners' websites. It does not look for customers. Tick Include all vendors on the left to do every vendor. Free; each scan takes a few minutes.";
+export const CUSTOMERS_TIP = "For partners already on the list, reads their published customers: customer pages, case studies, go-lives, press and LinkedIn snippets. It works in batches of 8 partners per scan, skips partners done in the last 45 days, and you can click again for the next batch. Run Scan Partners first.";

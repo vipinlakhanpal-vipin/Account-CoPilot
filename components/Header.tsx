@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { logActivity } from "@/lib/activityClient";
 import BuyingSignals from "@/components/BuyingSignals";
 import MarketIntel from "@/components/MarketIntel";
+import { PARTNERS_TIP, CUSTOMERS_TIP } from "@/lib/market";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -199,7 +200,12 @@ export default function Header({ meta }: { meta: string }) {
         </div>
       )}
       <AppWindow open={win === "signals"} onClose={() => setWin(null)} title="Buying signals" subtitle="Tenders, RFPs, ERP and S2P intent, ECC to S/4HANA" badge="B" actions={<button type="button" className="aria-home aria-scan" title="Start a free scan now instead of waiting for the daily run" onClick={() => window.dispatchEvent(new CustomEvent("appwin-scan", { detail: "signals" }))}>Scan now</button>}><BuyingSignals embedded /></AppWindow>
-      <AppWindow open={win === "market"} onClose={() => setWin(null)} title="Market intelligence" subtitle="SAP, Coupa, Oracle and Microsoft partners and their customers" badge="M" actions={<button type="button" className="aria-home aria-scan" title="Start a free scan now instead of waiting for the daily run" onClick={() => window.dispatchEvent(new CustomEvent("appwin-scan", { detail: "market" }))}>Scan now</button>}><MarketIntel embedded /></AppWindow>
+      <AppWindow open={win === "market"} onClose={() => setWin(null)} title="Market intelligence" subtitle="SAP, Coupa, Oracle and Microsoft partners and their customers" badge="M" actions={<>
+        <button type="button" className="aria-home aria-scan" onClick={() => window.dispatchEvent(new CustomEvent("appwin-scan", { detail: "market-partners" }))}>Scan Partners</button>
+        <span className="find-i hdr" tabIndex={0} role="note" aria-label={PARTNERS_TIP}>i<span className="find-i-pop">{PARTNERS_TIP}</span></span>
+        <button type="button" className="aria-home aria-scan" onClick={() => window.dispatchEvent(new CustomEvent("appwin-scan", { detail: "market-customers" }))}>Scan Customers</button>
+        <span className="find-i hdr" tabIndex={0} role="note" aria-label={CUSTOMERS_TIP}>i<span className="find-i-pop">{CUSTOMERS_TIP}</span></span>
+      </>}><MarketIntel embedded /></AppWindow>
       {showHistory && (
         <div className="wn-backdrop" onClick={() => setShowHistory(false)}>
           <div className="wn" role="dialog" aria-modal="true" aria-labelledby="vh-title" onClick={(e) => e.stopPropagation()}>
