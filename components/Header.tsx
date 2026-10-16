@@ -1,6 +1,7 @@
 "use client";
 import AppWindow from "@/components/AppWindow";
 import OnlineNow from "@/components/OnlineNow";
+import type { ReactNode } from "react";
 import { logActivity } from "@/lib/activityClient";
 import BuyingSignals from "@/components/BuyingSignals";
 import MarketIntel from "@/components/MarketIntel";
@@ -21,15 +22,15 @@ import { APP_VERSION, TAGLINE, RELEASES, RELEASE_AUTHOR } from "@/lib/version";
 // has to stay listed here so this group is found while standing on that page — hideLanding then drops it from
 // what's actually shown, for a group (like Dashboard) where that first item is just the main tab's own page
 // and has no other siblings worth presenting it alongside, unlike Accounts' 5 genuinely distinct pages.
-const GROUPS: { label: string; items: [string, string][]; hideLanding?: boolean; icon?: boolean; tip?: string; glyph?: "search" | "pulse" | "network"; win?: "signals" | "market" }[] = [
+const GROUPS: { label: string; items: [string, string][]; hideLanding?: boolean; icon?: boolean; tip?: string; glyph?: "search" | "pulse" | "network" | "home" | "dashboard" | "accounts" | "data" | "setup"; win?: "signals" | "market" }[] = [
   { label: "Find company", items: [["/find", "Find company"]], icon: true, tip: "Find company - search or add a new one", glyph: "search" },
   { label: "Buying signals", items: [["/signals", "Buying signals"]], icon: true, tip: "Buying signals - tenders, RFPs, ERP and S2P intent, ECC to S/4HANA", glyph: "pulse", win: "signals" },
   { label: "Market intelligence", items: [["/market", "Market intelligence"]], icon: true, tip: "Market intelligence - SAP, Coupa, Oracle and Microsoft partners and their customers", glyph: "network", win: "market" },
-  { label: "Home", items: [["/home", "Home"]] },
-  { label: "Dashboard", items: [["/", "Dashboard"], ["/?tab=reports", "Mission Control"]], hideLanding: true },
-  { label: "Accounts", items: [["/?tab=accounts", "Accounts"], ["/?tab=pipeline", "Pipeline"], ["/?tab=stakeholders", "Stakeholders"], ["/?tab=signals", "S2P Signals"], ["/?tab=erp", "ERP & Apps"]] },
-  { label: "Data", items: [["/?tab=sources", "Sources"], ["/?tab=conflicts", "Conflicts"], ["/research", "Research Queue"]] },
-  { label: "Setup", items: [["/icp", "Define ICP"], ["/settings", "Settings"], ["/guide", "Learn Me"], ["/team", "Team"]] },
+  { label: "Home", items: [["/home", "Home"]], icon: true, tip: "Home - where to start", glyph: "home" },
+  { label: "Dashboard", items: [["/", "Dashboard"], ["/?tab=reports", "Mission Control"]], hideLanding: true, glyph: "dashboard" },
+  { label: "Accounts", items: [["/?tab=accounts", "Accounts"], ["/?tab=pipeline", "Pipeline"], ["/?tab=stakeholders", "Stakeholders"], ["/?tab=signals", "S2P Signals"], ["/?tab=erp", "ERP & Apps"]], glyph: "accounts" },
+  { label: "Data", items: [["/?tab=sources", "Sources"], ["/?tab=conflicts", "Conflicts"], ["/research", "Research Queue"]], glyph: "data" },
+  { label: "Setup", items: [["/icp", "Define ICP"], ["/settings", "Settings"], ["/guide", "Learn Me"], ["/team", "Team"]], glyph: "setup" },
 ];
 const SUB_LABEL: Record<string, string> = { Accounts: "All accounts" };
 
@@ -45,13 +46,22 @@ const TAB_LABEL: Record<string, string> = { pipeline: "Pipeline", accounts: "Acc
 
 const PAGE_LABEL: Record<string, string> = { "/research": "Research Queue", "/settings": "Settings", "/guide": "Learn Me", "/icp": "Define ICP", "/team": "Team", "/home": "Home", "/find": "Find company", "/signals": "Buying signals", "/market": "Market intelligence" };
 
-const ICONS = (glyph: string | undefined, sig: { new: number; hot: number } | null) => (
-  <>
-    {glyph === "pulse" ? <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 8h3l1.6-4.5 3 9L11 8h3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
-      : <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="3.2" r="1.9" fill="none" stroke="currentColor" strokeWidth="1.6" /><circle cx="3" cy="12.4" r="1.9" fill="none" stroke="currentColor" strokeWidth="1.6" /><circle cx="13" cy="12.4" r="1.9" fill="none" stroke="currentColor" strokeWidth="1.6" /><path d="M7 5 4 10.6M9 5l3 5.6M5 12.4h6" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" /></svg>}
-    {sig && sig.new > 0 && <span className={`sig-badge${sig.hot ? " hot" : ""}`} aria-label={`${sig.new} new buying signals`}>{sig.new > 99 ? "99+" : sig.new}</span>}
-  </>
-);
+const P = { fill: "none", stroke: "currentColor", strokeLinecap: "round", strokeLinejoin: "round" } as const;
+// Short outline icons for the main tabs (16 px grid). Home, Find company, Buying signals and Market intelligence show only the icon; the others sit beside their title.
+function Glyph({ g }: { g?: string }) {
+  const svg = (children: ReactNode, w = 1.7) => <svg viewBox="0 0 16 16" aria-hidden="true" strokeWidth={w} {...P}>{children}</svg>;
+  switch (g) {
+    case "pulse": return svg(<path d="M1.5 8h3l1.6-4.5 3 9L11 8h3.5" />, 1.8);
+    case "network": return svg(<><circle cx="8" cy="3.2" r="1.9" /><circle cx="3" cy="12.4" r="1.9" /><circle cx="13" cy="12.4" r="1.9" /><path d="M7 5 4 10.6M9 5l3 5.6M5 12.4h6" /></>, 1.5);
+    case "home": return svg(<path d="M1.8 7.6 8 2.2l6.2 5.4M3.4 6.6V13.4h3.2V9.6h2.8v3.8h3.2V6.6" />);
+    case "dashboard": return svg(<><rect x="2" y="2" width="5" height="6" rx="1" /><rect x="9" y="2" width="5" height="3.5" rx="1" /><rect x="9" y="7.5" width="5" height="6.5" rx="1" /><rect x="2" y="10" width="5" height="4" rx="1" /></>, 1.5);
+    case "accounts": return svg(<><path d="M2.5 14V3.2h6.2V14M8.7 7h4.8V14M1.5 14h13" /><path d="M5 5.6h1.2M5 8.2h1.2M5 10.8h1.2" /></>, 1.5);
+    case "data": return svg(<><ellipse cx="8" cy="4" rx="5" ry="2" /><path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4M3 8c0 1.1 2.2 2 5 2s5-.9 5-2" /></>, 1.5);
+    case "setup": return svg(<path d="M2 4.5h6M11 4.5h3M8 3v3M2 11.5h2M7 11.5h7M4 10v3" />, 1.6);
+    default: return svg(<><circle cx="7" cy="7" r="4.6" strokeWidth={1.8} /><path d="M10.6 10.6 14 14" strokeWidth={1.8} /></>);
+  }
+}
+const Badge = ({ sig }: { sig: { new: number; hot: number } | null }) => (sig && sig.new > 0 ? <span className={`sig-badge${sig.hot ? " hot" : ""}`} aria-label={`${sig.new} new buying signals`}>{sig.new > 99 ? "99+" : sig.new}</span> : null);
 
 // Rendered once in the root layout, so it stays put across page changes (no rebuild, no jump).
 export default function Header({ meta }: { meta: string }) {
@@ -249,18 +259,15 @@ export default function Header({ meta }: { meta: string }) {
           <nav className="tabs" aria-label="Sections">
             {GROUPS.map((g) => (g.win ? (
               <button type="button" key={g.label} className="tab tab-icon" aria-label={g.label} aria-haspopup="dialog" aria-expanded={win === g.win} onClick={() => setWin((w) => (w === g.win ? null : g.win!))}>
-                {ICONS(g.glyph, g.win === "signals" ? sig : null)}
+                <Glyph g={g.glyph} /><Badge sig={g.win === "signals" ? sig : null} />
                 <span className="tip-pill" role="tooltip"><span className="tip-dot" aria-hidden="true" />{g.tip}{g.win === "signals" && sig.new > 0 ? ` (${sig.new} new${sig.hot ? `, ${sig.hot} hot` : ""})` : ""}</span>
               </button>
             ) : (
               <Link key={g.label} href={g.items[0][0]} className={`tab${g.icon ? " tab-icon" : ""}`} aria-label={g.icon ? g.label : undefined} aria-selected={g.items.some(([, l]) => l === current)} onClick={(e) => go(e, g.items[0][0])}>
                 {g.icon ? <>
-                  {g.glyph === "pulse"
-                    ? <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 8h3l1.6-4.5 3 9L11 8h3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                    : <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" strokeWidth="1.8" /><path d="M10.6 10.6 14 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>}
-                  {g.glyph === "pulse" && sig.new > 0 && <span className={`sig-badge${sig.hot ? " hot" : ""}`} aria-label={`${sig.new} new buying signals`}>{sig.new > 99 ? "99+" : sig.new}</span>}
-                  <span className="tip-pill" role="tooltip"><span className="tip-dot" aria-hidden="true" />{g.tip}{g.glyph === "pulse" && sig.new > 0 ? ` (${sig.new} new${sig.hot ? `, ${sig.hot} hot` : ""})` : ""}</span>
-                </> : g.label}
+                  <Glyph g={g.glyph} />
+                  <span className="tip-pill" role="tooltip"><span className="tip-dot" aria-hidden="true" />{g.tip}</span>
+                </> : <><Glyph g={g.glyph} />{g.label}</>}
               </Link>
             )))}
           </nav>
