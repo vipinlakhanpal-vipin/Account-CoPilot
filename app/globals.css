@@ -1616,3 +1616,9 @@ button.tab[aria-expanded="true"]{color:var(--text-strong);background:linear-grad
 .act-tools{display:flex;gap:16px;flex-wrap:wrap;margin:8px 0 12px}
 .act-tools label{display:flex;gap:6px;align-items:center;font-size:13px}
 .act-day{font:700 11px var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--surface-2)}
+.act-dayblock{margin:10px 0 16px}
+.act-feed caption{caption-side:top;text-align:left;font:700 13px var(--body);padding:8px 10px;color:var(--text-strong);background:var(--surface-2)}
+.act-total td{font-weight:700;background:color-mix(in srgb,#2ECC8F 10%,var(--surface));border-top:2px solid var(--line-2)}
+.used-cell{display:flex;align-items:center;gap:8px;min-width:120px;cursor:help}
+.used-bar{flex:1;height:8px;border-radius:999px;background:rgba(var(--ink),.12);overflow:hidden}
+.used-bar i{display:block;height:100%;background:#0B7A66}

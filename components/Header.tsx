@@ -60,6 +60,7 @@ export default function Header({ meta }: { meta: string }) {
   const [showHistory, setShowHistory] = useState(false);
   const [sig, setSig] = useState({ new: 0, hot: 0 });
   const [win, setWin] = useState<"signals" | "market" | null>(null);
+  useEffect(() => { window.dispatchEvent(new CustomEvent("act-view", { detail: win ? `/${win === "market" ? "market" : "signals"}` : null })); }, [win]);
   // In-app alert: how many unseen Hot / Warm buying signals are waiting in the user's regions.
   useEffect(() => {
     let off = false;

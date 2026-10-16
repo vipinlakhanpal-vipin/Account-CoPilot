@@ -41,6 +41,9 @@ function AccessPicker({ role, regions, onChange }: { role: Role; regions: string
 
 export default function TeamSettings() {
   const [users, setUsers] = useState<U[]>([]);
+  // % used: of the places and features a person can use, the share they opened in the last 30 days (see lib/activity.ts USAGE_AREAS).
+  const [usage, setUsage] = useState<Record<string, { pct: number; used: string[]; missing: string[]; total: number }>>({});
+  useEffect(() => { fetch("/api/activity?view=usage", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((j) => { if (j?.ready) setUsage(j.usage || {}); }).catch(() => {}); }, []);
   const [ready, setReady] = useState(true);
   const [denied, setDenied] = useState(false);
   const [email, setEmail] = useState("");
@@ -160,7 +163,7 @@ export default function TeamSettings() {
         </div>
       )}
       <div className="tablewrap" style={{ marginTop: 12 }}><table>
-        <thead><tr><th className="num">#</th><th>Name</th><th>Email</th><th>Role</th><th>Region(s)</th><th>Change access</th><th>Invited by</th><th>Joined</th><th>Last sign-in</th><th>Reset password</th><th>Delete</th></tr></thead>
+        <thead><tr><th className="num">#</th><th>Name</th><th>Email</th><th>Role</th><th>Region(s)</th><th>Change access</th><th>Invited by</th><th>Joined</th><th>Last sign-in</th><th title="Share of the places and features this person opened in the last 30 days. Hover a value to see what they have and have not used.">% used</th><th>Reset password</th><th>Delete</th></tr></thead>
         <tbody>{users.map((u, i) => {
           const x = edit[u.id];
           return (
@@ -175,6 +178,9 @@ export default function TeamSettings() {
                 : <button type="button" className="btn-change" disabled={!!deleting} onClick={() => setEdit((m) => ({ ...m, [u.id]: { role: u.role, regions: u.regions } }))}>Change</button>}</td>
               <td className="muted">{u.invited_by || "—"}</td><td className="mono team-dt">{fmtDateTime(u.created_at)}</td>
               <td className="mono team-dt">{u.last_sign_in ? fmtDateTime(u.last_sign_in) : "Not yet"}</td>
+              <td>{(() => { const g = usage[u.email]; return g ? (
+                <div className="used-cell" title={`Used ${g.used.length} of ${g.total} places and features in the last 30 days.\n\nUsed: ${g.used.join(", ") || "none yet"}\n\nNot yet used: ${g.missing.join(", ") || "nothing"}`}>
+                  <b>{g.pct}%</b><span className="used-bar" aria-hidden="true"><i style={{ width: `${g.pct}%` }} /></span></div>) : <span className="muted">—</span>; })()}</td>
               <td className="team-row-actions">
                 {!u.last_sign_in && <button type="button" className="btn tiny" disabled={!!deleting} onClick={() => resetPassword(u)} title="They haven't signed in yet — set a fresh one-time password to share with them">Reset password</button>}
               </td>

@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.21";
+export const APP_VERSION = "4.22";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.22", date: "2026-10-16", notes: "Log Activity shows where each person went, how long they stayed and their daily total, and the Team table has a % used column.", changes: [
+      { what: "Team → Activity is now Log Activity. The confusing Feed is now Day by day: for each person and day, every tab or page opened with the time spent there, what they did (searches, reports, Find contacts, scans, Aria questions), and a closing line with their total time in the app that day. The Buying signals and Market intelligence windows count as places too", where: "components/ActivityLog.tsx, app/api/activity, lib/activity.ts", why: "Requested — clearer titles, time spent per page and total time per day" },
+      { what: "New % used column in the Team table: of the 22 places and features a person can use (20 for Standard Users), the share they opened in the last 30 days. Hover to see what they used and what they have not", where: "components/TeamSettings.tsx", why: "Requested — how much of the app each person uses" },
+    ] },
   { version: "4.21", date: "2026-10-16", notes: "Online now refreshes sooner after you open the app.", changes: [
       { what: "The Online now chip looks again 4 seconds after the app opens and then every 20 seconds, so you appear in it straight away instead of after the next refresh", where: "components/OnlineNow.tsx", why: "It showed no one active right after opening, although the first heartbeat had just been recorded" },
     ] },
