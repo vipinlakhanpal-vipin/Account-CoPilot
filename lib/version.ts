@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.08";
+export const APP_VERSION = "4.09";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.09", date: "2026-10-16", notes: "The Excel contact list (from Aria, the report dialog and Find company) now has a phone column next to the email.", changes: [
+      { what: "Added \"Phone (Tel / Mobile)\" after Email ID in the campaign contact list. Phones are shown exactly as stored, several numbers separated by a slash, and left blank when none is on file (never guessed)", where: "lib/xlsxReport.ts", why: "Reported — an Excel from Aria for 20 UAE companies had emails but no telephone numbers" },
+    ] },
   { version: "4.08", date: "2026-10-16", notes: "Faster tab switching: the app's servers now run in Tokyo next to the database, tabs you opened a minute ago open instantly, and the pipeline explanation sits behind an i.", changes: [
       { what: "The app's servers now run in Tokyo (hnd1), where the database is. Before, they ran in the US and every page made several round trips across the Pacific to read the data", where: "vercel.json", why: "Reported — each tab took 4 to 8 seconds" },
       { what: "Going back to a tab you opened in the last minute reuses it instead of loading it again, and the Dashboard looks up access, data and ICP settings together instead of one after another", where: "next.config.mjs (staleTimes), app/page.tsx", why: "Same" },
