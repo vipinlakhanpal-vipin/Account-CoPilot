@@ -1754,3 +1754,19 @@ a.mkt-site i{font-style:normal;font-size:.75em;opacity:.55}
 .sig-cmsg.bad{background:color-mix(in srgb,#FF4D6A 10%,var(--surface));border-color:#E9A0A8;color:#B42318}
 .sig-cmsg .fcj-x{position:absolute;top:2px;right:6px;font-size:16px}
 .sig-acts .gauge{min-width:180px}
+
+/* v4.70: Find company's left panel uses the same compact checkbox list as Market intelligence */
+.find-side{padding:12px 14px}
+.find-side h2{font-size:9.5px;font-weight:600;letter-spacing:.09em;margin:0 0 6px}
+.find-reglist{gap:1px}
+label.find-reg{display:flex;align-items:center;gap:7px;padding:3px 4px;border-radius:7px;font:400 12px/1.3 var(--body);color:var(--text);cursor:pointer}
+label.find-reg:hover{background:rgba(var(--ink),.05)}
+label.find-reg span{flex:1;min-width:0}
+label.find-reg em{font:400 10.5px var(--body);font-style:normal;color:var(--muted)}
+label.find-reg i{font-style:normal;font-size:10.5px;color:var(--muted)}
+label.find-reg input{width:13px;height:13px;margin:0;flex:none;accent-color:#0B7A66}
+.find-side .find-facets{margin:12px 0 4px;gap:2px}
+.find-side .find-facet{display:block}
+.find-side .find-facet-h{display:flex;width:100%;justify-content:space-between;align-items:center;padding:6px 4px 3px;border:0;background:none;font:600 9.5px var(--body);letter-spacing:.09em;text-transform:uppercase;color:var(--muted);cursor:pointer}
+.find-side .find-facet-chips{display:flex;flex-direction:column;gap:1px;padding-bottom:4px}
+.find-side .find-clearall{margin-top:8px}

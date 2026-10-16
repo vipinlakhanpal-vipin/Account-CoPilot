@@ -103,8 +103,7 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
         <button type="button" className="find-facet-h" aria-expanded={!!open[label]} onClick={() => setOpen((o) => ({ ...o, [label]: !o[label] }))}>
           <span>{label}{picked > 0 && <b className="find-picked">{picked}</b>}</span><span className="find-chev" aria-hidden="true">{open[label] ? "▾" : "▸"}</span>
         </button>
-        {open[label] && <div className="find-facet-chips">{rows.map((f) => <button type="button" key={f.value} className="find-chip" aria-pressed={sel[k].includes(f.value)} onClick={() => toggle(k, f.value)}>
-          {f.value.replace(/^ICP — /, "").replace(/ SIGNAL$/, "")} <em>{f.count}</em></button>)}</div>}
+        {open[label] && <div className="find-facet-chips">{rows.map((f) => <label key={f.value} className="find-reg find-opt"><input type="checkbox" checked={sel[k].includes(f.value)} onChange={() => toggle(k, f.value)} /><span>{f.value.replace(/^ICP — /, "").replace(/ SIGNAL$/, "")}</span><em>{f.count}</em></label>)}</div>}
       </div>);
   };
 
@@ -192,19 +191,20 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
       <h2>Region</h2>
       <div className="find-reglist" role={mode === "new" ? "tablist" : undefined}>
         {mode === "search" && (
-          <button type="button" className="find-reg" aria-pressed={sel.region.length === 0} onClick={() => { setLimit(25); setSel((x) => ({ ...x, region: [] })); }}>
+          <label className="find-reg">
+            <input type="checkbox" checked={sel.region.length === 0} onChange={() => { setLimit(25); setSel((x) => ({ ...x, region: [] })); }} />
             <span>All regions</span>{found && <em>{found.facets.region.reduce((t, f) => t + f.count, 0)}</em>}
-          </button>)}
+          </label>)}
         {regionRows.map((r) => {
           const n = found?.facets.region.find((f) => f.value === r.key)?.count;
           const on = mode === "search" ? sel.region.includes(r.key) : r.key === region;
           return (
-            <button type="button" key={r.key} className={`find-reg${r.status !== "active" ? " dim" : ""}`} aria-pressed={on} role={mode === "new" ? "tab" : undefined} aria-selected={mode === "new" ? on : undefined}
-              title={STATUS_TXT[r.status] || r.status}
-              onClick={() => { if (mode === "search") toggle("region", r.key); else { setRegion(r.key); setMsg(null); setDupes(null); } }}>
+            <label key={r.key} className={`find-reg${r.status !== "active" ? " dim" : ""}`} title={STATUS_TXT[r.status] || r.status}>
+              <input type={mode === "search" ? "checkbox" : "radio"} name="find-region" checked={on}
+                onChange={() => { if (mode === "search") toggle("region", r.key); else { setRegion(r.key); setMsg(null); setDupes(null); } }} />
               <span>{r.name}{r.status !== "active" && <i> · {r.status === "next" ? "next phase" : "paused"}</i>}</span>
               {mode === "search" && n !== undefined && <em>{n}</em>}
-            </button>);
+            </label>);
         })}
       </div>
       {mode === "new" && regionInfo && (
@@ -227,7 +227,7 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
           <div className="find-facet">
             <button type="button" className="find-facet-h" aria-expanded={!!open.People} onClick={() => setOpen((o) => ({ ...o, People: !o.People }))}>
               <span>People{sel.contacts && <b className="find-picked">1</b>}</span><span className="find-chev" aria-hidden="true">{open.People ? "▾" : "▸"}</span></button>
-            {open.People && <div className="find-facet-chips"><button type="button" className="find-chip" aria-pressed={sel.contacts} onClick={() => { setLimit(25); setSel((x) => ({ ...x, contacts: !x.contacts })); }}>Has contacts <em>{found.facets.withContacts}</em></button></div>}
+            {open.People && <div className="find-facet-chips"><label className="find-reg find-opt"><input type="checkbox" checked={sel.contacts} onChange={() => { setLimit(25); setSel((x) => ({ ...x, contacts: !x.contacts })); }} /><span>Has contacts</span><em>{found.facets.withContacts}</em></label></div>}
           </div>
           {anyChip && <button type="button" className="btn tiny ghost find-clearall" onClick={() => setSel(EMPTY_SEL)}>Clear all filters</button>}
         </div>)}

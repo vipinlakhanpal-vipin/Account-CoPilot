@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.69";
+export const APP_VERSION = "4.70";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.70", date: "2026-10-16", notes: "Find company uses the same compact region list as Market intelligence.", changes: [
+      { what: "The left panel of Find company now has a compact list in fine type with small tick boxes: regions as ticks in Search Company (several at once, with company counts) and as round buttons in Find New Company (one region at a time), and the filter groups (ICP status, Listing, S2P signal, Platform, People) as ticks with counts instead of pills", where: "components/FindCompany.tsx, app/globals.css", why: "Requested — the same pattern as Market intelligence, compact with a fine font" },
+    ] },
   { version: "4.69", date: "2026-10-16", notes: "Find contacts in Buying signals stays inside the signal card.", changes: [
       { what: "Clicking Find contacts on a signal card no longer opens the floating card at the top right. The button turns into a gauge with an orange dot and a timer, and a small message under the card's buttons says what it is doing; when it finishes the message says how many contacts were added (or that none were found) and where to see them", where: "components/BuyingSignals.tsx, app/api/signals", why: "Requested — keep the contact search inside the Buying signals window, with the button flashing and the message below it" },
     ] },
