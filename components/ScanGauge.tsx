@@ -10,11 +10,13 @@ export function ScanGauge({ label, requestedAt, startedAt, expectedSecs, extra, 
   const secs = Math.max(0, Math.round((now - new Date(startedAt || requestedAt).getTime()) / 1000));
   const pct = running ? Math.min(95, Math.round((secs / expectedSecs) * 95)) : 0;
   const note = running ? (secs > expectedSecs * 1.5 ? "taking longer than usual" : `usually about ${Math.max(1, Math.round(expectedSecs / 60))} min`) : "starts within a minute or two";
-  if (tile) { // inside a dashboard-style tile: the tile keeps its size; the clock sits in the corner and the gauge is a thin line on the bottom edge
+  if (tile) { // inside a dashboard-style tile: the tile keeps its size; a green gauge with the timer inside it sits on the right of the tile
     return (
-      <span className="gauge tile" role="status" aria-live="polite" title={`${label}${running ? ` · usually about ${Math.max(1, Math.round(expectedSecs / 60))} min` : " · waiting for a session"}${extra || ""}`}>
-        <span className="gauge-clock"><i className="fcj-dot" aria-hidden="true" />{running ? clock(secs) : "waiting"}</span>
-        <span className="gauge-bar" aria-hidden="true"><i className={running ? "" : "wait"} style={{ width: `${running ? Math.max(4, pct) : 100}%` }} /></span>
+      <span className="gauge tile" role="status" aria-live="polite" title={`${label}${running ? ` · usually about ${Math.max(1, Math.round(expectedSecs / 60))} min` : " · waiting for a session to pick it up"}${extra || ""}`}>
+        <span className="gauge-pill">
+          <i className={`gauge-fill${running ? "" : " wait"}`} style={{ width: `${running ? Math.max(6, pct) : 100}%` }} aria-hidden="true" />
+          <b className="gauge-pilltext"><i className="fcj-dot" aria-hidden="true" />{running ? clock(secs) : `waiting ${clock(secs)}`}</b>
+        </span>
       </span>
     );
   }
