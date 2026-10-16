@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.55";
+export const APP_VERSION = "4.56";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.56", date: "2026-10-16", notes: "The timer text in the tile gauge is small again.", changes: [
+      { what: "The tile's large-number style was also applied to the text inside the green gauge, so it came out huge and spilled out of the pill. The gauge text is now a fixed small size", where: "app/globals.css", why: "Reported — big font and tab after the scan started" },
+    ] },
   { version: "4.55", date: "2026-10-16", notes: "The scan gauge on a vendor tile is a green pill with the timer inside.", changes: [
       { what: "On a vendor tile the scan progress is now a green gauge with the timer inside it, on the right of the tile, so the tile keeps its size. While a scan waits for a session the gauge is striped and the timer counts the wait (waiting 0:34); once it runs the green fills and the clock shows the running time; when done it turns into a green tick", where: "components/ScanGauge.tsx, app/globals.css", why: "Reported — the timer and green progress bar were not visible on the tile" },
     ] },

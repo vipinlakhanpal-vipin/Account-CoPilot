@@ -1729,3 +1729,8 @@ a.mkt-site i{font-style:normal;font-size:.75em;opacity:.55}
 .gauge-pilltext{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:5px;font:700 11px var(--mono);font-variant-numeric:tabular-nums;color:var(--text-strong);text-shadow:0 0 3px var(--surface)}
 .gauge-pilltext .fcj-dot{margin:0;width:7px;height:7px;background:#E08A00}
 .gauge-done.tile{top:50%;transform:translateY(-50%);right:10px;padding:2px 10px;border-radius:999px;background:color-mix(in srgb,#2ECC8F 28%,var(--surface));border:1px solid #0B7A66}
+/* v4.56: the tile's own big-number style (.sig-lane b) must not reach the gauge text */
+.sig-lane .gauge.tile .gauge-pilltext{font:700 11px/1 var(--mono);color:var(--text-strong);letter-spacing:0}
+.sig-lane .gauge.tile .gauge-pilltext .fcj-dot{width:7px;height:7px}
+.sig-lane .gauge-done.tile,.sig-lane .gauge-done.tile em{font:600 11px/1.2 var(--body);color:#0B5A47}
+.sig-lane .gauge.tile .gauge-pill{height:20px}
