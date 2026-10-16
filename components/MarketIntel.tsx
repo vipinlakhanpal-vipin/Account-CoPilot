@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ask, notify } from "@/components/Confirm";
 import FindContactsButton from "@/components/FindContactsButton";
@@ -7,7 +7,7 @@ import { logActivity } from "@/lib/activityClient";
 import type { MContact, PCustomer, Partner, Vendor } from "@/lib/market";
 
 type Cust = PCustomer & { in_app: boolean; people_on_file: number };
-type Job = { mode: string; vendor?: string; customer?: string; region: string; status: string; requested_at: string };
+type Job = { mode: string; vendor?: string; customer?: string; slug?: string; contacts_only?: boolean; region: string; status: string; requested_at: string };
 type Data = { vendors: Vendor[]; custom_vendors: string[]; is_super: boolean; defaults: string[]; regions: string[]; partners: Partner[]; customers: Cust[]; scans: Record<string, string>; jobs: Job[] };
 const ago = (iso?: string) => { if (!iso) return "never"; const h = Math.round((Date.now() - new Date(iso).getTime()) / 36e5); return h < 1 ? "just now" : h < 48 ? `${h} h ago` : `${Math.round(h / 24)} days ago`; };
 const csv = (rows: string[][]) => rows.map((r) => r.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(",")).join("\r\n");
@@ -43,7 +43,19 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
     && (!needle || `${c.customer} ${c.partner} ${c.project}`.toLowerCase().includes(needle))), [data, vendor, active, notInApp, withContacts, needle]);
   const custOf = (p: Partner) => custs.filter((c) => c.partner_id === p.id);
   const countP = (v: Vendor) => (data?.partners || []).filter((p) => p.vendor === v && active.includes(p.region)).length;
-  const pending = (data?.jobs || []).filter((j) => j.status === "queued" || j.status === "running");
+  const allPending = (data?.jobs || []).filter((j) => j.status === "queued" || j.status === "running");
+  const pending = allPending.filter((j) => j.mode === "market" && !j.customer && !j.contacts_only); // scans, shown in the bar
+  // A contact search shows on the customer's own row (a flashing orange dot), not in the bar
+  const searching = (c: Cust) => allPending.some((j) => (j.mode === "market" && j.customer === c.customer) || (j.mode === "contacts" && !!j.slug && j.slug === c.slug)
+    || (j.mode === "market" && j.contacts_only && j.vendor === c.vendor && j.region === c.region && c.contacts.length === 0));
+  const wasSearching = useRef<Record<string, string>>({});
+  useEffect(() => {
+    const now: Record<string, string> = {};
+    for (const c of data?.customers || []) if (searching(c)) now[c.id] = c.customer;
+    for (const [id, name] of Object.entries(wasSearching.current)) if (!(id in now)) { const c = data?.customers.find((x) => x.id === id); notify(c && (c.contacts.length || c.people_on_file) ? `Contact search finished for ${name}.` : `Contact search finished for ${name}. No public contact details found.`, "ok"); }
+    wasSearching.current = now;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data]);
   const toggle = (arr: string[], v: string) => (arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
 
   const addVendor = async () => {
@@ -64,7 +76,7 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
     const r = await fetch("/api/engine", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "queue", region: c.region, count: 1, mode: "market", vendor: c.vendor, customer: c.customer, partner: c.partner }) });
     const j = await r.json().catch(() => ({}));
     setBusy("");
-    if (r.ok) { notify(`Searching ${c.customer} contacts. They appear here when the search finishes.`, "ok"); load(); } else notify(j.error || "Could not start the search.", r.status === 409 ? "ok" : "error");
+    if (r.ok || r.status === 409) load(); else notify(j.error || "Could not start the search.", "error");
   };
   const findAll = async () => {
     for (const r of active) {
@@ -73,7 +85,7 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
       const j = await res.json().catch(() => ({}));
       if (!res.ok && res.status !== 409) notify(j.error || "Could not start the search.", "error");
     }
-    setBusy(""); notify(`Searching contacts for ${vendor} customers that have none. They appear here when it finishes.`, "ok"); load();
+    setBusy(""); load();
   };
   const host = (u: string) => { try { return new URL(u).hostname.replace(/^www\./, ""); } catch { return "source"; } };
   // One table for every partner's customers: Customer | Project (two lines) | In database? | Contact | Find contacts (only when there is nobody yet) | Source (the website)
@@ -92,7 +104,8 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
             <td>{c.contacts.length > 0 ? c.contacts.map((k, i) => <Who key={i} c={k} />)
               : c.in_app && c.people_on_file > 0 ? <span className="muted">{c.people_on_file} people on file · <Link href={`/?open=${encodeURIComponent(c.slug)}&country=${encodeURIComponent(c.region)}`}>see account</Link></span>
               : <span className="muted">None yet</span>}</td>
-            <td>{noOne ? (c.in_app ? <FindContactsButton slug={c.slug} region={c.region} company={c.customer} />
+            <td>{searching(c) ? <span className="srch" role="status"><i className="fcj-dot" aria-hidden="true" /><b className="fcj-flash">Searching…</b></span>
+              : noOne ? (c.in_app ? <FindContactsButton slug={c.slug} region={c.region} company={c.customer} quiet onQueued={load} />
               : <button type="button" className="btn tiny nowrap" disabled={busy === `c|${c.id}`} onClick={() => findFor(c)} title="Free: searches public web pages for named people at this customer">{busy === `c|${c.id}` ? "Queuing…" : "Find contacts"}</button>) : <span className="muted">—</span>}</td>
             <td><a href={c.source_url} target="_blank" rel="noopener noreferrer" title={c.source_url}>{host(c.source_url)}</a></td>
           </tr>);

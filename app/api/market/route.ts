@@ -18,7 +18,7 @@ export async function GET() {
   const docs = (data || []).map((r) => r.value as MarketDoc).filter((d) => d && canSeeRegion(access, d.region));
   const def = normalizeDefinition((await db.from("settings").select("value").eq("key", "icp_definition").maybeSingle()).data?.value);
   const regions = Object.entries(def.regions).filter(([k, r]) => canSeeRegion(access, k) && (r as { status: string }).status === "active").map(([k]) => k);
-  const jobs = ((await db.from("settings").select("value").eq("key", "engine_jobs").maybeSingle()).data?.value as { jobs: { mode: string; vendor?: string; customer?: string; region: string; status: string; requested_at: string }[] } | null)?.jobs || [];
+  const jobs = ((await db.from("settings").select("value").eq("key", "engine_jobs").maybeSingle()).data?.value as { jobs: { mode: string; vendor?: string; customer?: string; slug?: string; contacts_only?: boolean; region: string; status: string; requested_at: string }[] } | null)?.jobs || [];
   const { data: co } = await db.from("companies").select("slug");
   const inApp = new Set((co || []).map((c) => c.slug as string));
   // People already on file in the app for customers that are in the database (shown as a link to the account instead of "none published").
@@ -35,7 +35,7 @@ export async function GET() {
     partners: docs.flatMap((d) => d.partners || []),
     customers: docs.flatMap((d) => (d.customers || []).map((c) => ({ ...c, in_app: !!c.slug && inApp.has(c.slug), people_on_file: people[c.slug] || 0 }))),
     scans: Object.fromEntries(docs.map((d) => [`${d.vendor}|${d.region}`, d.scanned_at])),
-    jobs: jobs.filter((j) => j.mode === "market" && canSeeRegion(access, j.region)).slice(0, 10),
+    jobs: jobs.filter((j) => (j.mode === "market" || j.mode === "contacts") && (j.status === "queued" || j.status === "running") && canSeeRegion(access, j.region)).slice(0, 40),
   });
 }
 

@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { queueFindContacts } from "@/lib/findContactsClient";
 
 // Find contacts: one button, two ways. Free = public web pages only. With Seamless = also Seamless records (uses Seamless credits, about 1 per person, at most 5).
-export default function FindContactsButton({ slug, region, company, className = "btn tiny", label = "Find contacts" }: { slug: string; region: string; company: string; className?: string; label?: string }) {
+export default function FindContactsButton({ slug, region, company, className = "btn tiny", label = "Find contacts", quiet = false, onQueued }: { slug: string; region: string; company: string; className?: string; label?: string; quiet?: boolean; onQueued?: () => void }) {
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLSpanElement>(null);
   useEffect(() => {
@@ -12,7 +12,7 @@ export default function FindContactsButton({ slug, region, company, className = 
     document.addEventListener("mousedown", off);
     return () => document.removeEventListener("mousedown", off);
   }, [open]);
-  const go = (seamless: boolean) => { setOpen(false); queueFindContacts(slug, region, company, seamless); };
+  const go = (seamless: boolean) => { setOpen(false); queueFindContacts(slug, region, company, seamless, quiet).then((ok) => { if (ok) onQueued?.(); }); };
   return (
     <span className="fc-wrap" ref={box}>
       <button type="button" className={className} aria-expanded={open} onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}>{label} ▾</button>
