@@ -146,6 +146,7 @@ Every Anthropic-API route (`/api/research`, `/api/discover`, `/api/pitch`, and `
 - **Where:** the robot icon beside the suggestions bulb (`components/AriaChat.tsx`, a thin wrapper over the copy-in package `packages/aria`). Server: `app/api/aria/route.ts`.
 - **Free first, AI second (v3.77):** `lib/aria/router.ts` reads common questions by plain rules (counts, lists, one company, contacts, ICP rules, PDF, Excel with its region / how-many / pick-by questions) and answers from the database with **no API cost and no PIN**. Only what the rules cannot read goes to the AI (`lib/aria/agent.ts`, default model Haiku 4.5, override with `ARIA_MODEL`), which is behind `requirePaidApproval`. Every reply carries a note saying which path answered.
 - **Tools** live in `lib/aria/tools.ts` (all read-only, scoped by `scopeData`). Excel and PDF go through the existing `/api/report/*` routes.
+- **One topic per chat (v4.72):** `conversation()` in `lib/aria/router.ts` builds the question from the chat so far: refinements ("only verified", "revenue above 400m") are added to the earlier question (a newer revenue range or status replaces the older); a new standalone question while a topic is open is not run, Aria asks to close the chat (it stays in History) or keep going. Buttons send `flow: true` and are never questioned; `§new:` / `§keep:` prefixes carry the choice.
 - **Voice** uses the browser's speech recognition; nothing extra to configure. Aria's spend is not yet added to the Settings spend total.
 
 ## Guide & Research more (v1.14)

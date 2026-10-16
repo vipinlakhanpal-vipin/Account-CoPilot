@@ -232,3 +232,39 @@ export async function tryFree(question: string, ctx: AriaContext): Promise<FreeR
 }
 
 export { parseRevenue as parseRevenueText }; // exported so the range reading can be tested
+
+// ---- Conversation memory: a chat is one topic until the person completes it ----
+const REFINE_START = /^(only|also|just|now|then|and|but|with|without|exclude|instead|make it|narrow|add|remove|same|those|them|these|filter|sort|rank|order|limit|change|what about|how about)\b/;
+const REFINE_REF = /\b(from (those|them|these|that)|of (those|them|these)|among (those|them)|in that (list|set)|the same)\b/;
+const FILTER_WORD = /\b(verified|likely|needs check|unknown|not icp|coupa|ariba|sap|oracle|dynamics|revenue|above|below|between|only|contacts?|email|phone|top \d+)\b/;
+const ASKS = /\b(list|show|find|give me|how many|count|number of|report|pdf|excel|tell me about|who|which|top \d+|what is|what are)\b/;
+const clean = (m: string) => m.replace(/^§(keep|new):\s*/, "").trim();
+const isRefinement = (m: string) => { const t = clean(m).toLowerCase(); return REFINE_START.test(t) || REFINE_REF.test(t) || (t.split(/\s+/).length <= 6 && FILTER_WORD.test(t) && !findRegionIn(t) && !/\b(list|find|how many|report|pdf|excel|tell me about)\b/.test(t)); };
+/**
+ * What Aria should answer for the newest typed message, given the earlier ones in this chat.
+ * - A refinement ("only verified", "also with Coupa", "above 400m") is added to the earlier question, so the chat stays on its topic.
+ * - A brand-new standalone question while a topic is open is not run at once: Aria asks whether to close this chat (it stays in History) or keep going.
+ * - Answers to Aria's own buttons (flow) and a first question always run as they are.
+ */
+export function conversation(question: string, prior: string[], flow: boolean): { question: string; ask?: FreeReply } {
+  const forced = /^§keep:/.test(question);
+  const q = clean(question);
+  const earlier = prior.filter((m) => !/^§new:/.test(m));
+  if (!earlier.length || flow) return { question: forced || isRefinement(q) ? withTopic(q, earlier) : q };
+  if (forced || isRefinement(q)) return { question: withTopic(q, earlier) };
+  const t = q.toLowerCase();
+  const standalone = ASKS.test(t) || !!findRegionIn(t);
+  if (!standalone) return { question: q };
+  return { question: q, ask: { text: "That looks like a **new question**. Shall I close this chat, which stays saved in History, and start a new one? Or keep going with the current topic and use your earlier criteria too?", actions: [],
+    choices: [{ label: "Close this chat, start a new one", value: `§new:${q}` }, { label: "Keep going in this chat", value: `§keep:${q}` }] } };
+}
+function withTopic(q: string, earlier: string[]): string {
+  let eff = "";
+  for (const m of earlier) { const c = clean(m); eff = isRefinement(c) && eff ? `${c}, ${eff}` : c; }
+  if (!eff) return q;
+  // what the newest message says again replaces the earlier version (a new revenue range, a different status), it does not add to it
+  const ql = q.toLowerCase(); let e = eff.toLowerCase();
+  if (parseRevenue(ql, {})) { const h = parseRevenue(e, {}); if (h) e = e.replace(h, " "); }
+  if (/\b(verified|likely|needs? check|not icp|unknown)\b/.test(ql) && !/\bunverified\b/.test(ql)) e = e.replace(/\b(verified|likely|needs? check|not icp|unknown)\b/g, " ");
+  return `${q}, ${e.replace(/\s+/g, " ").trim()}`;
+}

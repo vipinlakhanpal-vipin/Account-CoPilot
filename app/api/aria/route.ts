@@ -7,7 +7,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { loadAllCached } from "@/lib/dataCache";
 import { makeContext } from "@/lib/aria/tools";
 import { runAria } from "@/lib/aria/agent";
-import { tryFree } from "@/lib/aria/router";
+import { tryFree, conversation } from "@/lib/aria/router";
 
 // Aria, the in-app assistant. Paid (Anthropic API): behind the paid-actions PIN like every other paid action.
 export const maxDuration = 60;
@@ -15,6 +15,7 @@ export const dynamic = "force-dynamic";
 
 const Body = z.object({
   messages: z.array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().min(1).max(3000) })).min(1).max(20),
+  flow: z.boolean().optional(), // the message answers one of Aria's own buttons
 });
 
 export async function POST(req: Request) {
@@ -33,13 +34,18 @@ export async function POST(req: Request) {
     ]);
     const regions = access.isSuper ? ALL_REGIONS : access.regions;
     const ctx = makeContext(data, def, crit, log);
-    const question = parsed.data.messages[parsed.data.messages.length - 1].content;
+    const msgs = parsed.data.messages;
+    const typed = msgs[msgs.length - 1].content;
+    // The chat is one topic until the person completes it: refinements build on the earlier questions, a new topic is confirmed first.
+    const conv = conversation(typed, msgs.slice(0, -1).filter((m) => m.role === "user").map((m) => m.content), !!parsed.data.flow);
+    if (conv.ask) return NextResponse.json({ ...conv.ask, mode: "free", note: "Free answer · no API cost" });
+    const question = conv.question;
     // 1) Free first: plain rules answer the common questions straight from the database, with no AI and no API cost, so no PIN either.
     const free = await tryFree(question, ctx);
     if (free) return NextResponse.json({ ...free, mode: "free", note: "Free answer · read from your data, no API cost" });
     // 2) Only what the rules cannot read goes to the AI (the cheaper model), behind the paid-actions PIN.
     const blocked = await requirePaidApproval(req, user); if (blocked) return blocked;
-    const out = await runAria(parsed.data.messages, ctx, regions);
+    const out = await runAria([...msgs.slice(0, -1), { role: "user" as const, content: question }], ctx, regions);
     return NextResponse.json({ text: out.text, actions: out.actions, choices: out.choices, mode: "ai", note: "AI answer · this question used Anthropic API credit" });
   } catch {
     return NextResponse.json({ error: "Aria could not answer that just now. Try again." }, { status: 502 });

@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.71";
+export const APP_VERSION = "4.72";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.72", date: "2026-10-16", notes: "Aria keeps one topic per chat and asks before starting a new one.", changes: [
+      { what: "Aria now remembers the chat's topic. A follow-up such as only verified, also with Coupa, or revenue above 400m refines the earlier question instead of starting a new search (a newer revenue range or status replaces the older one). When you type a brand-new question while a topic is open, Aria asks first: Close this chat, start a new one (the old chat stays in History), or Keep going in this chat and use the earlier criteria too. Answers to Aria's own buttons are never questioned", where: "lib/aria/router.ts (conversation), app/api/aria/route.ts, packages/aria/AriaChat.tsx", why: "Requested — Aria should stay on one topic until the person completes it, and ask before closing it into History" },
+    ] },
   { version: "4.71", date: "2026-10-16", notes: "Aria reads revenue ranges written as upto, and answers can be cleared.", changes: [
       { what: "Aria now reads a range written as net revenue of $250M upto 650M (also up to, till, until, a dash) as 250 to 650 million. Before, upto was not understood, so no revenue filter was applied and companies of any size came back. The answer now states the range it applied, and if an amount is written but cannot be read, Aria asks instead of guessing", where: "lib/aria/router.ts", why: "Reported — a 250M to 650M request returned companies with revenue in billions" },
       { what: "Every Aria answer has a Clear this answer button that removes that question and answer from the screen", where: "packages/aria/AriaChat.tsx", why: "Requested — a way to revoke an answer shown on screen" },

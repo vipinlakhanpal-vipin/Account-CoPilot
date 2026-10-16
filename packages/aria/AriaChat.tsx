@@ -204,16 +204,20 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
   };
 
   const send = useCallback(async (q: string, shown?: string) => {
-    const question = q.trim();
+    let question = q.trim();
     if (!question || busy) return;
-    const next: Msg[] = [...msgs, { role: "user", content: question, display: shown }];
+    // "Close this chat, start a new one": the old chat is already in History; the question runs in a clean chat
+    let base = msgs, display = shown;
+    if (question.startsWith("§new:")) { question = question.slice(5).trim(); base = []; display = undefined; convId.current = null; setView("chat"); }
+    else if (question.startsWith("§keep:")) display = question.slice(6).trim(); // sent with the marker so the server keeps the earlier criteria, shown without it
+    const next: Msg[] = [...base, { role: "user", content: question, display }];
     setMsgs(next); setText(""); setBusy(true);
     const started = Date.now(), ctl = new AbortController(), giveUp = setTimeout(() => ctl.abort(), GIVE_UP_MS);
     abortRef.current = ctl; cancelledRef.current = false;
     let reply: Msg;
     try {
       const history = next.slice(-14).map((m) => ({ role: m.role, content: m.content }));
-      const init = { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: history }), signal: ctl.signal };
+      const init = { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: history, flow: shown !== undefined }), signal: ctl.signal };
       // Stop (or the 90 second limit) must always free the chat, even while a PIN box is open or the network hangs.
       const stopped = new Promise<never>((_, reject) => ctl.signal.addEventListener("abort", () => reject(new Error("stopped"))));
       const res = await Promise.race([sendFn ? sendFn(endpoint, init) : fetch(endpoint, init), stopped]);
