@@ -83,6 +83,9 @@ This writes `profile["HubSpot"]` = {in_hubspot, hubspot_id, hubspot_name, record
 ## Spend benchmarks (v1.36)
 `SPEND_BENCHMARKS` in `lib/icp.ts` holds, per sector: the addressable ratio, the split, a confidence `level` (Sourced / Partly sourced / Judgement) and a source string, researched on 2026-09-27. Oil & gas, logistics and utilities are still Judgement; update them when a credible published split is found. The Guide table and every estimate's "basis" show the level and source.
 
+## Tables (v4.88): one rule for all
+- Every table inside `.tablewrap` follows the "TABLES" block at the end of `app/globals.css`: one line per value, text that does not fit is cut with an **i** (added at run time by `components/TableNeat.tsx`; click the cell to read it all). Do not style cell wrapping per table. Opt out only with `className="prose"` (running text) and `.mkt-table` / `.aria-table` (their own layouts). List tables (`FilterTable`) also turn long text columns into a lead plus an i (`components/LongText.tsx`); company names use `shortName()` (`lib/shortName.ts`); ICP status is plain coloured text; the S2P signal is a four-bar meter. New tables just use `<div className="tablewrap"><table>`.
+
 ## Navigation & performance (v1.30)
 - `components/Header.tsx` is rendered ONCE in `app/layout.tsx` (not by pages). It works out the active tab from the URL and hides itself on /login and /auth. The sub-tab row stays hidden until it has been measured, so it never slides. Pages must not render their own `<Header>`.
 - `lib/dataCache.ts`: `loadAllCached()` is an in-memory 60-second cache of `loadAll`, using the admin client. Call it only after `requirePageUser()`. Routes that write data call `invalidateAllData()` (research, discover, engine worker). The Excel export still loads fresh data.

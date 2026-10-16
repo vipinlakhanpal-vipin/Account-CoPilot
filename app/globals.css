@@ -1814,3 +1814,16 @@ td .mono{white-space:nowrap}
 .longtext-pop{position:fixed;z-index:1200;width:min(420px,calc(100vw - 24px));max-height:60vh;overflow:auto;padding:12px 14px;border-radius:12px;background:var(--surface);color:var(--text);border:1px solid var(--line-2);box-shadow:0 14px 34px rgba(0,0,0,.3);font:400 12.5px/1.55 var(--body);white-space:normal}
 td.num,th.num{white-space:nowrap}
 table.ft td.num{width:1%;text-align:right}
+
+/* ===== TABLES: the one rule for every data table (v4.88) =====
+   Every value on one line; a text that does not fit is cut with an i at the end of the cell (click it to read all, see TableNeat).
+   Opt out with class "prose" (running text: Guide, cost notes, source catalogue). Special tables with their own layout: .mkt-table, .aria-table, .bell-table, .suggest-table. */
+.tablewrap table:not(.prose):not(.mkt-table):not(.aria-table) td{white-space:nowrap;max-width:300px;overflow:hidden;text-overflow:ellipsis;overflow-wrap:normal;vertical-align:middle;position:relative}
+.tablewrap table:not(.prose):not(.mkt-table):not(.aria-table) td.wrap,.tablewrap table.ft td.wrap,.tablewrap table.ft td.co-cell{white-space:nowrap;min-width:0;max-width:300px}
+.tablewrap table:not(.prose):not(.mkt-table):not(.aria-table) th{white-space:nowrap;vertical-align:bottom}
+/* cells that hold buttons, menus, gauges or links must not clip them */
+.tablewrap table:not(.prose):not(.mkt-table):not(.aria-table) td:has(button,select,input,form,.gauge,.fc-wrap,.longtext,.job-link,.btn){overflow:visible;max-width:none;text-overflow:clip}
+.tablewrap table td.is-cut{padding-right:28px;cursor:pointer}
+.tablewrap table td.is-cut::after{content:"i";position:absolute;right:6px;top:50%;transform:translateY(-50%);width:15px;height:15px;border-radius:50%;border:1.3px solid var(--muted);color:var(--muted);font:italic 700 10px/12px Georgia,serif;text-align:center;background:var(--surface)}
+.tablewrap table td.is-cut:hover::after{background:#0F6E56;border-color:#0F6E56;color:#fff}
+.tablewrap table.prose td,.tablewrap table.prose th{white-space:normal}

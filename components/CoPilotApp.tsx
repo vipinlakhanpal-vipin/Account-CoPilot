@@ -639,7 +639,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
     const contrib = countBy(wbRows, contributorOf);
     const catalogue = (group: "origin" | "contributor" | "evidence", label: string) => (
       <details className="src-cat"><summary>{label}</summary>
-        <div className="tablewrap"><table><thead><tr><th>Source</th><th>What it is</th><th>Provides</th><th>How it's collected</th><th>Reliability</th><th>Cost</th></tr></thead>
+        <div className="tablewrap"><table className="prose"><thead><tr><th>Source</th><th>What it is</th><th>Provides</th><th>How it's collected</th><th>Reliability</th><th>Cost</th></tr></thead>
           <tbody>{SOURCES.filter((d) => d.group === group).map((d) => (
             <tr key={d.key}><td><span className="src-dot" style={{ background: d.color }} /> <b>{d.name}</b></td><td className="wrap">{d.what}</td><td className="wrap">{d.provides}</td>
               <td className="wrap">{d.how}</td><td className="wrap">{d.reliability}</td><td>{d.cost}</td></tr>))}</tbody></table></div></details>);

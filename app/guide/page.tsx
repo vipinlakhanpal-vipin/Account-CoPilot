@@ -67,7 +67,7 @@ const TOC: [string, string][] = [["start", "Get to know me"], ["engine", "How th
   ["rules", "Data rules"], ["limits", "What the app can't do"]];
 
 const T = ({ head, rows }: { head: string[]; rows: ReactNode[][] }) => (
-  <div className="tablewrap"><table><thead><tr>{head.map((h) => <th key={h}>{h}</th>)}</tr></thead>
+  <div className="tablewrap"><table className="prose"><thead><tr>{head.map((h) => <th key={h}>{h}</th>)}</tr></thead>
     <tbody>{rows.map((r, i) => <tr key={i}>{r.map((c, j) => <td key={j} className="wrap">{c}</td>)}</tr>)}</tbody></table></div>);
 const pct = (x: number) => `${Math.round(x * 100)}%`;
 
@@ -127,7 +127,7 @@ export default async function GuidePage() {
 
               <h3>Logic Followed in Account CoPilot</h3>
               <p className="note">Checked live against the app&apos;s data each time this page opens. A failing check shows ✕ in red with the number affected.</p>
-              <div className="tablewrap"><table><thead><tr><th>Check</th><th>Result</th></tr></thead>
+              <div className="tablewrap"><table className="prose"><thead><tr><th>Check</th><th>Result</th></tr></thead>
                 <tbody>{live.checks.map((c) => <tr key={c.label}><td className="wrap">{c.label}</td>
                   <td className={c.ok ? "chk-ok" : "chk-bad"}><span>{c.ok ? "✓" : "✕"} {c.result}</span></td></tr>)}</tbody></table></div>
 

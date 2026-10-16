@@ -32,7 +32,7 @@ export default function CostInfo() {
       <h4 className="sub">Worked example</h4>
       <p className="note">Revenue check for Al Batha Group: 42,000 tokens read ($0.21) + 2,400 tokens written ($0.06) + 6 searches ($0.06) = <b>$0.33</b>. For Al Ghurair Group, Claude opened long pages (274,000 tokens read), so the same check cost <b>$1.59</b>.</p>
       <h4 className="sub">What each action costs</h4>
-      <div className="tablewrap"><table>
+      <div className="tablewrap"><table className="prose">
         <thead><tr><th>Action</th><th>Uses API?</th><th>Typical usage</th><th>Typical cost</th></tr></thead>
         <tbody>{ROWS.map(([a, u, t, c]) => <tr key={a} className={u === "Yes" ? "cost-row-paid" : "cost-row-free"}><td><b>{a}</b></td><td>{u}</td><td className="muted">{t}</td><td className="mono">{c}</td></tr>)}</tbody>
       </table></div>
