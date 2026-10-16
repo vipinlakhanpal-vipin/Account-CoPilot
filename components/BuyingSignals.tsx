@@ -58,7 +58,7 @@ export default function BuyingSignals({ embedded = false }: { embedded?: boolean
 
       <div className="sig-lanes" role="group" aria-label="Signal type">
         {([["all", "All signals"], ...LANES.map((l) => [l, LANE_LABEL[l]])] as [string, string][]).map(([k, label]) => (
-          <button type="button" key={k} className="sig-lane" aria-pressed={lane === k} onClick={() => setLane(k as "all" | SignalLane)}><b>{count(k as "all" | SignalLane)}</b><span>{label}</span></button>))}
+          <button type="button" key={k} className={`sig-lane ${({ all: "c1", rfp: "c4", erp: "c2", ecc: "c3" } as Record<string, string>)[k]}`} aria-pressed={lane === k} onClick={() => setLane(k as "all" | SignalLane)}><b>{count(k as "all" | SignalLane)}</b><span>{label}</span></button>))}
       </div>
 
       <div className="sig-body">
@@ -85,7 +85,8 @@ export default function BuyingSignals({ embedded = false }: { embedded?: boolean
           {data && shown.length === 0 && (
             <div className="sig-empty">
               <h3>{open.length === 0 && show === "open" ? "No signals yet" : "Nothing matches these filters"}</h3>
-              <p>{open.length === 0 && show === "open" ? "The daily run scans UAE and KSA for tenders, ERP and S2P intent, and ECC owners. You can also scan a region now from the left panel." : "Widen the strength or type, or switch to Done or Dismissed."}</p>
+              <p>{open.length === 0 && show === "open" ? "Nothing has been scanned yet. The daily 6am run scans UAE and KSA for tenders, ERP and S2P intent, and ECC owners. You do not have to wait: scan now (free, usually a few minutes)." : "Widen the strength or type, or switch to Done or Dismissed."}</p>
+              {open.length === 0 && show === "open" && <div className="sig-scanbar">{regionList.map((r) => <button type="button" key={r} className="btn primary" disabled={busy === r} onClick={() => scan(r)}>{busy === r ? "Queuing…" : `Scan ${r} now`}</button>)}</div>}
             </div>)}
           {shown.map((s) => {
             const left = daysLeft(s.closes);

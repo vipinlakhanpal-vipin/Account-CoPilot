@@ -51,6 +51,8 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
     if (r.ok) { notify(`${v === "all" ? "Market" : v} scan for ${region} queued. Results appear here when it finishes.`, "ok"); load(); }
     else notify(j.error || "Could not start the scan.", r.status === 409 ? "ok" : "error");
   };
+  // one after another: each queue call rewrites the shared job list, so parallel calls could overwrite each other
+  const scanAll = async (pairs: [string, string][]) => { for (const [r, v] of pairs) await scan(r, v); };
   const download = () => {
     const rows = [["Vendor", "Region", "Partner", "Customer", "Project", "Customer in your app", "Contact", "Title", "Email", "Phone", "LinkedIn", "Source"]];
     for (const c of custs) { if (c.contacts.length) for (const k of c.contacts) rows.push([c.vendor, c.region, c.partner, c.customer, c.project, c.in_app ? "Yes" : "No", k.name, k.title, k.email, k.phone, k.linkedin_url, c.source_url]);
@@ -64,7 +66,7 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
       <section className="hero mkt-hero"><h1>Market intelligence</h1><p>Who implements SAP, Coupa, Oracle and Microsoft in your regions, and the customers they publish. Every row links to its source.</p></section>
       <div className="sig-lanes" role="group" aria-label="Vendor">
         {(data?.vendors || (["SAP", "Coupa", "Oracle", "Microsoft"] as Vendor[])).map((v) => (
-          <button type="button" key={v} className="sig-lane" aria-pressed={vendor === v} onClick={() => { setVendor(v); setOpenP(null); }}><b>{countP(v)}</b><span>{v} partners</span></button>))}
+          <button type="button" key={v} className={`sig-lane ${({ SAP: "c1", Coupa: "c2", Oracle: "c6", Microsoft: "c7" } as Record<string, string>)[v]}`} aria-pressed={vendor === v} onClick={() => { setVendor(v); setOpenP(null); }}><b>{countP(v)}</b><span>{v} partners</span></button>))}
       </div>
       <div className="sig-body">
         <aside className="sig-side">
@@ -79,19 +81,22 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
           <label><input type="checkbox" checked={withContacts} onChange={() => setWithContacts(!withContacts)} /> With contact details</label>
           <h3>Scan now</h3>
           {regionList.slice(0, 4).map((r) => <button type="button" key={r} className="btn tiny" disabled={busy === `${vendor}|${r}`} onClick={() => scan(r, vendor)}>{vendor} · {r}</button>)}
-          {regionList.length > 0 && <button type="button" className="btn tiny" disabled={busy === `all|${regionList[0]}`} onClick={() => regionList.forEach((r) => scan(r, "all"))}>All vendors, all regions</button>}
+          {regionList.length > 0 && <button type="button" className="btn tiny" disabled={busy === `all|${regionList[0]}`} onClick={() => scanAll(regionList.map((r) => [r, "all"] as [string, string]))}>All vendors, all regions</button>}
           <p className="note">Free. Public web pages only. A scheduled Claude session runs it, usually a few minutes per region.</p>
         </aside>
         <section className="sig-main">
           <div className="mkt-tools">
             <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={`Search ${vendor} partners, customers, projects`} aria-label="Search" />
+            <button type="button" className="btn tiny primary" disabled={!!busy || regionList.length === 0} onClick={() => scanAll(active.map((r) => [r, vendor] as [string, string]))}>Scan {vendor} now</button>
             <button type="button" className="btn tiny" disabled={!custs.length} onClick={download}>Download customers (CSV)</button>
             <span className="note">{partners.length} partners · {custs.length} customers</span>
           </div>
           {pending.length > 0 && <div className="sig-pending" role="status"><span className="fcj-dot" aria-hidden="true" /> <b className="fcj-flash">Scanning {pending.map((j) => `${j.vendor === "all" || !j.vendor ? "all vendors" : j.vendor} · ${j.region}`).join(", ")}…</b> Results appear here by themselves.</div>}
           {!data && <p className="note">Loading…</p>}
           {data && partners.length === 0 && view === "partners" && (
-            <div className="sig-empty"><h3>No {vendor} partners yet</h3><p>The daily run adds a few vendor and region pairs each day. Scan {vendor} for a region from the left panel to start now.</p></div>)}
+            <div className="sig-empty"><h3>No {vendor} partners yet</h3><p>Nothing has been scanned yet. The daily 6am run adds four vendor and region pairs each day, so all regions take about nine days. You do not have to wait: scan now (free, usually a few minutes per region).</p>
+              <div className="sig-scanbar">{regionList.map((r) => <button type="button" key={r} className="btn primary" disabled={busy === `${vendor}|${r}`} onClick={() => scan(r, vendor)}>{busy === `${vendor}|${r}` ? "Queuing…" : `Scan ${vendor} · ${r} now`}</button>)}
+                <button type="button" className="btn" onClick={() => scanAll(regionList.map((r) => [r, "all"] as [string, string]))}>All vendors, all regions</button></div></div>)}
           {view === "partners" && partners.map((p) => {
             const cs = custOf(p), isOpen = openP === p.id;
             return (
