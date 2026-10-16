@@ -1501,14 +1501,14 @@ th .infotip{margin-left:3px}.infotip-btn{width:15px;height:15px;font-size:10px}
 :root{--tbl-font:11.5px;--tbl-head:9.5px}
 table,.bell-table,.suggest-table{font-size:var(--tbl-font)}
 th,.bell-table th,.suggest-table th{font-size:var(--tbl-head);letter-spacing:.04em;line-height:1.25;padding:8px 6px;white-space:normal;vertical-align:bottom}
-td,.bell-table td,.suggest-table td{padding:7px 6px;line-height:1.35;overflow-wrap:anywhere}
+td,.bell-table td,.suggest-table td{padding:7px 8px;line-height:1.35;overflow-wrap:break-word}
 th .infotip-btn{width:13px;height:13px;font-size:9px}
 .mono,td .mono{font-size:var(--tbl-font)}
 td.logo-cell,th.logo-cell{width:34px;padding-left:2px;padding-right:2px}
 td.co-cell{min-width:140px;max-width:220px}
 td.wrap{min-width:140px;max-width:260px}
 td .pill,td .icp,td .status-plain,td .trust,td .job-st,td .role-tag{font-size:10px;padding-left:6px;padding-right:7px}
-td .icp{gap:4px;white-space:normal}
+td .icp{gap:4px;white-space:nowrap}
 td .rev-src{font-size:10px}
 .tablewrap td b,.tablewrap td strong{font-size:var(--tbl-font)}
 
@@ -1782,3 +1782,13 @@ label.find-reg input{width:13px;height:13px;margin:0;flex:none;accent-color:#0B7
 .bh-btns .bh-btn.btn-dl:hover:not(:disabled){background:#157AC4;border-color:#0F66A8;color:#fff}
 .navbar .btn.btn-dl.dl{padding:8px 16px}
 .aria-actions .btn.btn-dl{margin-top:4px}
+
+/* v4.82: data tables (Dashboard lists, Mission Control, Pipeline, Stakeholders ...) keep each value on one line, so emails, phones, revenue and statuses are never broken into pieces; only the long text columns (marked wrap) wrap, and a wide table scrolls sideways */
+table.ft td{white-space:nowrap;vertical-align:middle;overflow-wrap:normal}
+table.ft td.wrap{white-space:normal;min-width:170px;max-width:280px;overflow-wrap:break-word}
+table.ft td.co-cell{white-space:normal;min-width:160px;max-width:230px}
+table.ft th{white-space:nowrap;vertical-align:bottom}
+table.ft td .clamp2{white-space:normal}
+table.ft td b{font-size:var(--tbl-font)}
+table.ft td .muted{display:block}
+td .mono{white-space:nowrap}

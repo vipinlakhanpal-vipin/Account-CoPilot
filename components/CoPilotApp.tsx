@@ -344,7 +344,7 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "
         <button type="button" className="btn tiny" aria-label="Scroll table right" onClick={() => scrollH(320)}> →</button>
       </div>
       <div className="tablewrap tablewrap-tall" ref={wrapRef}>
-        <table>
+        <table className="ft">
           <thead><tr><th className="num">#</th>{cols.map((c) => <th key={c.h} className={c.cls}>{c.h}{c.tip && <InfoTip k={c.tip} w={tipW} />}</th>)}</tr></thead>
           <tbody>
             {displayed.map((r, i) => (
