@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.32";
+export const APP_VERSION = "4.33";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.33", date: "2026-10-16", notes: "Finer type in the filter panels of Buying signals and Market intelligence.", changes: [
+      { what: "The option labels in the left filter panels (regions, view, filters) now use light 11.5 px type like the help text, with small tick boxes in the app's green, so the options are easy to tell apart from the headings", where: "app/globals.css (.sig-side)", why: "Requested — finer font in the left panel" },
+    ] },
   { version: "4.32", date: "2026-10-16", notes: "Define ICP saves automatically with a message, and Market intelligence can scan every vendor at once.", changes: [
       { what: "Define ICP now saves by itself. Making a region Active, Paused or Next phase saves at once and shows a message such as UK is now Active; other edits save 2 seconds after you stop. A Save automatically switch at the top turns it off, and the bar shows Saving and Saved with the time. A failed save waits for your next edit instead of retrying", where: "components/IcpEditor.tsx", why: "Reported — UK was made Active but not saved, so it went back to Paused" },
       { what: "Market intelligence has a Scan all vendors button that queues one free scan per vendor and ticked region, after one confirmation. Before this, Scan now only scanned the vendor tab you were on, so only SAP had data", where: "components/MarketIntel.tsx", why: "Reported — only SAP partners showed" },
