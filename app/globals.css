@@ -1792,3 +1792,12 @@ table.ft td .clamp2{white-space:normal}
 table.ft td b{font-size:var(--tbl-font)}
 table.ft td .muted{display:block}
 td .mono{white-space:nowrap}
+
+/* v4.83: ICP status is short coloured text, not a pill */
+.icp-txt{display:inline-flex;align-items:center;gap:4px;font:700 12px var(--body);white-space:nowrap;background:none !important;border:0 !important;padding:0}
+.icp-txt i{font-style:normal;font-size:11px;width:auto;height:auto;background:none !important;border-radius:0;display:inline}
+.icp-txt.icp-v{color:#0B8A5F}
+.icp-txt.icp-l{color:#1F7FD0}
+.icp-txt.icp-c{color:var(--warn-text)}
+.icp-txt.icp-u{color:var(--icp-u)}
+.icp-txt.icp-n{color:var(--bad-text)}

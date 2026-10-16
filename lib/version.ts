@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.82";
+export const APP_VERSION = "4.83";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.83", date: "2026-10-16", notes: "Short company names and plain ICP status text in tables.", changes: [
+      { what: "Company names in the tables are short: ADNOC (Abu Dhabi National Oil Company) shows as ADNOC, Emirates Telecommunications Group Company PJSC (e&) as e&, and legal endings such as PJSC, LLC and PLC are dropped. The full name is the tooltip and is on the account page when clicked", where: "lib/shortName.ts, components/CoPilotApp.tsx", why: "Requested — do not expand company names; the user knows them anyway" },
+      { what: "ICP status is short coloured text instead of a pill (✓ Verified in green, Likely blue, Needs check amber, Unknown purple, Not ICP red), so it no longer wraps into a circle in narrow columns", where: "components/CoPilotApp.tsx (IcpTag), app/globals.css", why: "Reported — ICP Verified showed in a big circle" },
+    ] },
   { version: "4.82", date: "2026-10-16", notes: "Tables keep each value on one line.", changes: [
       { what: "The list tables (Mission Control contacts, Accounts, Pipeline, Stakeholders and the Dashboard lists) no longer break values into pieces: emails, phones, revenue, employees, status pills and names stay on one line, only the long text columns (job title, why, evidence) wrap, and a wide table scrolls sideways with the arrows. The earlier rule that let any cell break anywhere was the cause of the broken emails and phone numbers", where: "app/globals.css, components/CoPilotApp.tsx", why: "Reported — the contacts table was spoiled: emails and statuses broken letter by letter" },
     ] },
