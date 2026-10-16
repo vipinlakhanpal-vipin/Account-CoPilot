@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.67";
+export const APP_VERSION = "4.68";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.68", date: "2026-10-16", notes: "Minimize the floating windows.", changes: [
+      { what: "Aria, Buying signals and Market intelligence have a Minimize button: the window shrinks to a small bar in the bottom-right corner (stacked so they do not overlap) and the page behind is fully usable. Scans keep running and updating while it is minimized; Restore (or the Aria icon) brings it back exactly as it was", where: "components/AppWindow.tsx, packages/aria/AriaChat.tsx, packages/aria/aria.css", why: "Requested — minimize so you can work on other functions" },
+    ] },
   { version: "4.67", date: "2026-10-16", notes: "Buying signals scans only what you ticked and selected.", changes: [
       { what: "Scan now in Buying signals now scans only the ticked regions and only the lane you selected (All signals = every lane), after a confirmation that says how many scans it queues. Before, it scanned every active region whatever was ticked, which queued nine scans at once. The window opens with only UAE ticked, like Market intelligence", where: "components/BuyingSignals.tsx, app/api/engine, ENGINE.md", why: "Reported — nine searches started with only the ERP and S2P buying tile selected" },
     ] },

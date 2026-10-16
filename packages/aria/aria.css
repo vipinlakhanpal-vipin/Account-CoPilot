@@ -129,3 +129,14 @@
 
 .aria-hint{font-size:10.5px !important;opacity:.8;margin-top:1px}
 @media (max-width:640px){.aria-hint{display:none}}
+
+/* Minimize (v4.68): the window shrinks to a bar in the bottom-right corner, stacked by --slot; the page behind is usable and the content keeps running */
+.aria-backdrop.mini{background:transparent !important;backdrop-filter:none !important;pointer-events:none}
+.aria-window.mini{pointer-events:auto;left:auto !important;top:auto !important;right:16px;bottom:calc(16px + var(--slot,0) * 64px);width:min(340px,calc(100vw - 32px)) !important;height:auto !important;min-height:0;min-width:0;border-radius:14px;animation:none}
+.aria-window.mini .aria-body,.aria-window.mini .aria-foot,.aria-window.mini .aria-rz,.aria-window.mini .aria-hint,.aria-window.mini .aria-title small{display:none}
+.aria-window.mini::after{display:none}
+.aria-window.mini .aria-top{padding:8px 12px;gap:10px;cursor:default}
+.aria-window.mini .aria-badge{width:30px;height:30px;font-size:15px;border-radius:9px}
+.aria-window.mini .aria-title b{font-size:14px}
+.aria-window.mini .aria-top-actions{gap:6px}
+.aria-window.mini .aria-top-actions .aria-toggle,.aria-window.mini .aria-top-actions .aria-home:not(.aria-close):not(.aria-minbtn){padding:4px 9px}

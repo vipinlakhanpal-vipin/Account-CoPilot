@@ -72,6 +72,7 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
   tagline = "Automatic Responsive Intelligent Assistant", welcomeText, placeholder, buttonClassName = "", storageKey = "aria-read-aloud" }: AriaChatProps) {
   const [open, setOpen] = useState(false);
   const [wide, setWide] = useState(false);
+  const [mini, setMini] = useState(false); // minimized to a small bar; the chat stays as it is
   const [rect, setRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
   const winRef = useRef<HTMLElement>(null);
   const [msgs, setMsgs] = useState<Msg[]>([]);
@@ -97,7 +98,7 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
   // Drag the window by its header, or resize it from any edge or corner. The position is kept in state so it
   // survives close/re-open, and is clamped so the header can never be lost off-screen.
   const startDrag = (mode: string) => (e: React.PointerEvent) => {
-    if (e.button !== 0 || !winRef.current) return;
+    if (e.button !== 0 || !winRef.current || mini) return;
     if (mode === "move" && (e.target as HTMLElement).closest("button")) return;
     e.preventDefault();
     const r = winRef.current.getBoundingClientRect();
@@ -166,10 +167,10 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
   useEffect(() => { if (open) setTimeout(() => inputRef.current?.focus(), 60); }, [open]);
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape" && !mini) setOpen(false); };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [open]);
+  }, [open, mini]);
 
   const histKey = `${storageKey}-history`;
   useEffect(() => {
@@ -193,7 +194,7 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
   function fresh() {
     cancelledRef.current = true; abortRef.current?.abort();
     window.speechSynthesis?.cancel();
-    convId.current = null; setMsgs([]); setText(""); setBusy(false); setListening(false); setView("chat");
+    convId.current = null; setMsgs([]); setText(""); setBusy(false); setListening(false); setView("chat"); setMini(false);
   }
   function openConv(c: Conv) { convId.current = c.id; loaded.current = c.msgs; setMsgs(c.msgs as Msg[]); setView("chat"); }
   const dayLabel = (t: number) => {
@@ -263,7 +264,7 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
   const last = msgs[msgs.length - 1];
   return (
     <>
-      <button type="button" className={`aria-btn ${buttonClassName}`.trim()} onClick={() => { if (!open) fresh(); setOpen((o) => !o); }} aria-expanded={open} aria-label={`${name} - Your interactive agent`}>
+      <button type="button" className={`aria-btn ${buttonClassName}`.trim()} onClick={() => { if (open && mini) { setMini(false); return; } if (!open) fresh(); setOpen((o) => !o); }} aria-expanded={open} aria-label={`${name} - Your interactive agent`}>
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <circle cx="12" cy="2.9" r="1.35" fill="#FFE08A" />
           <path d="M12 4.2v2.3" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" />
@@ -278,8 +279,8 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
         <span className="aria-tip" role="tooltip"><span className="aria-tip-dot" aria-hidden="true" />{name} - Your interactive agent</span>
       </button>
       {open && typeof document !== "undefined" && createPortal(
-        <div className="aria-backdrop" onClick={() => setOpen(false)}>
-          <section ref={winRef} className={`aria-window${wide ? " wide" : ""}`} style={rect ? { left: rect.x, top: rect.y, width: rect.w, height: rect.h } : undefined}
+        <div className={`aria-backdrop${mini ? " mini" : ""}`} onClick={() => { if (!mini) setOpen(false); }}>
+          <section ref={winRef} className={`aria-window${wide ? " wide" : ""}${mini ? " mini" : ""}`} style={mini ? ({ "--slot": 2 } as React.CSSProperties) : rect ? { left: rect.x, top: rect.y, width: rect.w, height: rect.h } : undefined}
             role="dialog" aria-modal="true" aria-label={`${name}, your assistant`} onClick={(e) => e.stopPropagation()}>
             {["n", "s", "e", "w", "ne", "nw", "se", "sw"].map((d) => <span key={d} className={`aria-rz ${d}`} onPointerDown={startDrag(d)} aria-hidden="true" />)}
             <header className="aria-top" onPointerDown={startDrag("move")} title="Drag to move the window anywhere. Drag any edge or corner to resize it.">
@@ -287,6 +288,7 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
               <div className="aria-title"><b>{name}</b><small>{tagline}</small><small className="aria-hint">✥ Drag me anywhere on the screen, and resize me from any edge or corner</small></div>
               <div className="aria-top-actions">
                 <button type="button" className={`aria-home${view === "history" ? " on" : ""}`} onClick={() => setView((v) => (v === "history" ? "chat" : "history"))} aria-pressed={view === "history"} title="Your earlier chats, by date">🕘 History</button>
+                <button type="button" className="aria-home" onClick={() => setMini((m) => !m)} title={mini ? "Bring the window back" : "Shrink to a small bar so you can work on other things"}>{mini ? "Restore" : "Minimize"}</button>
                 <button type="button" className="aria-home" onClick={() => { setRect(null); setWide((w) => !w); }} aria-pressed={wide} title="Make the window fill the screen, or back to its normal size. You can also drag the header to move it and any edge to resize it.">{wide ? "⤡ Smaller" : "⤢ Expand"}</button>
                 {(msgs.length > 0 || view === "history") && <button type="button" className="aria-home" onClick={restart} title="Back to the start screen with the example questions">🏠 Home</button>}
                 <button type="button" className={`aria-toggle${readAloud ? " on" : ""}`} onClick={toggleRead} aria-pressed={readAloud} title="Read answers aloud">🔊 {readAloud ? "Reading aloud" : "Read aloud"}</button>

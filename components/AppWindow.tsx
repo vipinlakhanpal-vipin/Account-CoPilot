@@ -4,13 +4,14 @@ import { createPortal } from "react-dom";
 
 // A floating window in Aria's style: drag the header, drag any edge or corner to resize, Expand to fill the screen, Close. It does not dim or block the page behind it,
 // so a list can stay open beside the account pages. Used by Buying signals and Market intelligence.
-export default function AppWindow({ open, onClose, title, subtitle, badge, actions, children }: { open: boolean; onClose: () => void; title: string; subtitle: string; badge: string; actions?: ReactNode; children: ReactNode }) {
+export default function AppWindow({ open, onClose, title, subtitle, badge, actions, slot = 0, children }: { open: boolean; onClose: () => void; title: string; subtitle: string; badge: string; actions?: ReactNode; slot?: number; children: ReactNode }) {
   const [wide, setWide] = useState(false);
+  const [mini, setMini] = useState(false); // minimized: a small bar in the corner; the content stays mounted, so scans keep running and updating
   const [rect, setRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
   const winRef = useRef<HTMLElement>(null);
 
   const startDrag = (mode: string) => (e: React.PointerEvent) => {
-    if (e.button !== 0 || !winRef.current) return;
+    if (e.button !== 0 || !winRef.current || mini) return;
     if (mode === "move" && (e.target as HTMLElement).closest("button")) return;
     e.preventDefault();
     const r = winRef.current.getBoundingClientRect();
@@ -36,6 +37,7 @@ export default function AppWindow({ open, onClose, title, subtitle, badge, actio
     };
     document.addEventListener("pointermove", onMove); document.addEventListener("pointerup", onUp); document.addEventListener("pointercancel", onUp);
   };
+  useEffect(() => { if (!open) setMini(false); }, [open]); // reopening always starts at normal size
   useEffect(() => {
     const fit = () => setRect((r) => r && { ...r, x: Math.min(Math.max(r.x, 140 - r.w), window.innerWidth - 140), y: Math.min(Math.max(r.y, 0), window.innerHeight - 56) });
     window.addEventListener("resize", fit);
@@ -43,22 +45,23 @@ export default function AppWindow({ open, onClose, title, subtitle, badge, actio
   }, []);
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape" && !mini) onClose(); };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+  }, [open, onClose, mini]);
 
   if (!open || typeof document === "undefined") return null;
   return createPortal(
-    <div className="aria-backdrop appwin-bd">
-      <section ref={winRef} className={`aria-window appwin${wide ? " wide" : ""}`} style={rect ? { left: rect.x, top: rect.y, width: rect.w, height: rect.h } : undefined} role="dialog" aria-label={title}>
+    <div className={`aria-backdrop appwin-bd${mini ? " mini" : ""}`}>
+      <section ref={winRef} className={`aria-window appwin${wide ? " wide" : ""}${mini ? " mini" : ""}`} style={mini ? ({ "--slot": slot } as React.CSSProperties) : rect ? { left: rect.x, top: rect.y, width: rect.w, height: rect.h } : undefined} role="dialog" aria-label={title}>
         {["n", "s", "e", "w", "ne", "nw", "se", "sw"].map((d) => <span key={d} className={`aria-rz ${d}`} onPointerDown={startDrag(d)} aria-hidden="true" />)}
         <header className="aria-top" onPointerDown={startDrag("move")} title="Drag to move the window anywhere. Drag any edge or corner to resize it.">
           <span className="aria-badge" aria-hidden="true">{badge}</span>
           <div className="aria-title"><b>{title}</b><small>{subtitle}</small><small className="aria-hint">✥ Drag me anywhere on the screen, and resize me from any edge or corner</small></div>
           <div className="aria-top-actions">
             {actions}
-            <button type="button" className="aria-home" onClick={() => { setRect(null); setWide((w) => !w); }} aria-pressed={wide} title="Make the window fill the screen, or back to its normal size">{wide ? "Shrink" : "Expand"}</button>
+            <button type="button" className="aria-home" onClick={() => setMini((m) => !m)} title={mini ? "Bring the window back" : "Shrink to a small bar so you can work on other things; it keeps running"}>{mini ? "Restore" : "Minimize"}</button>
+            {!mini && <button type="button" className="aria-home" onClick={() => { setRect(null); setWide((w) => !w); }} aria-pressed={wide} title="Make the window fill the screen, or back to its normal size">{wide ? "Shrink" : "Expand"}</button>}
             <button type="button" className="aria-home aria-close" onClick={onClose}>Close</button>
           </div>
         </header>
