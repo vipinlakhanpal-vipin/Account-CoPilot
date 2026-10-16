@@ -340,7 +340,7 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
                       <div className="aria-choices">{m.choices.map((c) => { const label = typeof c === "string" ? c : c.label, value = typeof c === "string" ? c : c.value;
                         if (typeof c !== "string" && c.number) return <form key={label + value} className="aria-num" onSubmit={(e) => { e.preventDefault(); const n = Math.floor(Number(new FormData(e.currentTarget).get("n"))); if (n >= 1 && n <= 500) send(value.replace("{n}", String(n)), `${n}`); }}>
                           <input name="n" type="number" min={1} max={500} inputMode="numeric" placeholder="Other number" aria-label="Enter how many companies" /><button type="submit">Go</button></form>;
-                        return <button type="button" key={label + value} onClick={() => send(value, label)}>{label}</button>; })}</div>
+                        return <button type="button" key={label + value} className={/\b(excel|pdf)\b/i.test(label) ? "aria-dl" : undefined} onClick={() => send(value, label)}>{label}</button>; })}</div>
                     )}
                   </div>
                 </div>

@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.79";
+export const APP_VERSION = "4.80";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.80", date: "2026-10-16", notes: "Excel and PDF choices in Aria are sky-blue, and 20 potential prospects shows 20.", changes: [
+      { what: "The Excel contact list and PDF report choices Aria offers under an answer are now sky-blue pills, like the other download buttons", where: "packages/aria/AriaChat.tsx, packages/aria/aria.css", why: "Requested — sky blue for the Excel and PDF tabs" },
+      { what: "A request such as give me 20 potential prospects now shows 20 (before, only 20 companies was read as a count, so the list stopped at 15)", where: "lib/aria/router.ts", why: "Reported — asked for 20 prospects and 15 were shown" },
+    ] },
   { version: "4.79", date: "2026-10-16", notes: "Aria asks which ICP status to include.", changes: [
       { what: "Aria now asks which ICP status to include (Verified only, Verified and Likely, Everything except Not ICP, Any status) before building a PDF or Excel, and before listing prospects (companies not on Coupa or SAP Ariba), unless your request already named a status or said any. It is asked once; the earlier questions (region, format, how many, how to pick) are unchanged", where: "lib/aria/router.ts", why: "Questioned — the ICP and Likely question was not asked for the prospect list" },
     ] },

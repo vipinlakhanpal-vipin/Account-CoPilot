@@ -155,3 +155,6 @@
 .aria-window.mini .aria-minbtn,.aria-window.mini .aria-close{padding:5px 12px;font-size:12px;white-space:nowrap}
 .aria-home.aria-ic{width:30px;height:30px;padding:0;display:inline-grid;place-items:center;border-radius:50%;font:700 20px/1 var(--aria-body)}
 .aria-window.mini .aria-minbtn.aria-ic{width:28px;height:28px;padding:0;font-size:19px}
+/* Excel and PDF choices: sky-blue pills, like every download button in the app */
+.aria-choices button.aria-dl{background:#1F8FE0;color:#fff;border:1.5px solid #157AC4;font-weight:700;padding:8px 18px;box-shadow:0 2px 8px rgba(31,143,224,.28)}
+.aria-choices button.aria-dl:hover{background:#157AC4;color:#fff}

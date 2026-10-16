@@ -142,7 +142,7 @@ export async function tryFree(question: string, ctx: AriaContext): Promise<FreeR
         choices: [{ label: "Ask the AI to handle it (uses API credit)", value: `§ai:${question}` }, { label: "Run it without that part", value: `§plain:${plain}` }] };
     }
   }
-  const num = /\btop\s*(\d{1,3})\b|\b(\d{1,3})\s*compan/.exec(t);
+  const num = /\btop\s*(\d{1,3})\b|\b(\d{1,3})\s*(?:potential |target |more |new )?(?:compan|prospect|account|customer)/.exec(t);
   const limit = num ? Number(num[1] || num[2]) : 0;
   const wantsAll = /\ball\b|\bevery\b|\bfull\b/.test(t);
   const tNoRange = (() => { const g: AccountFilter = {}; const hit = parseRevenue(t, g); return hit ? t.replace(hit, " ") : t; })();
