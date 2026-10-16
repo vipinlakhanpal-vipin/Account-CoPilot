@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.41";
+export const APP_VERSION = "4.42";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.42", date: "2026-10-16", notes: "Scanning text on the vendor tiles is small and short.", changes: [
+      { what: "The Scanning line on a vendor tile was picking up the big number style and swelled the tiles; it is now one small line, and long region lists shorten to the first region plus the count (Scanning Kenya +8 more…)", where: "components/MarketIntel.tsx, app/globals.css", why: "Reported — the scanning text on the tiles was huge" },
+    ] },
   { version: "4.41", date: "2026-10-16", notes: "A vendor scan flashes on the vendor's own tile.", changes: [
       { what: "While a vendor is being scanned, its tile shows a flashing orange dot and Scanning with the regions; the bar at the top of the list is gone. A short message appears when that vendor's scan finishes", where: "components/MarketIntel.tsx", why: "Requested — show scanning on the tile itself instead of a separate bar" },
     ] },

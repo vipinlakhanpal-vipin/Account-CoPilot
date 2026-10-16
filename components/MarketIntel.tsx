@@ -182,7 +182,7 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
           const custom = !!data?.custom_vendors?.includes(v);
           return (
             <span key={v} className="vendor-tile">
-              <button type="button" className={`sig-lane ${["c1", "c2", "c6", "c7", "c3", "c4", "c5", "c8"][i % 8]}`} aria-pressed={vendor === v} onClick={() => { setVendor(v); setOpenP(null); }}><b>{countP(v)}</b><span>{v} partners</span>{scanningRegions(v).length > 0 && <span className="srch" role="status"><i className="fcj-dot" aria-hidden="true" /><b className="fcj-flash">Scanning {scanningRegions(v).join(", ")}…</b></span>}</button>
+              <button type="button" className={`sig-lane ${["c1", "c2", "c6", "c7", "c3", "c4", "c5", "c8"][i % 8]}`} aria-pressed={vendor === v} onClick={() => { setVendor(v); setOpenP(null); }}><b>{countP(v)}</b><span>{v} partners</span>{scanningRegions(v).length > 0 && <span className="srch" role="status"><i className="fcj-dot" aria-hidden="true" /><em className="fcj-flash">{(() => { const r = scanningRegions(v); return `Scanning ${r.length <= 2 ? r.join(", ") : `${r[0]} +${r.length - 1} more`}…`; })()}</em></span>}</button>
               {custom && data?.is_super && <button type="button" className="vendor-x" aria-label={`Remove ${v}`} title={`Remove ${v} from the list`} onClick={() => removeVendor(v)}>×</button>}
             </span>);
         })}
