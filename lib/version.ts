@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.64";
+export const APP_VERSION = "4.65";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.65", date: "2026-10-16", notes: "A partner is listed in a region only with a local office address and a cited source.", changes: [
+      { what: "To be listed under a region a partner, local or foreign, needs an office address in that region and a page that shows it; the address appears on its card with the source. Without it the partner goes to Other regions, where its actual base is shown. Coupa UAE now lists Deloitte, Bahwan CyberTek, Bain & Company, Wipro, Miebach Consulting, PwC, Accenture, KPMG and RSM with their Dubai or Abu Dhabi addresses; Accely and BRINGVAS (no UAE office found) are under Other regions. Scans must supply the address and source, and the app files a partner without them under Other regions", where: "lib/market.ts (presenceOk), components/MarketIntel.tsx, app/api/engine/worker, ENGINE.md", why: "Requested — list only partners with a UAE office and its address, foreign firms included" },
+    ] },
   { version: "4.64", date: "2026-10-16", notes: "Self-announced partners are labelled LIKELY.", changes: [
       { what: "A partner that only announces the partnership on its own website, not in the vendor's partner directory, is labelled LIKELY with a note saying so. Accely (Coupa, UAE) was corrected: its Coupa partnership comes from its own January 2024 press release, and it is not in Coupa's directory. Scans follow the same rule", where: "ENGINE.md, Market intelligence data", why: "Reported — Coupa could not be found among Accely's partners" },
     ] },

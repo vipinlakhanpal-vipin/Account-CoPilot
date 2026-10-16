@@ -14,7 +14,7 @@ export function vendorList(custom: unknown): string[] {
 }
 export type MContact = { name: string; title: string; email: string; phone: string; linkedin_url: string; source_url: string };
 export type Partner = { id: string; vendor: Vendor; region: string; name: string; website: string; tier: string; services: string; hq_city: string; source_url: string;
-  label: "FACT" | "LIKELY"; contacts: MContact[]; found_at: string; added_by?: string; customers_scanned_at?: string; hq_country?: string; branch?: boolean; branch_note?: string; coverage_only?: boolean; scope_note?: string; branch_source?: string; presence_pending?: boolean };
+  label: "FACT" | "LIKELY"; contacts: MContact[]; found_at: string; added_by?: string; customers_scanned_at?: string; hq_country?: string; branch?: boolean; branch_note?: string; coverage_only?: boolean; scope_note?: string; branch_source?: string; presence_pending?: boolean; office_address?: string; office_source?: string };
 export type PCustomer = { id: string; partner_id: string; partner: string; vendor: Vendor; region: string; customer: string; customer_website: string; slug: string; project: string;
   source_url: string; published: string; contacts: MContact[]; found_at: string };
 export type MarketDoc = { vendor: Vendor; region: string; partners: Partner[]; customers: PCustomer[]; scanned_at: string };
@@ -27,9 +27,7 @@ export const CUSTOMERS_TIP = "For partners already on the list, reads their publ
 const COUNTRY_REGION: Record<string, string> = { uae: "UAE", "united arab emirates": "UAE", ksa: "KSA", "saudi arabia": "KSA", qatar: "Qatar", kuwait: "Kuwait", oman: "Oman", bahrain: "Bahrain", egypt: "Egypt", morocco: "Morocco", kenya: "Kenya", uk: "UK", "united kingdom": "UK", usa: "USA", "united states": "USA" };
 /** The app's region for a country name; an unknown country (India, Germany ...) comes back as typed, so it never matches one of our regions. */
 export const regionOfCountry = (c?: string) => (c ? COUNTRY_REGION[c.trim().toLowerCase()] || c.trim() : "");
-/** The listing rule: a partner belongs under a region only if it is based there, or is a branch with an office there confirmed by a cited page. Coverage alone ("serves the UAE", a global listing) does not count. */
-export function presenceOk(p: { hq_city?: string; hq_country?: string; branch?: boolean; branch_source?: string }, region: string): boolean {
-  if (p.hq_country && regionOfCountry(p.hq_country) === region) return true;
-  if (!p.hq_country && p.hq_city) return true; // a city in the region, no other country named
-  return !!(p.branch && p.branch_source);
+/** The listing rule: a partner belongs under a region only with a local office in that region, shown by an address and a cited page (office_address + office_source). Based there or a branch of a foreign firm, the same proof: coverage alone ("serves the UAE", a global listing) does not count. */
+export function presenceOk(p: { office_address?: string; office_source?: string }, _region?: string): boolean {
+  return !!(p.office_address && p.office_address.trim().length >= 8 && /^https?:\/\//.test(p.office_source || ""));
 }

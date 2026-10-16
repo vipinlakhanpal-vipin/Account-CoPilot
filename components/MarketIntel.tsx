@@ -307,6 +307,7 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
                   {p.tier && <span className="sig-pill">{p.tier}</span>}<span className={`sig-pill lab-${p.label.toLowerCase()}`}>{p.label}</span>
                 </div>
                 {p.services && <p className="sig-ev">{p.services}</p>}
+                {p.office_address && <p className="sig-office"><b>Office:</b> {p.office_address}{p.office_source && <> · <a href={p.office_source} target="_blank" rel="noopener noreferrer">source</a></>}</p>}
                 {p.scope_note && <p className="sig-scope">{p.scope_note}{p.branch_source && <> <a href={p.branch_source} target="_blank" rel="noopener noreferrer">source</a></>}</p>}
                 <p className="sig-src">{p.website && <><a href={/^https?:/.test(p.website) ? p.website : `https://${p.website}`} target="_blank" rel="noopener noreferrer">{p.website.replace(/^https?:\/\//, "")}</a> · </>}Listed on: <a href={p.source_url} target="_blank" rel="noopener noreferrer">source</a></p>
                 {p.contacts.map((c, i) => <Who key={i} c={c} />)}
