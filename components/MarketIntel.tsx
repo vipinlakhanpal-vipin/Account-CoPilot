@@ -13,7 +13,8 @@ type Job = { mode: string; started_at?: string; phase?: string; seamless?: boole
 type Data = { vendors: Vendor[]; custom_vendors: string[]; is_super: boolean; defaults: string[]; regions: string[]; partners: Partner[]; customers: Cust[]; scans: Record<string, string>; jobs: Job[] };
 // One place format for every partner: Region-City, for example UAE-Dubai. A city that is just the country name becomes the capital; no city shows as Unknown until a scan finds it.
 const CAPITAL: Record<string, string> = { Kuwait: "Kuwait City", Qatar: "Doha", Bahrain: "Manama", Oman: "Muscat" };
-const place = (region: string, city?: string, hqCountry?: string, branch?: boolean, coverageOnly?: boolean) => {
+const place = (region: string, city?: string, hqCountry?: string, branch?: boolean, coverageOnly?: boolean, pending?: boolean) => {
+  if (pending) return hqCountry ? `Other region · based ${[(city || "").split(/[,(]/)[0].trim(), hqCountry].filter(Boolean).join(", ")}` : "Other region · base not stated";
   if (coverageOnly && !hqCountry && !city) return `Serves ${region} · base not stated`;
   if (branch && !hqCountry) return `Branch in ${region}`;
   const rc = regionOfCountry(hqCountry);
@@ -47,7 +48,6 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
   const [q, setQ] = useState("");
   const [view, setView] = useState<"partners" | "customers">("partners");
   const [notInApp, setNotInApp] = useState(false);
-  const [showPending, setShowPending] = useState(false); // partners whose base or office in the region is not confirmed yet
   const [withContacts, setWithContacts] = useState(false);
   const [openP, setOpenP] = useState<string | null>(null);
   const [busy, setBusy] = useState("");
@@ -59,14 +59,24 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
   useEffect(() => { load(); const t = setInterval(load, 25000); return () => clearInterval(t); }, [load]);
 
   const regionList = data?.regions || [];
-  const active = regions ?? (regionList.includes("UAE") ? ["UAE"] : regionList.slice(0, 1));
+  // "Other regions": partners a vendor lists that are not based in, or confirmed to have an office in, any of your regions. They are saved (never thrown away) and appear when this row is ticked.
+  const OTHER = "Other regions";
+  const picked = regions ?? (regionList.includes("UAE") ? ["UAE"] : regionList.slice(0, 1));
+  const active = picked.filter((r) => r !== OTHER); // real regions: what the scan buttons use
+  const otherOn = picked.includes(OTHER);
+  const pendingIds = new Set((data?.partners || []).filter((p) => p.presence_pending).map((p) => p.id));
+  const otherPartners = useMemo(() => { // one row per vendor and name, whichever region's list it was found in
+    const seen = new Set<string>(); const out: Partner[] = [];
+    for (const p of data?.partners || []) { if (!p.presence_pending) continue; const k = `${p.vendor}|${p.name.toLowerCase().replace(/[^a-z0-9]+/g, "")}`; if (seen.has(k)) continue; seen.add(k); out.push(p); }
+    return out;
+  }, [data]);
+  const shownPartners = (v?: string) => [...(data?.partners || []).filter((p) => !p.presence_pending && active.includes(p.region)), ...(otherOn ? otherPartners : [])].filter((p) => !v || p.vendor === v);
   const needle = q.trim().toLowerCase();
-  const partners = useMemo(() => (data?.partners || []).filter((p) => p.vendor === vendor && active.includes(p.region) && (showPending || !p.presence_pending) && (!needle || `${p.name} ${p.services} ${p.tier}`.toLowerCase().includes(needle))), [data, vendor, active, needle]);
-  const custs = useMemo(() => (data?.customers || []).filter((c) => c.vendor === vendor && active.includes(c.region) && (!notInApp || !c.in_app) && (!withContacts || c.contacts.length > 0)
+  const partners = useMemo(() => shownPartners(vendor).filter((p) => !needle || `${p.name} ${p.services} ${p.tier}`.toLowerCase().includes(needle)), [data, vendor, active, otherOn, needle]); // eslint-disable-line react-hooks/exhaustive-deps
+  const custs = useMemo(() => (data?.customers || []).filter((c) => c.vendor === vendor && (pendingIds.has(c.partner_id) ? otherOn : active.includes(c.region)) && (!notInApp || !c.in_app) && (!withContacts || c.contacts.length > 0)
     && (!needle || `${c.customer} ${c.partner} ${c.project}`.toLowerCase().includes(needle))), [data, vendor, active, notInApp, withContacts, needle]);
   const custOf = (p: Partner) => custs.filter((c) => c.partner_id === p.id);
-  const countP = (v: Vendor) => (data?.partners || []).filter((p) => p.vendor === v && active.includes(p.region) && (showPending || !p.presence_pending)).length;
-  const pendingN = (data?.partners || []).filter((p) => p.vendor === vendor && active.includes(p.region) && p.presence_pending).length;
+  const countP = (v: Vendor) => shownPartners(v).length;
   const allPending = (data?.jobs || []).filter((j) => j.status === "queued" || j.status === "running");
   const pending = allPending.filter((j) => j.mode === "market" && !j.customer && !j.partner && !j.contacts_only); // vendor scans: shown on the vendor tile
   const scanningRegions = (v: string) => [...new Set(pending.filter((j) => j.vendor === v || j.vendor === "all" || !j.vendor).map((j) => j.region))];
@@ -128,7 +138,7 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
     if (!r.ok) { notify(j.error || "Could not add the partner.", "error"); return; }
     logActivity("scan", `Added partner ${pf.name} (${vendor} · ${region})`);
     setAddingP(false); setPf({ name: "", website: "", region: "" }); await load();
-    if (!active.includes(region)) setRegions([...active, region]);
+    if (!picked.includes(region)) setRegions([...picked, region]);
     notify(`${pf.name} added to ${vendor} · ${region}. Click Find more customers on its card to search its customers.`, "ok");
   };
   const moreFor = async (p: Partner) => {
@@ -249,16 +259,14 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
       <div className="sig-body">
         <aside className="sig-side">
           <h3>Regions</h3>
-          {regionList.length === 0 ? <p className="note">No active region.</p> : regionList.map((r) => (
-            <label key={r}><input type="checkbox" checked={active.includes(r)} onChange={() => setRegions(toggle(active, r))} /> {r} <small>{ago(data?.scans[`${vendor}|${r}`])}</small></label>))}
+          {regionList.length === 0 ? <p className="note">No active region.</p> : [...regionList, ...(otherPartners.length || otherOn ? [OTHER] : [])].map((r) => (
+            <label key={r}><input type="checkbox" checked={picked.includes(r)} onChange={() => setRegions(toggle(picked, r))} /> {r} <small>{r === OTHER ? `${otherPartners.filter((p) => p.vendor === vendor).length} ${vendor}` : ago(data?.scans[`${vendor}|${r}`])}</small></label>))}
           <h3>View</h3>
           <label><input type="radio" name="mkview" checked={view === "partners"} onChange={() => setView("partners")} /> By partner</label>
           <label><input type="radio" name="mkview" checked={view === "customers"} onChange={() => setView("customers")} /> All Partners' Customers</label>
           <h3>Partner Customers</h3>
           <label><input type="checkbox" checked={notInApp} onChange={() => setNotInApp(!notInApp)} /> Not in my app database</label>
           <label><input type="checkbox" checked={withContacts} onChange={() => setWithContacts(!withContacts)} /> With contact details</label>
-          <h3>Partners</h3>
-          <label title="Partners listed by the vendor whose base or office in the region is not confirmed yet"><input type="checkbox" checked={showPending} onChange={() => setShowPending(!showPending)} /> Show partners without a confirmed office{pendingN ? ` (${pendingN})` : ""}</label>
           <h3>Scan scope</h3>
           <label><input type="checkbox" checked={allVendors} onChange={() => setAllVendors(!allVendors)} /> Include all vendors</label>
           <p className="note">Free. Public web pages only. Use Scan Partners and Scan Customers at the top. Scan again to find more: each scan adds partners it had not found before.</p>
@@ -295,7 +303,7 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
             return (
               <article key={p.id} className={`sig-card mkt-card${isOpen ? " open" : ""}`}>
                 <div className="sig-row">
-                  <a className="sig-co mkt-site" href={p.website ? webUrl(p.website) : p.source_url} target="_blank" rel="noopener noreferrer" title={p.website ? `Open ${p.website.replace(/^https?:\/\//, "")} in a new tab` : "No website saved; opens the page that lists this partner"}>{p.name}<i aria-hidden="true">↗</i></a><span className="sig-meta">{place(p.region, p.hq_city, p.hq_country, p.branch, p.coverage_only)}</span>
+                  <a className="sig-co mkt-site" href={p.website ? webUrl(p.website) : p.source_url} target="_blank" rel="noopener noreferrer" title={p.website ? `Open ${p.website.replace(/^https?:\/\//, "")} in a new tab` : "No website saved; opens the page that lists this partner"}>{p.name}<i aria-hidden="true">↗</i></a><span className="sig-meta">{place(p.region, p.hq_city, p.hq_country, p.branch, p.coverage_only, p.presence_pending)}</span>
                   {p.tier && <span className="sig-pill">{p.tier}</span>}<span className={`sig-pill lab-${p.label.toLowerCase()}`}>{p.label}</span>
                 </div>
                 {p.services && <p className="sig-ev">{p.services}</p>}
@@ -315,7 +323,7 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
               const cs = custOf(p);
               return (
                 <details key={p.id} className="mkt-group" open={i === 0 || !!needle}>
-                  <summary><a className="mkt-site" href={p.website ? webUrl(p.website) : p.source_url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} title={p.website ? `Open ${p.website.replace(/^https?:\/\//, "")} in a new tab` : "No website saved; opens the page that lists this partner"}><b>{p.name}</b><i aria-hidden="true">↗</i></a><span className="sig-meta">{place(p.region, p.hq_city, p.hq_country, p.branch, p.coverage_only)}{p.tier ? ` · ${p.tier}` : ""}</span><em>{cs.length} customer{cs.length === 1 ? "" : "s"}</em></summary>
+                  <summary><a className="mkt-site" href={p.website ? webUrl(p.website) : p.source_url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} title={p.website ? `Open ${p.website.replace(/^https?:\/\//, "")} in a new tab` : "No website saved; opens the page that lists this partner"}><b>{p.name}</b><i aria-hidden="true">↗</i></a><span className="sig-meta">{place(p.region, p.hq_city, p.hq_country, p.branch, p.coverage_only, p.presence_pending)}{p.tier ? ` · ${p.tier}` : ""}</span><em>{cs.length} customer{cs.length === 1 ? "" : "s"}</em></summary>
                   {custTable(cs)}
                 </details>);
             })))}

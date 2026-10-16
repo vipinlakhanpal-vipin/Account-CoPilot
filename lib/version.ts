@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.62";
+export const APP_VERSION = "4.63";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.63", date: "2026-10-16", notes: "An Other regions row collects partners that are not in your regions.", changes: [
+      { what: "The Regions list in Market intelligence has an Other regions row (with the count for the vendor you are on). Partners a vendor lists that are not based in, and have no confirmed office in, any of your regions are saved there instead of being hidden; tick it to see them, each marked Other region with where it is based. The Show partners without a confirmed office box is gone. Scans still only run for the real regions you tick", where: "components/MarketIntel.tsx", why: "Requested — an Other regions bucket for partners identified outside the listed regions" },
+    ] },
   { version: "4.62", date: "2026-10-16", notes: "Partners without a confirmed office are hidden, not deleted.", changes: [
       { what: "A partner that is not based in the region and has no confirmed office there is saved but hidden; a Show partners without a confirmed office box in the left panel brings them back with a count. Nothing is thrown away, and a later scan or a correction that confirms an office moves the partner into the main list. KPMG, RSM and BRINGVAS were restored this way after being removed without your say", where: "components/MarketIntel.tsx, app/api/engine/worker, lib/market.ts", why: "Reported — partners were removed from the backend" },
     ] },
