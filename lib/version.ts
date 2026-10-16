@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.70";
+export const APP_VERSION = "4.71";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.71", date: "2026-10-16", notes: "Aria reads revenue ranges written as upto, and answers can be cleared.", changes: [
+      { what: "Aria now reads a range written as net revenue of $250M upto 650M (also up to, till, until, a dash) as 250 to 650 million. Before, upto was not understood, so no revenue filter was applied and companies of any size came back. The answer now states the range it applied, and if an amount is written but cannot be read, Aria asks instead of guessing", where: "lib/aria/router.ts", why: "Reported — a 250M to 650M request returned companies with revenue in billions" },
+      { what: "Every Aria answer has a Clear this answer button that removes that question and answer from the screen", where: "packages/aria/AriaChat.tsx", why: "Requested — a way to revoke an answer shown on screen" },
+    ] },
   { version: "4.70", date: "2026-10-16", notes: "Find company uses the same compact region list as Market intelligence.", changes: [
       { what: "The left panel of Find company now has a compact list in fine type with small tick boxes: regions as ticks in Search Company (several at once, with company counts) and as round buttons in Find New Company (one region at a time), and the filter groups (ICP status, Listing, S2P signal, Platform, People) as ticks with counts instead of pills", where: "components/FindCompany.tsx, app/globals.css", why: "Requested — the same pattern as Market intelligence, compact with a fine font" },
     ] },

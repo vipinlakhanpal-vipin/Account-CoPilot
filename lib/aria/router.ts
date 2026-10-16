@@ -33,11 +33,18 @@ const NUM = String.raw`\$?\s*([\d][\d,]*(?:\.\d+)?)\s*(m|mn|million|b|bn|billion
 function parseRevenue(t: string, f: AccountFilter): string {
   const val = (n: string, u?: string) => Number(n.replace(/,/g, "")) * (u ? UNIT[u] : 1);
   const ctx = /\b(revenue|turnover|sales)\b/.test(t);
-  let m = new RegExp(String.raw`(?:(?:net )?(?:revenue|turnover|sales)\s*)?(?:between|from)\s*${NUM}\s*(?:and|to|-)\s*${NUM}`).exec(t);
+  let m = new RegExp(String.raw`(?:(?:net )?(?:revenue|turnover|sales)\s*)?(?:between|from)\s*${NUM}\s*(?:and|to|-|–|up ?to|till|until)\s*${NUM}`).exec(t);
   if (m && (ctx || m[2] || m[4])) {
     const hi = val(m[3], m[4]); let lo = val(m[1], m[2] || (m[4] && Number(m[1].replace(/,/g, "")) < Number(m[3].replace(/,/g, "")) ? m[4] : undefined));
     if (lo > hi) [lo, f.max_revenue_usd_m] = [hi, lo]; else f.max_revenue_usd_m = hi;
     f.min_revenue_usd_m = Math.min(lo, hi); if (f.max_revenue_usd_m === undefined) f.max_revenue_usd_m = Math.max(lo, hi);
+    return m[0];
+  }
+  m = new RegExp(String.raw`(?:net )?(?:revenue|turnover|sales)\s*(?:of|is|at|around|about|:)?\s*${NUM}\s*(?:up ?to|upto|to|till|until|-|–)\s*${NUM}`).exec(t);
+  if (m && (m[2] || m[4])) {
+    const n1 = Number(m[1].replace(/,/g, "")), n3 = Number(m[3].replace(/,/g, ""));
+    let lo = val(m[1], m[2] || (m[4] && n1 < n3 ? m[4] : undefined)); const hi = val(m[3], m[4]);
+    if (lo > hi) { f.min_revenue_usd_m = hi; f.max_revenue_usd_m = lo; } else { f.min_revenue_usd_m = lo; f.max_revenue_usd_m = hi; }
     return m[0];
   }
   m = new RegExp(String.raw`(?:(?:net )?(?:revenue|turnover|sales)\s*)?(?:above|over|more than|at least|greater than|>=|>)\s*${NUM}`).exec(t);
@@ -209,6 +216,9 @@ export async function tryFree(question: string, ctx: AriaContext): Promise<FreeR
   }
 
   // ---- Lists ----
+  // A revenue amount was written but not understood: ask, never guess (a wrong filter shows the wrong companies)
+  if (/\b(revenue|turnover|sales)\b/.test(t) && /(\$|usd|aed|\d\s*(m|mn|million|b|bn|billion)\b)/.test(t) && f.min_revenue_usd_m === undefined && f.max_revenue_usd_m === undefined)
+    return { text: "I could not read that revenue range, so I have not filtered by it. Say it like **between 250m and 650m**, **above 1b** or **below 100m** (US dollars).", actions: [], choices: [] };
   if (/\b(list|show|which|find|give me|display|top|largest|biggest|who)\b/.test(t) && (f.region || f.icp_status || f.platform || f.erp_contains || f.signal || f.has_contacts) && /\b(compan\w*|account\w*|customer\w*|prospect\w*|verified|likely)\b/.test(t)) {
     const r = searchAccounts(ctx, { ...f, limit: Math.min(limit || 15, 25) });
     if (!r.total && !r.existing_coupa_customers) return { text: "No companies match that.", actions: [], choices: [] };
@@ -216,7 +226,9 @@ export async function tryFree(question: string, ctx: AriaContext): Promise<FreeR
       r.rows.map((x) => [x.company, x.country, x.icp_status.replace("ICP — ", ""), x.revenue, x.erp, x.s2p_platform, x.signal, x.contacts]));
     const coupaLine = !r.coupa_customers_included_in_rows && r.existing_coupa_customers
       ? `\n\n+ **${r.existing_coupa_customers}** existing Coupa customers also match; they are not listed here (as on the dashboard). Say "include Coupa customers" to see them.` : "";
-    return { text: `**${r.total}** prospects${readable(f) ? ` (${readable(f)})` : ""}${r.total > r.shown ? `, showing the ${r.shown} largest by revenue` : ""}:\n\n${md}${coupaLine}`, actions: [], choices: nextSteps(f, f.region) };
+    return { text: `**${r.total}** prospects${[readable(f), revenuePhrase(f)].filter(Boolean).length ? ` (${[readable(f), revenuePhrase(f)].filter(Boolean).join(", ")})` : ""}${r.total > r.shown ? `, showing the ${r.shown} largest by revenue` : ""}:\n\n${md}${coupaLine}`, actions: [], choices: nextSteps(f, f.region) };
   }
   return null;
 }
+
+export { parseRevenue as parseRevenueText }; // exported so the range reading can be tested

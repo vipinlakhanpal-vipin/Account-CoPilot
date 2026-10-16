@@ -330,6 +330,7 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
                         <button type="button" key={j} className="btn primary tiny" disabled={filing === `${i}-${j}`} onClick={() => file(a, `${i}-${j}`)}>
                           {filing === `${i}-${j}` ? "Building…" : `${a.kind === "xlsx" ? "📊" : "📄"} ${a.label}`}</button>))}</div>
                     )}
+                    {m.role === "assistant" && !busy && <button type="button" className="aria-clear" title="Remove this question and its answer from the screen" onClick={() => setMsgs((all) => all.filter((_, k) => k !== i && !(k === i - 1 && all[k].role === "user")))}>↩ Clear this answer</button>}
                     {m.note && <p className={`aria-note ${m.mode === "ai" ? "ai" : "free"}`}>{m.note}{m.ms !== undefined ? ` · ${(m.ms / 1000).toFixed(1)}s` : ""}</p>}
                     {m.choices && m.choices.length > 0 && i === msgs.length - 1 && !busy && (
                       <div className="aria-choices">{m.choices.map((c) => { const label = typeof c === "string" ? c : c.label, value = typeof c === "string" ? c : c.value;

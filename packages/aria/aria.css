@@ -140,3 +140,5 @@
 .aria-window.mini .aria-title b{font-size:14px}
 .aria-window.mini .aria-top-actions{gap:6px}
 .aria-window.mini .aria-top-actions .aria-toggle,.aria-window.mini .aria-top-actions .aria-home:not(.aria-close):not(.aria-minbtn){padding:4px 9px}
+.aria-clear{align-self:flex-start;margin-top:8px;font:600 11px var(--aria-body);color:var(--aria-muted);background:none;border:1px solid var(--aria-line-2);border-radius:999px;padding:3px 10px;cursor:pointer}
+.aria-clear:hover{color:#B42318;border-color:#B42318}
