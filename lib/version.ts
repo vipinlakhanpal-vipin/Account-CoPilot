@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.89";
+export const APP_VERSION = "4.90";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.90", date: "2026-10-16", notes: "The Excel and PDF buttons under an Aria list keep the list's filters.", changes: [
+      { what: "The Excel contact list and PDF report buttons under a list now carry everything the list was filtered by (status, platform, ERP, revenue range, exclusions such as Coupa and SAP Ariba), its size (top N) and its order (largest revenue). Before, they kept only the status and the region, so the file held a wider set of companies than the ones shown. A file still lists only companies that have an email, phone or LinkedIn on file", where: "lib/aria/router.ts (nextSteps)", why: "Reported — the companies in the downloaded Excel differed from the ones Aria displayed" },
+    ] },
   { version: "4.89", date: "2026-10-16", notes: "Aria no longer asks which ICP status to include.", changes: [
       { what: "The ICP status question (Verified only, Verified and Likely...) that v4.79 added before building an Excel or PDF, and before a prospect list, is removed. Aria asks region, format, how many and how to pick, as before; name a status in the request if you want one", where: "lib/aria/router.ts", why: "Requested — remove the extra question" },
     ] },

@@ -122,8 +122,13 @@ const rowsOf = (ctx: AriaContext, f: AccountFilter, limit = 15) => {
   return { r, md: table(["Company", "Country", "ICP status", "Revenue", "ERP", "Platform", "Signal", "Contacts"],
     r.rows.map((x) => [x.company, x.country, x.icp_status.replace("ICP — ", ""), x.revenue, x.erp, x.s2p_platform, x.signal, x.contacts])) };
 };
-const nextSteps = (f: AccountFilter, region?: string): AriaChoice[] => {
-  const base = [f.icp_status?.join(" and "), "companies", region ? `in ${region}` : ""].filter(Boolean).join(" ");
+// The Excel / PDF choices under a list carry EVERYTHING the list was filtered by (status, platform, ERP, revenue range, exclusions) and its size and order,
+// so the file holds the companies that were shown, not a wider set.
+const nextSteps = (f: AccountFilter, region?: string, limit = 0, byRevenue = false): AriaChoice[] => {
+  const scope = [f.icp_status?.join(" and "), f.platform && `${f.platform} customers`, f.erp_contains && `${f.erp_contains.toUpperCase()} users`].filter(Boolean).join(" ");
+  const rev = revenuePhrase(f);
+  const excl = f.exclude_platform?.length || f.exclude_erp?.length ? `, excluding ${[...(f.exclude_platform || []).map((x) => (x === "ariba" ? "sap ariba" : "coupa")), ...(f.exclude_erp || [])].join(" and ")}` : "";
+  const base = `${scope ? `${scope} ` : ""}companies${region ? ` in ${region}` : ""}${rev ? ` with ${rev}` : ""}${excl}${limit ? `, top ${limit}` : ""}${byRevenue ? ", by largest revenue" : ""}`;
   return region ? [{ label: "📊 Excel contact list", value: `Excel contact list for ${base}` }, { label: "📄 PDF report", value: `PDF report for ${base}` }] : [];
 };
 
@@ -265,7 +270,7 @@ export async function tryFree(question: string, ctx: AriaContext): Promise<FreeR
       r.rows.map((x) => [x.company, x.country, x.icp_status.replace("ICP — ", ""), x.revenue, x.erp, x.s2p_platform, x.signal, x.contacts]));
     const coupaLine = !r.coupa_customers_included_in_rows && r.existing_coupa_customers
       ? `\n\n+ **${r.existing_coupa_customers}** existing Coupa customers also match; they are not listed here (as on the dashboard). Say "include Coupa customers" to see them.` : "";
-    return { text: `**${r.total}** prospects${[readable(f), revenuePhrase(f)].filter(Boolean).length ? ` (${[readable(f), revenuePhrase(f)].filter(Boolean).join(", ")})` : ""}${r.total > r.shown ? `, showing the ${r.shown} largest by revenue` : ""}:\n\n${md}${coupaLine}`, actions: [], choices: nextSteps(f, f.region) };
+    return { text: `**${r.total}** prospects${[readable(f), revenuePhrase(f)].filter(Boolean).length ? ` (${[readable(f), revenuePhrase(f)].filter(Boolean).join(", ")})` : ""}${r.total > r.shown ? `, showing the ${r.shown} largest by revenue` : ""}:\n\n${md}${coupaLine}`, actions: [], choices: nextSteps(f, f.region, limit ? Math.min(limit, 25) : 0, true) };
   }
   return null;
 }
