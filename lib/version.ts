@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.30";
+export const APP_VERSION = "4.31";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,8 +9,8 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
-  { version: "4.30", date: "2026-10-16", notes: "Setup has a proper settings gear icon.", changes: [
-      { what: "The Setup tab now shows a settings gear beside its title instead of the sliders icon", where: "components/Header.tsx", why: "Requested — a nice settings icon for Setup" },
+  { version: "4.30", date: "2026-10-16", notes: "Setup is a settings gear icon without a title.", changes: [
+      { what: "The Setup tab is now a settings gear icon only, with a hover label; its sub-tabs (Define ICP, Settings, Learn Me, Team) still appear underneath when you are in it", where: "components/Header.tsx", why: "Requested — a nice settings icon for Setup" },
     ] },
   { version: "4.29", date: "2026-10-16", notes: "Market intelligence shows partners in two columns.", changes: [
       { what: "In Market intelligence, By partner now lays the partner cards out in as many columns as fit (two in a normal window). A card whose customers are opened takes the full row", where: "components/MarketIntel.tsx, app/globals.css", why: "Requested — the right side of the window was empty" },

@@ -30,7 +30,7 @@ const GROUPS: { label: string; items: [string, string][]; hideLanding?: boolean;
   { label: "Dashboard", items: [["/", "Dashboard"], ["/?tab=reports", "Mission Control"]], hideLanding: true, glyph: "dashboard" },
   { label: "Accounts", items: [["/?tab=accounts", "Accounts"], ["/?tab=pipeline", "Pipeline"], ["/?tab=stakeholders", "Stakeholders"], ["/?tab=signals", "S2P Signals"], ["/?tab=erp", "ERP & Apps"]], glyph: "accounts" },
   { label: "Data", items: [["/?tab=sources", "Sources"], ["/?tab=conflicts", "Conflicts"], ["/research", "Research Queue"]], glyph: "data" },
-  { label: "Setup", items: [["/icp", "Define ICP"], ["/settings", "Settings"], ["/guide", "Learn Me"], ["/team", "Team"]], glyph: "setup" },
+  { label: "Setup", items: [["/icp", "Define ICP"], ["/settings", "Settings"], ["/guide", "Learn Me"], ["/team", "Team"]], icon: true, tip: "Setup - Define ICP, Settings, Learn Me, Team", glyph: "setup" },
 ];
 const SUB_LABEL: Record<string, string> = { Accounts: "All accounts" };
 
