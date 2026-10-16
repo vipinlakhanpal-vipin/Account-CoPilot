@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.27";
+export const APP_VERSION = "4.28";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,12 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.28", date: "2026-10-16", notes: "Market intelligence: customers grouped under each partner, customer contact search, deeper partner scans, a slimmer left panel.", changes: [
+      { what: "All Partners' Customers now shows one collapsible section per partner (partner name, region, number of customers) instead of one mixed list, each with its customers, project, contact details and source", where: "components/MarketIntel.tsx", why: "Requested — customers partner-wise, not mixed" },
+      { what: "Each customer has contact details or a Find contacts button (free). Customers in your database use the account's Find contacts; others queue a market contact search. A toolbar button finds contacts for up to 10 customers of the vendor that have none. In-database customers show how many people are already on file", where: "components/MarketIntel.tsx, app/api/market, app/api/engine, ENGINE.md", why: "Requested — contact details for the customers listed under each partner" },
+      { what: "Partner scans are now thorough: the session pages through the vendor's whole partner directory for the region (well over 20 SAP partners in the UAE), skips partners already found, and a repeat scan adds the ones still missing", where: "ENGINE.md (Market intelligence), app/api/engine/worker (market_targets vendor and region filter)", why: "Reported — only 4 of 20+ UAE SAP partners were found" },
+      { what: "The Scan now block at the bottom of the left panel is gone (the header and toolbar buttons remain), and the left panel uses smaller type", where: "components/MarketIntel.tsx, app/globals.css", why: "Requested" },
+    ] },
   { version: "4.27", date: "2026-10-16", notes: "Icons in the top tabs: a house for Home, and a short icon beside Dashboard, Accounts, Data and Setup.", changes: [
       { what: "Home is now a house icon (with a hover label). Dashboard, Accounts, Data and Setup keep their titles and each gets a short outline icon beside it", where: "components/Header.tsx", why: "Requested — a nice Home icon, and short icons for the other tabs" },
     ] },

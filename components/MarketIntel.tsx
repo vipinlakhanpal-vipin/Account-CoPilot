@@ -2,13 +2,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ask, notify } from "@/components/Confirm";
+import FindContactsButton from "@/components/FindContactsButton";
 import { logActivity } from "@/lib/activityClient";
 import type { MContact, PCustomer, Partner, Vendor } from "@/lib/market";
 
-type Cust = PCustomer & { in_app: boolean };
-type Job = { mode: string; vendor?: string; region: string; status: string; requested_at: string };
+type Cust = PCustomer & { in_app: boolean; people_on_file: number };
+type Job = { mode: string; vendor?: string; customer?: string; region: string; status: string; requested_at: string };
 type Data = { vendors: Vendor[]; custom_vendors: string[]; is_super: boolean; defaults: string[]; regions: string[]; partners: Partner[]; customers: Cust[]; scans: Record<string, string>; jobs: Job[] };
-const ago = (iso?: string) => { if (!iso) return "not scanned yet"; const h = Math.round((Date.now() - new Date(iso).getTime()) / 36e5); return h < 1 ? "just now" : h < 48 ? `${h} h ago` : `${Math.round(h / 24)} days ago`; };
+const ago = (iso?: string) => { if (!iso) return "never"; const h = Math.round((Date.now() - new Date(iso).getTime()) / 36e5); return h < 1 ? "just now" : h < 48 ? `${h} h ago` : `${Math.round(h / 24)} days ago`; };
 const csv = (rows: string[][]) => rows.map((r) => r.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(",")).join("\r\n");
 
 function Who({ c }: { c: MContact }) {
@@ -58,6 +59,32 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
     const r = await fetch("/api/market", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "remove_vendor", name: v }) });
     if (r.ok) { if (vendor === v) setVendor("SAP"); load(); } else notify("Could not remove it.", "error");
   };
+  const findFor = async (c: Cust) => {
+    setBusy(`c|${c.id}`); logActivity("contacts", `${c.customer} (${c.partner})`);
+    const r = await fetch("/api/engine", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "queue", region: c.region, count: 1, mode: "market", vendor: c.vendor, customer: c.customer, partner: c.partner }) });
+    const j = await r.json().catch(() => ({}));
+    setBusy("");
+    if (r.ok) { notify(`Searching ${c.customer} contacts. They appear here when the search finishes.`, "ok"); load(); } else notify(j.error || "Could not start the search.", r.status === 409 ? "ok" : "error");
+  };
+  const findAll = async () => {
+    for (const r of active) {
+      setBusy(`ca|${r}`);
+      const res = await fetch("/api/engine", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "queue", region: r, count: 1, mode: "market", vendor, contacts_only: true }) });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok && res.status !== 409) notify(j.error || "Could not start the search.", "error");
+    }
+    setBusy(""); notify(`Searching contacts for ${vendor} customers that have none. They appear here when it finishes.`, "ok"); load();
+  };
+  const contactCell = (c: Cust) => (
+    <>
+      {c.contacts.map((k, i) => <Who key={i} c={k} />)}
+      {c.contacts.length === 0 && (c.in_app && c.people_on_file > 0
+        ? <span className="muted">{c.people_on_file} people on file · <Link href={`/?open=${encodeURIComponent(c.slug)}&country=${encodeURIComponent(c.region)}`}>see in account</Link></span>
+        : <span className="muted">none yet</span>)}
+      {c.in_app ? <div><FindContactsButton slug={c.slug} region={c.region} company={c.customer} /></div>
+        : <div><button type="button" className="btn tiny" disabled={busy === `c|${c.id}`} onClick={() => findFor(c)} title="Free: searches public web pages for named people at this customer">{busy === `c|${c.id}` ? "Queuing…" : "Find contacts"}</button></div>}
+    </>
+  );
   const scan = async (region: string, v: string) => {
     setBusy(`${v}|${region}`); logActivity("scan", `Market intelligence: ${v} · ${region}`);
     const r = await fetch("/api/engine", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "queue", region, count: 1, mode: "market", vendor: v }) });
@@ -112,19 +139,17 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
           <h3>Partner Customers</h3>
           <label><input type="checkbox" checked={notInApp} onChange={() => setNotInApp(!notInApp)} /> Not in my app database</label>
           <label><input type="checkbox" checked={withContacts} onChange={() => setWithContacts(!withContacts)} /> With contact details</label>
-          <h3>Scan now</h3>
-          {regionList.slice(0, 4).map((r) => <button type="button" key={r} className="btn tiny" disabled={busy === `${vendor}|${r}`} onClick={() => scan(r, vendor)}>{vendor} · {r}</button>)}
-          {regionList.length > 0 && <button type="button" className="btn tiny" disabled={busy === `all|${regionList[0]}`} onClick={() => scanAll(regionList.map((r) => [r, "all"] as [string, string]))}>All vendors, all regions</button>}
-          <p className="note">Free. Public web pages only. A scheduled Claude session runs it, usually a few minutes per region.</p>
+          <p className="note">Free. Public web pages only. Use Scan now at the top. Scan again to find more: each scan adds partners it had not found before.</p>
         </aside>
         <section className="sig-main">
           <div className="mkt-tools">
             <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={`Search ${vendor} partners, customers, projects`} aria-label="Search" />
             <button type="button" className="btn tiny primary" disabled={!!busy || regionList.length === 0} onClick={() => scanAll(active.map((r) => [r, vendor] as [string, string]))}>Scan {vendor} now</button>
+            <button type="button" className="btn tiny" disabled={!custs.length || !!busy} onClick={findAll} title="Free: searches for contacts at up to 10 customers of this vendor that have none yet">Find customer contacts</button>
             <button type="button" className="btn tiny" disabled={!custs.length} onClick={download}>Download customers (CSV)</button>
             <span className="note">{partners.length} partners · {custs.length} customers</span>
           </div>
-          {pending.length > 0 && <div className="sig-pending" role="status"><span className="fcj-dot" aria-hidden="true" /> <b className="fcj-flash">Scanning {pending.map((j) => `${j.vendor === "all" || !j.vendor ? "all vendors" : j.vendor} · ${j.region}`).join(", ")}…</b> Results appear here by themselves.</div>}
+          {pending.length > 0 && <div className="sig-pending" role="status"><span className="fcj-dot" aria-hidden="true" /> <b className="fcj-flash">Scanning {pending.map((j) => (j.customer ? `contacts for ${j.customer}` : `${j.vendor === "all" || !j.vendor ? "all vendors" : j.vendor} · ${j.region}`)).join(", ")}…</b> Results appear here by themselves.</div>}
           {!data && <p className="note">Loading…</p>}
           {data && partners.length === 0 && view === "partners" && (
             <div className="sig-empty"><h3>No {vendor} partners yet</h3><p>Nothing has been scanned yet. The daily 6am run adds four vendor and region pairs each day, so all regions take about nine days. You do not have to wait: scan now (free, usually a few minutes per region).</p>
@@ -146,17 +171,24 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
                   <div className="tablewrap"><table><thead><tr><th>Customer</th><th>Project</th><th>Contact</th><th>Source</th></tr></thead><tbody>
                     {cs.map((c) => (
                       <tr key={c.id}><td><b>{c.customer}</b> {c.in_app ? <Link className="mkt-in" href={`/?open=${encodeURIComponent(c.slug)}&country=${encodeURIComponent(c.region)}`}>In your app database</Link> : <Link className="mkt-add" href={addLink(c)}>Not in your database · Add</Link>}</td>
-                        <td>{c.project}</td><td>{c.contacts.length ? c.contacts.map((k, i) => <Who key={i} c={k} />) : <span className="muted">none published</span>}</td>
+                        <td>{c.project}</td><td>{contactCell(c)}</td>
                         <td><a href={c.source_url} target="_blank" rel="noopener noreferrer">open</a></td></tr>))}
                   </tbody></table></div>))}
               </article>);
           })}
           {view === "customers" && (custs.length === 0 ? <div className="sig-empty"><h3>No partner customers to show</h3><p>Partners often publish few customers. Try another vendor or loosen the filters.</p></div> : (
-            <div className="tablewrap"><table><thead><tr><th>Customer</th><th>Partner</th><th>Project</th><th>Contact</th><th>Source</th></tr></thead><tbody>
-              {custs.map((c) => (
-                <tr key={c.id}><td><b>{c.customer}</b><div className="muted">{c.region}</div>{c.in_app ? <Link className="mkt-in" href={`/?open=${encodeURIComponent(c.slug)}&country=${encodeURIComponent(c.region)}`}>In your app database</Link> : <Link className="mkt-add" href={addLink(c)}>Not in your database · Add</Link>}</td>
-                  <td>{c.partner}</td><td>{c.project}</td><td>{c.contacts.length ? c.contacts.map((k, i) => <Who key={i} c={k} />) : <span className="muted">none published</span>}</td><td><a href={c.source_url} target="_blank" rel="noopener noreferrer">open</a></td></tr>))}
-            </tbody></table></div>))}
+            partners.filter((p) => custOf(p).length > 0).sort((x, y) => custOf(y).length - custOf(x).length).map((p, i) => {
+              const cs = custOf(p);
+              return (
+                <details key={p.id} className="mkt-group" open={i === 0 || !!needle}>
+                  <summary><b>{p.name}</b><span className="sig-meta">{p.region}{p.tier ? ` · ${p.tier}` : ""}</span><em>{cs.length} customer{cs.length === 1 ? "" : "s"}</em></summary>
+                  <div className="tablewrap"><table><thead><tr><th>Customer</th><th>Project</th><th>Contact details</th><th>Source</th></tr></thead><tbody>
+                    {cs.map((c) => (
+                      <tr key={c.id}><td><b>{c.customer}</b><div className="muted">{c.region}</div>{c.in_app ? <Link className="mkt-in" href={`/?open=${encodeURIComponent(c.slug)}&country=${encodeURIComponent(c.region)}`}>In your app database</Link> : <Link className="mkt-add" href={addLink(c)}>Not in your database · Add</Link>}</td>
+                        <td>{c.project}</td><td>{contactCell(c)}</td><td><a href={c.source_url} target="_blank" rel="noopener noreferrer">open</a></td></tr>))}
+                  </tbody></table></div>
+                </details>);
+            })))}
         </section>
       </div>
     </div>

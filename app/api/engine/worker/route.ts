@@ -75,7 +75,7 @@ const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("add_contacts"), slug: z.string().min(2).max(120), contacts: z.array(NewContact).max(25) }),
   z.object({ action: z.literal("signal_targets"), region: z.string().default("UAE"), limit: z.number().int().min(1).max(30).default(10) }),
   z.object({ action: z.literal("add_signals"), scanned: z.array(z.string().max(120)).max(40).optional().default([]), sweep_region: z.string().max(40).optional().default(""), signals: z.array(NewSignal).max(40) }),
-  z.object({ action: z.literal("market_targets"), limit: z.number().int().min(1).max(12).default(4) }),
+  z.object({ action: z.literal("market_targets"), limit: z.number().int().min(1).max(12).default(4), vendor: z.string().max(30).optional().default(""), region: z.string().max(40).optional().default("") }),
   z.object({ action: z.literal("add_market"), vendor: z.string().trim().min(2).max(30), region: z.string().min(2).max(40), partners: z.array(MPartnerIn).max(40).optional().default([]), customers: z.array(MCustomerIn).max(120).optional().default([]) }),
   z.object({ action: z.literal("names") }),
   z.object({ action: z.literal("icp") }),
@@ -257,7 +257,7 @@ export async function POST(req: Request) {
     const vendors = vendorList((await get<{ custom?: string[] }>(db, VENDORS_KEY, {})).custom);
     const { data } = await db.from("settings").select("key,value").like("key", "market_intel:%");
     const docs = new Map((data || []).map((r) => [r.key as string, r.value as MarketDoc]));
-    const pairs = active.flatMap((region) => vendors.map((vendor) => { const d = docs.get(marketKey(vendor, region)); return { vendor, region, last_scan: d?.scanned_at || null, partners_known: d?.partners?.length || 0, known: (d?.partners || []).map((p) => p.name) }; }))
+    const pairs = active.filter((r) => !b.region || r === b.region).flatMap((region) => vendors.filter((v) => !b.vendor || v === b.vendor).map((vendor) => { const d = docs.get(marketKey(vendor, region)); return { vendor, region, last_scan: d?.scanned_at || null, partners_known: d?.partners?.length || 0, known: (d?.partners || []).map((p) => p.name), needs_contacts: (d?.customers || []).filter((c) => !c.contacts?.length).slice(0, 10).map((c) => ({ partner: c.partner, customer: c.customer, customer_website: c.customer_website })) }; }))
       .sort((x, y) => String(x.last_scan || "").localeCompare(String(y.last_scan || ""))).slice(0, b.limit);
     return NextResponse.json({ targets: pairs, vendors });
   }

@@ -16,7 +16,7 @@
 //   node scripts/engine_client.mjs add_contacts <slug> <file.json>      → saves people found on the public web for ONE company (a "contacts" job; format: see ENGINE.md "Find contacts")
 //   node scripts/engine_client.mjs signal_targets <REGION> [N]        → writes data/verification/signal_targets.json: the N companies (default 10) due a buying-signals scan
 //   node scripts/engine_client.mjs add_signals <file.json>             → saves buying signals: {"scanned":[slugs],"sweep_region":"UAE","signals":[...]} (format: see ENGINE.md "Buying signals")
-//   node scripts/engine_client.mjs market_targets [N]                  → writes data/verification/market_targets.json: the vendor x region pairs due a market-intelligence scan (oldest first)
+//   node scripts/engine_client.mjs market_targets [N] [VENDOR] [REGION]  → writes data/verification/market_targets.json: the vendor x region pairs due a market-intelligence scan (oldest first)
 //   node scripts/engine_client.mjs add_market <file.json>              → saves partners and their published customers: {"vendor","region","partners":[...],"customers":[...]} (format: see ENGINE.md "Market intelligence")
 //   node scripts/engine_client.mjs uploads                              → writes data/verification/uploaded_lists.json: [{"id","filename","region","url"}] waiting to be read
 //   node scripts/engine_client.mjs add_upload <file.json> <filename>    → imports one upload's extracted rows (format: see ENGINE.md "Reading an uploaded list")
@@ -79,7 +79,7 @@ else if (cmd === "queue") {
   added.forEach((x) => console.log(`added: ${x}`)); updated.forEach((x) => console.log(`updated: ${x}`)); skipped.forEach((x) => console.log(`SKIPPED ${x.title}: ${x.why}`));
   console.log(`${added.length} added, ${updated.length} updated, ${skipped.length} skipped`);
 } else if (cmd === "market_targets") {
-  const j = await call({ action: "market_targets", limit: Number(a) || 4 });
+  const j = await call({ action: "market_targets", limit: Number(a) || 4, vendor: b || "", region: c || "" });
   fs.mkdirSync("data/verification", { recursive: true });
   fs.writeFileSync("data/verification/market_targets.json", JSON.stringify(j.targets, null, 1));
   console.log(`${j.targets.length} vendor/region pairs due → data/verification/market_targets.json`);

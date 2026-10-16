@@ -1639,3 +1639,16 @@ button.tab[aria-expanded="true"]{color:var(--text-strong);background:linear-grad
 .vendor-add input{width:100%;padding:6px 8px;border-radius:8px;border:1px solid var(--line-2);background:var(--surface);color:var(--text);font:13px var(--body)}
 .vendor-add-acts{display:flex;gap:6px}
 .navbar .tab:not(.tab-icon) svg{width:15px;height:15px;flex:none}
+/* Market intelligence: slimmer left panel, partner-wise customer sections */
+.appwin-body .sig-side{font-size:12px;padding:10px 12px}
+.appwin-body .sig-side h3{font-size:9.5px;margin:10px 0 3px}
+.appwin-body .sig-side label{font-size:12px;gap:5px;margin:3px 0;line-height:1.25}
+.appwin-body .sig-side label small{font-size:10px;white-space:nowrap}
+.appwin-body .sig-side .note{font-size:11px;line-height:1.35}
+.mkt-group{border:1px solid var(--line);border-radius:12px;background:var(--surface);margin-bottom:10px;overflow:hidden}
+.mkt-group>summary{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;list-style:none;font-size:14px}
+.mkt-group>summary::-webkit-details-marker{display:none}
+.mkt-group>summary::before{content:"▸";color:var(--muted);transition:transform .12s}
+.mkt-group[open]>summary::before{transform:rotate(90deg)}
+.mkt-group>summary em{margin-left:auto;font-style:normal;font:600 11px var(--body);padding:2px 9px;border-radius:999px;background:color-mix(in srgb,#2ECC8F 16%,var(--surface));color:#0B5A47}
+.mkt-group .tablewrap{border:0;border-top:1px solid var(--line);border-radius:0}

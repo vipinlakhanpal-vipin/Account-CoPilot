@@ -18,13 +18,22 @@ export async function GET() {
   const docs = (data || []).map((r) => r.value as MarketDoc).filter((d) => d && canSeeRegion(access, d.region));
   const def = normalizeDefinition((await db.from("settings").select("value").eq("key", "icp_definition").maybeSingle()).data?.value);
   const regions = Object.entries(def.regions).filter(([k, r]) => canSeeRegion(access, k) && (r as { status: string }).status === "active").map(([k]) => k);
-  const jobs = ((await db.from("settings").select("value").eq("key", "engine_jobs").maybeSingle()).data?.value as { jobs: { mode: string; vendor?: string; region: string; status: string; requested_at: string }[] } | null)?.jobs || [];
+  const jobs = ((await db.from("settings").select("value").eq("key", "engine_jobs").maybeSingle()).data?.value as { jobs: { mode: string; vendor?: string; customer?: string; region: string; status: string; requested_at: string }[] } | null)?.jobs || [];
   const { data: co } = await db.from("companies").select("slug");
   const inApp = new Set((co || []).map((c) => c.slug as string));
+  // People already on file in the app for customers that are in the database (shown as a link to the account instead of "none published").
+  const slugs = [...new Set(docs.flatMap((d) => (d.customers || []).map((c) => c.slug)).filter((x) => x && inApp.has(x)))];
+  const people: Record<string, number> = {};
+  if (slugs.length) {
+    const { data: ids } = await db.from("companies").select("id,slug").in("slug", slugs);
+    const idSlug = new Map((ids || []).map((r) => [r.id as string, r.slug as string]));
+    const { data: cs } = await db.from("contacts").select("company_id").in("company_id", [...idSlug.keys()]).limit(10000);
+    for (const c of cs || []) { const sl = idSlug.get(c.company_id as string); if (sl) people[sl] = (people[sl] || 0) + 1; }
+  }
   return NextResponse.json({
     vendors: vendorList(custom), custom_vendors: custom, is_super: access.isSuper, defaults: DEFAULT_VENDORS, regions,
     partners: docs.flatMap((d) => d.partners || []),
-    customers: docs.flatMap((d) => (d.customers || []).map((c) => ({ ...c, in_app: !!c.slug && inApp.has(c.slug) }))),
+    customers: docs.flatMap((d) => (d.customers || []).map((c) => ({ ...c, in_app: !!c.slug && inApp.has(c.slug), people_on_file: people[c.slug] || 0 }))),
     scans: Object.fromEntries(docs.map((d) => [`${d.vendor}|${d.region}`, d.scanned_at])),
     jobs: jobs.filter((j) => j.mode === "market" && canSeeRegion(access, j.region)).slice(0, 10),
   });
