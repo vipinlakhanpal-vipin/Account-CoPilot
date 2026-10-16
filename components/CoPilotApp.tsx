@@ -32,6 +32,7 @@ type ReportRequest = { ids: string[]; title: string };
 const ReportsCtx = createContext<((req: ReportRequest) => void) | null>(null);
 import ReportDialog, { downloadReport } from "@/components/ReportDialog";
 import FreePitch from "@/components/FreePitch";
+import LongText from "@/components/LongText";
 import { shortName } from "@/lib/shortName";
 import FindContactsButton from "@/components/FindContactsButton";
 
@@ -364,7 +365,8 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "
                 onClick={(e) => { if (onRow && !(e.target as HTMLElement).closest("a")) onRow(r); }}
                 onKeyDown={(e) => { if (onRow && e.key === "Enter") onRow(r); }}>
                 <td className="num mono">{i + 1}</td>
-                {cols.map((c) => <td key={c.h} className={[c.wrap ? "wrap" : "", c.cls || ""].join(" ").trim() || undefined}>{c.cell(r)}</td>)}
+                {cols.map((c) => { const v = c.cell(r); const long = c.wrap && typeof v === "string" && v.length > 60 && !/title|job|name/i.test(c.h);
+                  return <td key={c.h} className={[c.wrap && !long ? "wrap" : "", c.cls || ""].join(" ").trim() || undefined}>{long ? <LongText text={v as string} /> : v}</td>; })}
               </tr>
             ))}
           </tbody>

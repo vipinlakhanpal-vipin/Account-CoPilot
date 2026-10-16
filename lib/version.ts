@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.84";
+export const APP_VERSION = "4.85";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.85", date: "2026-10-16", notes: "Long text in tables is the first words and an i button.", changes: [
+      { what: "In the list tables a long text column (Evidence, Why, Signal and similar) now shows only its opening words, for example 2025 Annual Report…, followed by an i button that opens the full text in a small window; rows stay one line tall. Titles, job titles and names are left in full", where: "components/LongText.tsx, components/CoPilotApp.tsx (FilterTable)", why: "Requested — the Evidence column has a lot to say; show a short lead and an i button" },
+    ] },
   { version: "4.84", date: "2026-10-16", notes: "S2P signal as a small meter in tables.", changes: [
       { what: "In the Accounts, Pipeline, Stakeholders, Mission Control and Dashboard tables the S2P signal is a four-bar meter (Very strong 4 bars, Strong 3, Moderate 2, Weak 1, No signal 0, Conflicting !) in the signal colour, with the words on hover; it takes a fraction of the width of the old pill. The Signals tab and account page keep the words", where: "components/CoPilotApp.tsx (Pill), app/globals.css", why: "Requested — use an icon for the S2P signal to save space" },
     ] },

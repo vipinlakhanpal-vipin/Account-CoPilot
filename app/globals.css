@@ -1806,3 +1806,9 @@ td .mono{white-space:nowrap}
 .sigmeter i{display:block;width:4px;border-radius:1px;background:rgba(var(--ink),.18)}
 .sigmeter i.on{background:var(--c)}
 .sigmeter b{font:700 14px/1 var(--body);color:var(--c)}
+/* v4.85: long text in table cells = the first words and an i button for the full text */
+.longtext{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.longtext-lead{color:var(--muted)}
+.longtext-i{flex:none;width:16px;height:16px;border-radius:50%;border:1.3px solid var(--muted);background:transparent;color:var(--muted);font:italic 700 10px/1 Georgia,serif;cursor:pointer;display:inline-grid;place-items:center;padding:0}
+.longtext-i:hover,.longtext-i[aria-expanded="true"]{background:#0F6E56;border-color:#0F6E56;color:#fff}
+.longtext-pop{position:fixed;z-index:1200;width:min(420px,calc(100vw - 24px));max-height:60vh;overflow:auto;padding:12px 14px;border-radius:12px;background:var(--surface);color:var(--text);border:1px solid var(--line-2);box-shadow:0 14px 34px rgba(0,0,0,.3);font:400 12.5px/1.55 var(--body);white-space:normal}
