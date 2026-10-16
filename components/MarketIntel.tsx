@@ -9,6 +9,7 @@ import { PARTNERS_TIP, CUSTOMERS_TIP, type MContact, type PCustomer, type Partne
 type Cust = PCustomer & { in_app: boolean; people_on_file: number };
 type Job = { mode: string; vendor?: string; customer?: string; partner?: string; slug?: string; contacts_only?: boolean; region: string; status: string; requested_at: string };
 type Data = { vendors: Vendor[]; custom_vendors: string[]; is_super: boolean; defaults: string[]; regions: string[]; partners: Partner[]; customers: Cust[]; scans: Record<string, string>; jobs: Job[] };
+const webUrl = (w: string) => (/^https?:\/\//.test(w) ? w : `https://${w}`);
 const ago = (iso?: string) => { if (!iso) return "never"; const h = Math.round((Date.now() - new Date(iso).getTime()) / 36e5); return h < 1 ? "just now" : h < 48 ? `${h} h ago` : `${Math.round(h / 24)} days ago`; };
 const csv = (rows: string[][]) => rows.map((r) => r.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(",")).join("\r\n");
 
@@ -137,7 +138,7 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
         const noOne = c.contacts.length === 0 && !(c.in_app && c.people_on_file > 0);
         return (
           <tr key={c.id}>
-            <td><b>{c.customer}</b><div className="muted">{c.region}</div></td>
+            <td>{c.customer_website ? <a className="mkt-site" href={webUrl(c.customer_website)} target="_blank" rel="noopener noreferrer" title={`Open ${c.customer_website.replace(/^https?:\/\//, "")} in a new tab`}><b>{c.customer}</b><i aria-hidden="true">↗</i></a> : <b>{c.customer}</b>}<div className="muted">{c.region}</div></td>
             <td><div className="clamp2" title={c.project}>{c.project || <span className="muted">—</span>}</div></td>
             <td>{c.in_app ? <Link className="mkt-in" href={`/?open=${encodeURIComponent(c.slug)}&country=${encodeURIComponent(c.region)}`}>In database</Link>
               : <><span className="mkt-add">Not in database</span><div><Link className="mkt-addlink" href={addLink(c)}>+ Add</Link></div></>}</td>
@@ -261,7 +262,7 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
             return (
               <article key={p.id} className={`sig-card mkt-card${isOpen ? " open" : ""}`}>
                 <div className="sig-row">
-                  <b className="sig-co">{p.name}</b><span className="sig-meta">{p.region}{p.hq_city ? ` · ${p.hq_city}` : ""}</span>
+                  {p.website ? <a className="sig-co mkt-site" href={webUrl(p.website)} target="_blank" rel="noopener noreferrer" title={`Open ${p.website.replace(/^https?:\/\//, "")} in a new tab`}>{p.name}<i aria-hidden="true">↗</i></a> : <b className="sig-co">{p.name}</b>}<span className="sig-meta">{p.region}{p.hq_city ? ` · ${p.hq_city}` : ""}</span>
                   {p.tier && <span className="sig-pill">{p.tier}</span>}<span className={`sig-pill lab-${p.label.toLowerCase()}`}>{p.label}</span>
                 </div>
                 {p.services && <p className="sig-ev">{p.services}</p>}
@@ -279,7 +280,7 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
               const cs = custOf(p);
               return (
                 <details key={p.id} className="mkt-group" open={i === 0 || !!needle}>
-                  <summary><b>{p.name}</b><span className="sig-meta">{p.region}{p.tier ? ` · ${p.tier}` : ""}</span><em>{cs.length} customer{cs.length === 1 ? "" : "s"}</em></summary>
+                  <summary>{p.website ? <a className="mkt-site" href={webUrl(p.website)} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} title={`Open ${p.website.replace(/^https?:\/\//, "")} in a new tab`}><b>{p.name}</b><i aria-hidden="true">↗</i></a> : <b>{p.name}</b>}<span className="sig-meta">{p.region}{p.tier ? ` · ${p.tier}` : ""}</span><em>{cs.length} customer{cs.length === 1 ? "" : "s"}</em></summary>
                   {custTable(cs)}
                 </details>);
             })))}

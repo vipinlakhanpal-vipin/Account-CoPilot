@@ -1687,3 +1687,6 @@ button.tab[aria-expanded="true"]{color:var(--text-strong);background:linear-grad
 .find-i.hdr{border-color:rgba(255,255,255,.7);color:#fff;margin-left:2px;margin-right:6px}
 .find-i.hdr:hover,.find-i.hdr:focus-visible{background:#fff;color:#0F6E56;border-color:#fff}
 .find-i.hdr .find-i-pop{bottom:auto;top:calc(100% + 8px);left:auto;right:-4px;transform:none;z-index:50}
+a.mkt-site{color:var(--text-strong);text-decoration:none;display:inline-flex;align-items:baseline;gap:3px}
+a.mkt-site:hover{color:#0B7A66;text-decoration:underline}
+a.mkt-site i{font-style:normal;font-size:.75em;opacity:.55}

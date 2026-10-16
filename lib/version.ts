@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.46";
+export const APP_VERSION = "4.47";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.47", date: "2026-10-16", notes: "Partner and customer names link to their websites.", changes: [
+      { what: "In Market intelligence a partner's name is now a link (with a small arrow) that opens its website in a new tab, on the partner card and on the partner sections; a customer's name links to its website when one is known", where: "components/MarketIntel.tsx", why: "Requested — click the name to see who the partner is" },
+    ] },
   { version: "4.46", date: "2026-10-16", notes: "Scan Partners and Scan Customers sit in the Market intelligence window header.", changes: [
       { what: "Scan Partners and Scan Customers moved to the window header, before Expand, each with an i button (only these two have one). They replace the Scan now button in this window and are gone from the toolbar; the All vendors option is now Include all vendors under Scan scope in the left panel. The full-page /market view keeps them in its toolbar", where: "components/Header.tsx, components/MarketIntel.tsx, lib/market.ts", why: "Requested — put them where Scan now and Expand are, and remove them from the toolbar" },
     ] },
