@@ -92,6 +92,14 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
     setBusy("");
     if (r.ok || r.status === 409) load(); else notify(j.error || "Could not start the search.", "error");
   };
+  const stopScans = async () => {
+    if (!(await ask({ title: "Stop scanning?", body: "Waiting scans are removed and running ones are marked stopped. A scan that is already mid-way in the cloud may finish the page it is on, but its job is closed. Partners and customers already found stay saved.", confirm: "Stop scanning", tone: "danger" }))) return;
+    setBusy("stop");
+    const r = await fetch("/api/engine", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "stop_scans", mode: "market" }) });
+    const j = await r.json().catch(() => ({}));
+    setBusy("");
+    if (r.ok) { notify(`Stopped: ${j.removed || 0} waiting scan${j.removed === 1 ? "" : "s"} removed, ${j.stopped || 0} running marked stopped.`, "ok"); load(); } else notify(j.error || "Could not stop the scans.", "error");
+  };
   const addPartner = async () => {
     const region = pf.region || active[0] || "";
     const r = await fetch("/api/market", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "add_partner", vendor, region, name: pf.name, website: pf.website }) });
@@ -187,6 +195,9 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
   return (
     <div className="mkt">
       <section className="hero mkt-hero"><h1>Market intelligence</h1><p>Who implements SAP, Coupa, Oracle, Microsoft, Boomi, MuleSoft, Ivalua, GEP, Jaggaer and any vendor you add, in your regions, and the customers they publish. Every row links to its source.</p></section>
+      {allPending.length > 0 && (
+        <div className="mkt-stopbar" role="status"><span className="fcj-dot" aria-hidden="true" /><span>{allPending.length} scan{allPending.length === 1 ? "" : "s"} running or waiting</span>
+          <button type="button" className="btn tiny danger" disabled={busy === "stop"} onClick={stopScans}>■ Stop scanning</button></div>)}
       <div className="sig-lanes" role="group" aria-label="Vendor">
         {(data?.vendors || ["SAP", "Coupa", "Oracle", "Microsoft"]).map((v, i) => {
           const custom = !!data?.custom_vendors?.includes(v);

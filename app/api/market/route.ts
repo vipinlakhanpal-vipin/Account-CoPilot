@@ -36,7 +36,7 @@ export async function GET() {
     partners: docs.flatMap((d) => d.partners || []),
     customers: docs.flatMap((d) => (d.customers || []).map((c) => ({ ...c, in_app: !!c.slug && inApp.has(c.slug), people_on_file: people[c.slug] || 0 }))),
     scans: Object.fromEntries(docs.map((d) => [`${d.vendor}|${d.region}`, d.scanned_at])),
-    jobs: jobs.filter((j) => (j.mode === "market" || j.mode === "contacts") && (j.status === "queued" || j.status === "running") && canSeeRegion(access, j.region)).slice(0, 40),
+    jobs: jobs.filter((j) => (j.mode === "market" || j.mode === "contacts") && (j.status === "queued" || (j.status === "running" && Date.now() - new Date((j as { started_at?: string }).started_at || j.requested_at).getTime() < 60 * 60000)) && canSeeRegion(access, j.region)).slice(0, 40),
   });
 }
 

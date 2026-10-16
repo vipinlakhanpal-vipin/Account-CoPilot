@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { notify } from "@/components/Confirm";
+import { ask, notify } from "@/components/Confirm";
 import { logActivity } from "@/lib/activityClient";
 import FindContactsButton from "@/components/FindContactsButton";
 import { LANE_LABEL, STRENGTH_ORDER, daysLeft, type Signal, type SignalLane, type SignalStatus } from "@/lib/signals";
@@ -38,6 +38,12 @@ export default function BuyingSignals({ embedded = false }: { embedded?: boolean
     else notify(j.error || "Could not start the scan.", "error");
   };
 
+  const stopScans = async () => {
+    if (!(await ask({ title: "Stop scanning?", body: "Waiting scans are removed and running ones are marked stopped. Signals already found stay saved.", confirm: "Stop scanning", tone: "danger" }))) return;
+    const r = await fetch("/api/engine", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "stop_scans", mode: "signals" }) });
+    const j = await r.json().catch(() => ({}));
+    if (r.ok) { notify(`Stopped: ${j.removed || 0} waiting removed, ${j.stopped || 0} running marked stopped.`, "ok"); load(); } else notify(j.error || "Could not stop the scans.", "error");
+  };
   const regionList = data?.regions || [];
   // "Scan now" in the window header: scan every active region, one after another (each queue call rewrites the shared job list)
   const scanAllRef = { current: async () => {} };
@@ -89,7 +95,7 @@ export default function BuyingSignals({ embedded = false }: { embedded?: boolean
 
         <section className="sig-main">
           {pending.length > 0 && (
-            <div className="sig-pending" role="status"><span className="fcj-dot" aria-hidden="true" /> <b className="fcj-flash">Scanning {pending.map((j) => j.company_name || `${j.region} tenders and companies`).join(", ")}…</b> New signals appear here by themselves.</div>)}
+            <div className="sig-pending" role="status"><span className="fcj-dot" aria-hidden="true" /> <b className="fcj-flash">Scanning {pending.map((j) => j.company_name || `${j.region} tenders and companies`).join(", ")}…</b> New signals appear here by themselves. <button type="button" className="btn tiny danger" onClick={stopScans}>■ Stop scanning</button></div>)}
           {!data && <p className="note">Loading…</p>}
           {data && shown.length === 0 && (
             <div className="sig-empty">

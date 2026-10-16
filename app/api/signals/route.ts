@@ -25,7 +25,7 @@ export async function GET(req: Request) {
   const def = normalizeDefinition((await db.from("settings").select("value").eq("key", "icp_definition").maybeSingle()).data?.value);
   const regions = Object.entries(def.regions).filter(([k, r]) => canSeeRegion(access, k) && (r as { status: string }).status === "active").map(([k]) => k);
   const jobs = ((await db.from("settings").select("value").eq("key", "engine_jobs").maybeSingle()).data?.value as { jobs: { mode: string; slug?: string; region: string; status: string; company_name?: string; result?: string; requested_at: string }[] } | null)?.jobs || [];
-  return NextResponse.json({ items: mine, regions, sweeps: st.sweeps || {}, jobs: jobs.filter((j) => j.mode === "signals" && canSeeRegion(access, regionOf(j.region))).slice(0, 10) });
+  return NextResponse.json({ items: mine, regions, sweeps: st.sweeps || {}, jobs: jobs.filter((j) => j.mode === "signals" && (j.status === "queued" || (j.status === "running" && Date.now() - new Date((j as { started_at?: string }).started_at || j.requested_at).getTime() < 60 * 60000) || j.status === "done" || j.status === "error") && canSeeRegion(access, regionOf(j.region))).slice(0, 10) });
 }
 
 export async function POST(req: Request) {

@@ -205,6 +205,7 @@ const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("refresh"), region: z.string().min(2).max(40), update_count: z.number().int().min(0).max(50), new_count: z.number().int().min(0).max(10), budget: z.number().min(0).max(500) }),
   z.object({ action: z.literal("balance"), amount: z.number().min(0).max(100000) }),
   z.object({ action: z.literal("cancel"), id: z.string() }),
+  z.object({ action: z.literal("stop_scans"), mode: z.enum(["market", "signals"]) }),
   z.object({ action: z.literal("token"), op: z.enum(["generate", "revoke"]) }),
   z.object({ action: z.literal("pin"), pin: z.string().regex(/^\d{6,12}$/).nullable(), ask_super: z.boolean() }),
   z.object({ action: z.literal("release_pending"), id: z.string() }),
@@ -237,7 +238,7 @@ export async function POST(req: Request) {
   if (b.action === "refresh") { const blocked = await requirePaidApproval(req, user); if (blocked) return blocked; } // paid-actions PIN
   // Super Admin: everything. Standard user: only queue jobs / refresh in their own region (no token, no balance).
   const access = await getAccess(user);
-  if (!access.isSuper) {
+  if (!access.isSuper && b.action !== "stop_scans") { // stop_scans is limited to the person's own regions below
     let region = "region" in b ? regionOf(b.region) : "";
     const jobId = b.action === "cancel" ? b.id : "job_id" in b ? b.job_id : "";
     if (jobId) { // acting on an existing job: it must belong to one of the user's regions
@@ -249,6 +250,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Only a Super Admin can change this. Standard users can queue work for their own region." }, { status: 403 });
   }
 
+  if (b.action === "stop_scans") {
+    // Stop scanning: waiting jobs are removed, running ones are marked stopped (a running cloud session cannot be killed from here; it simply finds its job closed).
+    const st = await getSetting<{ jobs: Job[] }>(db, "engine_jobs", { jobs: [] });
+    let removed = 0, stopped = 0;
+    st.jobs = st.jobs.filter((j) => {
+      if (j.mode !== b.mode || !canSeeRegion(access, regionOf(j.region))) return true;
+      if (j.status === "queued") { removed++; return false; }
+      if (j.status === "running") { j.status = "error"; j.done_at = now; j.result = `Stopped by ${user.email || "a user"}.`; stopped++; }
+      return true;
+    });
+    await setSetting(db, "engine_jobs", { jobs: st.jobs.slice(0, 50) });
+    return NextResponse.json({ ok: true, removed, stopped });
+  }
   if (b.action === "token") {
     // Engine token for scheduled sessions: shown once, only its SHA-256 hash is stored. Generating a new one revokes the old.
     if (b.op === "revoke") { await setSetting(db, "engine_token", { revoked_at: now, by: user.email }); return NextResponse.json({ ...(await summary(db)), token: null }); }
@@ -300,6 +314,8 @@ export async function POST(req: Request) {
   }
   if (b.action === "queue" || b.action === "cancel") {
     const st = await getSetting<{ jobs: Job[] }>(db, "engine_jobs", { jobs: [] });
+    // A job still "running" an hour after it started has lost its session (often the plan's usage limit): close it so it stops blocking a new scan.
+    for (const j of st.jobs) if (j.status === "running" && Date.now() - new Date((j as Job & { started_at?: string }).started_at || j.requested_at).getTime() > 60 * 60000) { j.status = "error"; j.done_at = now; j.result = "Timed out: the session ended before it finished (often the Claude plan's usage limit). Scan again."; }
     if (b.action === "queue" && b.mode === "company" && !(b.company_name && b.company_name.length >= 2)) return NextResponse.json({ error: "Enter the company name." }, { status: 400 });
     if (b.action === "queue" && b.mode === "market") {
       // Market intelligence scan: partners of one vendor (or all four) in one region, and the customers they publish.
