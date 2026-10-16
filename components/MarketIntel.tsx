@@ -54,7 +54,7 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
   // one after another: each queue call rewrites the shared job list, so parallel calls could overwrite each other
   const scanAll = async (pairs: [string, string][]) => { for (const [r, v] of pairs) await scan(r, v); };
   const download = () => {
-    const rows = [["Vendor", "Region", "Partner", "Customer", "Project", "Customer in your app", "Contact", "Title", "Email", "Phone", "LinkedIn", "Source"]];
+    const rows = [["Vendor", "Region", "Partner", "Customer", "Project", "Customer in your app database", "Contact", "Title", "Email", "Phone", "LinkedIn", "Source"]];
     for (const c of custs) { if (c.contacts.length) for (const k of c.contacts) rows.push([c.vendor, c.region, c.partner, c.customer, c.project, c.in_app ? "Yes" : "No", k.name, k.title, k.email, k.phone, k.linkedin_url, c.source_url]);
       else rows.push([c.vendor, c.region, c.partner, c.customer, c.project, c.in_app ? "Yes" : "No", "", "", "", "", "", c.source_url]); }
     const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["﻿" + csv(rows)], { type: "text/csv" })); a.download = `market-intelligence-${vendor}.csv`; a.click();
@@ -75,9 +75,9 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
             <label key={r}><input type="checkbox" checked={active.includes(r)} onChange={() => setRegions(toggle(active, r))} /> {r} <small>{ago(data?.scans[`${vendor}|${r}`])}</small></label>))}
           <h3>View</h3>
           <label><input type="radio" name="mkview" checked={view === "partners"} onChange={() => setView("partners")} /> By partner</label>
-          <label><input type="radio" name="mkview" checked={view === "customers"} onChange={() => setView("customers")} /> All customers</label>
-          <h3>Customers</h3>
-          <label><input type="checkbox" checked={notInApp} onChange={() => setNotInApp(!notInApp)} /> Not in my accounts</label>
+          <label><input type="radio" name="mkview" checked={view === "customers"} onChange={() => setView("customers")} /> All Partners' Customers</label>
+          <h3>Partner Customers</h3>
+          <label><input type="checkbox" checked={notInApp} onChange={() => setNotInApp(!notInApp)} /> Not in my app database</label>
           <label><input type="checkbox" checked={withContacts} onChange={() => setWithContacts(!withContacts)} /> With contact details</label>
           <h3>Scan now</h3>
           {regionList.slice(0, 4).map((r) => <button type="button" key={r} className="btn tiny" disabled={busy === `${vendor}|${r}`} onClick={() => scan(r, vendor)}>{vendor} · {r}</button>)}
@@ -112,16 +112,16 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
                 {isOpen && (cs.length === 0 ? <p className="note">No customers published by this partner (or none match the filters).</p> : (
                   <div className="tablewrap"><table><thead><tr><th>Customer</th><th>Project</th><th>Contact</th><th>Source</th></tr></thead><tbody>
                     {cs.map((c) => (
-                      <tr key={c.id}><td><b>{c.customer}</b> {c.in_app ? <Link className="mkt-in" href={`/?open=${encodeURIComponent(c.slug)}&country=${encodeURIComponent(c.region)}`}>In your accounts</Link> : <Link className="mkt-add" href={addLink(c)}>Add as account</Link>}</td>
+                      <tr key={c.id}><td><b>{c.customer}</b> {c.in_app ? <Link className="mkt-in" href={`/?open=${encodeURIComponent(c.slug)}&country=${encodeURIComponent(c.region)}`}>In your app database</Link> : <Link className="mkt-add" href={addLink(c)}>Not in your database · Add</Link>}</td>
                         <td>{c.project}</td><td>{c.contacts.length ? c.contacts.map((k, i) => <Who key={i} c={k} />) : <span className="muted">none published</span>}</td>
                         <td><a href={c.source_url} target="_blank" rel="noopener noreferrer">open</a></td></tr>))}
                   </tbody></table></div>))}
               </article>);
           })}
-          {view === "customers" && (custs.length === 0 ? <div className="sig-empty"><h3>No customers to show</h3><p>Partners often publish few customers. Try another vendor or loosen the filters.</p></div> : (
+          {view === "customers" && (custs.length === 0 ? <div className="sig-empty"><h3>No partner customers to show</h3><p>Partners often publish few customers. Try another vendor or loosen the filters.</p></div> : (
             <div className="tablewrap"><table><thead><tr><th>Customer</th><th>Partner</th><th>Project</th><th>Contact</th><th>Source</th></tr></thead><tbody>
               {custs.map((c) => (
-                <tr key={c.id}><td><b>{c.customer}</b><div className="muted">{c.region}</div>{c.in_app ? <Link className="mkt-in" href={`/?open=${encodeURIComponent(c.slug)}&country=${encodeURIComponent(c.region)}`}>In your accounts</Link> : <Link className="mkt-add" href={addLink(c)}>Add as account</Link>}</td>
+                <tr key={c.id}><td><b>{c.customer}</b><div className="muted">{c.region}</div>{c.in_app ? <Link className="mkt-in" href={`/?open=${encodeURIComponent(c.slug)}&country=${encodeURIComponent(c.region)}`}>In your app database</Link> : <Link className="mkt-add" href={addLink(c)}>Not in your database · Add</Link>}</td>
                   <td>{c.partner}</td><td>{c.project}</td><td>{c.contacts.length ? c.contacts.map((k, i) => <Who key={i} c={k} />) : <span className="muted">none published</span>}</td><td><a href={c.source_url} target="_blank" rel="noopener noreferrer">open</a></td></tr>))}
             </tbody></table></div>))}
         </section>

@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.23";
+export const APP_VERSION = "4.24";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.24", date: "2026-10-16", notes: "Clearer wording in Market intelligence.", changes: [
+      { what: "In Market intelligence the view is now By partner or All Partners' Customers, the filter group is called Partner Customers, and Not in my accounts now reads Not in my app database. Customer tags read In your app database or Not in your database · Add", where: "components/MarketIntel.tsx", why: "Requested — more meaningful labels" },
+    ] },
   { version: "4.23", date: "2026-10-16", notes: "Signals and Market intelligence tiles use the app's standard tile colours, and Scan now is front and centre.", changes: [
       { what: "The lane and vendor tiles now use the same coloured fills as the Dashboard tiles. When nothing has been scanned yet, the window shows Scan now buttons (one per region) right in the middle, and Market intelligence has a Scan now button beside the search box", where: "app/globals.css (.sig-lane), components/BuyingSignals.tsx, components/MarketIntel.tsx", why: "Requested — standard tile colours, and a clear way to start a scan instead of waiting for the daily run" },
       { what: "Scanning several regions at once now queues them one after another, so the job list cannot be overwritten", where: "components/MarketIntel.tsx", why: "Each queue call rewrites the shared job list" },
