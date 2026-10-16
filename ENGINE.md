@@ -86,8 +86,13 @@ typed in) — see "Multi-name discover jobs" under step 2.
   - `phone` only if printed for that person (set `phone_type` Direct / Mobile) or the company switchboard on its own site (`Switchboard`, attach to the person only if the page names them).
   - `linkedin_url` only a `linkedin.com/in/...` link that appears in a search-result snippet or on a public page. Do not open LinkedIn, log in or scrape.
   - Every person needs `source_url` (the page that shows them) and, ideally, a short `source_note`. A person with no email, phone or LinkedIn is not saved.
-  Write `data/verification/new_contacts.json` as `[{"full_name","title_verbatim","email","phone","phone_type","linkedin_url","source_url","source_note"}]`, then run
+  Write `data/verification/new_contacts.json` as `[{"full_name","title_verbatim","email","phone","phone_type","linkedin_url","source_url","source_note"}]` (Seamless people also `"via":"seamless","seamless_id"`), then run
   `node scripts/engine_client.mjs add_contacts <slug> data/verification/new_contacts.json` (people already on file are skipped; empty fields of Claude-added rows may be filled).
+  - **`seamless: true` on the claimed job** — the user also allowed Seamless credits for this company. Only if this session has the Seamless tools (`search_contacts`, `research_contacts`, `poll_contact_research`, `get_credits`):
+    `search_contacts` with `companyDomain` (the job's website domain) and `contactCountry`; pick up to 4 people (procurement first, then CFO/finance, then IT), then `research_contacts` for those ids
+    (about 1 credit each; never more than 5 credits for the job, and none if `get_credits` shows fewer than 20 left). Save a person with `"via":"seamless"` and `"seamless_id":"<contactId>"` (no `source_url` needed);
+    keep the email only if Seamless marks it valid at 90%+ and it is on the company's own domain (the app re-checks); `linkedin_url` from the Seamless record; title verbatim. Public-web finds (`"via":"web"`,
+    with `source_url`) can go in the same file. If the session has NO Seamless tools, do the free web search only and end the result with " (Seamless was not available in this session)". Add "Seamless credits used: K" to the result text when used.
   Finish with `finish <id> done "<Company> (<Region>): N contacts added, M updated"` or, if nothing public was found, `finish <id> done "<Company> (<Region>): no public contact details found"`. Do not run `add`, `hold` or revenue steps for this job.
 
 ## 3. Finish and notify

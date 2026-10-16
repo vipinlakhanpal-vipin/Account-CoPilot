@@ -31,7 +31,7 @@ import { dashboardTiles } from "@/lib/dashboardTiles";
 type ReportRequest = { ids: string[]; title: string };
 const ReportsCtx = createContext<((req: ReportRequest) => void) | null>(null);
 import ReportDialog, { downloadReport } from "@/components/ReportDialog";
-import { queueFindContacts } from "@/lib/findContactsClient";
+import FindContactsButton from "@/components/FindContactsButton";
 
 const HERO: Record<string, [string, string]> = {
   dashboard: ["Dashboard", "A live snapshot of UAE target accounts, S2P signals, ERP landscape and decision makers."],
@@ -99,9 +99,9 @@ const ICP_ORDER = ["ICP — Verified", "ICP — Likely", "ICP — Needs check", 
 const icpRank = (s?: string) => { const i = ICP_ORDER.indexOf(String(s)); return i < 0 ? 9 : i; };
 const ICP_CLS: Record<string, string> = { "ICP — Verified": "icp-v", "ICP — Likely": "icp-l", "ICP — Needs check": "icp-c", "Not ICP": "icp-n", Unknown: "icp-u" };
 const ICP_ICON: Record<string, string> = { "ICP — Verified": "✓", "ICP — Likely": "●", "ICP — Needs check": "!", "Not ICP": "✕", Unknown: "?" };
-/** A person added by Find contacts in the last 14 days (external_id WEB-…), flagged so it can be told apart from the older rows. */
-const isNewWeb = (p: Row) => [p, ...((p.rows as Row[]) || [])].some((r) => String(r.external_id || "").startsWith("WEB-") && Date.now() - new Date(String(r.created_at || 0)).getTime() < 14 * 864e5);
-const NewTag = ({ p }: { p: Row }) => isNewWeb(p) ? <span className="new-tag" title="Added by Find contacts from public web pages in the last 14 days. The source page is on the contact card.">NEW</span> : null;
+/** A person added by Find contacts in the last 14 days (record_status "Claude — added (Find contacts …)"), flagged so it can be told apart from the older rows. */
+const isNewWeb = (p: Row) => [p, ...((p.rows as Row[]) || [])].some((r) => String(r.record_status || "").includes("Find contacts") && Date.now() - new Date(String(r.created_at || 0)).getTime() < 14 * 864e5);
+const NewTag = ({ p }: { p: Row }) => isNewWeb(p) ? <span className="new-tag" title="Added by Find contacts in the last 14 days (public web or Seamless). The source page is on the contact card.">NEW</span> : null;
 
 function IcpTag({ s, why }: { s?: string; why?: string }) {
   if (!s) return null;
@@ -855,8 +855,7 @@ function Brief({ a, data, people, onClose, onContact, scores, criteria, isSuper 
               <div className="bh-btns">
                 <button className="btn ghost bh-btn" type="button" disabled={pdfBusy} title="PDF with everything on this page, plus how it was built from your ICP"
                   onClick={async () => { setPdfBusy(true); await downloadReport({ companyId: a.id }); setPdfBusy(false); }}>{pdfBusy ? "Building…" : "📄 PDF"}</button>
-                <button className="btn ghost bh-btn" type="button" title="Free: searches public web pages for named contacts with an email, phone or LinkedIn link, and saves them here. No API cost."
-                  onClick={() => queueFindContacts(a.slug, regionOf(a.country), a.company_name)}>🔎 Find contacts</button>
+                <FindContactsButton slug={a.slug} region={regionOf(a.country)} company={a.company_name} className="btn ghost bh-btn" label="🔎 Find contacts" />
                 <button className="btn ghost bh-btn" type="button" aria-expanded={confirmRefresh} onClick={() => setConfirmRefresh((v) => !v)}>Refresh research</button>
                 <button className="btn ghost bh-btn btn-close" type="button" onClick={onClose}>Close</button>
               </div>

@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { ask, paidFetch, notify } from "@/components/Confirm";
-import { queueFindContacts } from "@/lib/findContactsClient";
+import FindContactsButton from "@/components/FindContactsButton";
 import { downloadReport } from "@/components/ReportDialog";
 import { fmtDateTime } from "@/lib/dates";
 
@@ -300,7 +300,7 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
                   <div className="find-acts">
                     <Link className="btn tiny" href={openAccount(it)}>Open</Link>
                     <button type="button" className="btn tiny" onClick={() => downloadReport({ companyId: it.id }, "pdf")}>PDF</button>
-                    <button type="button" className="btn tiny" title="Free: searches public web pages for this company's contacts and saves them" onClick={() => queueFindContacts(it.slug, it.region, it.company_name)}>Find contacts</button>
+                    <FindContactsButton slug={it.slug} region={it.region} company={it.company_name} />
                     {it.contacts > 0 && <button type="button" className="btn tiny" onClick={() => downloadReport({ companyIds: [it.id], region: "All", emailOnly: true }, "xlsx")}>Excel</button>}
                   </div>
                 </li>))}

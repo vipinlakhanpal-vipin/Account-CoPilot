@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.16";
+export const APP_VERSION = "4.17";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.17", date: "2026-10-16", notes: "Find contacts can also use Seamless: choose Free, or Free + Seamless.", changes: [
+      { what: "The Find contacts button opens a two-choice menu: Free (public web pages only) or Free + Seamless (also Seamless records; about 1 credit per person, at most 5 per company). Seamless people are saved like the earlier Seamless run: email only when valid at 90%+ and on the company domain, LinkedIn from the record, new rows only", where: "components/FindContactsButton.tsx, app/api/engine (job.seamless), app/api/engine/worker (add_contacts via seamless), ENGINE.md", why: "Requested — add a Seamless option to Find contacts" },
+      { what: "The NEW badge now follows the record note (Find contacts), so it covers both web and Seamless additions and not the earlier bulk Seamless run", where: "components/CoPilotApp.tsx (isNewWeb)", why: "Keeps the badge to people this button added" },
+    ] },
   { version: "4.16", date: "2026-10-16", notes: "People added by Find contacts carry a green NEW badge for 14 days, and the completion card says where to look.", changes: [
       { what: "A green NEW badge beside the name of anyone added by Find contacts in the last 14 days: on the account page Stakeholders list, in Accounts → Stakeholders and in the contacts drill-down. The completion card names these places, and when nothing public was found it says so plainly", where: "components/CoPilotApp.tsx (NewTag), components/ContactsJobTracker.tsx", why: "Requested — show where a new contact was added and how to tell it is new" },
     ] },

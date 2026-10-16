@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 // Follows every "Find contacts" job from click to finish: a flashing "Searching…" card while it runs, then a completion card that says what was added and where to see it.
 // Tracked jobs are kept in localStorage so the card survives page changes and reloads.
-type Tracked = { slug: string; company: string; region: string; at: number; trigger: string; state?: "done" | "error"; result?: string };
+type Tracked = { slug: string; company: string; region: string; at: number; trigger: string; seamless?: boolean; state?: "done" | "error"; result?: string };
 type Job = { mode: string; slug?: string; status: string; requested_at: string; result?: string };
 const KEY = "fc-contacts-jobs";
 export const FIND_CONTACTS_EVENT = "find-contacts-queued";
@@ -72,8 +72,8 @@ export default function ContactsJobTracker() {
             <div key={it.slug} className={`fcj-card ${daily ? "wait" : "busy"}`} role="status" aria-live="polite">
               <span className="fcj-dot" aria-hidden="true" />
               <div className="fcj-body">
-                <b className="fcj-flash">{phase[it.slug] === "running" || it.trigger === "ok" ? `Searching ${it.company} contacts…` : `Waiting to search ${it.company} contacts…`}</b>
-                <span>{daily ? "The instant trigger is off, so this starts at the next daily run (6am Dubai)." : "Reading public web pages for named people with an email, phone or LinkedIn link. Usually a few minutes. You can keep working; this card updates by itself."}</span>
+                <b className="fcj-flash">{phase[it.slug] === "running" || it.trigger === "ok" ? `Searching ${it.company} contacts${it.seamless ? " (web + Seamless)" : ""}…` : `Waiting to search ${it.company} contacts…`}</b>
+                <span>{daily ? "The instant trigger is off, so this starts at the next daily run (6am Dubai)." : `${it.seamless ? "Reading public web pages and Seamless records" : "Reading public web pages"} for named people with an email, phone or LinkedIn link. Usually a few minutes. You can keep working; this card updates by itself.`}</span>
               </div>
               {close}
             </div>);

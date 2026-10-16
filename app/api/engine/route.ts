@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
 const EST = { update: 0.55, discovery: 0.75, profile: 0.55 }; // USD per Quick research / discovery search / new-company profile
 
 type JobDetail = { name: string; status?: string; revenue?: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; country?: string; decided?: "added" | "ignored"; entity_type?: "Regional HQ" | "Branch" | "Foreign Branch" | "Unknown" };
-type Job = { id: string; region: string; count: number | "max"; mode: "verify" | "discover" | "both" | "company" | "contacts"; company_name?: string; slug?: string; website?: string; company_names?: string[]; requested_by: string; requested_at: string;
+type Job = { id: string; region: string; count: number | "max"; mode: "verify" | "discover" | "both" | "company" | "contacts"; company_name?: string; slug?: string; seamless?: boolean; website?: string; company_names?: string[]; requested_by: string; requested_at: string;
   status: "queued" | "running" | "done" | "error"; done_at?: string; result?: string; details?: JobDetail[] };
 type IgnoredCo = { id: string; name: string; country: string; region: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; ignored_at: string; ignored_by: string; recheck_at: string };
 type Batch = { id: string; region: string; update_count: number; new_count: number; budget: number; available: number; planned_update: number; planned_new: number;
@@ -39,7 +39,7 @@ const setSetting = (db: ReturnType<typeof supabaseAdmin>, key: string, value: un
 async function openJobIssue(job: Job): Promise<string> {
   const token = process.env.GITHUB_JOBS_TOKEN;
   if (!token) return "not_set";
-  const title = job.mode === "contacts" ? `Job ${job.id}: find contacts at "${job.company_name}" (${job.region})` : job.mode === "company" ? `Job ${job.id}: check "${job.company_name}" (${job.region})` : `Job ${job.id}: ${job.mode} ${job.count} in ${job.region}`;
+  const title = job.mode === "contacts" ? `Job ${job.id}: find contacts at "${job.company_name}" (${job.region})${job.seamless ? " with Seamless" : ""}` : job.mode === "company" ? `Job ${job.id}: check "${job.company_name}" (${job.region})` : `Job ${job.id}: ${job.mode} ${job.count} in ${job.region}`;
   const body = `Queued by ${job.requested_by} at ${job.requested_at}.\n\nAuto-opened by Account CoPilot so the instant job runner fires now instead of waiting for the next daily run. The job itself is tracked in the app (Setup → Settings), not in this issue — closing or leaving this open makes no difference.`;
   try {
     const r = await fetch("https://api.github.com/repos/vipinlakhanpal-vipin/account-copilot-jobs/issues", {
@@ -197,7 +197,7 @@ export async function GET(req: Request) {
 
 const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("queue"), region: z.string().min(2).max(40), count: z.union([z.number().int().min(1).max(500), z.literal("max")]), mode: z.enum(["verify", "discover", "both", "company", "contacts"]),
-    slug: z.string().trim().max(120).optional(), company_name: z.string().trim().max(120).optional(), website: z.string().trim().max(200).optional(), company_names: z.array(z.string().trim().min(2).max(120)).max(30).optional() }),
+    slug: z.string().trim().max(120).optional(), seamless: z.boolean().optional(), company_name: z.string().trim().max(120).optional(), website: z.string().trim().max(200).optional(), company_names: z.array(z.string().trim().min(2).max(120)).max(30).optional() }),
   z.object({ action: z.literal("add_found"), job_id: z.string(), name: z.string() }),
   z.object({ action: z.literal("ignore_found"), job_id: z.string(), name: z.string() }),
   z.object({ action: z.literal("add_all_found"), job_id: z.string() }),
@@ -307,7 +307,7 @@ export async function POST(req: Request) {
       if (!canSeeCountry(access, co.country)) return NextResponse.json({ error: "That company is outside your regions." }, { status: 403 });
       if (st.jobs.some((j) => j.mode === "contacts" && j.slug === co.slug && (j.status === "queued" || j.status === "running")))
         return NextResponse.json({ error: `Contacts for ${co.company_name} are already being searched.` }, { status: 409 });
-      const job: Job = { id, region: regionOf(co.country), count: 1, mode: "contacts", company_name: co.company_name, slug: co.slug, website: co.company_website || co.domain || "",
+      const job: Job = { id, region: regionOf(co.country), count: 1, mode: "contacts", company_name: co.company_name, slug: co.slug, ...(b.seamless ? { seamless: true } : {}), website: co.company_website || co.domain || "",
         requested_by: user.email || "", requested_at: now, status: "queued" };
       st.jobs.unshift(job);
       trigger = await openJobIssue(job);

@@ -1535,3 +1535,8 @@ td .rev-src{font-size:10px}
 @keyframes fcj-blink{0%,100%{opacity:1}50%{opacity:.45}}
 @media (prefers-reduced-motion:reduce){.fcj-dot,.fcj-flash{animation:none}}
 .new-tag{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:999px;background:#0B7A66;color:#fff;font:700 9px var(--body);letter-spacing:.06em;vertical-align:middle}
+.fc-wrap{position:relative;display:inline-block}
+.fc-menu{position:absolute;top:calc(100% + 4px);right:0;z-index:600;display:flex;flex-direction:column;gap:2px;width:250px;padding:6px;border-radius:12px;background:var(--surface);border:1px solid var(--line-2);box-shadow:0 14px 34px rgba(0,0,0,.3);text-align:left}
+.fc-menu button{display:flex;flex-direction:column;gap:2px;padding:8px 10px;border:0;border-radius:8px;background:transparent;color:var(--text);cursor:pointer;text-align:left;font:500 12.5px var(--body)}
+.fc-menu button:hover{background:var(--accent-soft)}
+.fc-menu small{color:var(--muted);font-size:11.5px;line-height:1.35}

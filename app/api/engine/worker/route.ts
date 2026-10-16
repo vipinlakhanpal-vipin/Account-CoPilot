@@ -39,7 +39,9 @@ const NewCoUpload = z.object({ name: z.string().min(2), website: z.string().opti
   hq_city: z.string().optional().default(""), notes: z.string().optional().default("") });
 const NewContact = z.object({ full_name: z.string().trim().min(3).max(120), title_verbatim: z.string().trim().min(2).max(200),
   email: z.string().trim().max(160).optional().default(""), phone: z.string().trim().max(40).optional().default(""), phone_type: z.enum(["Direct", "Mobile", "Switchboard", ""]).optional().default(""),
-  linkedin_url: z.string().trim().max(240).optional().default(""), source_url: z.string().trim().url().max(500), source_note: z.string().trim().max(400).optional().default("") });
+  linkedin_url: z.string().trim().max(240).optional().default(""), via: z.enum(["web", "seamless"]).optional().default("web"), seamless_id: z.string().trim().max(40).optional().default(""),
+  source_url: z.string().trim().max(500).optional().default(""), source_note: z.string().trim().max(400).optional().default("") })
+  .refine((c) => (c.via === "seamless" ? !!c.seamless_id : /^https?:\/\//.test(c.source_url)), { message: "A public-web contact needs source_url; a Seamless contact needs seamless_id." });
 const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("claim") }),
   z.object({ action: z.literal("finish"), id: z.string(), status: z.enum(["done", "error"]), result: z.string().max(2000), slug: z.string().max(120).optional(),
@@ -164,24 +166,28 @@ export async function POST(req: Request) {
       if (same) {
         const fill: Record<string, unknown> = {};
         if (same.channel_state === "Claude") {
-          if (email && !same.email) Object.assign(fill, { email, email_status: "Published", email_source: c.source_url, email_confidence: "FACT" });
-          if (phone && !same.phone) Object.assign(fill, { phone, phone_type: c.phone_type || null, phone_source: c.source_url });
+          if (email && !same.email) Object.assign(fill, { email, email_status: c.via === "seamless" ? "Seamless valid (90%+)" : "Published", email_source: c.via === "seamless" ? "Seamless.ai" : c.source_url, email_confidence: c.via === "seamless" ? "LIKELY" : "FACT" });
+          if (phone && !same.phone) Object.assign(fill, { phone, phone_type: c.phone_type || null, phone_source: c.via === "seamless" ? "Seamless.ai" : c.source_url });
           if (linkedin && !same.linkedin_url) fill.linkedin_url = linkedin;
         }
         if (Object.keys(fill).length) {
-          await db.from("contacts").update({ ...fill, claude_check: `${same.claude_check ? same.claude_check + " | " : ""}Public web ${now.slice(0, 10)}: ${c.source_url}`, updated_at: now }).eq("id", same.id);
+          await db.from("contacts").update({ ...fill, claude_check: `${same.claude_check ? same.claude_check + " | " : ""}${c.via === "seamless" ? "Seamless" : "Public web"} ${now.slice(0, 10)}: ${c.via === "seamless" ? "record" : c.source_url}`, updated_at: now }).eq("id", same.id);
           updated.push(c.full_name);
         } else skipped.push({ name: c.full_name, why: "already on file" });
         continue;
       }
-      const day = now.slice(0, 10);
-      const ext = "WEB-" + createHash("sha1").update(`${co.id}|${key(c.full_name)}`).digest("hex").slice(0, 12);
+      const day = now.slice(0, 10), sm = c.via === "seamless";
+      const ext = sm ? `SMLS-${c.seamless_id}` : "WEB-" + createHash("sha1").update(`${co.id}|${key(c.full_name)}`).digest("hex").slice(0, 12);
+      const src = sm ? "Seamless.ai" : c.source_url;
       const { error } = await db.from("contacts").upsert([{ external_id: ext, company_id: co.id, full_name: c.full_name, title_verbatim: c.title_verbatim, research_channel: "Claude", channel_state: "Claude",
-        channel_source: "Claude public web search", source: c.source_url, source_type: "Public web (free session)", source_url: c.source_url, verification_status: email || linkedin ? "LIKELY CURRENT" : "UNVERIFIED",
-        email: email || null, email_status: email ? "Published" : null, email_source: email ? c.source_url : null, email_confidence: email ? "FACT" : null,
-        phone: phone || null, phone_type: phone ? c.phone_type || null : null, phone_source: phone ? c.source_url : null, linkedin_url: linkedin || null, employment_status: "Current (per source)",
-        notes_contact: `Found by a free Claude session on ${day} from public web pages. ${c.source_note || ""} LinkedIn URLs are from search results only; profiles were not opened.`.trim(),
-        claude_check: `Public web ${day}: ${c.source_url}`, record_status: `Claude — added (public web, ${day})`, company_ref_name: co.company_name }], { onConflict: "external_id", ignoreDuplicates: true });
+        channel_source: sm ? "Claude-Seamless" : "Claude public web search", source: sm ? "Seamless.ai (Find contacts)" : c.source_url, source_type: sm ? "Seamless.ai" : "Public web (free session)", source_url: sm ? null : c.source_url,
+        verification_status: email || linkedin ? "LIKELY CURRENT" : "UNVERIFIED",
+        email: email || null, email_status: email ? (sm ? "Seamless valid (90%+)" : "Published") : null, email_source: email ? src : null, email_confidence: email ? (sm ? "LIKELY" : "FACT") : null,
+        phone: phone || null, phone_type: phone ? c.phone_type || null : null, phone_source: phone ? src : null, linkedin_url: linkedin || null, employment_status: sm ? "Current (per Seamless)" : "Current (per source)",
+        notes_contact: sm ? `Found by Find contacts with Seamless on ${day}. ${c.source_note || ""} LinkedIn URL is from the Seamless record; the profile page was not opened.`.trim()
+          : `Found by a free Claude session on ${day} from public web pages. ${c.source_note || ""} LinkedIn URLs are from search results only; profiles were not opened.`.trim(),
+        claude_check: `${sm ? "Seamless record" : "Public web"} ${day}: ${sm ? "title, employer and contact details from the Seamless record" : c.source_url}`,
+        record_status: `Claude — added (Find contacts, ${sm ? "Seamless" : "public web"}, ${day})`, company_ref_name: co.company_name }], { onConflict: "external_id", ignoreDuplicates: true });
       if (error) skipped.push({ name: c.full_name, why: error.message }); else { added.push(c.full_name); (have || []).push({ id: "", full_name: c.full_name, email, phone, linkedin_url: linkedin, channel_state: "Claude", claude_check: "" }); }
     }
     invalidateAllData();
