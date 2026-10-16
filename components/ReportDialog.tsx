@@ -138,7 +138,7 @@ export default function ReportDialog({ accounts, icpDef, onClose, companyIds, li
             ))}
           </div>}
           {format === "xlsx" && (
-            <label className="pdf-check"><input type="checkbox" checked={emailOnly} onChange={(e) => setEmailOnly(e.target.checked)} /> Only people with an official email (recommended for campaigns)</label>
+            <label className="pdf-check"><input type="checkbox" checked={emailOnly} onChange={(e) => setEmailOnly(e.target.checked)} /> Only people I can reach: an official email, a phone or a LinkedIn profile (recommended)</label>
           )}
           <p className="note">{!region ? "Choose a region to continue." : `${matching} companies match. ${format === "pdf" ? `The PDF covers ${Math.min(eff, matching)}` : eff ? `The Excel lists up to ${eff} that have a contact on file` : "The Excel lists every one that has a contact on file"}, picked by ${rank === "revenue" ? "largest revenue" : rank === "name" ? "name" : "best ICP fit"}. Free: built from data already in the app.`}</p>
         </div>

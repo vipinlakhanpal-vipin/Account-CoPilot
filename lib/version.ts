@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.09";
+export const APP_VERSION = "4.10";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.10", date: "2026-10-16", notes: "The Excel contact list has email, phone and LinkedIn profile for each person, and includes anyone with at least one of them.", changes: [
+      { what: "Added a LinkedIn Profile column (a clickable link) after the phone column, and the list now includes people who have an official email, a phone or a LinkedIn profile, instead of only people with an email", where: "lib/xlsxReport.ts, components/ReportDialog.tsx, lib/aria/agent.ts", why: "Requested — phone and email both, plus LinkedIn, whenever Aria generates an Excel from the existing database" },
+    ] },
   { version: "4.09", date: "2026-10-16", notes: "The Excel contact list (from Aria, the report dialog and Find company) now has a phone column next to the email.", changes: [
       { what: "Added \"Phone (Tel / Mobile)\" after Email ID in the campaign contact list. Phones are shown exactly as stored, several numbers separated by a slash, and left blank when none is on file (never guessed)", where: "lib/xlsxReport.ts", why: "Reported — an Excel from Aria for 20 UAE companies had emails but no telephone numbers" },
     ] },

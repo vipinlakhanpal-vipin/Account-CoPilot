@@ -22,7 +22,7 @@ const splitName = (full: string) => {
 export type CampaignOptions = { region: string; statuses: string[]; emailOnly: boolean; generatedBy: string; ids?: string[]; def?: unknown; limit?: number; rank?: "fit" | "revenue" | "name"; criteria?: Partial<Criteria> | null };
 
 const GREEN = "FF0F6E56", BAND = "FFF1F7F5", LINE = "FFD5DEDA";
-type Out = { company: string; name: string; first: string; last: string; title: string; email: string; phone: string; erp: string; s2p: string;
+type Out = { company: string; name: string; first: string; last: string; title: string; email: string; phone: string; linkedin: string; erp: string; s2p: string;
   revenue: string; revType: string; employees: string; hq: string; tier: string };
 
 export async function buildCampaignList(d: AllData, o: CampaignOptions) {
@@ -39,11 +39,11 @@ export async function buildCampaignList(d: AllData, o: CampaignOptions) {
     // Phones exactly as stored (never guessed); a person with several numbers across sources gets them all, once each.
     const seenNo = new Set<string>(), phone = p.rows.flatMap((r) => s(r.phone).split(/[;/]/)).map((x) => x.trim()).filter((x) => {
       const digits = x.replace(/\D/g, ""); if (digits.length < 7 || seenNo.has(digits)) return false; seenNo.add(digits); return true; }).join(" / ");
-    return { company: s(a.company_name), name, first, last, title: s(p.title_verbatim), email, phone, erp: known(a.erp).replace(/\s*\(.*$/, ""),
+    return { company: s(a.company_name), name, first, last, title: s(p.title_verbatim), email, phone, linkedin: s(p.linkedin_url) || p.rows.map((r) => s(r.linkedin_url)).find(Boolean) || "", erp: known(a.erp).replace(/\s*\(.*$/, ""),
       s2p: known(a.existing_s2p_product), revenue: rev ? fmtMoneyM(rev, cur) : "",
       revType: rev ? (revenueIsOfficial(a) ? "Official" : "Estimate") : "", employees: known(a.employee_range).replace(/\s*\(.*$/, ""),
       hq: [s(a.hq_city), s(a.country)].filter(Boolean).join(", "), tier: s(p.contact_tier) };
-  }).filter((r) => r.name && (!o.emailOnly || r.email))
+  }).filter((r) => r.name && (!o.emailOnly || r.email || r.phone || r.linkedin)) // reachable: an official email, a phone or a LinkedIn profile
     .sort((x, y) => x.company.localeCompare(y.company) || x.tier.localeCompare(y.tier) || x.name.localeCompare(y.name));
 
   // One block per company, so each company is listed once with its people beneath it.
@@ -66,7 +66,7 @@ export async function buildCampaignList(d: AllData, o: CampaignOptions) {
   wb.creator = "Account CoPilot";
   const cols: [string, keyof Out, number][] = [
     ["Company Name", "company", 34], ["Contact Name", "name", 26], ["First Name", "first", 16], ["Last Name", "last", 20], ["Contact Job Title", "title", 40],
-    ["Email ID", "email", 34], ["Phone (Tel / Mobile)", "phone", 24], ["Existing ERP", "erp", 24], ["Existing S2P Platform", "s2p", 24], ["Net Revenue (USD, local in brackets)", "revenue", 30],
+    ["Email ID", "email", 34], ["Phone (Tel / Mobile)", "phone", 24], ["LinkedIn Profile", "linkedin", 34], ["Existing ERP", "erp", 24], ["Existing S2P Platform", "s2p", 24], ["Net Revenue (USD, local in brackets)", "revenue", 30],
     ["Revenue Type", "revType", 14], ["Total Employees", "employees", 16], ["HQ Location", "hq", 24],
   ];
   const styleHeader = (row: ExcelJS.Row) => {
@@ -81,18 +81,18 @@ export async function buildCampaignList(d: AllData, o: CampaignOptions) {
   ws.mergeCells(1, 1, 1, 6);
   ws.getCell(1, 1).value = "Account CoPilot — campaign contact list";
   ws.getCell(1, 1).font = { bold: true, size: 15, color: { argb: GREEN } };
-  ws.mergeCells(2, 1, 2, 13);
+  ws.mergeCells(2, 1, 2, 14);
   ws.getCell(2, 1).value = `Region: ${o.region}   |   Companies: ${companies} of ${accounts.length} selected${totalWithContacts > companies ? ` (${companies} of ${totalWithContacts} with contacts, picked by ${rank === "revenue" ? "largest revenue" : rank === "name" ? "name, A to Z" : "best ICP fit"})` : ""}   |   Contacts: ${contacts}`;
   ws.getCell(2, 1).font = { bold: true, size: 12 };
-  ws.mergeCells(3, 1, 3, 13);
-  ws.getCell(3, 1).value = `Each company is listed once with its contacts beneath it. Revenue is in USD, with the regional currency in brackets. ${accounts.length - totalWithContacts} of the ${accounts.length} companies have no contact${o.emailOnly ? " with an official email" : ""} on file and are not listed.`;
+  ws.mergeCells(3, 1, 3, 14);
+  ws.getCell(3, 1).value = `Each company is listed once with its contacts beneath it. Revenue is in USD, with the regional currency in brackets. ${accounts.length - totalWithContacts} of the ${accounts.length} companies have no contact${o.emailOnly ? " with an email, phone or LinkedIn profile" : ""} on file and are not listed.`;
   ws.getCell(3, 1).font = { italic: true, color: { argb: "FF5B6670" } };
   ws.getCell(3, 1).alignment = { wrapText: true, vertical: "top" };
   ws.getRow(3).height = 30;
   cols.forEach(([h], i) => { ws.getCell(4, i + 1).value = h; });
   styleHeader(ws.getRow(4));
 
-  const COMPANY_LEVEL = [1, 8, 9, 10, 11, 12, 13]; // company, ERP, S2P, revenue, revenue type, employees, HQ: merged down the group
+  const COMPANY_LEVEL = [1, 9, 10, 11, 12, 13, 14]; // company, ERP, S2P, revenue, revenue type, employees, HQ: merged down the group
   let r = 5;
   groups.forEach((g, gi) => {
     const start = r;
@@ -100,7 +100,7 @@ export async function buildCampaignList(d: AllData, o: CampaignOptions) {
       cols.forEach(([, key], ci) => {
         // company-level values are written once, on the group's first row
         if (i > 0 && COMPANY_LEVEL.includes(ci + 1)) return;
-        ws.getCell(r, ci + 1).value = p[key] as string;
+        ws.getCell(r, ci + 1).value = key === "linkedin" && p.linkedin ? { text: p.linkedin, hyperlink: p.linkedin } : (p[key] as string);
       });
       r++;
     });

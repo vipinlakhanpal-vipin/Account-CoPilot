@@ -97,7 +97,7 @@ export async function runTool(name: string, input: Record<string, unknown>, ctx:
       rank: (input.rank as string) || "fit", ...(input.limit ? { limit: Math.max(1, Math.min(1000, Number(input.limit))) } : {}) };
     const prev = await buildCampaignList(ctx.data, { region, statuses: [], emailOnly: body.emailOnly, generatedBy: "", ids: body.companyIds, def: ctx.def,
       limit: (body as { limit?: number }).limit, rank: body.rank as "fit" | "revenue" | "name", criteria: ctx.criteria as Partial<Criteria> | null });
-    if (!prev.contacts) return { result: { error: `${accounts.length} ${region} companies match, but none has a contact${body.emailOnly ? " with an official email" : ""} on file yet. Contacts exist only where the workbook or Seamless enrichment added them.` } };
+    if (!prev.contacts) return { result: { error: `${accounts.length} ${region} companies match, but none has a contact${body.emailOnly ? " with an email, phone or LinkedIn profile" : ""} on file yet. Contacts exist only where the workbook or Seamless enrichment added them.` } };
     return { result: { prepared: true, region, companies_matching: accounts.length, companies_in_file: prev.companies, contacts_in_file: prev.contacts },
       action: { kind: "xlsx", label: `Download Excel · ${prev.companies} companies, ${prev.contacts} contacts`, body } };
   }
