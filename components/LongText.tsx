@@ -5,6 +5,8 @@ import { createPortal } from "react-dom";
 // A long text in a table cell: the first few words, then an i button that opens the full text. Keeps rows one line tall; the story is one click away.
 export function leadOf(text: string, max = 44): string {
   const t = text.replace(/\s+/g, " ").trim();
+  const tag = t.match(/^(FACT|LIKELY|UNVERIFIED|UNKNOWN|CONFLICTING)\b/i); // an evidence label leads: FACT … then the i button
+  if (tag && t.length > tag[0].length + 4) return tag[0].toUpperCase();
   const cut = t.split(/[:;]|\.\s|\s[—–]\s/)[0].trim();
   const lead = cut.length >= 12 ? cut : t;
   return lead.length > max ? lead.slice(0, max - 1).trimEnd() + "…" : lead + (lead.length < t.length ? "…" : "");

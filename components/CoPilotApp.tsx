@@ -773,12 +773,12 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
           <h2 className="with-count">Priority accounts <span className="count">{top.length} {top.length === 1 ? "account" : "accounts"}</span>
             <button type="button" className="btn btn-dl tiny" style={{ marginLeft: 12 }} onClick={() => openReports({ ids: top.map((a) => a.id as string), title: "Priority accounts" })} title="Full PDF report or an Excel contact list for the priority accounts, for a region you choose">📊 Reports (PDF / Excel)</button></h2>
           <p className="note">Accounts with strong or very strong S2P signals. Select a row to open the account brief.</p>
-          <div className="tablewrap"><table>
+          <div className="tablewrap"><table className="ft">
             <thead><tr><th className="num">#</th><th className="logo-cell"></th><th>Company</th><th>Signal</th><th>Existing S2P</th><th>Status</th><th>ERP</th><th>Why</th></tr></thead>
             <tbody>{top.map((a, i) => (
               <tr key={a.id} className="click" tabIndex={0} onClick={() => setOpen(a.id)} onKeyDown={(e) => e.key === "Enter" && setOpen(a.id)}>
                 <td className="num mono">{i + 1}</td><td className="logo-cell"><CompanyLogo a={a} /></td><td><b><Sn n={a.company_name} /></b></td><td><Pill icon s={a.s2p_signal_level} /></td><td>{a.existing_s2p_product}</td><td>{a.s2p_platform_status}</td>
-                <td>{a.erp}</td><td className="wrap">{str(a.s2p_strong_signals).slice(0, 260)}</td>
+                <td>{a.erp}</td><td>{str(a.s2p_strong_signals) ? <LongText text={str(a.s2p_strong_signals).slice(0, 600)} /> : <span className="muted">—</span>}</td>
               </tr>))}
             </tbody></table></div>
         </div>
@@ -1008,7 +1008,7 @@ function Brief({ a, data, people, onClose, onContact, scores, criteria, isSuper 
             );
           })()}
           <div className="block"><h4>Stakeholders ({cs.length}) · select a person for their contact card</h4>
-            <div className="tablewrap"><table><thead><tr><th className="num">#</th><th>Name</th><th>Title (verbatim)</th><th>Tier</th><th>Channel</th><th>Email</th><th>Phone</th><th>LinkedIn</th></tr></thead>
+            <div className="tablewrap"><table className="ft"><thead><tr><th className="num">#</th><th>Name</th><th>Title (verbatim)</th><th>Tier</th><th>Channel</th><th>Email</th><th>Phone</th><th>LinkedIn</th></tr></thead>
               <tbody>{cs.map((p, i) => (
                 <tr key={p.id} className="click" tabIndex={0} onClick={(e) => { if (!(e.target as HTMLElement).closest("a")) onContact(p.id); }} onKeyDown={(e) => e.key === "Enter" && onContact(p.id)}><td className="num mono">{i + 1}</td><td><b>{p.full_name}</b><NewTag p={p} /><div className="muted">{p.role_family} · {p.verification_status}</div></td><td>{p.title_verbatim}</td>
                   <td>{p.contact_tier}</td><td>{p.channel_state}</td><td className="mono">{p.email}<div className="muted">{p.email_status}</div></td>

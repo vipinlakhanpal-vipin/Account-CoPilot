@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.86";
+export const APP_VERSION = "4.87";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.87", date: "2026-10-16", notes: "Dashboard Priority accounts follows the same neat table rule.", changes: [
+      { what: "On the Dashboard the Priority accounts table now keeps every value on one line and shows Why as the evidence label (FACT, LIKELY...) with an i button for the full story. Row numbers of two digits no longer split onto a second line (in every table). The stakeholders table in an account brief uses the same layout", where: "components/CoPilotApp.tsx, components/LongText.tsx, app/globals.css", why: "Requested — the Dashboard had the same long story in Why and two-digit serial numbers wrapping" },
+    ] },
   { version: "4.86", date: "2026-10-16", notes: "The Sources table is neat: short leads with an i button.", changes: [
       { what: "In Data, Sources the Information found and Source columns show a short lead (for example Orion ERP rollout…) with an i button for the full text, and the open link stays on one line. Any text over 40 characters in a wrap column uses the i button, in every list table", where: "components/CoPilotApp.tsx", why: "Requested — keep the Sources table neat; the URL open was rolling onto a second line" },
     ] },
