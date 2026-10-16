@@ -1770,3 +1770,15 @@ label.find-reg input{width:13px;height:13px;margin:0;flex:none;accent-color:#0B7
 .find-side .find-facet-h{display:flex;width:100%;justify-content:space-between;align-items:center;padding:6px 4px 3px;border:0;background:none;font:600 9.5px var(--body);letter-spacing:.09em;text-transform:uppercase;color:var(--muted);cursor:pointer}
 .find-side .find-facet-chips{display:flex;flex-direction:column;gap:1px;padding-bottom:4px}
 .find-side .find-clearall{margin-top:8px}
+
+/* Download buttons everywhere (v4.76): sky-blue pills with a download arrow */
+.btn.btn-dl{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:#1F8FE0;border:1px solid #157AC4;color:#fff;border-radius:999px;padding:8px 18px;font:700 13px var(--body);letter-spacing:.01em;cursor:pointer;text-decoration:none;box-shadow:0 2px 8px rgba(31,143,224,.28)}
+.btn.btn-dl:hover:not(:disabled){background:#157AC4;border-color:#0F66A8;color:#fff}
+.btn.btn-dl:disabled{opacity:.55;cursor:not-allowed;box-shadow:none}
+.btn.btn-dl.tiny{padding:5px 14px;font-size:12px}
+.btn.btn-dl.big{padding:11px 26px;font-size:14.5px;box-shadow:0 4px 14px rgba(31,143,224,.35)}
+.btn.btn-dl:not(.no-ic)::before{content:"⬇";font-size:.95em}
+.btn.btn-dl.bh-btn,.bh-btns .btn.btn-dl.bh-btn{background:#1F8FE0;border-color:#157AC4;color:#fff}
+.bh-btns .bh-btn.btn-dl:hover:not(:disabled){background:#157AC4;border-color:#0F66A8;color:#fff}
+.navbar .btn.btn-dl.dl{padding:8px 16px}
+.aria-actions .btn.btn-dl{margin-top:4px}

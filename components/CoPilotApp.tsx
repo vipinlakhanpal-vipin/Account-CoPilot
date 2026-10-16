@@ -314,8 +314,8 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "
         {!isPeople && multiPerCompany && <InfoTip k="accountsVsRows" />}
         {toggleExtra}
         {openReports && reportIds.length > 0 && (
-          <button type="button" className="btn primary tiny" onClick={() => openReports({ ids: reportIds, title })}
-            title={`Full PDF report or an Excel contact list for the ${reportIds.length.toLocaleString()} companies shown here, for a region you choose`}>📊 Reports (PDF / Excel)</button>)}
+          <button type="button" className="btn btn-dl tiny" onClick={() => openReports({ ids: reportIds, title })}
+            title={`Full PDF report or an Excel contact list for the ${reportIds.length.toLocaleString()} companies shown here, for a region you choose`}>Reports (PDF / Excel)</button>)}
       </div>
       {isPeople && <p className="note seg-extra">All Contacts ({rows.length.toLocaleString()})</p>}
       <div className="filters">
@@ -756,7 +756,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
         </div>
         <div className="panel" style={{ marginTop: 16 }}>
           <h2 className="with-count">Priority accounts <span className="count">{top.length} {top.length === 1 ? "account" : "accounts"}</span>
-            <button type="button" className="btn primary tiny" style={{ marginLeft: 12 }} onClick={() => openReports({ ids: top.map((a) => a.id as string), title: "Priority accounts" })} title="Full PDF report or an Excel contact list for the priority accounts, for a region you choose">📊 Reports (PDF / Excel)</button></h2>
+            <button type="button" className="btn btn-dl tiny" style={{ marginLeft: 12 }} onClick={() => openReports({ ids: top.map((a) => a.id as string), title: "Priority accounts" })} title="Full PDF report or an Excel contact list for the priority accounts, for a region you choose">📊 Reports (PDF / Excel)</button></h2>
           <p className="note">Accounts with strong or very strong S2P signals. Select a row to open the account brief.</p>
           <div className="tablewrap"><table>
             <thead><tr><th className="num">#</th><th className="logo-cell"></th><th>Company</th><th>Signal</th><th>Existing S2P</th><th>Status</th><th>ERP</th><th>Why</th></tr></thead>
@@ -853,7 +853,7 @@ function Brief({ a, data, people, onClose, onContact, scores, criteria, isSuper 
             <h3 className="drawer-title-logo bh-title"><CompanyLogo a={a} size={34} />{a.company_name}</h3>
             <div className="bh-actions">
               <div className="bh-btns">
-                <button className="btn ghost bh-btn" type="button" disabled={pdfBusy} title="PDF with everything on this page, plus how it was built from your ICP"
+                <button className="btn btn-dl bh-btn" type="button" disabled={pdfBusy} title="PDF with everything on this page, plus how it was built from your ICP"
                   onClick={async () => { setPdfBusy(true); await downloadReport({ companyId: a.id }); setPdfBusy(false); }}>{pdfBusy ? "Building…" : "📄 PDF"}</button>
                 <FindContactsButton slug={a.slug} region={regionOf(a.country)} company={a.company_name} className="btn ghost bh-btn" label="🔎 Find contacts" />
                 <button className="btn ghost bh-btn" type="button" aria-expanded={confirmRefresh} onClick={() => setConfirmRefresh((v) => !v)}>Refresh research</button>

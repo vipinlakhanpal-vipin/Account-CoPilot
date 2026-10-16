@@ -372,7 +372,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                 {hasList === "yes" && (
                   <div className="hw-upload-panel">
                     <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8, flexWrap: "wrap" }}>
-                      <a className="btn" href="/api/wizard-template" download>⬇ Download the template (.xlsx)</a>
+                      <a className="btn btn-dl no-ic" href="/api/wizard-template" download>⬇ Download the template (.xlsx)</a>
                       <span className="hint">— optional, only if you&apos;re starting from scratch</span>
                     </div>
                     <p className="hw-lead hw-lead-justify">Already have a spreadsheet? You don&apos;t need to reshape it into the template — as long as it&apos;s

@@ -147,7 +147,7 @@ export default function ReportDialog({ accounts, icpDef, onClose, companyIds, li
         <div className="wn-foot">
           <span className="wn-actions">
             <button type="button" className="btn" onClick={onClose}>Cancel</button>
-            <button type="button" className="btn primary" disabled={!ready} onClick={generate}>{busy ? "Building…" : format === "pdf" ? "Generate PDF" : "Generate Excel"}</button>
+            <button type="button" className="btn btn-dl big" disabled={!ready} onClick={generate}>{busy ? "Building…" : format === "pdf" ? "Generate PDF" : "Generate Excel"}</button>
           </span>
         </div>
       </div>

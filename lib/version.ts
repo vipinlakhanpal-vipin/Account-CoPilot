@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.75";
+export const APP_VERSION = "4.76";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.76", date: "2026-10-16", notes: "Download buttons are sky-blue pills everywhere.", changes: [
+      { what: "Every download button now looks the same: a sky-blue pill with a download arrow, bigger in Aria and in the report window. Used for Aria's PDF and Excel buttons, Master Book, account and search-result PDF and Excel, Reports (PDF / Excel), the Market intelligence CSV, tender document downloads and the Setup Wizard template", where: "app/globals.css (.btn-dl) and the buttons in Aria, Header, CoPilotApp, FindCompany, MarketIntel, BuyingSignals, HomeWorkspace, ReportDialog", why: "Requested — the Aria download button was hard to see; one clear style for all downloads" },
+    ] },
   { version: "4.75", date: "2026-10-16", notes: "Minimize and restore are a minus and a plus.", changes: [
       { what: "The Minimize button is now a round – button and, once minimized, the same button becomes + to restore; both have a hover label. This applies to Aria, Buying signals and Market intelligence", where: "components/AppWindow.tsx, packages/aria/AriaChat.tsx, packages/aria/aria.css", why: "Requested — the Restore text was confusing; use – and +" },
     ] },

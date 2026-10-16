@@ -278,7 +278,7 @@ export default function Header({ meta }: { meta: string }) {
             )))}
           </nav>
           <div className="nav-actions">
-            <button type="button" className="btn primary dl" onClick={downloadMasterBook} disabled={downloading} title="Download Master Book (.xlsx)">
+            <button type="button" className="btn btn-dl dl no-ic" onClick={downloadMasterBook} disabled={downloading} title="Download Master Book (.xlsx)">
               {downloading ? <span className="btn-spin">Preparing…</span> : <>
                 <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m0 0-3-3m3 3 3-3M3 13h10" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 <span>Master Book</span></>}

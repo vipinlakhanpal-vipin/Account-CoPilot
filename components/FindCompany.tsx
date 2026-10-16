@@ -277,8 +277,8 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
               <span className="find-bar-r">
                 {anyChip && <button type="button" className="btn tiny ghost" onClick={() => setSel(EMPTY_SEL)}>Clear filters</button>}
                 <label>Sort <select value={sort} onChange={(e) => setSort(e.target.value as typeof sort)}><option value="best">Best match</option><option value="revenue">Revenue, high to low</option><option value="name">Name A–Z</option></select></label>
-                {found.total > 0 && <button type="button" className="btn tiny" onClick={() => downloadReport({ companyIds: found.ids.slice(0, 10), region: "All", title: "Search results" }, "pdf")}>PDF, top {Math.min(10, found.ids.length)}</button>}
-                {found.total > 0 && <button type="button" className="btn tiny" onClick={() => downloadReport({ companyIds: found.ids, region: "All", emailOnly: true, rank: "revenue" }, "xlsx")}>Excel contact list{found.ids.length < found.total ? ` (first ${found.ids.length})` : ""}</button>}
+                {found.total > 0 && <button type="button" className="btn btn-dl tiny" onClick={() => downloadReport({ companyIds: found.ids.slice(0, 10), region: "All", title: "Search results" }, "pdf")}>PDF, top {Math.min(10, found.ids.length)}</button>}
+                {found.total > 0 && <button type="button" className="btn btn-dl tiny" onClick={() => downloadReport({ companyIds: found.ids, region: "All", emailOnly: true, rank: "revenue" }, "xlsx")}>Excel contact list{found.ids.length < found.total ? ` (first ${found.ids.length})` : ""}</button>}
               </span>
             </div>)}
           {found && found.items.length > 0 && (
@@ -303,9 +303,9 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
                   </div>
                   <div className="find-acts">
                     <Link className="btn tiny" href={openAccount(it)}>Open</Link>
-                    <button type="button" className="btn tiny" onClick={() => downloadReport({ companyId: it.id }, "pdf")}>PDF</button>
+                    <button type="button" className="btn btn-dl tiny" onClick={() => downloadReport({ companyId: it.id }, "pdf")}>PDF</button>
                     <FindContactsButton slug={it.slug} region={it.region} company={it.company_name} />
-                    {it.contacts > 0 && <button type="button" className="btn tiny" onClick={() => downloadReport({ companyIds: [it.id], region: "All", emailOnly: true }, "xlsx")}>Excel</button>}
+                    {it.contacts > 0 && <button type="button" className="btn btn-dl tiny" onClick={() => downloadReport({ companyIds: [it.id], region: "All", emailOnly: true }, "xlsx")}>Excel</button>}
                   </div>
                 </li>))}
             </ul>)}

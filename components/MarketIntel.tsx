@@ -297,7 +297,7 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
             </span>}
             <button type="button" className="btn tiny" onClick={() => setAddingP((v) => !v)} aria-expanded={addingP} title="Add a partner the scans missed">+ Add partner</button>
             <button type="button" className="btn tiny" disabled={!custs.length || !!busy} onClick={findAll} title="Free: searches for contacts at up to 10 customers of this vendor that have none yet">Find customer contacts</button>
-            <button type="button" className="btn tiny" disabled={!custs.length} onClick={download}>Download customers (CSV)</button>
+            <button type="button" className="btn btn-dl tiny" disabled={!custs.length} onClick={download}>Download customers (CSV)</button>
             <span className="note">{partners.length} partners · {custs.length} customers</span>
           </div>
           {addingP && (
