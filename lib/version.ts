@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.63";
+export const APP_VERSION = "4.64";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.64", date: "2026-10-16", notes: "Self-announced partners are labelled LIKELY.", changes: [
+      { what: "A partner that only announces the partnership on its own website, not in the vendor's partner directory, is labelled LIKELY with a note saying so. Accely (Coupa, UAE) was corrected: its Coupa partnership comes from its own January 2024 press release, and it is not in Coupa's directory. Scans follow the same rule", where: "ENGINE.md, Market intelligence data", why: "Reported — Coupa could not be found among Accely's partners" },
+    ] },
   { version: "4.63", date: "2026-10-16", notes: "An Other regions row collects partners that are not in your regions.", changes: [
       { what: "The Regions list in Market intelligence has an Other regions row (with the count for the vendor you are on). Partners a vendor lists that are not based in, and have no confirmed office in, any of your regions are saved there instead of being hidden; tick it to see them, each marked Other region with where it is based. The Show partners without a confirmed office box is gone. Scans still only run for the real regions you tick", where: "components/MarketIntel.tsx", why: "Requested — an Other regions bucket for partners identified outside the listed regions" },
     ] },
