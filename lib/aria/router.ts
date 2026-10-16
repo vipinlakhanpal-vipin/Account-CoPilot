@@ -12,7 +12,7 @@ export type FreeReply = { text: string; actions: AriaAction[]; choices: AriaChoi
 
 const s = (v: unknown) => (v === null || v === undefined ? "" : String(v).trim());
 const esc = (v: unknown) => s(v).replace(/\|/g, "/").replace(/\n/g, " ");
-function table(head: string[], rows: unknown[][]) {
+export function table(head: string[], rows: unknown[][]) {
   return `| ${head.join(" | ")} |\n|${head.map(() => "---").join("|")}|\n${rows.map((r) => `| ${r.map(esc).join(" | ")} |`).join("\n")}`;
 }
 const SUFFIX = /\b(pjsc|psc|llc|l\.l\.c|plc|ltd|limited|inc|co|company|corp|corporation|group|holding|holdings|international|the|of|and)\b/g;
@@ -54,7 +54,7 @@ function parseRevenue(t: string, f: AccountFilter): string {
   return "";
 }
 const money = (m: number) => (m >= 1000 && m % 1000 === 0 ? `${m / 1000}b` : m >= 1000 ? `${+(m / 1000).toFixed(2)}b` : `${+m.toFixed(1)}m`);
-const revenuePhrase = (f: AccountFilter) => f.min_revenue_usd_m !== undefined && f.max_revenue_usd_m !== undefined ? `net revenue between ${money(f.min_revenue_usd_m)} and ${money(f.max_revenue_usd_m)}`
+export const revenuePhrase = (f: AccountFilter) => f.min_revenue_usd_m !== undefined && f.max_revenue_usd_m !== undefined ? `net revenue between ${money(f.min_revenue_usd_m)} and ${money(f.max_revenue_usd_m)}`
   : f.min_revenue_usd_m !== undefined ? `net revenue above ${money(f.min_revenue_usd_m)}` : f.max_revenue_usd_m !== undefined ? `net revenue below ${money(f.max_revenue_usd_m)}` : "";
 
 
@@ -89,7 +89,7 @@ function parseFilters(t: string): AccountFilter {
   if (/\bwith (a )?(contact|email)|have (a )?contact/.test(t)) f.has_contacts = true;
   return f;
 }
-const readable = (f: AccountFilter) => [f.icp_status?.join("/"), f.platform && `${f.platform} customers`, f.erp_contains && `running ${f.erp_contains.toUpperCase()}`, f.region && `in ${f.region}`].filter(Boolean).join(" ");
+export const readable = (f: AccountFilter) => [f.icp_status?.join("/"), f.platform && `${f.platform} customers`, f.erp_contains && `running ${f.erp_contains.toUpperCase()}`, f.region && `in ${f.region}`].filter(Boolean).join(" ");
 
 function companyIn(t: string, ctx: AriaContext): { hits: Row[]; term: string } {
   const quoted = /["“]([^"”]+)["”]/.exec(t);

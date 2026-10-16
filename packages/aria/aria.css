@@ -142,3 +142,14 @@
 .aria-window.mini .aria-top-actions .aria-toggle,.aria-window.mini .aria-top-actions .aria-home:not(.aria-close):not(.aria-minbtn){padding:4px 9px}
 .aria-clear{align-self:flex-start;margin-top:8px;font:600 11px var(--aria-body);color:var(--aria-muted);background:none;border:1px solid var(--aria-line-2);border-radius:999px;padding:3px 10px;cursor:pointer}
 .aria-clear:hover{color:#B42318;border-color:#B42318}
+
+/* Minimized (v4.74): a slim pill: badge, name, Restore and Close. Everything else is hidden until the window is restored. */
+.aria-window.mini{width:auto !important;min-width:220px;max-width:min(340px,calc(100vw - 32px));border-radius:999px;box-shadow:0 10px 28px rgba(3,8,20,.4);overflow:hidden}
+.aria-window.mini .aria-top{padding:6px 8px 6px 8px;gap:10px;align-items:center;border-radius:999px}
+.aria-window.mini .aria-badge{width:28px;height:28px;border-radius:50%;font-size:14px;box-shadow:none}
+.aria-window.mini .aria-title{flex:1;min-width:0}
+.aria-window.mini .aria-title b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.aria-window.mini .aria-title small,.aria-window.mini .aria-hint{display:none}
+.aria-window.mini .aria-top-actions{gap:6px;flex:none}
+.aria-window.mini .aria-top-actions>*:not(.aria-minbtn):not(.aria-close){display:none !important}
+.aria-window.mini .aria-minbtn,.aria-window.mini .aria-close{padding:5px 12px;font-size:12px;white-space:nowrap}

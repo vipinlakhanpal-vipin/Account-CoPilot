@@ -8,6 +8,8 @@ import { loadAllCached } from "@/lib/dataCache";
 import { makeContext } from "@/lib/aria/tools";
 import { runAria } from "@/lib/aria/agent";
 import { tryFree, conversation } from "@/lib/aria/router";
+import { interpret, cleanPlan } from "@/lib/aria/interpret";
+import { confirmation, runPlan } from "@/lib/aria/plan";
 
 // Aria, the in-app assistant. Paid (Anthropic API): behind the paid-actions PIN like every other paid action.
 export const maxDuration = 60;
@@ -38,6 +40,14 @@ export async function POST(req: Request) {
     let typed = msgs[msgs.length - 1].content;
     // Buttons from the understanding guard: §ai: = hand it to the AI (paid), §plain: = run the reduced question
     const forceAi = typed.startsWith("§ai:");
+    // A plan the person confirmed: run it with the app's own tools (the reading was already paid for), no second AI call
+    if (typed.startsWith("§plan:")) {
+      let plan = null; try { plan = cleanPlan(JSON.parse(typed.slice(6))); } catch { /* fall through */ }
+      const done = plan ? await runPlan(plan, ctx) : null;
+      if (done) return NextResponse.json({ ...done, mode: "free", note: "Answered from your data · the reading was confirmed by you" });
+      return NextResponse.json({ text: "I could not run that plan. Please say it again in your own words.", actions: [], choices: [], mode: "free", note: "" });
+    }
+    if (typed === "§rephrase") return NextResponse.json({ text: "Okay. Tell me again in your own words and I will re-read it.", actions: [], choices: [], mode: "free", note: "" });
     typed = typed.replace(/^§(ai|plain):\s*/, "");
     // The chat is one topic until the person completes it: refinements build on the earlier questions, a new topic is confirmed first.
     const conv = conversation(typed, msgs.slice(0, -1).filter((m) => m.role === "user").map((m) => m.content), !!parsed.data.flow);
@@ -48,7 +58,16 @@ export async function POST(req: Request) {
     if (free) return NextResponse.json({ ...free, mode: "free", note: "Free answer · read from your data, no API cost" });
     // 2) Only what the rules cannot read goes to the AI (the cheaper model), behind the paid-actions PIN.
     const blocked = await requirePaidApproval(req, user); if (blocked) return blocked;
-    const out = await runAria([...msgs.slice(0, -1), { role: "user" as const, content: question }], ctx, regions);
+    const chat = [...msgs.slice(0, -1), { role: "user" as const, content: question }];
+    // Plan first (one small Haiku call): Aria states how it read the request, asks you to confirm when unsure, and runs the plan with the app's own tools.
+    const read = await interpret(chat, regions).catch(() => null);
+    if (read?.plan && read.plan.intent !== "other") {
+      const p = read.plan;
+      const needsConfirm = !p.confident || p.assumptions.length > 0 || p.not_supported.length > 0 || p.intent === "report";
+      const reply = needsConfirm ? confirmation(p) : await runPlan(p, ctx);
+      if (reply) return NextResponse.json({ ...reply, mode: "ai", note: "AI reading · one small Anthropic call, the figures come from your data" });
+    }
+    const out = await runAria(chat, ctx, regions);
     return NextResponse.json({ text: out.text, actions: out.actions, choices: out.choices, mode: "ai", note: "AI answer · this question used Anthropic API credit" });
   } catch {
     return NextResponse.json({ error: "Aria could not answer that just now. Try again." }, { status: 502 });

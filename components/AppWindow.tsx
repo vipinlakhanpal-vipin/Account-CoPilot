@@ -60,7 +60,7 @@ export default function AppWindow({ open, onClose, title, subtitle, badge, actio
           <div className="aria-title"><b>{title}</b><small>{subtitle}</small><small className="aria-hint">✥ Drag me anywhere on the screen, and resize me from any edge or corner</small></div>
           <div className="aria-top-actions">
             {actions}
-            <button type="button" className="aria-home" onClick={() => setMini((m) => !m)} title={mini ? "Bring the window back" : "Shrink to a small bar so you can work on other things; it keeps running"}>{mini ? "Restore" : "Minimize"}</button>
+            <button type="button" className="aria-home aria-minbtn" onClick={() => setMini((m) => !m)} title={mini ? "Bring the window back" : "Shrink to a small bar so you can work on other things; it keeps running"}>{mini ? "Restore" : "Minimize"}</button>
             {!mini && <button type="button" className="aria-home" onClick={() => { setRect(null); setWide((w) => !w); }} aria-pressed={wide} title="Make the window fill the screen, or back to its normal size">{wide ? "Shrink" : "Expand"}</button>}
             <button type="button" className="aria-home aria-close" onClick={onClose}>Close</button>
           </div>

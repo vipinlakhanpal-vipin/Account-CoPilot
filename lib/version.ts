@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.73";
+export const APP_VERSION = "4.74";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.74", date: "2026-10-16", notes: "Aria asks Claude to read your request first, and a neater minimized bar.", changes: [
+      { what: "Plan first: when the free rules cannot read a request, one small Claude (Haiku) call turns your sentence into a structured plan. Aria states how it read it (I read this as: ...), asks you to confirm when it guessed, when something cannot be applied, or before a PDF or Excel (Yes, run it / No, let me rephrase), and runs the confirmed plan with the app's own tools so the figures always come from your data. Anything it cannot plan still goes to the full Aria agent", where: "lib/aria/interpret.ts, lib/aria/plan.ts, app/api/aria/route.ts", why: "Requested — add Claude's understanding to Aria, using Haiku to keep credit use low" },
+      { what: "A minimized window is now a slim rounded bar with the badge, the name, Restore and Close; History, Expand, Read aloud and the scan buttons are hidden until you restore it", where: "packages/aria/aria.css, components/AppWindow.tsx, packages/aria/AriaChat.tsx", why: "Reported — the minimized bar looked cluttered and its buttons overlapped" },
+    ] },
   { version: "4.73", date: "2026-10-16", notes: "Aria says how it read your question and never silently drops part of it.", changes: [
       { what: "When a list, count or report request contains a limit the quick free search cannot apply (an industry such as pharma, a staff-size limit, ownership or listing type, a city, a time period), Aria no longer ignores it and shows unfiltered results. It says how it read the question and what it cannot apply, and offers two choices: Ask the AI to handle it (uses API credit) or Run it without that part. The AI path now starts every answer with I read this as: and the filters it applied, and asks you to confirm when something is ambiguous or it had to assume", where: "lib/aria/router.ts (understanding guard), lib/aria/agent.ts, app/api/aria/route.ts", why: "Requested — a more capable Aria that understands plain English and confirms its reading when unsure" },
     ] },
