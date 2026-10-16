@@ -1,4 +1,5 @@
 "use client";
+import { logActivity } from "@/lib/activityClient";
 import { useMemo, useState } from "react";
 import { REGIONS, rulesFor, describeRules, regionOf } from "@/lib/icpDefinition.mjs";
 import { notify } from "@/components/Confirm";
@@ -11,6 +12,7 @@ type Format = "pdf" | "xlsx";
 
 /** POSTs to a report API and saves the file. Shared by the region dialog and the single-company button in the account brief. */
 export async function downloadReport(body: Record<string, unknown>, format: Format = "pdf"): Promise<boolean> {
+  logActivity("report", `${format.toUpperCase()} report`);
   try {
     const res = await fetch(`/api/report/${format}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     if (!res.ok) { const j = await res.json().catch(() => ({})); notify(j.error || "Could not build the report. Try again.", "error"); return false; }

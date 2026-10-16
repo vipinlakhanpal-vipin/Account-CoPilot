@@ -2,6 +2,7 @@
 import AriaChat from "@/packages/aria/AriaChat";
 import { paidFetch } from "@/components/Confirm";
 import { downloadReport } from "@/components/ReportDialog";
+import { logActivity } from "@/lib/activityClient";
 
 // Twenty one-tap questions, four rows of five. All are answered free from your data, except the last (marked "uses AI").
 const EXAMPLES: [string, string][] = [
@@ -32,7 +33,7 @@ export default function AccountCopilotAria() {
   return (
     <AriaChat
       endpoint="/api/aria"
-      send={(url, init) => paidFetch(url, init, "Asking Aria")}
+      send={(url, init) => { try { const m = JSON.parse(String(init.body || "{}")).messages as { role: string; content: string }[] | undefined; const q = m?.filter((x) => x.role === "user").pop()?.content; if (q) logActivity("aria", q); } catch { /* optional */ } return paidFetch(url, init, "Asking Aria"); }}
       onAction={async (a) => { await downloadReport(a.body, a.kind === "xlsx" ? "xlsx" : "pdf"); }}
       examples={EXAMPLES}
       welcomeText={<>Ask me anything that lives in Account CoPilot: companies, contacts, signals, technology, sources, ICP rules, engine runs. I answer in tables, and I can build a detailed <b>PDF</b> or an <b>Excel</b> contact list for you. Type below, or tap the microphone and speak.</>}

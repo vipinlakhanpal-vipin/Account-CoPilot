@@ -1,5 +1,7 @@
 "use client";
 import AppWindow from "@/components/AppWindow";
+import OnlineNow from "@/components/OnlineNow";
+import { logActivity } from "@/lib/activityClient";
 import BuyingSignals from "@/components/BuyingSignals";
 import MarketIntel from "@/components/MarketIntel";
 import Link from "next/link";
@@ -234,6 +236,7 @@ export default function Header({ meta }: { meta: string }) {
                     <HistoryIcon />
                     <span className="tip-pill" role="tooltip"><span className="tip-dot" aria-hidden="true" />Version history - what changed in each update</span>
                   </button>
+                  <OnlineNow />
                   <EngineBell />
                   <SuggestionsButton />
                   <AriaChat />

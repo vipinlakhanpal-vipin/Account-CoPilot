@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { notify } from "@/components/Confirm";
+import { logActivity } from "@/lib/activityClient";
 import type { MContact, PCustomer, Partner, Vendor } from "@/lib/market";
 
 type Cust = PCustomer & { in_app: boolean };
@@ -43,7 +44,7 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
   const toggle = (arr: string[], v: string) => (arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
 
   const scan = async (region: string, v: string) => {
-    setBusy(`${v}|${region}`);
+    setBusy(`${v}|${region}`); logActivity("scan", `Market intelligence: ${v} · ${region}`);
     const r = await fetch("/api/engine", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "queue", region, count: 1, mode: "market", vendor: v }) });
     const j = await r.json().catch(() => ({}));
     setBusy("");

@@ -122,6 +122,11 @@ Every Anthropic-API route (`/api/research`, `/api/discover`, `/api/pitch`, and `
 - **Free:** scheduled sessions follow the "Buying signals" section of `ENGINE.md` (job mode `signals`, plus daily step 5, UAE and KSA only in phase 1) and save through worker actions `signal_targets` / `add_signals`. The daily routine's own prompt overrides ENGINE.md, so step 5 only runs once that prompt mentions it.
 - **Tenders:** `doc_url` is a link only when the documents open without a login; otherwise `needs_login` and the notice page is the source. Never log in, register, bypass or re-host documents.
 
+## Activity log and online now (v4.20)
+- **Tables (migration `0007_activity_log.sql`, applied 2026-10-16 through the Supabase connector):** `activity_log` (user, kind, detail, path, time) and `user_presence` (one row per user, last_seen). RLS on with no policies: only the server (service role) reads and writes, through `app/api/activity`.
+- **What is recorded:** `components/ActivityTracker.tsx` (in `app/layout.tsx`) logs one "visit" per browser session, every page or tab open, and a heartbeat every 45 s while the tab is visible. `logActivity()` (`lib/activityClient.ts`) records searches (Find company), report downloads, Find contacts, scans (signals, market) and Aria questions (the question text, first 200 characters).
+- **Who sees it:** Super Admins only. "Online now" chip in the header (`components/OnlineNow.tsx`, active in the last 2 minutes) and Setup → Team → Activity (`components/ActivityLog.tsx`). Tell new users the app keeps this log; it is not hidden.
+
 ## Market intelligence (v4.19)
 - **Where:** network icon beside Buying signals; both icons open Aria-style floating windows (`components/AppWindow.tsx`, hosted by `components/Header.tsx`; pages `/signals` and `/market` remain). UI `components/MarketIntel.tsx`, API `app/api/market` (read-only, scoped by region).
 - **Data:** one settings document per vendor and region, key `market_intel:<vendor>:<region>` (SAP, Coupa, Oracle, Microsoft; types in `lib/market.ts`): partners (name, tier, services, source) and the customers each partner publishes, with optional public named contacts (same rules as Find contacts, validated in the worker). Customers are matched to the app's companies; unmatched ones link to Find company → Find New Company ("Add as account").

@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { notify } from "@/components/Confirm";
+import { logActivity } from "@/lib/activityClient";
 import FindContactsButton from "@/components/FindContactsButton";
 import { LANE_LABEL, STRENGTH_ORDER, daysLeft, type Signal, type SignalLane, type SignalStatus } from "@/lib/signals";
 
@@ -29,7 +30,7 @@ export default function BuyingSignals({ embedded = false }: { embedded?: boolean
     else notify("Could not update that signal.", "error");
   };
   const scan = async (region: string, slug?: string, company?: string) => {
-    const key = slug || region; setBusy(key);
+    const key = slug || region; setBusy(key); logActivity("scan", `Buying signals: ${company || region}`);
     const r = await fetch("/api/engine", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "queue", region, count: 10, mode: "signals", ...(slug ? { slug } : {}) }) });
     const j = await r.json().catch(() => ({}));
     setBusy("");

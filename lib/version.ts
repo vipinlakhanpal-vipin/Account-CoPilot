@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.19";
+export const APP_VERSION = "4.20";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.20", date: "2026-10-16", notes: "Activity log and a live Online now chip, for Super Admins.", changes: [
+      { what: "A green Online now chip in the top bar (Super Admins only) shows how many people were active in the last 2 minutes; click it to see who they are and which page they are on", where: "components/OnlineNow.tsx, components/ActivityTracker.tsx, app/api/activity", why: "Requested — see active users at any time" },
+      { what: "Setup → Team has an Activity section: a per-person summary (last seen, last sign-in, visits, actions, most used pages) and a day-by-day feed of page opens, searches, report downloads, Find contacts, scans and Aria questions, with a period and person filter", where: "components/ActivityLog.tsx, supabase/migrations/0007_activity_log.sql", why: "Requested — know who logged in and explored the app" },
+    ] },
   { version: "4.19", date: "2026-10-16", notes: "Market intelligence: SAP, Coupa, Oracle and Microsoft partners per region and the customers they publish. Buying signals and Market intelligence open as Aria-style windows.", changes: [
       { what: "New Market intelligence icon opens a window with four vendor tabs (SAP, Coupa, Oracle, Microsoft). Each lists the vendor's partners in your active regions and the customers each partner publishes on its own site: project, source link, any public named contact (email, phone, LinkedIn), whether the customer is already in your accounts or can be added, and a CSV download", where: "components/MarketIntel.tsx, app/market, app/api/market, ENGINE.md (market job), app/api/engine/worker (market_targets, add_market)", why: "Requested — market intelligence on vendor partners and their customers for all active regions" },
       { what: "Buying signals and Market intelligence now open as floating windows in Aria's style: drag the header, resize from any edge, Expand, Close. The page behind stays usable, so a list can stay open while you work in accounts. /signals and /market still work as full pages", where: "components/AppWindow.tsx, components/Header.tsx", why: "Requested — same window character as the bell summary and Aria" },

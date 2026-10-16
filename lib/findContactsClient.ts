@@ -1,8 +1,10 @@
+import { logActivity } from "@/lib/activityClient";
 import { notify } from "@/components/Confirm";
 import { FIND_CONTACTS_EVENT } from "@/components/ContactsJobTracker";
 
 // "Find contacts": queues a free job (a scheduled Claude session, public web search only, no API spend, no Seamless credits).
 export async function queueFindContacts(slug: string, region: string, company: string, seamless = false): Promise<boolean> {
+  logActivity("contacts", `${company}${seamless ? " (with Seamless)" : ""}`);
   try {
     const r = await fetch("/api/engine", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "queue", region, count: 1, mode: "contacts", slug, ...(seamless ? { seamless: true } : {}) }) });
     const j = await r.json().catch(() => ({}));

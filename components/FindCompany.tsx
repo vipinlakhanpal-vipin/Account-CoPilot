@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { ask, paidFetch, notify } from "@/components/Confirm";
+import { logActivity } from "@/lib/activityClient";
 import FindContactsButton from "@/components/FindContactsButton";
 import { downloadReport } from "@/components/ReportDialog";
 import { fmtDateTime } from "@/lib/dates";
@@ -38,6 +39,7 @@ const PAID_INFO = "Full profile: revenue, ERP and S2P signals, sources and conta
 
 export default function FindCompany({ initialMode, initialQuery, initialRegion }: { initialMode: Mode; initialQuery: string; initialRegion: string }) {
   const [mode, setMode] = useState<Mode>(initialMode);
+  const lastLogged = useRef("");
   const [info, setInfo] = useState<Info | null>(null);
   const [pausedHint, setPausedHint] = useState("");
   const [allRegions, setAllRegions] = useState<RegionInfo[]>([]); // includes paused regions, only used to explain why one can't be searched
@@ -82,7 +84,7 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
       const p = new URLSearchParams({ q, sort, limit: String(scoped ? limit : 0) });
       (["region", "status", "listing", "signal", "platform"] as const).forEach((k) => sel[k].length && p.set(k, sel[k].join("||")));
       if (sel.contacts) p.set("contacts", "1");
-      try { const r = await fetch(`/api/find?${p}`, { signal: ac.signal }); if (r.ok) setFound(await r.json()); } catch {}
+      try { const r = await fetch(`/api/find?${p}`, { signal: ac.signal }); if (r.ok) { setFound(await r.json()); if (q.trim().length >= 3 && lastLogged.current !== q.trim()) { lastLogged.current = q.trim(); logActivity("search", q.trim()); } } } catch {}
       if (!ac.signal.aborted) setBusy(false);
     }, q ? 280 : 0);
     return () => { clearTimeout(t); ac.abort(); };
