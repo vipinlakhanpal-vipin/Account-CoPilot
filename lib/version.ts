@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.53";
+export const APP_VERSION = "4.54";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.54", date: "2026-10-16", notes: "Partners can be marked as a branch of a company based elsewhere.", changes: [
+      { what: "A partner with an office in the region but headquartered elsewhere reads Branch in Qatar · HQ Chennai, India; one that only serves the region reads Serves UAE · based Chennai, India. Bahwan CyberTek's Qatar entry is marked as a branch, as you confirmed", where: "components/MarketIntel.tsx, ENGINE.md, app/api/engine/worker", why: "Requested — Qatar is a Bahwan CyberTek branch" },
+    ] },
   { version: "4.53", date: "2026-10-16", notes: "Partners show where they are based as well as where they serve.", changes: [
       { what: "A partner headquartered outside the region it is listed under now reads Serves UAE · based Chennai, India instead of UAE-Dubai. Scans list a partner under every region its vendor says it supports and must record where it is actually based, never the scanned region's city by default. Bahwan CyberTek is listed for UAE, Qatar and KSA (its Coupa listing names them) and shown as based in Chennai, India", where: "components/MarketIntel.tsx, ENGINE.md, app/api/engine/worker", why: "Reported — Bahwan CyberTek was shown as a UAE partner based in Dubai" },
     ] },
