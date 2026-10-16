@@ -47,6 +47,7 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
   const [q, setQ] = useState("");
   const [view, setView] = useState<"partners" | "customers">("partners");
   const [notInApp, setNotInApp] = useState(false);
+  const [showPending, setShowPending] = useState(false); // partners whose base or office in the region is not confirmed yet
   const [withContacts, setWithContacts] = useState(false);
   const [openP, setOpenP] = useState<string | null>(null);
   const [busy, setBusy] = useState("");
@@ -60,11 +61,12 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
   const regionList = data?.regions || [];
   const active = regions ?? (regionList.includes("UAE") ? ["UAE"] : regionList.slice(0, 1));
   const needle = q.trim().toLowerCase();
-  const partners = useMemo(() => (data?.partners || []).filter((p) => p.vendor === vendor && active.includes(p.region) && (!needle || `${p.name} ${p.services} ${p.tier}`.toLowerCase().includes(needle))), [data, vendor, active, needle]);
+  const partners = useMemo(() => (data?.partners || []).filter((p) => p.vendor === vendor && active.includes(p.region) && (showPending || !p.presence_pending) && (!needle || `${p.name} ${p.services} ${p.tier}`.toLowerCase().includes(needle))), [data, vendor, active, needle]);
   const custs = useMemo(() => (data?.customers || []).filter((c) => c.vendor === vendor && active.includes(c.region) && (!notInApp || !c.in_app) && (!withContacts || c.contacts.length > 0)
     && (!needle || `${c.customer} ${c.partner} ${c.project}`.toLowerCase().includes(needle))), [data, vendor, active, notInApp, withContacts, needle]);
   const custOf = (p: Partner) => custs.filter((c) => c.partner_id === p.id);
-  const countP = (v: Vendor) => (data?.partners || []).filter((p) => p.vendor === v && active.includes(p.region)).length;
+  const countP = (v: Vendor) => (data?.partners || []).filter((p) => p.vendor === v && active.includes(p.region) && (showPending || !p.presence_pending)).length;
+  const pendingN = (data?.partners || []).filter((p) => p.vendor === vendor && active.includes(p.region) && p.presence_pending).length;
   const allPending = (data?.jobs || []).filter((j) => j.status === "queued" || j.status === "running");
   const pending = allPending.filter((j) => j.mode === "market" && !j.customer && !j.partner && !j.contacts_only); // vendor scans: shown on the vendor tile
   const scanningRegions = (v: string) => [...new Set(pending.filter((j) => j.vendor === v || j.vendor === "all" || !j.vendor).map((j) => j.region))];
@@ -255,6 +257,8 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
           <h3>Partner Customers</h3>
           <label><input type="checkbox" checked={notInApp} onChange={() => setNotInApp(!notInApp)} /> Not in my app database</label>
           <label><input type="checkbox" checked={withContacts} onChange={() => setWithContacts(!withContacts)} /> With contact details</label>
+          <h3>Partners</h3>
+          <label title="Partners listed by the vendor whose base or office in the region is not confirmed yet"><input type="checkbox" checked={showPending} onChange={() => setShowPending(!showPending)} /> Show partners without a confirmed office{pendingN ? ` (${pendingN})` : ""}</label>
           <h3>Scan scope</h3>
           <label><input type="checkbox" checked={allVendors} onChange={() => setAllVendors(!allVendors)} /> Include all vendors</label>
           <p className="note">Free. Public web pages only. Use Scan Partners and Scan Customers at the top. Scan again to find more: each scan adds partners it had not found before.</p>

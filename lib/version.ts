@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.61";
+export const APP_VERSION = "4.62";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.62", date: "2026-10-16", notes: "Partners without a confirmed office are hidden, not deleted.", changes: [
+      { what: "A partner that is not based in the region and has no confirmed office there is saved but hidden; a Show partners without a confirmed office box in the left panel brings them back with a count. Nothing is thrown away, and a later scan or a correction that confirms an office moves the partner into the main list. KPMG, RSM and BRINGVAS were restored this way after being removed without your say", where: "components/MarketIntel.tsx, app/api/engine/worker, lib/market.ts", why: "Reported — partners were removed from the backend" },
+    ] },
   { version: "4.61", date: "2026-10-16", notes: "Partners are listed only if they are based in the region or have a confirmed office there.", changes: [
       { what: "The list now holds only partners based in the region or branches with an office there confirmed by a cited page. Coverage alone (the vendor says it serves the region, or lists it as global) is not enough, and the app rejects a scan result without that proof. On the Coupa UAE list this kept Deloitte, Bahwan CyberTek, Bain & Company, Wipro, Miebach Consulting, PwC and Accely, and removed KPMG, RSM and BRINGVAS until their UAE office is confirmed", where: "lib/market.ts (presenceOk), app/api/engine/worker, ENGINE.md, components/MarketIntel.tsx", why: "Requested — list only partners based in the UAE or with a UAE office, like Bahwan" },
     ] },

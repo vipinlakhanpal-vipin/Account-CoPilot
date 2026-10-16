@@ -285,11 +285,11 @@ export async function POST(req: Request) {
       return out;
     };
     for (const p of b.partners) {
-      if (!presenceOk(p, b.region)) { skipped.push({ name: p.name, why: `not listed: it is not based in ${b.region} and no office there is confirmed (set branch true with branch_source, or give its base city in ${b.region}); coverage or a global listing alone does not count` }); continue; }
+      const pending = !presenceOk(p, b.region); // kept, but hidden in the app until its base or an office in the region is confirmed
       const id = partnerId(b.vendor, b.region, p.name);
-      const row: Partner = { id, vendor: b.vendor, region: b.region, name: p.name, website: p.website, tier: p.tier, services: p.services, hq_city: p.hq_city, hq_country: p.hq_country, branch: p.branch, scope_note: p.scope_note, branch_source: p.branch_source, source_url: p.source_url, label: p.label, contacts: vet(p.contacts, p.website, p.name), found_at: now };
+      const row: Partner = { id, vendor: b.vendor, region: b.region, name: p.name, website: p.website, tier: p.tier, services: p.services, hq_city: p.hq_city, hq_country: p.hq_country, branch: p.branch, scope_note: p.scope_note, branch_source: p.branch_source, presence_pending: pending || undefined, source_url: p.source_url, label: p.label, contacts: vet(p.contacts, p.website, p.name), found_at: now };
       const old = doc.partners.find((x) => x.id === id);
-      if (old) { Object.assign(old, { website: row.website || old.website, tier: row.tier || old.tier, services: row.services || old.services, hq_city: row.hq_city || old.hq_city, hq_country: row.hq_country || old.hq_country, branch: row.branch || old.branch, scope_note: row.scope_note || old.scope_note, branch_source: row.branch_source || old.branch_source, contacts: row.contacts.length ? row.contacts : old.contacts }); updated.partners++; }
+      if (old) { Object.assign(old, { website: row.website || old.website, tier: row.tier || old.tier, services: row.services || old.services, hq_city: row.hq_city || old.hq_city, hq_country: row.hq_country || old.hq_country, branch: row.branch || old.branch, scope_note: row.scope_note || old.scope_note, branch_source: row.branch_source || old.branch_source, presence_pending: pending ? old.presence_pending : undefined, contacts: row.contacts.length ? row.contacts : old.contacts }); updated.partners++; }
       else { doc.partners.unshift(row); added.partners++; added.contacts += row.contacts.length; }
     }
     for (const c of b.customers) {
