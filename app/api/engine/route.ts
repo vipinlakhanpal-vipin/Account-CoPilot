@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { getAccess, canSeeRegion, canSeeCountry } from "@/lib/access";
 import { requirePaidApproval, pinSetting, savePin } from "@/lib/paidGuard";
+import { vendorList, VENDORS_KEY } from "@/lib/market";
 import { regionOf, normalizeDefinition, summarizeRules, REGIONS } from "@/lib/icpDefinition.mjs";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { invalidateAllData } from "@/lib/dataCache";
@@ -302,7 +303,8 @@ export async function POST(req: Request) {
     if (b.action === "queue" && b.mode === "company" && !(b.company_name && b.company_name.length >= 2)) return NextResponse.json({ error: "Enter the company name." }, { status: 400 });
     if (b.action === "queue" && b.mode === "market") {
       // Market intelligence scan: partners of one vendor (or all four) in one region, and the customers they publish.
-      const vendor = ["SAP", "Coupa", "Oracle", "Microsoft"].includes(b.vendor || "") ? (b.vendor as string) : "all";
+      const vendors = vendorList((await getSetting<{ custom?: string[] }>(db, VENDORS_KEY, {})).custom);
+      const vendor = vendors.includes(b.vendor || "") ? (b.vendor as string) : "all";
       if (st.jobs.some((j) => j.mode === "market" && (j.status === "queued" || j.status === "running") && j.region === b.region && (j.vendor || "all") === vendor))
         return NextResponse.json({ error: `A ${vendor === "all" ? "market" : vendor} scan for ${b.region} is already waiting.` }, { status: 409 });
       const job: Job = { id, region: b.region, count: 1, mode: "market", vendor, requested_by: user.email || "", requested_at: now, status: "queued" };

@@ -6,7 +6,7 @@ import { invalidateAllData } from "@/lib/dataCache";
 import { statusPatch, applyRevenueResult } from "@/lib/icpStatus.mjs";
 import { normalizeDefinition, rulesFor, regionOf, summarizeRules } from "@/lib/icpDefinition.mjs";
 import { EMPTY_STORE, type Signal, type SignalStore } from "@/lib/signals";
-import { VENDORS, marketKey, type MarketDoc, type MContact, type Partner, type PCustomer } from "@/lib/market";
+import { vendorList, VENDORS_KEY, marketKey, type MarketDoc, type MContact, type Partner, type PCustomer } from "@/lib/market";
 
 // Limited API for scheduled Claude sessions (no Supabase key needed in the cloud environment).
 // Auth: "Authorization: Bearer <ENGINE_TOKEN>"; only the SHA-256 hash is stored (settings.engine_token). Revoke/regenerate in Settings.
@@ -76,7 +76,7 @@ const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("signal_targets"), region: z.string().default("UAE"), limit: z.number().int().min(1).max(30).default(10) }),
   z.object({ action: z.literal("add_signals"), scanned: z.array(z.string().max(120)).max(40).optional().default([]), sweep_region: z.string().max(40).optional().default(""), signals: z.array(NewSignal).max(40) }),
   z.object({ action: z.literal("market_targets"), limit: z.number().int().min(1).max(12).default(4) }),
-  z.object({ action: z.literal("add_market"), vendor: z.enum(VENDORS), region: z.string().min(2).max(40), partners: z.array(MPartnerIn).max(40).optional().default([]), customers: z.array(MCustomerIn).max(120).optional().default([]) }),
+  z.object({ action: z.literal("add_market"), vendor: z.string().trim().min(2).max(30), region: z.string().min(2).max(40), partners: z.array(MPartnerIn).max(40).optional().default([]), customers: z.array(MCustomerIn).max(120).optional().default([]) }),
   z.object({ action: z.literal("names") }),
   z.object({ action: z.literal("icp") }),
   z.object({ action: z.literal("uploads") }),
@@ -254,14 +254,17 @@ export async function POST(req: Request) {
   if (b.action === "market_targets") {
     // The vendor x region pairs due a market-intelligence scan: every Active region, oldest scan first.
     const active = Object.entries(icpDef.regions).filter(([, r]) => r.status === "active").map(([k]) => k);
+    const vendors = vendorList((await get<{ custom?: string[] }>(db, VENDORS_KEY, {})).custom);
     const { data } = await db.from("settings").select("key,value").like("key", "market_intel:%");
     const docs = new Map((data || []).map((r) => [r.key as string, r.value as MarketDoc]));
-    const pairs = active.flatMap((region) => VENDORS.map((vendor) => { const d = docs.get(marketKey(vendor, region)); return { vendor, region, last_scan: d?.scanned_at || null, partners_known: d?.partners?.length || 0, known: (d?.partners || []).map((p) => p.name) }; }))
+    const pairs = active.flatMap((region) => vendors.map((vendor) => { const d = docs.get(marketKey(vendor, region)); return { vendor, region, last_scan: d?.scanned_at || null, partners_known: d?.partners?.length || 0, known: (d?.partners || []).map((p) => p.name) }; }))
       .sort((x, y) => String(x.last_scan || "").localeCompare(String(y.last_scan || ""))).slice(0, b.limit);
-    return NextResponse.json({ targets: pairs });
+    return NextResponse.json({ targets: pairs, vendors });
   }
   if (b.action === "add_market") {
     // Partners found on the vendor's partner directory / the partner's own site, and the customers the partner publishes. Public pages only; contacts follow the same rules as Find contacts.
+    const allowed = vendorList((await get<{ custom?: string[] }>(db, VENDORS_KEY, {})).custom);
+    if (!allowed.includes(b.vendor)) return NextResponse.json({ error: `Unknown vendor "${b.vendor}". Vendors: ${allowed.join(", ")}.` }, { status: 400 });
     const key = marketKey(b.vendor, b.region);
     const doc = await get<MarketDoc>(db, key, { vendor: b.vendor, region: b.region, partners: [], customers: [], scanned_at: "" });
     doc.partners ||= []; doc.customers ||= [];

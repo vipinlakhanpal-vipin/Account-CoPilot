@@ -1629,3 +1629,12 @@ button.tab[aria-expanded="true"]{color:var(--text-strong);background:linear-grad
 .used-bar i{display:block;height:100%;background:#0B7A66}
 .aria-home.aria-scan,.aria-home.aria-scan:hover{background:#2ECC8F;border-color:#2ECC8F;color:#04342C;font-weight:700}
 .aria-home.aria-scan:hover{background:#5DDDAB;border-color:#5DDDAB}
+.sig-lane.c5{--k:#6C7BFF}.sig-lane.c8{--k:#E052C8}
+.vendor-tile{position:relative;display:flex}
+.vendor-tile .sig-lane{flex:1}
+.vendor-x{position:absolute;top:4px;right:6px;width:20px;height:20px;border:0;border-radius:50%;background:rgba(var(--ink),.12);color:var(--text);font-size:14px;line-height:1;cursor:pointer;opacity:.6}
+.vendor-x:hover{opacity:1;background:#FF4D6A;color:#fff}
+.vendor-plus{border-style:dashed;--k:#8A94A6;align-items:center;justify-content:center}
+.vendor-add{cursor:default;gap:6px}
+.vendor-add input{width:100%;padding:6px 8px;border-radius:8px;border:1px solid var(--line-2);background:var(--surface);color:var(--text);font:13px var(--body)}
+.vendor-add-acts{display:flex;gap:6px}

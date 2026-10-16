@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.25";
+export const APP_VERSION = "4.26";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.26", date: "2026-10-16", notes: "More vendors in Market intelligence: Boomi, MuleSoft, Ivalua, GEP and Jaggaer by default, and you can add your own.", changes: [
+      { what: "Market intelligence now tracks nine vendors by default (SAP, Coupa, Oracle, Microsoft, Boomi, MuleSoft, Ivalua, GEP, Jaggaer). A Super Admin can add any other vendor with the + Add vendor tile and remove the ones added. The scans and the daily run cover every vendor on the list", where: "components/MarketIntel.tsx, app/api/market, lib/market.ts, app/api/engine/worker, ENGINE.md", why: "Requested — provision to add more vendors, with these five added by default" },
+    ] },
   { version: "4.25", date: "2026-10-16", notes: "A green Scan now button in the window header, before Expand.", changes: [
       { what: "Buying signals and Market intelligence have a green Scan now button in the window header, before Expand. Buying signals scans every active region; Market intelligence scans the selected vendor in the ticked regions", where: "components/AppWindow.tsx, components/Header.tsx", why: "Requested — make Scan now more visible" },
     ] },

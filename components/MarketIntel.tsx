@@ -1,13 +1,13 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { notify } from "@/components/Confirm";
+import { ask, notify } from "@/components/Confirm";
 import { logActivity } from "@/lib/activityClient";
 import type { MContact, PCustomer, Partner, Vendor } from "@/lib/market";
 
 type Cust = PCustomer & { in_app: boolean };
 type Job = { mode: string; vendor?: string; region: string; status: string; requested_at: string };
-type Data = { vendors: Vendor[]; regions: string[]; partners: Partner[]; customers: Cust[]; scans: Record<string, string>; jobs: Job[] };
+type Data = { vendors: Vendor[]; custom_vendors: string[]; is_super: boolean; defaults: string[]; regions: string[]; partners: Partner[]; customers: Cust[]; scans: Record<string, string>; jobs: Job[] };
 const ago = (iso?: string) => { if (!iso) return "not scanned yet"; const h = Math.round((Date.now() - new Date(iso).getTime()) / 36e5); return h < 1 ? "just now" : h < 48 ? `${h} h ago` : `${Math.round(h / 24)} days ago`; };
 const csv = (rows: string[][]) => rows.map((r) => r.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(",")).join("\r\n");
 
@@ -21,6 +21,8 @@ function Who({ c }: { c: MContact }) {
 export default function MarketIntel({ embedded = false }: { embedded?: boolean }) {
   const [data, setData] = useState<Data | null>(null);
   const [vendor, setVendor] = useState<Vendor>("SAP");
+  const [adding, setAdding] = useState(false);
+  const [newVendor, setNewVendor] = useState("");
   const [regions, setRegions] = useState<string[]>([]);
   const [q, setQ] = useState("");
   const [view, setView] = useState<"partners" | "customers">("partners");
@@ -43,6 +45,19 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
   const pending = (data?.jobs || []).filter((j) => j.status === "queued" || j.status === "running");
   const toggle = (arr: string[], v: string) => (arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
 
+  const addVendor = async () => {
+    const r = await fetch("/api/market", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "add_vendor", name: newVendor }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) { notify(j.error || "Could not add the vendor.", "error"); return; }
+    const name = newVendor.trim().replace(/\s+/g, " ");
+    setAdding(false); setNewVendor(""); await load(); setVendor(name);
+    notify(`${name} added. Use Scan now to find its partners and customers.`, "ok");
+  };
+  const removeVendor = async (v: string) => {
+    if (!(await ask({ title: `Remove ${v}?`, body: "It disappears from this list. Partners and customers already found stay saved and come back if you add the vendor again.", confirm: "Remove", tone: "danger" }))) return;
+    const r = await fetch("/api/market", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "remove_vendor", name: v }) });
+    if (r.ok) { if (vendor === v) setVendor("SAP"); load(); } else notify("Could not remove it.", "error");
+  };
   const scan = async (region: string, v: string) => {
     setBusy(`${v}|${region}`); logActivity("scan", `Market intelligence: ${v} · ${region}`);
     const r = await fetch("/api/engine", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "queue", region, count: 1, mode: "market", vendor: v }) });
@@ -69,10 +84,22 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
 
   return (
     <div className="mkt">
-      <section className="hero mkt-hero"><h1>Market intelligence</h1><p>Who implements SAP, Coupa, Oracle and Microsoft in your regions, and the customers they publish. Every row links to its source.</p></section>
+      <section className="hero mkt-hero"><h1>Market intelligence</h1><p>Who implements SAP, Coupa, Oracle, Microsoft, Boomi, MuleSoft, Ivalua, GEP, Jaggaer and any vendor you add, in your regions, and the customers they publish. Every row links to its source.</p></section>
       <div className="sig-lanes" role="group" aria-label="Vendor">
-        {(data?.vendors || (["SAP", "Coupa", "Oracle", "Microsoft"] as Vendor[])).map((v) => (
-          <button type="button" key={v} className={`sig-lane ${({ SAP: "c1", Coupa: "c2", Oracle: "c6", Microsoft: "c7" } as Record<string, string>)[v]}`} aria-pressed={vendor === v} onClick={() => { setVendor(v); setOpenP(null); }}><b>{countP(v)}</b><span>{v} partners</span></button>))}
+        {(data?.vendors || ["SAP", "Coupa", "Oracle", "Microsoft"]).map((v, i) => {
+          const custom = !!data?.custom_vendors?.includes(v);
+          return (
+            <span key={v} className="vendor-tile">
+              <button type="button" className={`sig-lane ${["c1", "c2", "c6", "c7", "c3", "c4", "c5", "c8"][i % 8]}`} aria-pressed={vendor === v} onClick={() => { setVendor(v); setOpenP(null); }}><b>{countP(v)}</b><span>{v} partners</span></button>
+              {custom && data?.is_super && <button type="button" className="vendor-x" aria-label={`Remove ${v}`} title={`Remove ${v} from the list`} onClick={() => removeVendor(v)}>×</button>}
+            </span>);
+        })}
+        {data?.is_super && (adding ? (
+          <form className="sig-lane vendor-add" onSubmit={(e) => { e.preventDefault(); addVendor(); }}>
+            <input autoFocus value={newVendor} onChange={(e) => setNewVendor(e.target.value)} placeholder="Vendor name, e.g. Zycus" maxLength={30} aria-label="New vendor name" />
+            <span className="vendor-add-acts"><button type="submit" className="btn tiny primary">Add</button><button type="button" className="btn tiny" onClick={() => { setAdding(false); setNewVendor(""); }}>Cancel</button></span>
+          </form>
+        ) : <button type="button" className="sig-lane vendor-plus" onClick={() => setAdding(true)} title="Add another vendor to track, for example a competitor or integration platform"><b>+</b><span>Add vendor</span></button>)}
       </div>
       <div className="sig-body">
         <aside className="sig-side">
