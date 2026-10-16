@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.56";
+export const APP_VERSION = "4.57";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.57", date: "2026-10-16", notes: "The tile gauge sits right after the partner count.", changes: [
+      { what: "On a vendor tile the green gauge with the timer now sits on the same line as the count, directly after the number, so the number, gauge and clock line up", where: "components/MarketIntel.tsx, app/globals.css", why: "Requested — put the waiting time in front of the number so it looks aligned" },
+    ] },
   { version: "4.56", date: "2026-10-16", notes: "The timer text in the tile gauge is small again.", changes: [
       { what: "The tile's large-number style was also applied to the text inside the green gauge, so it came out huge and spilled out of the pill. The gauge text is now a fixed small size", where: "app/globals.css", why: "Reported — big font and tab after the scan started" },
     ] },

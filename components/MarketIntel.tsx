@@ -231,9 +231,9 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
           const custom = !!data?.custom_vendors?.includes(v);
           return (
             <span key={v} className="vendor-tile">
-              <button type="button" className={`sig-lane ${["c1", "c2", "c6", "c7", "c3", "c4", "c5", "c8"][i % 8]}`} aria-pressed={vendor === v} onClick={() => { setVendor(v); setOpenP(null); }}><b>{countP(v)}</b><span>{v} partners</span>{(() => { const j = jobOfVendor(v); const n = pending.filter((x) => x.vendor === v || x.vendor === "all" || !x.vendor).length; const r = scanningRegions(v);
+              <button type="button" className={`sig-lane ${["c1", "c2", "c6", "c7", "c3", "c4", "c5", "c8"][i % 8]}`} aria-pressed={vendor === v} onClick={() => { setVendor(v); setOpenP(null); }}><span className="tile-top"><b>{countP(v)}</b>{(() => { const j = jobOfVendor(v); const n = pending.filter((x) => x.vendor === v || x.vendor === "all" || !x.vendor).length; const r = scanningRegions(v);
                   return j ? <ScanGauge tile label={`Scanning ${r.join(", ")}`} requestedAt={j.requested_at} startedAt={j.started_at} expectedSecs={expectedSecs(j)} extra={n > 1 ? ` · ${n - 1} more waiting` : ""} />
-                    : flash[`v:${v}`] ? <DoneTick tile text="Done" /> : null; })()}</button>
+                    : flash[`v:${v}`] ? <DoneTick tile text="Done" /> : null; })()}</span><span>{v} partners</span></button>
               {custom && data?.is_super && <button type="button" className="vendor-x" aria-label={`Remove ${v}`} title={`Remove ${v} from the list`} onClick={() => removeVendor(v)}>×</button>}
             </span>);
         })}

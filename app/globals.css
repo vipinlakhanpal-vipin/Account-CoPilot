@@ -1734,3 +1734,8 @@ a.mkt-site i{font-style:normal;font-size:.75em;opacity:.55}
 .sig-lane .gauge.tile .gauge-pilltext .fcj-dot{width:7px;height:7px}
 .sig-lane .gauge-done.tile,.sig-lane .gauge-done.tile em{font:600 11px/1.2 var(--body);color:#0B5A47}
 .sig-lane .gauge.tile .gauge-pill{height:20px}
+/* v4.57: the scan gauge sits on the count line, right after the number (3 ▓▓▓ 0:42), not on its own */
+.tile-top{display:flex;align-items:center;gap:12px;width:100%;min-width:0}
+.sig-lane .gauge.tile{position:static;display:block;flex:1;min-width:0;max-width:190px}
+.sig-lane .gauge.tile .gauge-pill{position:relative;right:auto;top:auto;transform:none;width:100%;min-width:90px;max-width:none}
+.sig-lane .gauge-done.tile{position:static;transform:none;right:auto;top:auto}
