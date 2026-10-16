@@ -36,17 +36,18 @@ const setSetting = (db: ReturnType<typeof supabaseAdmin>, key: string, value: un
 // away, instead of waiting for the next 6am run. Needs GITHUB_JOBS_TOKEN (a fine-grained PAT, Issues: write only, scoped
 // to that one repo) in Vercel's environment variables. Best-effort: if it's not set or the call fails, the job still
 // sits in the free queue and gets picked up at the next scheduled run — nothing here is required for queueing to work.
-async function openJobIssue(job: Job) {
+async function openJobIssue(job: Job): Promise<string> {
   const token = process.env.GITHUB_JOBS_TOKEN;
-  if (!token) return;
+  if (!token) return "not_set";
   const title = job.mode === "contacts" ? `Job ${job.id}: find contacts at "${job.company_name}" (${job.region})` : job.mode === "company" ? `Job ${job.id}: check "${job.company_name}" (${job.region})` : `Job ${job.id}: ${job.mode} ${job.count} in ${job.region}`;
   const body = `Queued by ${job.requested_by} at ${job.requested_at}.\n\nAuto-opened by Account CoPilot so the instant job runner fires now instead of waiting for the next daily run. The job itself is tracked in the app (Setup → Settings), not in this issue — closing or leaving this open makes no difference.`;
   try {
-    await fetch("https://api.github.com/repos/vipinlakhanpal-vipin/account-copilot-jobs/issues", {
+    const r = await fetch("https://api.github.com/repos/vipinlakhanpal-vipin/account-copilot-jobs/issues", {
       method: "POST", headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json", "Content-Type": "application/json" },
       body: JSON.stringify({ title, body }),
     });
-  } catch { /* best-effort */ }
+    return r.ok ? "ok" : `github_${r.status}`;
+  } catch { return "failed"; }
 }
 
 // Shared insert for a company found by a scheduled session (held pending region activation, or held pending the user's Add/Ignore review).
@@ -210,6 +211,7 @@ const Body = z.discriminatedUnion("action", [
 ]);
 
 export async function POST(req: Request) {
+  let trigger = ""; // result of waking the instant runner: ok | not_set | github_<status> | failed
   const user = await requireUser();
   if (!user) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
   const raw = await req.json().catch(() => ({}));
@@ -308,14 +310,14 @@ export async function POST(req: Request) {
       const job: Job = { id, region: regionOf(co.country), count: 1, mode: "contacts", company_name: co.company_name, slug: co.slug, website: co.company_website || co.domain || "",
         requested_by: user.email || "", requested_at: now, status: "queued" };
       st.jobs.unshift(job);
-      await openJobIssue(job);
+      trigger = await openJobIssue(job);
     } else if (b.action === "queue") {
       const names = b.mode === "discover" ? (b.company_names || []).filter((n) => n.length >= 2) : [];
       const job: Job = { id, region: b.region, count: b.mode === "company" ? 1 : names.length ? names.length : b.count, mode: b.mode,
         ...(b.mode === "company" ? { company_name: b.company_name, website: b.website || "" } : {}), ...(names.length ? { company_names: names } : {}),
         requested_by: user.email || "", requested_at: now, status: "queued" };
       st.jobs.unshift(job);
-      await openJobIssue(job);
+      trigger = await openJobIssue(job);
     } else st.jobs = st.jobs.filter((j) => !(j.id === b.id && j.status === "queued"));
     await setSetting(db, "engine_jobs", { jobs: st.jobs.slice(0, 50) });
   } else if (b.action === "balance") {
@@ -342,5 +344,5 @@ export async function POST(req: Request) {
         criteria: "Revenue ≥ USD 250M, ≥ 100 employees; group HQs only; exclude government bodies, single sites and foreign branches." }) }).catch(() => null) : null,
     ]);
   }
-  return NextResponse.json(await summary(db));
+  return NextResponse.json({ ...(await summary(db)), ...(trigger ? { trigger } : {}) });
 }

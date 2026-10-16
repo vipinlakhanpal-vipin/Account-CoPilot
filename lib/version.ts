@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.12";
+export const APP_VERSION = "4.13";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.13", date: "2026-10-16", notes: "Find contacts tells you whether the instant trigger fired or the job will wait for the daily run.", changes: [
+      { what: "After Find contacts is clicked, the message now says if the job was started right away, or why it was not (GITHUB_JOBS_TOKEN missing in Vercel, or GitHub refused it) and that it will run at the next daily run", where: "app/api/engine/route.ts (openJobIssue), lib/findContactsClient.ts", why: "Requested — make sure clicking Find contacts starts the engine at once" },
+    ] },
   { version: "4.12", date: "2026-10-16", notes: "Find contacts button (free, public web search), Aria chat history by date with a clean window each time, and a custom number for how many companies a report includes.", changes: [
       { what: "Find contacts button on every account page and in each Search Company result. It queues a free job: a scheduled Claude session searches public web pages for named people with a published email, phone or LinkedIn link and saves them as new contacts with the source page", where: "Account page, Find company → Search Company, ENGINE.md (contacts job), app/api/engine/worker (add_contacts)", why: "Requested — find contact details with standard resources at no cost and update the database" },
       { what: "The worker checks every saved contact: an email must be a named address on the company's own domain (no info@, sales@ or personal domains), LinkedIn must be a profile link, nothing is guessed, and existing reference people are never edited", where: "app/api/engine/worker/route.ts", why: "Keeps the data rules: no invented emails or phones" },
