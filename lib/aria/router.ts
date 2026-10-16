@@ -171,13 +171,6 @@ export async function tryFree(question: string, ctx: AriaContext): Promise<FreeR
     const heard = [f.region, scope, rev].filter(Boolean).join(", ");
     if (!f.region) return { text: "Which region should it cover?", actions: [], choices: (REGIONS as { key: string }[]).map((r) => r.key).filter((k) => ["UAE", "KSA", "Qatar", "Kuwait", "UK", "USA"].includes(k)).map((k) => ({ label: k, value: stem(kind, k) })) };
     if (!kind) return { text: `Which format for ${heard}?`, actions: [], choices: [{ label: "📄 PDF report", value: stem("pdf", f.region) }, { label: "📊 Excel contact list", value: stem("xlsx", f.region) }] };
-    // Which ICP statuses: asked once, unless the request already named one (or said any)
-    if (!f.icp_status && !/\b(any|all) icp status(es)?\b/.test(t)) {
-      const tail = limit ? `, top ${limit}` : "";
-      return { text: `Which ICP status should I include for ${f.region}?`, actions: [], choices: [
-        { label: "Verified only", value: `${stem(kind, f.region, "verified")}${tail}` }, { label: "Verified and Likely", value: `${stem(kind, f.region, "verified and likely")}${tail}` },
-        { label: "Everything except Not ICP", value: `${stem(kind, f.region, "verified and likely and needs check and unknown")}${tail}` }, { label: "Any status", value: `${stem(kind, f.region, "any icp status")}${tail}` }] };
-    }
     if (!limit && !wantsAll) return { text: `How many ${f.region} companies should I include?`, actions: [], choices: [...["1", "5", "10", "25", "50", "all"].map((n) => ({ label: n === "all" ? "All" : n, value: `${stem(kind, f.region!)}, ${n === "all" ? "all companies" : `top ${n}`}` })), { label: "Other number", value: `${stem(kind, f.region!)}, top {n}`, number: true }] };
     if (!rank) return { text: "How should I pick them?", actions: [], choices: [["Best ICP fit", "best fit"], ["Largest revenue", "largest revenue"], ["A to Z", "A to Z"]].map(([l, w]) => ({ label: l, value: `${stem(kind, f.region!)}, ${wantsAll ? "all companies" : `top ${limit}`}, by ${w}` })) };
     const how = rank === "revenue" ? "largest revenue" : rank === "name" ? "name" : "best ICP fit";
@@ -265,11 +258,6 @@ export async function tryFree(question: string, ctx: AriaContext): Promise<FreeR
   // A revenue amount was written but not understood: ask, never guess (a wrong filter shows the wrong companies)
   if (/\b(revenue|turnover|sales)\b/.test(t) && /(\$|usd|aed|\d\s*(m|mn|million|b|bn|billion)\b)/.test(t) && f.min_revenue_usd_m === undefined && f.max_revenue_usd_m === undefined)
     return { text: "I could not read that revenue range, so I have not filtered by it. Say it like **between 250m and 650m**, **above 1b** or **below 100m** (US dollars).", actions: [], choices: [] };
-  // A prospect list (companies not on Coupa or SAP Ariba) with no ICP status named: ask which statuses count
-  if (f.exclude_platform?.length && f.region && !f.icp_status && !/\b(any|all) icp status(es)?\b/.test(t) && /\b(list|show|find|give me|top)\b/.test(t) && /\b(compan\w*|account\w*|customer\w*|prospect\w*)\b/.test(t))
-    return { text: `Which ICP status should I include for these ${f.region} prospects?`, actions: [], choices: [
-      { label: "Verified only", value: `${question}, verified only` }, { label: "Verified and Likely", value: `${question}, verified and likely` },
-      { label: "Everything except Not ICP", value: `${question}, verified and likely and needs check and unknown companies` }, { label: "Any status", value: `${question}, any icp status` }] };
   if (/\b(list|show|which|find|give me|display|top|largest|biggest|who)\b/.test(t) && (f.region || f.icp_status || f.platform || f.erp_contains || f.signal || f.has_contacts) && /\b(compan\w*|account\w*|customer\w*|prospect\w*|verified|likely)\b/.test(t)) {
     const r = searchAccounts(ctx, { ...f, limit: Math.min(limit || 15, 25) });
     if (!r.total && !r.existing_coupa_customers) return { text: "No companies match that.", actions: [], choices: [] };

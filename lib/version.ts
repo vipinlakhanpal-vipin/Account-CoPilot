@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.88";
+export const APP_VERSION = "4.89";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.89", date: "2026-10-16", notes: "Aria no longer asks which ICP status to include.", changes: [
+      { what: "The ICP status question (Verified only, Verified and Likely...) that v4.79 added before building an Excel or PDF, and before a prospect list, is removed. Aria asks region, format, how many and how to pick, as before; name a status in the request if you want one", where: "lib/aria/router.ts", why: "Requested — remove the extra question" },
+    ] },
   { version: "4.88", date: "2026-10-16", notes: "One rule for every table in the app.", changes: [
       { what: "Every data table in the app now follows the same rule: each value sits on one line (emails, phones, revenue, status and names are never split), and any text that does not fit is cut with a small i at the end of the cell; click the cell to read all of it. This covers the dashboard tile drill-downs, Accounts, Pipeline, Stakeholders, Data, Mission Control, Research Queue, Settings, Team, Define ICP, Activity, the engine run histories and the Find company searches, in every region, without per-table work. Tables of running text (Guide, cost notes, the source catalogue) are marked as prose and wrap as before", where: "app/globals.css (tables block), components/TableNeat.tsx, app/layout.tsx", why: "Requested — neat, clear and clean tables everywhere, once, so it does not need coming back to" },
     ] },
