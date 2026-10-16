@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.85";
+export const APP_VERSION = "4.86";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.86", date: "2026-10-16", notes: "The Sources table is neat: short leads with an i button.", changes: [
+      { what: "In Data, Sources the Information found and Source columns show a short lead (for example Orion ERP rollout…) with an i button for the full text, and the open link stays on one line. Any text over 40 characters in a wrap column uses the i button, in every list table", where: "components/CoPilotApp.tsx", why: "Requested — keep the Sources table neat; the URL open was rolling onto a second line" },
+    ] },
   { version: "4.85", date: "2026-10-16", notes: "Long text in tables is the first words and an i button.", changes: [
       { what: "In the list tables a long text column (Evidence, Why, Signal and similar) now shows only its opening words, for example 2025 Annual Report…, followed by an i button that opens the full text in a small window; rows stay one line tall. Titles, job titles and names are left in full", where: "components/LongText.tsx, components/CoPilotApp.tsx (FilterTable)", why: "Requested — the Evidence column has a lot to say; show a short lead and an i button" },
     ] },

@@ -365,7 +365,7 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "
                 onClick={(e) => { if (onRow && !(e.target as HTMLElement).closest("a")) onRow(r); }}
                 onKeyDown={(e) => { if (onRow && e.key === "Enter") onRow(r); }}>
                 <td className="num mono">{i + 1}</td>
-                {cols.map((c) => { const v = c.cell(r); const long = c.wrap && typeof v === "string" && v.length > 60 && !/title|job|name/i.test(c.h);
+                {cols.map((c) => { const v = c.cell(r); const long = c.wrap && typeof v === "string" && v.length > 40 && !/title|job|name/i.test(c.h);
                   return <td key={c.h} className={[c.wrap && !long ? "wrap" : "", c.cls || ""].join(" ").trim() || undefined}>{long ? <LongText text={v as string} /> : v}</td>; })}
               </tr>
             ))}
@@ -677,7 +677,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
       <FilterTable unit="sources" title="Source evidence" note="The audit trail behind every fact: one row per source used, with what was found and how confident we are." rows={data.sources}
       search={(s) => [s.company, s.source, s.information_found, s.url].join(" ")}
       filters={[{ label: "Source group", get: (s) => evidenceGroup(s) }, { label: "Tier", get: (s) => s.source_tier }, { label: "Type", get: (s) => s.source_type }, { label: "Confidence", get: (s) => s.confidence }]}
-      cols={[{ h: "Company", field: "company", cell: (s) => <Sn n={s.company} /> }, { h: "Source", field: "source", cell: (s) => s.source }, { h: "Type", field: "source_type", cell: (s) => s.source_type }, { h: "Tier", field: "source_tier", cell: (s) => s.source_tier },
+      cols={[{ h: "Company", field: "company", cell: (s) => <Sn n={s.company} /> }, { h: "Source", field: "source", cell: (s) => s.source, wrap: true }, { h: "Type", field: "source_type", cell: (s) => s.source_type }, { h: "Tier", field: "source_tier", cell: (s) => s.source_tier },
         { h: "Information found", field: "information_found", cell: (s) => s.information_found, wrap: true }, { h: "Published", field: "date_published", cell: (s) => <span className="mono">{s.date_published}</span> },
         { h: "Confidence", field: "confidence", cell: (s) => s.confidence }, { h: "URL", cell: (s) => <Ext href={s.url}>open</Ext> }]}
       onRow={openRow} /></>;
