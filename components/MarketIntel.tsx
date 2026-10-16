@@ -15,7 +15,8 @@ type Data = { vendors: Vendor[]; custom_vendors: string[]; is_super: boolean; de
 const COUNTRY_REGION: Record<string, string> = { uae: "UAE", "united arab emirates": "UAE", ksa: "KSA", "saudi arabia": "KSA", qatar: "Qatar", kuwait: "Kuwait", oman: "Oman", bahrain: "Bahrain", egypt: "Egypt", morocco: "Morocco", kenya: "Kenya", uk: "UK", "united kingdom": "UK", usa: "USA", "united states": "USA" };
 const regionOfCountry = (c?: string) => (c ? COUNTRY_REGION[c.trim().toLowerCase()] || c.trim() : "");
 const CAPITAL: Record<string, string> = { Kuwait: "Kuwait City", Qatar: "Doha", Bahrain: "Manama", Oman: "Muscat" };
-const place = (region: string, city?: string, hqCountry?: string, branch?: boolean) => {
+const place = (region: string, city?: string, hqCountry?: string, branch?: boolean, coverageOnly?: boolean) => {
+  if (coverageOnly && !hqCountry && !city) return `Serves ${region} · base not stated`;
   const rc = regionOfCountry(hqCountry);
   if (hqCountry && rc && rc !== region) return `${branch ? `Branch in ${region} · HQ` : `Serves ${region} · based`} ${[(city || "").split(/[,(]/)[0].trim(), hqCountry].filter(Boolean).join(", ")}`; // headquartered elsewhere: say so
   let c = (city || "").split(/[,(]/)[0].trim();
@@ -291,7 +292,7 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
             return (
               <article key={p.id} className={`sig-card mkt-card${isOpen ? " open" : ""}`}>
                 <div className="sig-row">
-                  <a className="sig-co mkt-site" href={p.website ? webUrl(p.website) : p.source_url} target="_blank" rel="noopener noreferrer" title={p.website ? `Open ${p.website.replace(/^https?:\/\//, "")} in a new tab` : "No website saved; opens the page that lists this partner"}>{p.name}<i aria-hidden="true">↗</i></a><span className="sig-meta">{place(p.region, p.hq_city, p.hq_country, p.branch)}</span>
+                  <a className="sig-co mkt-site" href={p.website ? webUrl(p.website) : p.source_url} target="_blank" rel="noopener noreferrer" title={p.website ? `Open ${p.website.replace(/^https?:\/\//, "")} in a new tab` : "No website saved; opens the page that lists this partner"}>{p.name}<i aria-hidden="true">↗</i></a><span className="sig-meta">{place(p.region, p.hq_city, p.hq_country, p.branch, p.coverage_only)}</span>
                   {p.tier && <span className="sig-pill">{p.tier}</span>}<span className={`sig-pill lab-${p.label.toLowerCase()}`}>{p.label}</span>
                 </div>
                 {p.services && <p className="sig-ev">{p.services}</p>}
@@ -310,7 +311,7 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
               const cs = custOf(p);
               return (
                 <details key={p.id} className="mkt-group" open={i === 0 || !!needle}>
-                  <summary><a className="mkt-site" href={p.website ? webUrl(p.website) : p.source_url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} title={p.website ? `Open ${p.website.replace(/^https?:\/\//, "")} in a new tab` : "No website saved; opens the page that lists this partner"}><b>{p.name}</b><i aria-hidden="true">↗</i></a><span className="sig-meta">{place(p.region, p.hq_city, p.hq_country, p.branch)}{p.tier ? ` · ${p.tier}` : ""}</span><em>{cs.length} customer{cs.length === 1 ? "" : "s"}</em></summary>
+                  <summary><a className="mkt-site" href={p.website ? webUrl(p.website) : p.source_url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} title={p.website ? `Open ${p.website.replace(/^https?:\/\//, "")} in a new tab` : "No website saved; opens the page that lists this partner"}><b>{p.name}</b><i aria-hidden="true">↗</i></a><span className="sig-meta">{place(p.region, p.hq_city, p.hq_country, p.branch, p.coverage_only)}{p.tier ? ` · ${p.tier}` : ""}</span><em>{cs.length} customer{cs.length === 1 ? "" : "s"}</em></summary>
                   {custTable(cs)}
                 </details>);
             })))}

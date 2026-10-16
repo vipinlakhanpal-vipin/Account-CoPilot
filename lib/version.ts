@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.58";
+export const APP_VERSION = "4.59";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.59", date: "2026-10-16", notes: "Partners listed only as covering a region no longer show a made-up base city.", changes: [
+      { what: "A partner whose vendor listing only says it covers the region now reads Serves UAE · base not stated, not UAE-Dubai. BRINGVAS (Coupa lists Dubai among the countries it supports) was corrected", where: "components/MarketIntel.tsx", why: "Questioned — what showed BRINGVAS has a UAE branch; it only says it supports Dubai" },
+    ] },
   { version: "4.58", date: "2026-10-16", notes: "The usual scan time is back on the tile.", changes: [
       { what: "A vendor tile that is scanning shows the usual time next to its name (usually about 4 min), or waiting for a session, then about 4 min while it is queued", where: "components/MarketIntel.tsx, app/globals.css", why: "Requested — keep the message that says it takes up to 4 minutes" },
     ] },
