@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.39";
+export const APP_VERSION = "4.40";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.40", date: "2026-10-16", notes: "The floating windows tell you they can be dragged and resized.", changes: [
+      { what: "Aria, Buying signals and Market intelligence show a small line under their title: Drag me anywhere on the screen, and resize me from any edge or corner (hidden on phones)", where: "components/AppWindow.tsx, packages/aria/AriaChat.tsx", why: "Requested — let users know the windows can be moved and resized" },
+    ] },
   { version: "4.39", date: "2026-10-16", notes: "Add a partner the scans missed, and MDSap added to SAP.", changes: [
       { what: "A + Add partner button in Market intelligence adds a partner by name (website and region optional) to the vendor you are on; its card then has Find more customers to search its customers. Anyone with access to the region can use it", where: "components/MarketIntel.tsx, app/api/market, lib/marketServer.ts", why: "Requested — MDSap was missing from the SAP partners" },
       { what: "MDSap (SAP Gold partner, Midis Group, headquartered in Abu Dhabi, with offices in Dubai, Riyadh and Kuwait City) was added to the SAP list for UAE, KSA and Kuwait", where: "Market intelligence data", why: "Requested" },

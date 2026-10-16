@@ -284,7 +284,7 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
             {["n", "s", "e", "w", "ne", "nw", "se", "sw"].map((d) => <span key={d} className={`aria-rz ${d}`} onPointerDown={startDrag(d)} aria-hidden="true" />)}
             <header className="aria-top" onPointerDown={startDrag("move")} title="Drag to move the window anywhere. Drag any edge or corner to resize it.">
               <span className="aria-badge" aria-hidden="true">{name.charAt(0)}</span>
-              <div className="aria-title"><b>{name}</b><small>{tagline}</small></div>
+              <div className="aria-title"><b>{name}</b><small>{tagline}</small><small className="aria-hint">✥ Drag me anywhere on the screen, and resize me from any edge or corner</small></div>
               <div className="aria-top-actions">
                 <button type="button" className={`aria-home${view === "history" ? " on" : ""}`} onClick={() => setView((v) => (v === "history" ? "chat" : "history"))} aria-pressed={view === "history"} title="Your earlier chats, by date">🕘 History</button>
                 <button type="button" className="aria-home" onClick={() => { setRect(null); setWide((w) => !w); }} aria-pressed={wide} title="Make the window fill the screen, or back to its normal size. You can also drag the header to move it and any edge to resize it.">{wide ? "⤡ Smaller" : "⤢ Expand"}</button>

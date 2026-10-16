@@ -55,7 +55,7 @@ export default function AppWindow({ open, onClose, title, subtitle, badge, actio
         {["n", "s", "e", "w", "ne", "nw", "se", "sw"].map((d) => <span key={d} className={`aria-rz ${d}`} onPointerDown={startDrag(d)} aria-hidden="true" />)}
         <header className="aria-top" onPointerDown={startDrag("move")} title="Drag to move the window anywhere. Drag any edge or corner to resize it.">
           <span className="aria-badge" aria-hidden="true">{badge}</span>
-          <div className="aria-title"><b>{title}</b><small>{subtitle}</small></div>
+          <div className="aria-title"><b>{title}</b><small>{subtitle}</small><small className="aria-hint">✥ Drag me anywhere on the screen, and resize me from any edge or corner</small></div>
           <div className="aria-top-actions">
             {actions}
             <button type="button" className="aria-home" onClick={() => { setRect(null); setWide((w) => !w); }} aria-pressed={wide} title="Make the window fill the screen, or back to its normal size">{wide ? "Shrink" : "Expand"}</button>

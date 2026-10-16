@@ -126,3 +126,6 @@
 .aria-hist-row small{opacity:.65;font-size:12px}
 .aria-hist-del{width:32px;border:1px solid var(--aria-line,rgba(128,128,128,.3));border-radius:10px;background:var(--aria-surface);color:inherit;cursor:pointer;font-size:18px}
 .aria-hist-del:hover{color:#b3261e;border-color:#b3261e}
+
+.aria-hint{font-size:10.5px !important;opacity:.8;margin-top:1px}
+@media (max-width:640px){.aria-hint{display:none}}
