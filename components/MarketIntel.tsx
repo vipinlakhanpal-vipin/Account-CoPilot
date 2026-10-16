@@ -141,6 +141,21 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
     if (!picked.includes(region)) setRegions([...picked, region]);
     notify(`${pf.name} added to ${vendor} · ${region}. Click Find more customers on its card to search its customers.`, "ok");
   };
+  const [drag, setDrag] = useState<string | null>(null); // partner id being dragged
+  const [dropOn, setDropOn] = useState("");
+  const movePartner = async (p: Partner, to: "other" | "region") => {
+    const r = await fetch("/api/market", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "move_partner", id: p.id, vendor: p.vendor, region: p.region, to }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) { notify(j.error || "Could not move it.", "error"); return; }
+    logActivity("scan", `${to === "other" ? "Moved to Other regions" : "Moved back to " + p.region}: ${p.name}`);
+    notify(to === "other" ? `${p.name} moved to Other regions.` : `${p.name} moved back to ${p.region}.`, "ok"); load();
+  };
+  const dropOnRegion = (r: string) => {
+    const p = (data?.partners || []).find((x) => x.id === drag); setDrag(null); setDropOn("");
+    if (!p) return;
+    if (r === OTHER) { if (!p.presence_pending) movePartner(p, "other"); }
+    else if (p.presence_pending) { if (p.region === r) movePartner(p, "region"); else notify(`${p.name} was found on the ${p.region} list. Drop it on ${p.region} to move it back.`, "error"); }
+  };
   const moreFor = async (p: Partner) => {
     setBusy(`p|${p.id}`); logActivity("scan", `More customers: ${p.name}`);
     const r = await fetch("/api/engine", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "queue", region: p.region, count: 1, mode: "market", vendor: p.vendor, partner: p.name }) });
@@ -259,8 +274,8 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
       <div className="sig-body">
         <aside className="sig-side">
           <h3>Regions</h3>
-          {regionList.length === 0 ? <p className="note">No active region.</p> : [...regionList, ...(otherPartners.length || otherOn ? [OTHER] : [])].map((r) => (
-            <label key={r}><input type="checkbox" checked={picked.includes(r)} onChange={() => setRegions(toggle(picked, r))} /> {r} <small>{r === OTHER ? `${otherPartners.filter((p) => p.vendor === vendor).length} ${vendor}` : ago(data?.scans[`${vendor}|${r}`])}</small></label>))}
+          {regionList.length === 0 ? <p className="note">No active region.</p> : [...regionList, ...(otherPartners.length || otherOn || drag ? [OTHER] : [])].map((r) => (
+            <label key={r} className={`mkt-drop${dropOn === r ? " over" : ""}${drag ? " armed" : ""}`} onDragOver={(e) => { if (drag) { e.preventDefault(); setDropOn(r); } }} onDragLeave={() => setDropOn("")} onDrop={(e) => { e.preventDefault(); dropOnRegion(r); }}><input type="checkbox" checked={picked.includes(r)} onChange={() => setRegions(toggle(picked, r))} /> {r} <small>{r === OTHER ? `${otherPartners.filter((p) => p.vendor === vendor).length} ${vendor}` : ago(data?.scans[`${vendor}|${r}`])}</small></label>))}
           <h3>View</h3>
           <label><input type="radio" name="mkview" checked={view === "partners"} onChange={() => setView("partners")} /> By partner</label>
           <label><input type="radio" name="mkview" checked={view === "customers"} onChange={() => setView("customers")} /> All Partners' Customers</label>
@@ -301,7 +316,7 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
           {view === "partners" && <div className="mkt-grid">{partners.map((p) => {
             const cs = custOf(p), isOpen = openP === p.id;
             return (
-              <article key={p.id} className={`sig-card mkt-card${isOpen ? " open" : ""}`}>
+              <article key={p.id} className={`sig-card mkt-card${isOpen ? " open" : ""}${drag === p.id ? " dragging" : ""}`} draggable onDragStart={(e) => { e.dataTransfer.setData("text/plain", p.id); e.dataTransfer.effectAllowed = "move"; setDrag(p.id); }} onDragEnd={() => { setDrag(null); setDropOn(""); }} title="Drag this tile onto Other regions (left panel) if it is listed under the wrong region">
                 <div className="sig-row">
                   <a className="sig-co mkt-site" href={p.website ? webUrl(p.website) : p.source_url} target="_blank" rel="noopener noreferrer" title={p.website ? `Open ${p.website.replace(/^https?:\/\//, "")} in a new tab` : "No website saved; opens the page that lists this partner"}>{p.name}<i aria-hidden="true">↗</i></a><span className="sig-meta">{place(p.region, p.hq_city, p.hq_country, p.branch, p.coverage_only, p.presence_pending)}</span>
                   {p.tier && <span className="sig-pill">{p.tier}</span>}<span className={`sig-pill lab-${p.label.toLowerCase()}`}>{p.label}</span>
@@ -314,6 +329,7 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
                 <div className="sig-acts">{partnerJob(p) ? <ScanGauge compact label="Finding customers" requestedAt={partnerJob(p)!.requested_at} startedAt={partnerJob(p)!.started_at} expectedSecs={expectedSecs(partnerJob(p)!)} />
                   : flash[`p:${p.id}`] ? <DoneTick compact text={flash[`p:${p.id}`]} />
                   : <button type="button" className="btn tiny" disabled={busy === `p|${p.id}`} onClick={() => moreFor(p)} title="Free: reads this partner's whole published customer list and adds the ones not saved yet">Find more customers</button>}
+                  <button type="button" className="btn tiny ghost" onClick={() => movePartner(p, p.presence_pending ? "region" : "other")} title={p.presence_pending ? `Move back to the ${p.region} list` : "Wrongly listed here? Move it to Other regions (or drag the tile there)"}>{p.presence_pending ? `↩ Back to ${p.region}` : "⇢ Other regions"}</button>
                   <button type="button" className="btn tiny" onClick={() => setOpenP(isOpen ? null : p.id)} aria-expanded={isOpen}>{cs.length} published customer{cs.length === 1 ? "" : "s"} {isOpen ? "▴" : "▾"}</button></div>
                 {isOpen && (cs.length === 0 ? <p className="note">No customers published by this partner (or none match the filters).</p> : (
                   custTable(cs)))}

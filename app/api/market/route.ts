@@ -61,12 +61,29 @@ async function addPartner(user: { email?: string | null }, b: { name?: string; v
   return NextResponse.json({ ok: true, id });
 }
 
+// Drag a partner to Other regions (it was wrongly listed under a region), or back to its own region. Nothing is deleted; the partner just changes list.
+async function movePartner(user: { email?: string | null }, b: { id?: string; vendor?: string; region?: string; to?: string }) {
+  const access = await getAccess(user as Parameters<typeof getAccess>[0]);
+  const region = String(b.region || ""), vendor = String(b.vendor || "");
+  if (!canSeeRegion(access, region)) return NextResponse.json({ error: "That region is outside your access." }, { status: 403 });
+  const db = supabaseAdmin(), key = marketKey(vendor, region);
+  const doc = (await db.from("settings").select("value").eq("key", key).maybeSingle()).data?.value as MarketDoc | null;
+  const p = doc?.partners?.find((x) => x.id === b.id);
+  if (!doc || !p) return NextResponse.json({ error: "Partner not found." }, { status: 404 });
+  if (b.to === "other") { p.presence_pending = true; p.scope_note = `${p.scope_note ? p.scope_note + " " : ""}Moved to Other regions by ${user.email || "a user"}.`.trim(); }
+  else if (b.to === "region") { delete p.presence_pending; }
+  else return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+  await db.from("settings").upsert({ key, value: doc, updated_at: new Date().toISOString() });
+  return NextResponse.json({ ok: true });
+}
+
 // Super Admin: add a vendor to the list (or remove one that was added). The built-in vendors stay.
 export async function POST(req: Request) {
   const user = await requireUser();
   if (!user) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
   const b = (await req.json().catch(() => ({}))) as { action?: string; name?: string; vendor?: string; region?: string; website?: string; tier?: string; services?: string; source_url?: string };
   if (b.action === "add_partner") return addPartner(user, b);
+  if (b.action === "move_partner") return movePartner(user, b as { id?: string; vendor?: string; region?: string; to?: string });
   if (!(await getAccess(user)).isSuper) return NextResponse.json({ error: "Only a Super Admin can change the vendor list." }, { status: 403 });
   const name = cleanVendor(String(b.name || ""));
   const db = supabaseAdmin();

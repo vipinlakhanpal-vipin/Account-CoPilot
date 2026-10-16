@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.65";
+export const APP_VERSION = "4.66";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.66", date: "2026-10-16", notes: "Drag a partner tile to Other regions.", changes: [
+      { what: "A partner tile can be dragged onto the Other regions row in the left panel when it is listed under the wrong region (the row appears while you drag); the tile also has a Move to Other regions button. In Other regions the same tile can be dragged back onto its own region, or use its Back to region button. Nothing is deleted", where: "components/MarketIntel.tsx, app/api/market", why: "Requested — drag wrongly placed partners to Other regions" },
+    ] },
   { version: "4.65", date: "2026-10-16", notes: "A partner is listed in a region only with a local office address and a cited source.", changes: [
       { what: "To be listed under a region a partner, local or foreign, needs an office address in that region and a page that shows it; the address appears on its card with the source. Without it the partner goes to Other regions, where its actual base is shown. Coupa UAE now lists Deloitte, Bahwan CyberTek, Bain & Company, Wipro, Miebach Consulting, PwC, Accenture, KPMG and RSM with their Dubai or Abu Dhabi addresses; Accely and BRINGVAS (no UAE office found) are under Other regions. Scans must supply the address and source, and the app files a partner without them under Other regions", where: "lib/market.ts (presenceOk), components/MarketIntel.tsx, app/api/engine/worker, ENGINE.md", why: "Requested — list only partners with a UAE office and its address, foreign firms included" },
     ] },
