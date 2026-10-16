@@ -1655,3 +1655,4 @@ button.tab[aria-expanded="true"]{color:var(--text-strong);background:linear-grad
 .mkt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:10px;align-items:start}
 .mkt-card.open{grid-column:1/-1}
 .mkt-card{min-width:0}
+.icp-auto{display:inline-flex;align-items:center;gap:6px;font:600 12px var(--body);cursor:pointer}

@@ -1,7 +1,7 @@
 "use client";
 import { ask, notify } from "@/components/Confirm";
 import InfoTip from "@/components/InfoTip";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { REGIONS, OPTIONS, DEFAULT_RULES, normalizeDefinition, validateRules, summarizeRules, type Definition, type Rules } from "@/lib/icpDefinition.mjs";
 import { fmtDateTime } from "@/lib/dates";
 
@@ -115,32 +115,57 @@ export default function IcpEditor({ initial, counts, isSuper, allowed, roleLabel
   const [result, setResult] = useState<Result | null>(null);
   const [copyFrom, setCopyFrom] = useState("");
   const [unlocked, setUnlocked] = useState<Record<string, boolean>>({});
+  // Save automatically (default on): a change of status saves at once with a message; other edits save 2 seconds after you stop typing. Turn it off to save by hand.
+  const [auto, setAuto] = useState(true);
+  const [lastSaved, setLastSaved] = useState("");
+  const [stuck, setStuck] = useState(false); // a save failed: wait for the next edit (or the Save button) instead of retrying forever
+  const statusChange = useRef<{ region: string; status: string } | null>(null);
+  useEffect(() => { try { if (localStorage.getItem("icp-autosave") === "0") setAuto(false); } catch { /* optional */ } }, []);
+  const toggleAuto = (v: boolean) => { setAuto(v); try { localStorage.setItem("icp-autosave", v ? "1" : "0"); } catch { /* optional */ } };
   const r = def.regions[region];
   const locked = readOnly || (r.status !== "active" && !unlocked[region]); // owner-only lock; only an active region (or one being prepared) can be edited
   const dirty = JSON.stringify(def.regions) !== JSON.stringify(saved.regions);
   const dirtyRegions = visible.filter(({ key }) => JSON.stringify(def.regions[key]) !== JSON.stringify(saved.regions[key])).map((x) => x.key);
   const problems = useMemo(() => visible.flatMap(({ key }) => validateRules(key, def.regions[key])), [def, visible]);
-  const set = (fn: (x: Rules) => void) => { setDef((d) => { const n = clone(d); fn(n.regions[region]); return n; }); setResult(null); };
+  const set = (fn: (x: Rules) => void) => {
+    setDef((d) => { const n = clone(d); const before = n.regions[region].status; fn(n.regions[region]); if (n.regions[region].status !== before) statusChange.current = { region, status: n.regions[region].status }; return n; });
+    setResult(null); setStuck(false);
+  };
 
-  async function call(action: "preview" | "save") {
-    if (action === "save" && !(await ask({ title: "Save and apply the ICP now?", confirm: "Save & apply", body: `Changed: ${dirtyRegions.join(", ") || "nothing"}.`,
+  async function call(action: "preview" | "save", auto = false) {
+    if (action === "save" && !auto && !(await ask({ title: "Save and apply the ICP now?", confirm: "Save & apply", body: `Changed: ${dirtyRegions.join(", ") || "nothing"}.`,
       points: ["Every company's ICP status is recalculated straight away.", "The Pipeline follows the new weights.", "The next daily run uses these rules."] }))) return;
     setBusy(action); setResult(null);
     try {
       const res = await fetch("/api/icp", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action, definition: def }) });
       const j: Result = await res.json();
       setResult(j);
-      if (action === "save") notify(j.ok && j.saved ? `ICP saved as v${j.saved.version} and applied — ${j.changed} account${j.changed === 1 ? "" : "s"} changed status.` : (j.error || j.problems?.[0] || "Not saved."), j.ok ? "ok" : "error");
+      if (action === "save") {
+        const sc = statusChange.current; statusChange.current = null;
+        const word = (st: string) => (st === "active" ? "Active" : st === "paused" ? "Paused" : "Next phase");
+        const msg = !(j.ok && j.saved) ? (j.error || j.problems?.[0] || "Not saved.")
+          : sc ? `${sc.region} is now ${word(sc.status)}. Saved and applied${sc.status === "active" ? `; the daily run includes it from tomorrow 6am.` : "."}`
+          : `ICP saved as v${j.saved.version} and applied — ${j.changed} account${j.changed === 1 ? "" : "s"} changed status.`;
+        notify(msg, j.ok ? "ok" : "error");
+        if (j.ok && j.saved) setLastSaved(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })); else setStuck(true);
+      }
       if (action === "preview") notify(j.ok ? `Preview: ${j.changed} account${j.changed === 1 ? "" : "s"} would change status (details below the settings). Nothing saved.` : (j.problems?.[0] || j.error || "Check the settings."), j.ok ? "ok" : "error");
       if (action === "save" && j.ok && j.saved) {
-        const n: Definition = { ...def, version: j.saved.version, updated_at: j.saved.at, updated_by: j.saved.by,
+        const meta = { version: j.saved.version, updated_at: j.saved.at, updated_by: j.saved.by,
           history: [{ at: j.saved.at, by: j.saved.by, summary: (j.changes || []).join(" | ") || "Saved with no changes" }, ...(def.history || [])] };
-        setSaved(n); setDef(n);
+        setSaved({ ...def, ...meta }); setDef((d) => ({ ...d, ...meta })); // edits typed while the save ran stay in the draft
       }
-    } catch { setResult({ ok: false, error: "Could not reach the server." }); }
+    } catch { setResult({ ok: false, error: "Could not reach the server." }); setStuck(true); }
     setBusy("");
   }
 
+  // Auto-save: a status change goes straight away; other edits 2 seconds after the last one. Never while a save runs or while something needs fixing.
+  useEffect(() => {
+    if (!auto || !dirty || busy || problems.length || stuck) return;
+    const t = setTimeout(() => call("save", true), statusChange.current ? 300 : 2000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [def, auto, dirty, busy, problems.length, stuck]);
   const w = r.pipeline.w_match + r.pipeline.w_opportunity + r.pipeline.w_fit;
   // Warn before leaving the page with unsaved changes.
   useEffect(() => {
@@ -157,7 +182,8 @@ export default function IcpEditor({ initial, counts, isSuper, allowed, roleLabel
           <p className="note">{saved.updated_at ? <>Last saved {when(saved.updated_at)} by <b>{saved.updated_by}</b>.</> : <>Using the default rules (never edited). Everything below is what the agent follows today.</>}</p>
         </div>
         <div className="icp-actions">
-          <span className="icp-dirty" aria-live="polite">{problems.length ? `${problems.length} to fix (see below)` : dirty ? `Unsaved: ${dirtyRegions.join(", ")}` : ""}</span>
+          <label className="icp-auto" title="When on, a change of status saves at once and other edits save 2 seconds after you stop. A message confirms every save."><input type="checkbox" checked={auto} onChange={(e) => toggleAuto(e.target.checked)} /> Save automatically</label>
+          <span className="icp-dirty" aria-live="polite">{problems.length ? `${problems.length} to fix (see below)` : busy === "save" ? "Saving…" : dirty ? (auto ? `Saving ${dirtyRegions.join(", ")} in a moment…` : `Unsaved: ${dirtyRegions.join(", ")}`) : lastSaved ? `Saved ${lastSaved}` : ""}</span>
           <button type="button" className="btn" disabled={!dirty || !!busy} onClick={() => { setDef(clone(saved)); setResult(null); }}>Discard changes</button>
           <button type="button" className="btn" disabled={!!busy || !!problems.length} onClick={() => call("preview")}>{busy === "preview" ? "Checking…" : "Preview impact"}</button>
           {!readOnly && <button type="button" className="btn primary" disabled={!dirty || !!busy || !!problems.length} onClick={() => call("save")}>{busy === "save" ? "Saving…" : "Save & apply"}</button>}

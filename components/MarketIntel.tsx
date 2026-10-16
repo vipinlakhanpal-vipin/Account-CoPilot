@@ -101,6 +101,16 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
     window.addEventListener("appwin-scan", on);
     return () => window.removeEventListener("appwin-scan", on);
   });
+  // Every vendor on the list in the ticked regions: one job per vendor and region, queued one after another, with a single message at the end
+  const scanEvery = async () => {
+    const pairs = active.flatMap((r) => (data?.vendors || []).map((v) => [r, v] as [string, string]));
+    if (!pairs.length) return;
+    if (!(await ask({ title: `Scan all ${data?.vendors.length} vendors?`, body: `This queues ${pairs.length} free scans (${active.join(", ")}). Each takes a few minutes and they run one after another, so the lists fill in over the next hour or so. Tick fewer regions first to scan fewer.`, confirm: "Queue them" }))) return;
+    setBusy("every"); logActivity("scan", `Market intelligence: all vendors, ${active.join(", ")}`);
+    let ok = 0;
+    for (const [r, v] of pairs) { const res = await fetch("/api/engine", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "queue", region: r, count: 1, mode: "market", vendor: v }) }); if (res.ok || res.status === 409) ok++; }
+    setBusy(""); notify(`${ok} scans queued. Partners appear here as each one finishes.`, "ok"); load();
+  };
   const download = () => {
     const rows = [["Vendor", "Region", "Partner", "Customer", "Project", "Customer in your app database", "Contact", "Title", "Email", "Phone", "LinkedIn", "Source"]];
     for (const c of custs) { if (c.contacts.length) for (const k of c.contacts) rows.push([c.vendor, c.region, c.partner, c.customer, c.project, c.in_app ? "Yes" : "No", k.name, k.title, k.email, k.phone, k.linkedin_url, c.source_url]);
@@ -145,6 +155,7 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
           <div className="mkt-tools">
             <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={`Search ${vendor} partners, customers, projects`} aria-label="Search" />
             <button type="button" className="btn tiny primary" disabled={!!busy || regionList.length === 0} onClick={() => scanAll(active.map((r) => [r, vendor] as [string, string]))}>Scan {vendor} now</button>
+            <button type="button" className="btn tiny" disabled={!!busy || regionList.length === 0} onClick={scanEvery} title="Queue a free scan for every vendor on the list in the ticked regions">Scan all vendors</button>
             <button type="button" className="btn tiny" disabled={!custs.length || !!busy} onClick={findAll} title="Free: searches for contacts at up to 10 customers of this vendor that have none yet">Find customer contacts</button>
             <button type="button" className="btn tiny" disabled={!custs.length} onClick={download}>Download customers (CSV)</button>
             <span className="note">{partners.length} partners · {custs.length} customers</span>
