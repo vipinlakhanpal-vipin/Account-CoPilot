@@ -1,4 +1,7 @@
 "use client";
+import AppWindow from "@/components/AppWindow";
+import BuyingSignals from "@/components/BuyingSignals";
+import MarketIntel from "@/components/MarketIntel";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -16,9 +19,10 @@ import { APP_VERSION, TAGLINE, RELEASES, RELEASE_AUTHOR } from "@/lib/version";
 // has to stay listed here so this group is found while standing on that page — hideLanding then drops it from
 // what's actually shown, for a group (like Dashboard) where that first item is just the main tab's own page
 // and has no other siblings worth presenting it alongside, unlike Accounts' 5 genuinely distinct pages.
-const GROUPS: { label: string; items: [string, string][]; hideLanding?: boolean; icon?: boolean; tip?: string; glyph?: "search" | "pulse" }[] = [
+const GROUPS: { label: string; items: [string, string][]; hideLanding?: boolean; icon?: boolean; tip?: string; glyph?: "search" | "pulse" | "network"; win?: "signals" | "market" }[] = [
   { label: "Find company", items: [["/find", "Find company"]], icon: true, tip: "Find company - search or add a new one", glyph: "search" },
-  { label: "Buying signals", items: [["/signals", "Buying signals"]], icon: true, tip: "Buying signals - tenders, RFPs, ERP and S2P intent, ECC to S/4HANA", glyph: "pulse" },
+  { label: "Buying signals", items: [["/signals", "Buying signals"]], icon: true, tip: "Buying signals - tenders, RFPs, ERP and S2P intent, ECC to S/4HANA", glyph: "pulse", win: "signals" },
+  { label: "Market intelligence", items: [["/market", "Market intelligence"]], icon: true, tip: "Market intelligence - SAP, Coupa, Oracle and Microsoft partners and their customers", glyph: "network", win: "market" },
   { label: "Home", items: [["/home", "Home"]] },
   { label: "Dashboard", items: [["/", "Dashboard"], ["/?tab=reports", "Mission Control"]], hideLanding: true },
   { label: "Accounts", items: [["/?tab=accounts", "Accounts"], ["/?tab=pipeline", "Pipeline"], ["/?tab=stakeholders", "Stakeholders"], ["/?tab=signals", "S2P Signals"], ["/?tab=erp", "ERP & Apps"]] },
@@ -37,7 +41,15 @@ const HistoryIcon = () => (
 const TAB_LABEL: Record<string, string> = { pipeline: "Pipeline", accounts: "Accounts", stakeholders: "Stakeholders", signals: "S2P Signals", erp: "ERP & Apps",
   conflicts: "Conflicts", sources: "Sources", reports: "Mission Control" };
 
-const PAGE_LABEL: Record<string, string> = { "/research": "Research Queue", "/settings": "Settings", "/guide": "Learn Me", "/icp": "Define ICP", "/team": "Team", "/home": "Home", "/find": "Find company", "/signals": "Buying signals" };
+const PAGE_LABEL: Record<string, string> = { "/research": "Research Queue", "/settings": "Settings", "/guide": "Learn Me", "/icp": "Define ICP", "/team": "Team", "/home": "Home", "/find": "Find company", "/signals": "Buying signals", "/market": "Market intelligence" };
+
+const ICONS = (glyph: string | undefined, sig: { new: number; hot: number } | null) => (
+  <>
+    {glyph === "pulse" ? <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 8h3l1.6-4.5 3 9L11 8h3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+      : <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="3.2" r="1.9" fill="none" stroke="currentColor" strokeWidth="1.6" /><circle cx="3" cy="12.4" r="1.9" fill="none" stroke="currentColor" strokeWidth="1.6" /><circle cx="13" cy="12.4" r="1.9" fill="none" stroke="currentColor" strokeWidth="1.6" /><path d="M7 5 4 10.6M9 5l3 5.6M5 12.4h6" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" /></svg>}
+    {sig && sig.new > 0 && <span className={`sig-badge${sig.hot ? " hot" : ""}`} aria-label={`${sig.new} new buying signals`}>{sig.new > 99 ? "99+" : sig.new}</span>}
+  </>
+);
 
 // Rendered once in the root layout, so it stays put across page changes (no rebuild, no jump).
 export default function Header({ meta }: { meta: string }) {
@@ -45,6 +57,7 @@ export default function Header({ meta }: { meta: string }) {
   const [showChanges, setShowChanges] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [sig, setSig] = useState({ new: 0, hot: 0 });
+  const [win, setWin] = useState<"signals" | "market" | null>(null);
   // In-app alert: how many unseen Hot / Warm buying signals are waiting in the user's regions.
   useEffect(() => {
     let off = false;
@@ -172,6 +185,8 @@ export default function Header({ meta }: { meta: string }) {
           </div>
         </div>
       )}
+      <AppWindow open={win === "signals"} onClose={() => setWin(null)} title="Buying signals" subtitle="Tenders, RFPs, ERP and S2P intent, ECC to S/4HANA" badge="B"><BuyingSignals embedded /></AppWindow>
+      <AppWindow open={win === "market"} onClose={() => setWin(null)} title="Market intelligence" subtitle="SAP, Coupa, Oracle and Microsoft partners and their customers" badge="M"><MarketIntel embedded /></AppWindow>
       {showHistory && (
         <div className="wn-backdrop" onClick={() => setShowHistory(false)}>
           <div className="wn" role="dialog" aria-modal="true" aria-labelledby="vh-title" onClick={(e) => e.stopPropagation()}>
@@ -228,7 +243,12 @@ export default function Header({ meta }: { meta: string }) {
             </div>
           </div>
           <nav className="tabs" aria-label="Sections">
-            {GROUPS.map((g) => (
+            {GROUPS.map((g) => (g.win ? (
+              <button type="button" key={g.label} className="tab tab-icon" aria-label={g.label} aria-haspopup="dialog" aria-expanded={win === g.win} onClick={() => setWin((w) => (w === g.win ? null : g.win!))}>
+                {ICONS(g.glyph, g.win === "signals" ? sig : null)}
+                <span className="tip-pill" role="tooltip"><span className="tip-dot" aria-hidden="true" />{g.tip}{g.win === "signals" && sig.new > 0 ? ` (${sig.new} new${sig.hot ? `, ${sig.hot} hot` : ""})` : ""}</span>
+              </button>
+            ) : (
               <Link key={g.label} href={g.items[0][0]} className={`tab${g.icon ? " tab-icon" : ""}`} aria-label={g.icon ? g.label : undefined} aria-selected={g.items.some(([, l]) => l === current)} onClick={(e) => go(e, g.items[0][0])}>
                 {g.icon ? <>
                   {g.glyph === "pulse"
@@ -238,7 +258,7 @@ export default function Header({ meta }: { meta: string }) {
                   <span className="tip-pill" role="tooltip"><span className="tip-dot" aria-hidden="true" />{g.tip}{g.glyph === "pulse" && sig.new > 0 ? ` (${sig.new} new${sig.hot ? `, ${sig.hot} hot` : ""})` : ""}</span>
                 </> : g.label}
               </Link>
-            ))}
+            )))}
           </nav>
           <div className="nav-actions">
             <button type="button" className="btn primary dl" onClick={downloadMasterBook} disabled={downloading} title="Download Master Book (.xlsx)">

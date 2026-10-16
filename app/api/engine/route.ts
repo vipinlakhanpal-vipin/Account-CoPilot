@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
 const EST = { update: 0.55, discovery: 0.75, profile: 0.55 }; // USD per Quick research / discovery search / new-company profile
 
 type JobDetail = { name: string; status?: string; revenue?: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; country?: string; decided?: "added" | "ignored"; entity_type?: "Regional HQ" | "Branch" | "Foreign Branch" | "Unknown" };
-type Job = { id: string; region: string; count: number | "max"; mode: "verify" | "discover" | "both" | "company" | "contacts" | "signals"; company_name?: string; slug?: string; seamless?: boolean; website?: string; company_names?: string[]; requested_by: string; requested_at: string;
+type Job = { id: string; region: string; count: number | "max"; mode: "verify" | "discover" | "both" | "company" | "contacts" | "signals" | "market"; vendor?: string; company_name?: string; slug?: string; seamless?: boolean; website?: string; company_names?: string[]; requested_by: string; requested_at: string;
   status: "queued" | "running" | "done" | "error"; done_at?: string; result?: string; details?: JobDetail[] };
 type IgnoredCo = { id: string; name: string; country: string; region: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; ignored_at: string; ignored_by: string; recheck_at: string };
 type Batch = { id: string; region: string; update_count: number; new_count: number; budget: number; available: number; planned_update: number; planned_new: number;
@@ -39,7 +39,7 @@ const setSetting = (db: ReturnType<typeof supabaseAdmin>, key: string, value: un
 async function openJobIssue(job: Job): Promise<string> {
   const token = process.env.GITHUB_JOBS_TOKEN;
   if (!token) return "not_set";
-  const title = job.mode === "signals" ? `Job ${job.id}: buying signals ${job.company_name ? `for "${job.company_name}"` : "scan"} (${job.region})` : job.mode === "contacts" ? `Job ${job.id}: find contacts at "${job.company_name}" (${job.region})${job.seamless ? " with Seamless" : ""}` : job.mode === "company" ? `Job ${job.id}: check "${job.company_name}" (${job.region})` : `Job ${job.id}: ${job.mode} ${job.count} in ${job.region}`;
+  const title = job.mode === "market" ? `Job ${job.id}: market intelligence ${job.vendor || "all vendors"} (${job.region})` : job.mode === "signals" ? `Job ${job.id}: buying signals ${job.company_name ? `for "${job.company_name}"` : "scan"} (${job.region})` : job.mode === "contacts" ? `Job ${job.id}: find contacts at "${job.company_name}" (${job.region})${job.seamless ? " with Seamless" : ""}` : job.mode === "company" ? `Job ${job.id}: check "${job.company_name}" (${job.region})` : `Job ${job.id}: ${job.mode} ${job.count} in ${job.region}`;
   const body = `Queued by ${job.requested_by} at ${job.requested_at}.\n\nAuto-opened by Account CoPilot so the instant job runner fires now instead of waiting for the next daily run. The job itself is tracked in the app (Setup → Settings), not in this issue — closing or leaving this open makes no difference.`;
   try {
     const r = await fetch("https://api.github.com/repos/vipinlakhanpal-vipin/account-copilot-jobs/issues", {
@@ -196,7 +196,7 @@ export async function GET(req: Request) {
 }
 
 const Body = z.discriminatedUnion("action", [
-  z.object({ action: z.literal("queue"), region: z.string().min(2).max(40), count: z.union([z.number().int().min(1).max(500), z.literal("max")]), mode: z.enum(["verify", "discover", "both", "company", "contacts", "signals"]),
+  z.object({ action: z.literal("queue"), region: z.string().min(2).max(40), count: z.union([z.number().int().min(1).max(500), z.literal("max")]), mode: z.enum(["verify", "discover", "both", "company", "contacts", "signals", "market"]), vendor: z.string().trim().max(20).optional(),
     slug: z.string().trim().max(120).optional(), seamless: z.boolean().optional(), company_name: z.string().trim().max(120).optional(), website: z.string().trim().max(200).optional(), company_names: z.array(z.string().trim().min(2).max(120)).max(30).optional() }),
   z.object({ action: z.literal("add_found"), job_id: z.string(), name: z.string() }),
   z.object({ action: z.literal("ignore_found"), job_id: z.string(), name: z.string() }),
@@ -300,7 +300,15 @@ export async function POST(req: Request) {
   if (b.action === "queue" || b.action === "cancel") {
     const st = await getSetting<{ jobs: Job[] }>(db, "engine_jobs", { jobs: [] });
     if (b.action === "queue" && b.mode === "company" && !(b.company_name && b.company_name.length >= 2)) return NextResponse.json({ error: "Enter the company name." }, { status: 400 });
-    if (b.action === "queue" && b.mode === "signals") {
+    if (b.action === "queue" && b.mode === "market") {
+      // Market intelligence scan: partners of one vendor (or all four) in one region, and the customers they publish.
+      const vendor = ["SAP", "Coupa", "Oracle", "Microsoft"].includes(b.vendor || "") ? (b.vendor as string) : "all";
+      if (st.jobs.some((j) => j.mode === "market" && (j.status === "queued" || j.status === "running") && j.region === b.region && (j.vendor || "all") === vendor))
+        return NextResponse.json({ error: `A ${vendor === "all" ? "market" : vendor} scan for ${b.region} is already waiting.` }, { status: 409 });
+      const job: Job = { id, region: b.region, count: 1, mode: "market", vendor, requested_by: user.email || "", requested_at: now, status: "queued" };
+      st.jobs.unshift(job);
+      trigger = await openJobIssue(job);
+    } else if (b.action === "queue" && b.mode === "signals") {
       // Buying signals scan: one company (slug) or a region sweep (tenders plus the next companies due a scan).
       let name = "", region = b.region, slug = "", site = "";
       if (b.slug) {

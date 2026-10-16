@@ -122,6 +122,11 @@ Every Anthropic-API route (`/api/research`, `/api/discover`, `/api/pitch`, and `
 - **Free:** scheduled sessions follow the "Buying signals" section of `ENGINE.md` (job mode `signals`, plus daily step 5, UAE and KSA only in phase 1) and save through worker actions `signal_targets` / `add_signals`. The daily routine's own prompt overrides ENGINE.md, so step 5 only runs once that prompt mentions it.
 - **Tenders:** `doc_url` is a link only when the documents open without a login; otherwise `needs_login` and the notice page is the source. Never log in, register, bypass or re-host documents.
 
+## Market intelligence (v4.19)
+- **Where:** network icon beside Buying signals; both icons open Aria-style floating windows (`components/AppWindow.tsx`, hosted by `components/Header.tsx`; pages `/signals` and `/market` remain). UI `components/MarketIntel.tsx`, API `app/api/market` (read-only, scoped by region).
+- **Data:** one settings document per vendor and region, key `market_intel:<vendor>:<region>` (SAP, Coupa, Oracle, Microsoft; types in `lib/market.ts`): partners (name, tier, services, source) and the customers each partner publishes, with optional public named contacts (same rules as Find contacts, validated in the worker). Customers are matched to the app's companies; unmatched ones link to Find company → Find New Company ("Add as account").
+- **Free:** scheduled sessions follow the "Market intelligence" section of `ENGINE.md` (job mode `market`, daily step 6: 4 vendor x region pairs, oldest first, every Active region) through worker actions `market_targets` / `add_market`. Only public pages; partners that publish no customers simply have none.
+
 ## Find contacts (v4.12)
 - **Button:** "Find contacts" on the account page and in each Search Company result (`lib/findContactsClient.ts`) → `POST /api/engine` `{action:"queue", mode:"contacts", slug}`. The server looks the company up (region, domain), checks the user's region, and refuses a duplicate while one is queued or running.
 - **Free:** a scheduled Claude session follows the **contacts** job in `ENGINE.md` (public web search only; no Seamless credits, no LinkedIn login) and saves people with `engine_client.mjs add_contacts <slug> <file>` → worker action `add_contacts`.

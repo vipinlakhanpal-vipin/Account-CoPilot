@@ -6,12 +6,14 @@ import { invalidateAllData } from "@/lib/dataCache";
 import { statusPatch, applyRevenueResult } from "@/lib/icpStatus.mjs";
 import { normalizeDefinition, rulesFor, regionOf, summarizeRules } from "@/lib/icpDefinition.mjs";
 import { EMPTY_STORE, type Signal, type SignalStore } from "@/lib/signals";
+import { VENDORS, marketKey, type MarketDoc, type MContact, type Partner, type PCustomer } from "@/lib/market";
 
 // Limited API for scheduled Claude sessions (no Supabase key needed in the cloud environment).
 // Auth: "Authorization: Bearer <ENGINE_TOKEN>"; only the SHA-256 hash is stored (settings.engine_token). Revoke/regenerate in Settings.
 // Allowed: read the ICP definition, claim/finish queued jobs, read the verification queue, submit revenue results, add discovered companies, post a notification.
 // Also allowed: add_contacts (new people found on the public web for ONE company; written only after server-side checks, never read back).
 // Also allowed: signal_targets / add_signals (buying signals: tenders, ERP and S2P intent, ECC to S/4HANA; stored in settings.buying_signals).
+// Also allowed: market_targets / add_market (SAP, Coupa, Oracle and Microsoft partners and their published customers; stored in settings market_intel:<vendor>:<region>).
 // Not allowed: reading contacts, deleting anything, or any other table access.
 export const maxDuration = 60;
 type Db = ReturnType<typeof supabaseAdmin>;
@@ -44,6 +46,8 @@ const NewContact = z.object({ full_name: z.string().trim().min(3).max(120), titl
   linkedin_url: z.string().trim().max(240).optional().default(""), via: z.enum(["web", "seamless"]).optional().default("web"), seamless_id: z.string().trim().max(40).optional().default(""),
   source_url: z.string().trim().max(500).optional().default(""), source_note: z.string().trim().max(400).optional().default("") })
   .refine((c) => (c.via === "seamless" ? !!c.seamless_id : /^https?:\/\//.test(c.source_url)), { message: "A public-web contact needs source_url; a Seamless contact needs seamless_id." });
+const GENERIC_LOCAL = /^(info|sales|contact|contacts|admin|hello|hi|support|office|enquiries|enquiry|inquiries|inquiry|mail|service|services|help|hr|careers|jobs|recruitment|procurement|purchasing|accounts|finance|marketing|media|press|pr|customercare|customer\.care|reception|webmaster|noreply|no-reply|team)$/i;
+const PERSONAL = /(^|\.)(gmail|googlemail|yahoo|hotmail|outlook|live|msn|icloud|aol|proton|protonmail|gmx|mail|yandex|zoho)\./i;
 const Day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).or(z.literal("")).optional().default("");
 const Url = z.string().url().max(600);
 const NewSignal = z.object({ lane: z.enum(["erp", "rfp", "ecc"]), strength: z.enum(["Hot", "Warm", "Watch"]), label: z.enum(["FACT", "LIKELY", "UNVERIFIED"]),
@@ -51,6 +55,13 @@ const NewSignal = z.object({ lane: z.enum(["erp", "rfp", "ecc"]), strength: z.en
   title: z.string().trim().min(5).max(200), evidence: z.string().trim().min(10).max(700), why: z.string().trim().max(300).optional().default(""),
   source_name: z.string().trim().max(120).optional().default(""), source_url: Url, doc_url: Url.or(z.literal("")).optional().default(""), needs_login: z.boolean().optional().default(false),
   published: Day, closes: Day });
+const MContactIn = z.object({ name: z.string().trim().min(3).max(120), title: z.string().trim().max(200).optional().default(""), email: z.string().trim().max(160).optional().default(""),
+  phone: z.string().trim().max(40).optional().default(""), linkedin_url: z.string().trim().max(240).optional().default(""), source_url: Url });
+const MPartnerIn = z.object({ name: z.string().trim().min(2).max(140), website: z.string().trim().max(200).optional().default(""), tier: z.string().trim().max(80).optional().default(""),
+  services: z.string().trim().max(300).optional().default(""), hq_city: z.string().trim().max(80).optional().default(""), source_url: Url, label: z.enum(["FACT", "LIKELY"]).optional().default("FACT"),
+  contacts: z.array(MContactIn).max(3).optional().default([]) });
+const MCustomerIn = z.object({ partner: z.string().trim().min(2).max(140), customer: z.string().trim().min(2).max(160), customer_website: z.string().trim().max(200).optional().default(""),
+  project: z.string().trim().max(240).optional().default(""), source_url: Url, published: Day, contacts: z.array(MContactIn).max(3).optional().default([]) });
 const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("claim") }),
   z.object({ action: z.literal("finish"), id: z.string(), status: z.enum(["done", "error"]), result: z.string().max(2000), slug: z.string().max(120).optional(),
@@ -64,6 +75,8 @@ const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("add_contacts"), slug: z.string().min(2).max(120), contacts: z.array(NewContact).max(25) }),
   z.object({ action: z.literal("signal_targets"), region: z.string().default("UAE"), limit: z.number().int().min(1).max(30).default(10) }),
   z.object({ action: z.literal("add_signals"), scanned: z.array(z.string().max(120)).max(40).optional().default([]), sweep_region: z.string().max(40).optional().default(""), signals: z.array(NewSignal).max(40) }),
+  z.object({ action: z.literal("market_targets"), limit: z.number().int().min(1).max(12).default(4) }),
+  z.object({ action: z.literal("add_market"), vendor: z.enum(VENDORS), region: z.string().min(2).max(40), partners: z.array(MPartnerIn).max(40).optional().default([]), customers: z.array(MCustomerIn).max(120).optional().default([]) }),
   z.object({ action: z.literal("names") }),
   z.object({ action: z.literal("icp") }),
   z.object({ action: z.literal("uploads") }),
@@ -157,8 +170,6 @@ export async function POST(req: Request) {
     const cdom = String(co.domain || "").toLowerCase().replace(/^www\./, "");
     const { data: have } = await db.from("contacts").select("id,full_name,email,phone,linkedin_url,channel_state,claude_check").eq("company_id", co.id);
     const key = (n: string) => n.toLowerCase().normalize("NFKD").replace(/[^a-z]+/g, " ").trim();
-    const GENERIC_LOCAL = /^(info|sales|contact|contacts|admin|hello|hi|support|office|enquiries|enquiry|inquiries|inquiry|mail|service|services|help|hr|careers|jobs|recruitment|procurement|purchasing|accounts|finance|marketing|media|press|pr|customercare|customer\.care|reception|webmaster|noreply|no-reply|team)$/i;
-    const PERSONAL = /(^|\.)(gmail|googlemail|yahoo|hotmail|outlook|live|msn|icloud|aol|proton|protonmail|gmx|mail|yandex|zoho)\./i;
     const added: string[] = [], updated: string[] = [], skipped: { name: string; why: string }[] = [], dropped: string[] = [];
     for (const c of b.contacts) {
       const notes: string[] = [];
@@ -239,6 +250,58 @@ export async function POST(req: Request) {
     st.items = st.items.filter((i) => !(i.lane === "rfp" && i.closes && i.closes < cutoff)).slice(0, 1500);
     await put(db, "buying_signals", st);
     return NextResponse.json({ added, updated, skipped });
+  }
+  if (b.action === "market_targets") {
+    // The vendor x region pairs due a market-intelligence scan: every Active region, oldest scan first.
+    const active = Object.entries(icpDef.regions).filter(([, r]) => r.status === "active").map(([k]) => k);
+    const { data } = await db.from("settings").select("key,value").like("key", "market_intel:%");
+    const docs = new Map((data || []).map((r) => [r.key as string, r.value as MarketDoc]));
+    const pairs = active.flatMap((region) => VENDORS.map((vendor) => { const d = docs.get(marketKey(vendor, region)); return { vendor, region, last_scan: d?.scanned_at || null, partners_known: d?.partners?.length || 0, known: (d?.partners || []).map((p) => p.name) }; }))
+      .sort((x, y) => String(x.last_scan || "").localeCompare(String(y.last_scan || ""))).slice(0, b.limit);
+    return NextResponse.json({ targets: pairs });
+  }
+  if (b.action === "add_market") {
+    // Partners found on the vendor's partner directory / the partner's own site, and the customers the partner publishes. Public pages only; contacts follow the same rules as Find contacts.
+    const key = marketKey(b.vendor, b.region);
+    const doc = await get<MarketDoc>(db, key, { vendor: b.vendor, region: b.region, partners: [], customers: [], scanned_at: "" });
+    doc.partners ||= []; doc.customers ||= [];
+    const { data: have } = await db.from("companies").select("slug,company_name,domain");
+    const nk = (t: string) => t.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, " ").replace(/\b(llc|ltd|limited|fz|fze|fzco|co|company|inc|pjsc|plc|group|holding|holdings|the)\b/g, " ").replace(/\s+/g, " ").trim();
+    const added = { partners: 0, customers: 0, contacts: 0 }, updated = { partners: 0, customers: 0 }, skipped: { name: string; why: string }[] = [], dropped: string[] = [];
+    const vet = (list: MContact[] | undefined, site: string, who: string): MContact[] => {
+      const d = dom(site), out: MContact[] = [];
+      for (const c of (list || []).slice(0, 3)) {
+        let email = c.email.toLowerCase(), phone = c.phone, li = c.linkedin_url;
+        if (email) { const [local, host = ""] = email.split("@"); const h = host.replace(/^www\./, "");
+          if (!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/.test(email) || GENERIC_LOCAL.test(local) || PERSONAL.test(h) || !d || !(h === d || h.endsWith("." + d))) { dropped.push(`${who}: ${c.name} email ${email}`); email = ""; } }
+        if (phone && !/^\+?[\d\s().-]{7,24}$/.test(phone)) { dropped.push(`${who}: ${c.name} phone`); phone = ""; }
+        if (li) { const m = li.match(/^https?:\/\/([a-z]{2,3}\.)?linkedin\.com\/in\/([^/?#\s]+)/i); if (!m) { dropped.push(`${who}: ${c.name} LinkedIn`); li = ""; } else li = `https://www.linkedin.com/in/${m[2]}`; }
+        if (email || phone || li) out.push({ name: c.name, title: c.title, email, phone, linkedin_url: li, source_url: c.source_url });
+      }
+      return out;
+    };
+    for (const p of b.partners) {
+      const id = createHash("sha1").update(`${b.vendor}|${b.region}|${nk(p.name)}`).digest("hex").slice(0, 14);
+      const row: Partner = { id, vendor: b.vendor, region: b.region, name: p.name, website: p.website, tier: p.tier, services: p.services, hq_city: p.hq_city, source_url: p.source_url, label: p.label, contacts: vet(p.contacts, p.website, p.name), found_at: now };
+      const old = doc.partners.find((x) => x.id === id);
+      if (old) { Object.assign(old, { website: row.website || old.website, tier: row.tier || old.tier, services: row.services || old.services, hq_city: row.hq_city || old.hq_city, contacts: row.contacts.length ? row.contacts : old.contacts }); updated.partners++; }
+      else { doc.partners.unshift(row); added.partners++; added.contacts += row.contacts.length; }
+    }
+    for (const c of b.customers) {
+      const partner = doc.partners.find((x) => nk(x.name) === nk(c.partner));
+      if (!partner) { skipped.push({ name: c.customer, why: `partner "${c.partner}" is not on the list yet; add it in the same file` }); continue; }
+      const co = (have || []).find((x) => sameCompany(c.customer, c.customer_website, x.company_name, x.domain || ""));
+      const id = createHash("sha1").update(`${partner.id}|${nk(c.customer)}`).digest("hex").slice(0, 14);
+      const contacts = vet(c.contacts, c.customer_website || co?.domain || "", c.customer);
+      const old = doc.customers.find((x) => x.id === id);
+      if (old) { Object.assign(old, { project: c.project || old.project, contacts: contacts.length ? contacts : old.contacts, slug: co?.slug || old.slug }); updated.customers++; continue; }
+      doc.customers.unshift({ id, partner_id: partner.id, partner: partner.name, vendor: b.vendor, region: b.region, customer: co?.company_name || c.customer, customer_website: c.customer_website, slug: co?.slug || "",
+        project: c.project, source_url: c.source_url, published: c.published, contacts, found_at: now });
+      added.customers++; added.contacts += contacts.length;
+    }
+    doc.partners = doc.partners.slice(0, 300); doc.customers = doc.customers.slice(0, 2500); doc.scanned_at = now;
+    await put(db, key, doc);
+    return NextResponse.json({ added, updated, skipped, dropped, totals: { partners: doc.partners.length, customers: doc.customers.length } });
   }
   if (b.action === "names") {
     // Existing company names and domains, so a session can skip them before searching (no contacts, nothing else)

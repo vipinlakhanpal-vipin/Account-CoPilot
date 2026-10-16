@@ -1583,3 +1583,20 @@ a.sig-co:hover{text-decoration:underline}
 .sig-login{font-size:12px;color:#8A5300;padding:3px 8px;border-radius:8px;background:color-mix(in srgb,#F5A623 14%,var(--surface))}
 .navbar .tab.tab-icon .sig-badge{position:absolute;top:2px;right:3px;min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:#D92D20;color:#fff;font:700 10px/16px var(--body);text-align:center}
 .navbar .tab.tab-icon .sig-badge.hot{animation:fcj-pulse 1.4s ease-in-out infinite}
+
+/* Floating windows for Buying signals and Market intelligence (AppWindow): Aria's frame, but the page behind stays usable */
+.appwin-bd{background:transparent !important;backdrop-filter:none !important;pointer-events:none}
+.appwin{pointer-events:auto}
+.appwin-body{display:block !important;padding:14px 18px !important}
+.appwin-body .sig-hero,.appwin-body .mkt-hero{display:none}
+.appwin-body .sig-body{grid-template-columns:190px minmax(0,1fr)}
+.appwin-body .sig-side{position:static}
+.mkt-tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.mkt-tools input{flex:1;min-width:200px;padding:8px 12px;border-radius:10px;border:1px solid var(--line-2);background:var(--surface);color:var(--text);font:14px var(--body)}
+.mkt-card .tablewrap{margin-top:8px}
+.mkt-contact{font-size:12px;margin:3px 0;line-height:1.4}
+.mkt-in,.mkt-add{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;font:600 10.5px var(--body);text-decoration:none;border:1px solid}
+.mkt-in{color:#0B5A47;background:color-mix(in srgb,#2ECC8F 16%,var(--surface));border-color:#8FD4BD}
+.mkt-add{color:#8A5300;background:color-mix(in srgb,#F5A623 16%,var(--surface));border-color:#E6BF7E}
+button.tab{appearance:none;background:transparent;cursor:pointer}
+button.tab[aria-expanded="true"]{color:var(--text-strong);background:linear-gradient(180deg,rgba(46,196,166,.35),rgba(46,196,166,.18));border-color:rgba(46,196,166,.55)}

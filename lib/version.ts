@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.18";
+export const APP_VERSION = "4.19";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.19", date: "2026-10-16", notes: "Market intelligence: SAP, Coupa, Oracle and Microsoft partners per region and the customers they publish. Buying signals and Market intelligence open as Aria-style windows.", changes: [
+      { what: "New Market intelligence icon opens a window with four vendor tabs (SAP, Coupa, Oracle, Microsoft). Each lists the vendor's partners in your active regions and the customers each partner publishes on its own site: project, source link, any public named contact (email, phone, LinkedIn), whether the customer is already in your accounts or can be added, and a CSV download", where: "components/MarketIntel.tsx, app/market, app/api/market, ENGINE.md (market job), app/api/engine/worker (market_targets, add_market)", why: "Requested — market intelligence on vendor partners and their customers for all active regions" },
+      { what: "Buying signals and Market intelligence now open as floating windows in Aria's style: drag the header, resize from any edge, Expand, Close. The page behind stays usable, so a list can stay open while you work in accounts. /signals and /market still work as full pages", where: "components/AppWindow.tsx, components/Header.tsx", why: "Requested — same window character as the bell summary and Aria" },
+    ] },
   { version: "4.18", date: "2026-10-16", notes: "Buying signals: a new pulse icon shows tenders and RFPs, ERP and S2P buying intent, and SAP ECC owners who need an S/4HANA partner, with an in-app alert badge.", changes: [
       { what: "New Buying signals icon (next to Find company) opens a ranked list in three lanes: Tenders and RFPs, ERP and S2P buying, ECC to S/4HANA. Each card has strength (Hot, Warm, Watch), a FACT / LIKELY label, the evidence, the source link, the closing date for tenders, a link to download the tender documents when they open without a login, and actions (Find contacts, Rescan, Mark done, Dismiss)", where: "components/BuyingSignals.tsx, app/signals, app/api/signals", why: "Requested — reach companies that are seriously looking for ERP and S2P solutions, tenders and RFPs, and ECC to S/4HANA migrations" },
       { what: "A red badge on the icon counts new Hot and Warm signals (pulsing when any is Hot); scans run free as scheduled sessions for UAE and KSA, daily and on demand with Scan now or Rescan company", where: "components/Header.tsx, app/api/engine, app/api/engine/worker (signal_targets, add_signals), ENGINE.md", why: "Requested — in-app alerts only, UAE and KSA first" },

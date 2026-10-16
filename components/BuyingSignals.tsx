@@ -11,7 +11,7 @@ const LANES: SignalLane[] = ["rfp", "erp", "ecc"];
 const fmt = (d: string) => (d ? new Date(d).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "");
 const ago = (iso?: string) => { if (!iso) return "never"; const h = Math.round((Date.now() - new Date(iso).getTime()) / 36e5); return h < 1 ? "just now" : h < 48 ? `${h} h ago` : `${Math.round(h / 24)} days ago`; };
 
-export default function BuyingSignals() {
+export default function BuyingSignals({ embedded = false }: { embedded?: boolean }) {
   const [data, setData] = useState<Data | null>(null);
   const [lane, setLane] = useState<"all" | SignalLane>("all");
   const [strengths, setStrengths] = useState<string[]>(["Hot", "Warm"]);
@@ -50,10 +50,10 @@ export default function BuyingSignals() {
 
   return (
     <div className="sig">
-      <section className="hero sig-hero">
+      {!embedded && <section className="hero sig-hero">
         <h1>Buying signals</h1>
         <p>Companies that look ready to buy: open tenders and RFPs, ERP and S2P intent, and SAP ECC owners who will need an S/4HANA partner. Every signal carries its source.</p>
-      </section>
+      </section>}
 
       <div className="sig-lanes" role="group" aria-label="Signal type">
         {([["all", "All signals"], ...LANES.map((l) => [l, LANE_LABEL[l]])] as [string, string][]).map(([k, label]) => (

@@ -95,6 +95,7 @@ typed in) — see "Multi-name discover jobs" under step 2.
     with `source_url`) can go in the same file. If the session has NO Seamless tools, do the free web search only and end the result with " (Seamless was not available in this session)". Add "Seamless credits used: K" to the result text when used.
   Finish with `finish <id> done "<Company> (<Region>): N contacts added, M updated"` or, if nothing public was found, `finish <id> done "<Company> (<Region>): no public contact details found"`. Do not run `add`, `hold` or revenue steps for this job.
 
+- **market** — market intelligence (Market intelligence window): the job has `vendor` (SAP, Coupa, Oracle, Microsoft or `all`) and `region`. The work is the **Market intelligence** procedure below.
 - **signals** — buying signals (Buying signals tab). A job with `slug` = scan that one company; a job without `slug` = a region sweep (`region`, `count` companies). The work is the **Buying signals** procedure below.
 
 ## Buying signals (job `signals`, and the daily step in section 4)
@@ -116,6 +117,19 @@ leave `doc_url` empty and set `needs_login` true. Never log in, register, bypass
 press (last 12 months), and job posts for the three lanes. Typical queries: "<company> ERP implementation", "<company> procurement transformation", "<company> S/4HANA", "<company> SAP ECC", "<company> tender
 ERP", "<company> careers Coupa OR Ariba OR SAP". A company with nothing found is simply listed in `scanned` (so it rotates to the back of the queue).
 Finish a job with `finish <id> done "<Company or Region>: N signals added (X Hot)"` or `"... no signals found"`. Never add signals for a company outside UAE/KSA in phase 1.
+
+## Market intelligence (job `market`, and the daily step in section 4)
+Goal: for each vendor, list its partners in a region and the customers each partner publishes on its own website, with public contact details where they exist. Free: public web search only, no logins.
+`node scripts/engine_client.mjs market_targets 4` writes `data/verification/market_targets.json` (the vendor x region pairs due, oldest first, with the partner names already known). For a job, use its own `vendor` and `region`
+(`all` = the four vendors). Only Active regions. Save with `node scripts/engine_client.mjs add_market data/verification/new_market.json`, one file per vendor and region:
+`{"vendor":"SAP","region":"UAE","partners":[{"name","website","tier","services","hq_city","source_url","label","contacts":[]}],"customers":[{"partner","customer","customer_website","project","source_url","published","contacts":[]}]}`
+- **Partners:** from the vendor's own public partner directory (SAP Partner Finder / PartnerEdge, Coupa partner directory, Oracle PartnerNetwork partner finder, Microsoft partner finder / AppSource) filtered to the region,
+  and the partner's own website. `tier` as the vendor states it (Gold, Platinum, Premier ...). `services` in a few words (implementation, managed services, consulting). `source_url` = the page that lists the partner. Up to 15 partners per run; prefer ones not already known; skip a partner you cannot tie to the region.
+- **Customers:** only customers the partner itself publishes (case studies, customer or reference pages, press releases, project pages), where the customer is in the same region. `project` = what was delivered (for example "SAP S/4HANA migration"). `source_url` = the partner page that names the customer; `published` when dated. A partner that publishes no customers simply has none; do not infer customers from logos you cannot read or from third-party lists.
+  Every customer row names its `partner` exactly as in `partners` (same file).
+- **Contacts (optional, `contacts` on a partner or a customer):** named people with an email, phone or LinkedIn link that is printed on a public page. Same rules as Find contacts: title as published, never guess or pattern-build an email or phone, an email must be a named address on that company's own domain (no info@, sales@, personal domains), LinkedIn only from a public page or search snippet, and each needs `source_url`. Do not open LinkedIn or log in.
+- Labels: `label` FACT when the partner page or directory entry is what you read, LIKELY otherwise.
+Finish a job with `finish <id> done "<Vendor or all> · <Region>: P partners, C customers added"`. Do not add companies to the app from here; the app offers "Add as account" itself.
 
 ## 3. Finish and notify
 `node scripts/engine_client.mjs finish <id> done "<N verified: X Verified, Y Likely, Z Needs check, W Not ICP; M new companies added>"`
@@ -164,3 +178,4 @@ For **each region in `active`** of `icp_rules.json` (default: UAE, find 5, verif
    over quota — the user reviews these.
 5. **Buying signals (UAE and KSA only, after the rest, if time allows)**: for each of UAE and KSA that is in `active`, run the **Buying signals** procedure: one tender sweep, then
    `signal_targets <REGION> 10` and scan those companies; save with `add_signals`. Skip it silently if the session is short on time; never let it delay the revenue work above.
+6. **Market intelligence (after everything above, if time allows)**: `market_targets 4`, then run the **Market intelligence** procedure for those vendor x region pairs; save each with `add_market`. Skip silently if short on time.
