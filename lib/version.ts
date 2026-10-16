@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.10";
+export const APP_VERSION = "4.11";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,11 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.11", date: "2026-10-16", notes: "Aria now understands a revenue range (\"KSA companies with net revenue between 500m and 1b\"), asks the format, how many and how to pick before building any PDF or Excel, and every report carries email, phone and LinkedIn.", changes: [
+      { what: "Aria reads revenue ranges (between X and Y, above X, below X, in millions or billions) as a filter for reports, counts and lists, and no longer mistakes the word revenue in a range for a request to rank by revenue", where: "lib/aria/router.ts (parseRevenue)", why: "Requested — a report on KSA companies with net revenue between so and so" },
+      { what: "For a set of companies Aria always asks, as tap buttons, the region, the format (PDF or Excel when you only said report), how many, and how to pick them, then builds with the filter applied. A PDF on one named company is still built straight away", where: "lib/aria/router.ts, lib/aria/agent.ts", why: "Requested — ask questions before generating a PDF or Excel" },
+      { what: "The PDF stakeholder table now has a LinkedIn column next to email and phone, matching the Excel list", where: "lib/pdfReport.ts", why: "Requested — contact email, phone and LinkedIn by default" },
+    ] },
   { version: "4.10", date: "2026-10-16", notes: "The Excel contact list has email, phone and LinkedIn profile for each person, and includes anyone with at least one of them.", changes: [
       { what: "Added a LinkedIn Profile column (a clickable link) after the phone column, and the list now includes people who have an official email, a phone or a LinkedIn profile, instead of only people with an email", where: "lib/xlsxReport.ts, components/ReportDialog.tsx, lib/aria/agent.ts", why: "Requested — phone and email both, plus LinkedIn, whenever Aria generates an Excel from the existing database" },
     ] },

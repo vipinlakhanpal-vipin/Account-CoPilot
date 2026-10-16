@@ -351,7 +351,7 @@ export async function buildReport(all: AllData, def: unknown, opt: ReportOptions
     if (a.account_notes) w.p(a.account_notes, { size: 8.5, color: MUTED });
 
     w.h2(`Stakeholders (${cs.length})`, 150);
-    if (cs.length) w.table(["Name", "Title", "Tier", "Email", "Phone"], cs.slice(0, 25).map((p) => [s(p.full_name), s(p.title_verbatim), s(p.contact_tier), s(p.email), s(p.phone)]), [0.2, 0.3, 0.08, 0.26, 0.16], 8);
+    if (cs.length) w.table(["Name", "Title", "Tier", "Email", "Phone", "LinkedIn"], cs.slice(0, 25).map((p) => [s(p.full_name), s(p.title_verbatim), s(p.contact_tier), s(p.email), s(p.phone), s(p.linkedin_url).replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")]), [0.15, 0.22, 0.06, 0.2, 0.15, 0.22], 8);
     else w.p("No stakeholder contacts are on file for this company yet. The daily engine finds companies and verifies revenue; it does not collect people. Contacts reach the app from your reference workbook or from Seamless enrichment.", { size: 8.5, color: MUTED });
 
     if (conf.length) { w.h2(`Conflicts retained (${conf.length})`); w.p("Sources disagree on one or more fields for this company. The app keeps both values; open the account in the app to review them.", { size: 8.5, color: MUTED }); }

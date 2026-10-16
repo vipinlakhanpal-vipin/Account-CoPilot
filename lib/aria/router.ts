@@ -25,9 +25,35 @@ function findRegionIn(t: string): string {
   for (const r of REGIONS as { key: string; name: string }[]) if (t.includes(r.name.toLowerCase())) return r.key;
   return "";
 }
+
+// "net revenue between 500m and 1b", "revenue above 250 million", "under $2bn" → min/max in USD millions. Returns the matched text so it
+// can be taken out before the rest of the question is read ("revenue" in a range is not a request to sort by revenue).
+const UNIT: Record<string, number> = { m: 1, mn: 1, million: 1, b: 1000, bn: 1000, billion: 1000 };
+const NUM = String.raw`\$?\s*([\d][\d,]*(?:\.\d+)?)\s*(m|mn|million|b|bn|billion)?\b`;
+function parseRevenue(t: string, f: AccountFilter): string {
+  const val = (n: string, u?: string) => Number(n.replace(/,/g, "")) * (u ? UNIT[u] : 1);
+  const ctx = /\b(revenue|turnover|sales)\b/.test(t);
+  let m = new RegExp(String.raw`(?:(?:net )?(?:revenue|turnover|sales)\s*)?(?:between|from)\s*${NUM}\s*(?:and|to|-)\s*${NUM}`).exec(t);
+  if (m && (ctx || m[2] || m[4])) {
+    const hi = val(m[3], m[4]); let lo = val(m[1], m[2] || (m[4] && Number(m[1].replace(/,/g, "")) < Number(m[3].replace(/,/g, "")) ? m[4] : undefined));
+    if (lo > hi) [lo, f.max_revenue_usd_m] = [hi, lo]; else f.max_revenue_usd_m = hi;
+    f.min_revenue_usd_m = Math.min(lo, hi); if (f.max_revenue_usd_m === undefined) f.max_revenue_usd_m = Math.max(lo, hi);
+    return m[0];
+  }
+  m = new RegExp(String.raw`(?:(?:net )?(?:revenue|turnover|sales)\s*)?(?:above|over|more than|at least|greater than|>=|>)\s*${NUM}`).exec(t);
+  if (m && (ctx || m[2])) { f.min_revenue_usd_m = val(m[1], m[2]); return m[0]; }
+  m = new RegExp(String.raw`(?:(?:net )?(?:revenue|turnover|sales)\s*)?(?:below|under|less than|up to|at most|<=|<)\s*${NUM}`).exec(t);
+  if (m && (ctx || m[2])) { f.max_revenue_usd_m = val(m[1], m[2]); return m[0]; }
+  return "";
+}
+const money = (m: number) => (m >= 1000 && m % 1000 === 0 ? `${m / 1000}b` : m >= 1000 ? `${+(m / 1000).toFixed(2)}b` : `${+m.toFixed(1)}m`);
+const revenuePhrase = (f: AccountFilter) => f.min_revenue_usd_m !== undefined && f.max_revenue_usd_m !== undefined ? `net revenue between ${money(f.min_revenue_usd_m)} and ${money(f.max_revenue_usd_m)}`
+  : f.min_revenue_usd_m !== undefined ? `net revenue above ${money(f.min_revenue_usd_m)}` : f.max_revenue_usd_m !== undefined ? `net revenue below ${money(f.max_revenue_usd_m)}` : "";
+
 function parseFilters(t: string): AccountFilter {
   const f: AccountFilter = {};
   const region = findRegionIn(t); if (region) f.region = region;
+  parseRevenue(t, f);
   const st: string[] = [];
   if (/\bverified\b/.test(t) && !/\bunverified\b/.test(t)) st.push("Verified");
   if (/\blikely\b/.test(t)) st.push("Likely");
@@ -74,39 +100,46 @@ export async function tryFree(question: string, ctx: AriaContext): Promise<FreeR
   const num = /\btop\s*(\d{1,3})\b|\b(\d{1,3})\s*compan/.exec(t);
   const limit = num ? Number(num[1] || num[2]) : 0;
   const wantsAll = /\ball\b|\bevery\b|\bfull\b/.test(t);
-  const rank = /\b(revenue|largest|biggest)\b/.test(t) ? "revenue" : /\b(a to z|alphabet|by name)\b/.test(t) ? "name" : /\b(fit|icp match|best|promising)\b/.test(t) ? "fit" : "";
+  const tNoRange = (() => { const g: AccountFilter = {}; const hit = parseRevenue(t, g); return hit ? t.replace(hit, " ") : t; })();
+  const rank = /\b(revenue|largest|biggest)\b/.test(tNoRange) ? "revenue" : /\b(a to z|alphabet|by name)\b/.test(t) ? "name" : /\b(fit|icp match|best|promising)\b/.test(t) ? "fit" : "";
   const wantsExcel = /\b(excel|xlsx|spreadsheet|contact list|campaign list)\b/.test(t);
-  const wantsPdf = /\b(pdf|report|brief|dossier)\b/.test(t);
+  const wantsPdf = /\b(pdf|brief|dossier)\b/.test(t);
+  const wantsReport = /\breport\b/.test(t); // "report" alone: ask whether they want a PDF or an Excel
+  const anchored = !!(f.region || f.icp_status || f.platform || f.erp_contains || f.min_revenue_usd_m !== undefined || f.max_revenue_usd_m !== undefined);
 
-  // ---- Excel: always ask region, how many, how to pick (as buttons) before building ----
-  if (wantsExcel) {
+  // ---- A named company: its PDF straight away (one company is already a precise request) ----
+  if ((wantsPdf || wantsReport) && !wantsExcel && company.hits.length === 1) {
+    const out = await runTool("create_pdf", { company_names: [s(company.hits[0].company_name)] }, ctx);
+    if (out.action) return { text: `Your PDF report on **${s(company.hits[0].company_name)}** is ready: facts, ICP reasoning, scores, signals, stakeholders (email, phone, LinkedIn) and evidence.`, actions: [out.action], choices: [] };
+  }
+  if ((wantsPdf || wantsReport) && !wantsExcel && company.hits.length > 1)
+    return { text: `Several companies match "${company.term}". Which one?`, actions: [], choices: company.hits.slice(0, 6).map((a) => ({ label: s(a.company_name), value: `PDF report on ${s(a.company_name)}` })) };
+
+  // ---- A set of companies: always ask before building (format, region, how many, how to pick). Each answer is a button that carries the whole request. ----
+  if (wantsExcel || ((wantsPdf || wantsReport) && anchored)) {
+    const kind: "xlsx" | "pdf" | "" = wantsExcel ? "xlsx" : wantsPdf ? "pdf" : "";
+    const label = (k: string) => (k === "xlsx" ? "Excel contact list" : "PDF report");
     const scope = [f.icp_status?.join(" and "), f.platform && `${f.platform} customers`, f.erp_contains && `${f.erp_contains.toUpperCase()} users`].filter(Boolean).join(" ");
-    const stem = (r: string) => `Excel contact list for ${scope ? `${scope} companies` : "companies"} in ${r}`;
-    if (!f.region) return { text: "Which region should the contact list cover?", actions: [], choices: (REGIONS as { key: string }[]).map((r) => r.key).filter((k) => ["UAE", "KSA", "Qatar", "Kuwait", "UK", "USA"].includes(k)).map((k) => ({ label: k, value: stem(k) })) };
-    if (!limit && !wantsAll) return { text: `How many ${f.region} companies should I include?`, actions: [], choices: ["1", "5", "10", "25", "50", "all"].map((n) => ({ label: n === "all" ? "All" : n, value: `${stem(f.region!)}, ${n === "all" ? "all companies" : `top ${n}`}` })) };
-    if (!rank) return { text: "How should I pick them?", actions: [], choices: [["Best ICP fit", "best fit"], ["Largest revenue", "largest revenue"], ["A to Z", "A to Z"]].map(([label, w]) => ({ label, value: `${stem(f.region!)}, ${wantsAll ? "all companies" : `top ${limit}`}, by ${w}` })) };
-    const out = await runTool("create_excel", { ...f, region: f.region, rank, ...(limit && !wantsAll ? { limit } : {}) }, ctx);
-    const r = out.result as { error?: string; companies_in_file?: number; contacts_in_file?: number; companies_matching?: number };
-    if (r.error || !out.action) return { text: r.error || "I could not prepare that file.", actions: [], choices: [] };
-    return { text: `Your Excel is ready: **${r.companies_in_file} companies** and **${r.contacts_in_file} contacts** for ${f.region}, picked by ${rank === "revenue" ? "largest revenue" : rank === "name" ? "name" : "best ICP fit"} (from ${r.companies_matching} matching companies). Each company is listed once with its contacts beneath it.`, actions: [out.action], choices: [] };
-  }
-
-  // ---- PDF: a named company, or a set ----
-  if (wantsPdf) {
-    if (company.hits.length === 1) {
-      const out = await runTool("create_pdf", { company_names: [s(company.hits[0].company_name)] }, ctx);
-      if (out.action) return { text: `Your PDF report on **${s(company.hits[0].company_name)}** is ready: facts, ICP reasoning, scores, signals, stakeholders and evidence.`, actions: [out.action], choices: [] };
+    const rev = revenuePhrase(f);
+    const stem = (k: string, r: string) => `${label(k || "pdf")} for ${scope ? `${scope} companies` : "companies"} in ${r}${rev ? ` with ${rev}` : ""}`;
+    const heard = [f.region, scope, rev].filter(Boolean).join(", ");
+    if (!f.region) return { text: "Which region should it cover?", actions: [], choices: (REGIONS as { key: string }[]).map((r) => r.key).filter((k) => ["UAE", "KSA", "Qatar", "Kuwait", "UK", "USA"].includes(k)).map((k) => ({ label: k, value: stem(kind, k) })) };
+    if (!kind) return { text: `Which format for ${heard}?`, actions: [], choices: [{ label: "📄 PDF report", value: stem("pdf", f.region) }, { label: "📊 Excel contact list", value: stem("xlsx", f.region) }] };
+    if (!limit && !wantsAll) return { text: `How many ${f.region} companies should I include?`, actions: [], choices: ["1", "5", "10", "25", "50", "all"].map((n) => ({ label: n === "all" ? "All" : n, value: `${stem(kind, f.region!)}, ${n === "all" ? "all companies" : `top ${n}`}` })) };
+    if (!rank) return { text: "How should I pick them?", actions: [], choices: [["Best ICP fit", "best fit"], ["Largest revenue", "largest revenue"], ["A to Z", "A to Z"]].map(([l, w]) => ({ label: l, value: `${stem(kind, f.region!)}, ${wantsAll ? "all companies" : `top ${limit}`}, by ${w}` })) };
+    const how = rank === "revenue" ? "largest revenue" : rank === "name" ? "name" : "best ICP fit";
+    if (kind === "xlsx") {
+      const out = await runTool("create_excel", { ...f, region: f.region, rank, ...(limit && !wantsAll ? { limit } : {}) }, ctx);
+      const r = out.result as { error?: string; companies_in_file?: number; contacts_in_file?: number; companies_matching?: number };
+      if (r.error || !out.action) return { text: r.error || "I could not prepare that file.", actions: [], choices: [] };
+      return { text: `Your Excel is ready: **${r.companies_in_file} companies** and **${r.contacts_in_file} contacts** for ${heard}, picked by ${how} (from ${r.companies_matching} matching companies). Each company is listed once with its people beneath it: email, phone and LinkedIn where they are on file.`, actions: [out.action], choices: [] };
     }
-    if (company.hits.length > 1) return { text: `Several companies match "${company.term}". Which one?`, actions: [], choices: company.hits.slice(0, 6).map((a) => ({ label: s(a.company_name), value: `PDF report on ${s(a.company_name)}` })) };
-    if (f.region || f.icp_status || f.platform || f.erp_contains) {
-      const n = limit || 25;
-      const out = await runTool("create_pdf", { ...f, limit: n, rank: rank || "fit" }, ctx);
-      const r = out.result as { error?: string; companies_matching?: number; companies_in_pdf?: number };
-      if (r.error || !out.action) return { text: r.error || "I could not prepare that report.", actions: [], choices: [] };
-      return { text: `Your PDF is ready: **${r.companies_in_pdf} companies** (of ${r.companies_matching} matching), most promising first.`, actions: [out.action], choices: [] };
-    }
-    return null; // "report" with nothing to anchor it: let the AI read it
+    const out = await runTool("create_pdf", { ...f, region: f.region, limit: wantsAll ? 150 : limit, rank }, ctx);
+    const r = out.result as { error?: string; companies_matching?: number; companies_in_pdf?: number };
+    if (r.error || !out.action) return { text: r.error || "I could not prepare that report.", actions: [], choices: [] };
+    return { text: `Your PDF is ready: **${r.companies_in_pdf} companies** (of ${r.companies_matching} matching) for ${heard}, picked by ${how}. Each company has its facts, scores, signals and stakeholders with email, phone and LinkedIn where on file.`, actions: [out.action], choices: [] };
   }
+  if (wantsPdf || wantsReport) return null; // "report" with nothing to anchor it: let the AI read it
 
   // ---- ICP rules ----
   if (/\b(icp rules?|rules? for|icp definition|define icp|criteria)\b/.test(t)) {
