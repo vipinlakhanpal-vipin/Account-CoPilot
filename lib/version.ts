@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.59";
+export const APP_VERSION = "4.60";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.60", date: "2026-10-16", notes: "Partners with a global listing say so, and a branch needs a cited source.", changes: [
+      { what: "A partner whose vendor listing is global, not specific to the region, now carries a note saying so and the label LIKELY instead of FACT. Bain & Company (Coupa lists it as global since 2017; Arab News reports its Dubai office and a new Abu Dhabi one) was corrected, and KPMG, PwC, RSM, Miebach and Wipro were set to LIKELY until their UAE scope is checked. Scans must cite a source for any branch claim", where: "components/MarketIntel.tsx, ENGINE.md, app/api/engine/worker, lib/market.ts", why: "Questioned — what showed Bain & Company is a Coupa partner with a UAE branch" },
+    ] },
   { version: "4.59", date: "2026-10-16", notes: "Partners listed only as covering a region no longer show a made-up base city.", changes: [
       { what: "A partner whose vendor listing only says it covers the region now reads Serves UAE · base not stated, not UAE-Dubai. BRINGVAS (Coupa lists Dubai among the countries it supports) was corrected", where: "components/MarketIntel.tsx", why: "Questioned — what showed BRINGVAS has a UAE branch; it only says it supports Dubai" },
     ] },
