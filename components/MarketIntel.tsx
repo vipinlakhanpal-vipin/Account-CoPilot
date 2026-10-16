@@ -6,17 +6,16 @@ import FindContactsButton from "@/components/FindContactsButton";
 import { ScanGauge, DoneTick } from "@/components/ScanGauge";
 import { expectedSecs } from "@/lib/scanTime";
 import { logActivity } from "@/lib/activityClient";
-import { PARTNERS_TIP, CUSTOMERS_TIP, type MContact, type PCustomer, type Partner, type Vendor } from "@/lib/market";
+import { PARTNERS_TIP, CUSTOMERS_TIP, regionOfCountry, type MContact, type PCustomer, type Partner, type Vendor } from "@/lib/market";
 
 type Cust = PCustomer & { in_app: boolean; people_on_file: number };
 type Job = { mode: string; started_at?: string; phase?: string; seamless?: boolean; vendor?: string; customer?: string; partner?: string; slug?: string; contacts_only?: boolean; region: string; status: string; requested_at: string };
 type Data = { vendors: Vendor[]; custom_vendors: string[]; is_super: boolean; defaults: string[]; regions: string[]; partners: Partner[]; customers: Cust[]; scans: Record<string, string>; jobs: Job[] };
 // One place format for every partner: Region-City, for example UAE-Dubai. A city that is just the country name becomes the capital; no city shows as Unknown until a scan finds it.
-const COUNTRY_REGION: Record<string, string> = { uae: "UAE", "united arab emirates": "UAE", ksa: "KSA", "saudi arabia": "KSA", qatar: "Qatar", kuwait: "Kuwait", oman: "Oman", bahrain: "Bahrain", egypt: "Egypt", morocco: "Morocco", kenya: "Kenya", uk: "UK", "united kingdom": "UK", usa: "USA", "united states": "USA" };
-const regionOfCountry = (c?: string) => (c ? COUNTRY_REGION[c.trim().toLowerCase()] || c.trim() : "");
 const CAPITAL: Record<string, string> = { Kuwait: "Kuwait City", Qatar: "Doha", Bahrain: "Manama", Oman: "Muscat" };
 const place = (region: string, city?: string, hqCountry?: string, branch?: boolean, coverageOnly?: boolean) => {
   if (coverageOnly && !hqCountry && !city) return `Serves ${region} · base not stated`;
+  if (branch && !hqCountry) return `Branch in ${region}`;
   const rc = regionOfCountry(hqCountry);
   if (hqCountry && rc && rc !== region) return `${branch ? `Branch in ${region} · HQ` : `Serves ${region} · based`} ${[(city || "").split(/[,(]/)[0].trim(), hqCountry].filter(Boolean).join(", ")}`; // headquartered elsewhere: say so
   let c = (city || "").split(/[,(]/)[0].trim();

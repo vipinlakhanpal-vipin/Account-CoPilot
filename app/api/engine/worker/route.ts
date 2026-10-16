@@ -7,7 +7,7 @@ import { statusPatch, applyRevenueResult } from "@/lib/icpStatus.mjs";
 import { normalizeDefinition, rulesFor, regionOf, summarizeRules } from "@/lib/icpDefinition.mjs";
 import { EMPTY_STORE, type Signal, type SignalStore } from "@/lib/signals";
 import { nk as marketNk, partnerId } from "@/lib/marketServer";
-import { vendorList, VENDORS_KEY, marketKey, type MarketDoc, type MContact, type Partner, type PCustomer } from "@/lib/market";
+import { presenceOk, vendorList, VENDORS_KEY, marketKey, type MarketDoc, type MContact, type Partner, type PCustomer } from "@/lib/market";
 
 // Limited API for scheduled Claude sessions (no Supabase key needed in the cloud environment).
 // Auth: "Authorization: Bearer <ENGINE_TOKEN>"; only the SHA-256 hash is stored (settings.engine_token). Revoke/regenerate in Settings.
@@ -285,6 +285,7 @@ export async function POST(req: Request) {
       return out;
     };
     for (const p of b.partners) {
+      if (!presenceOk(p, b.region)) { skipped.push({ name: p.name, why: `not listed: it is not based in ${b.region} and no office there is confirmed (set branch true with branch_source, or give its base city in ${b.region}); coverage or a global listing alone does not count` }); continue; }
       const id = partnerId(b.vendor, b.region, p.name);
       const row: Partner = { id, vendor: b.vendor, region: b.region, name: p.name, website: p.website, tier: p.tier, services: p.services, hq_city: p.hq_city, hq_country: p.hq_country, branch: p.branch, scope_note: p.scope_note, branch_source: p.branch_source, source_url: p.source_url, label: p.label, contacts: vet(p.contacts, p.website, p.name), found_at: now };
       const old = doc.partners.find((x) => x.id === id);

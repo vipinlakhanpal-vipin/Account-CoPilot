@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.60";
+export const APP_VERSION = "4.61";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.61", date: "2026-10-16", notes: "Partners are listed only if they are based in the region or have a confirmed office there.", changes: [
+      { what: "The list now holds only partners based in the region or branches with an office there confirmed by a cited page. Coverage alone (the vendor says it serves the region, or lists it as global) is not enough, and the app rejects a scan result without that proof. On the Coupa UAE list this kept Deloitte, Bahwan CyberTek, Bain & Company, Wipro, Miebach Consulting, PwC and Accely, and removed KPMG, RSM and BRINGVAS until their UAE office is confirmed", where: "lib/market.ts (presenceOk), app/api/engine/worker, ENGINE.md, components/MarketIntel.tsx", why: "Requested — list only partners based in the UAE or with a UAE office, like Bahwan" },
+    ] },
   { version: "4.60", date: "2026-10-16", notes: "Partners with a global listing say so, and a branch needs a cited source.", changes: [
       { what: "A partner whose vendor listing is global, not specific to the region, now carries a note saying so and the label LIKELY instead of FACT. Bain & Company (Coupa lists it as global since 2017; Arab News reports its Dubai office and a new Abu Dhabi one) was corrected, and KPMG, PwC, RSM, Miebach and Wipro were set to LIKELY until their UAE scope is checked. Scans must cite a source for any branch claim", where: "components/MarketIntel.tsx, ENGINE.md, app/api/engine/worker, lib/market.ts", why: "Questioned — what showed Bain & Company is a Coupa partner with a UAE branch" },
     ] },

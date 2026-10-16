@@ -23,3 +23,13 @@ export const marketKey = (vendor: string, region: string) => `market_intel:${ven
 /** Help text for the two scan buttons in the Market intelligence window header. */
 export const PARTNERS_TIP = "Finds the vendor's partners in the ticked regions, from its partner directory and the partners' websites. It does not look for customers. Tick Include all vendors on the left to do every vendor. Free; each scan takes a few minutes.";
 export const CUSTOMERS_TIP = "For partners already on the list, reads their published customers: customer pages, case studies, go-lives, press and LinkedIn snippets. It works in batches of 8 partners per scan, skips partners done in the last 45 days, and you can click again for the next batch. Run Scan Partners first.";
+
+const COUNTRY_REGION: Record<string, string> = { uae: "UAE", "united arab emirates": "UAE", ksa: "KSA", "saudi arabia": "KSA", qatar: "Qatar", kuwait: "Kuwait", oman: "Oman", bahrain: "Bahrain", egypt: "Egypt", morocco: "Morocco", kenya: "Kenya", uk: "UK", "united kingdom": "UK", usa: "USA", "united states": "USA" };
+/** The app's region for a country name; an unknown country (India, Germany ...) comes back as typed, so it never matches one of our regions. */
+export const regionOfCountry = (c?: string) => (c ? COUNTRY_REGION[c.trim().toLowerCase()] || c.trim() : "");
+/** The listing rule: a partner belongs under a region only if it is based there, or is a branch with an office there confirmed by a cited page. Coverage alone ("serves the UAE", a global listing) does not count. */
+export function presenceOk(p: { hq_city?: string; hq_country?: string; branch?: boolean; branch_source?: string }, region: string): boolean {
+  if (p.hq_country && regionOfCountry(p.hq_country) === region) return true;
+  if (!p.hq_country && p.hq_city) return true; // a city in the region, no other country named
+  return !!(p.branch && p.branch_source);
+}
