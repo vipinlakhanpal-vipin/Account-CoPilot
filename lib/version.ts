@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.78";
+export const APP_VERSION = "4.79";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.79", date: "2026-10-16", notes: "Aria asks which ICP status to include.", changes: [
+      { what: "Aria now asks which ICP status to include (Verified only, Verified and Likely, Everything except Not ICP, Any status) before building a PDF or Excel, and before listing prospects (companies not on Coupa or SAP Ariba), unless your request already named a status or said any. It is asked once; the earlier questions (region, format, how many, how to pick) are unchanged", where: "lib/aria/router.ts", why: "Questioned — the ICP and Likely question was not asked for the prospect list" },
+    ] },
   { version: "4.78", date: "2026-10-16", notes: "Aria understands prospects for Coupa.", changes: [
       { what: "Asking for potential prospects, target accounts or companies where Coupa can be positioned now means companies that are not already on Coupa or SAP Ariba, within the region, revenue range and status you gave. The word Coupa in that phrase is the vendor being pitched, not a platform to include. The exclusion also carries into the PDF and Excel questions that follow", where: "lib/aria/router.ts", why: "Requested — 20 potential prospects in a revenue range where Coupa can be positioned" },
     ] },
