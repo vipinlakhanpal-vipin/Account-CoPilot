@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.91";
+export const APP_VERSION = "4.92";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.92", date: "2026-10-17", notes: "Log Activity: one compact line per day, click to expand.", changes: [
+      { what: "Setup → Team → Log Activity now lists one line per day (people, places opened, actions, total time). Click a day to see each person's places, actions and time spent, in one compact table", where: "components/ActivityLog.tsx", why: "Reported — the day-by-day list kept growing" },
+    ] },
   { version: "4.91", date: "2026-10-17", notes: "Excel and PDF still ask before building; History offers to create a file again; tile timers fixed.", changes: [
       { what: "The Excel and PDF buttons under an Aria list keep the list's filters (status, platform, revenue range, exclusions) but no longer carry the size and order, so they ask \"how many\" and \"how to pick\" again, as before", where: "lib/aria/router.ts (nextSteps)", why: "v4.90 skipped the questions and built the file straight away" },
       { what: "A file answer opened from History shows \"Create it again\" (it asks first), because download buttons are not kept in History", where: "packages/aria/AriaChat.tsx", why: "Reported — the Excel button in History did nothing" },

@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { KIND_LABEL, fmtDuration } from "@/lib/activity";
 
 type Sum = { email: string; name: string; last_sign_in: string | null; last_seen: string | null; visits: number; actions: number; time_secs: number; top_pages: string[] };
@@ -15,7 +15,9 @@ export default function ActivityLog() {
   const [days, setDays] = useState(7);
   const [user, setUser] = useState("");
   const [data, setData] = useState<{ ready: boolean; summary: Sum[]; feed: Row[]; totals: Tot[] } | null>(null);
-  const [showDays, setShowDays] = useState(3);
+  const [showDays, setShowDays] = useState(14);
+  const [open, setOpen] = useState<Set<string>>(new Set());
+  const toggle = (d: string) => setOpen((o) => { const n = new Set(o); if (n.has(d)) n.delete(d); else n.add(d); return n; });
   const load = useCallback(() => fetch(`/api/activity?days=${days}${user ? `&user=${encodeURIComponent(user)}` : ""}`, { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then(setData).catch(() => {}), [days, user]);
   useEffect(() => { load(); const t = setInterval(load, 30000); return () => clearInterval(t); }, [load]);
 
@@ -37,8 +39,8 @@ export default function ActivityLog() {
       <h2>Log Activity</h2>
       <p className="note">Who opened the app, which tab or page they used, how long they stayed, and what they did. Super Admins only. Times are Dubai time.</p>
       <div className="act-tools">
-        <label>Period <select value={days} onChange={(e) => { setDays(Number(e.target.value)); setShowDays(3); }}>{[[1, "Today"], [7, "Last 7 days"], [30, "Last 30 days"], [90, "Last 90 days"]].map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
-        <label>Person <select value={user} onChange={(e) => { setUser(e.target.value); setShowDays(3); }}><option value="">Everyone</option>{(data?.summary || []).map((s) => <option key={s.email} value={s.email}>{s.name || s.email}</option>)}</select></label>
+        <label>Period <select value={days} onChange={(e) => { setDays(Number(e.target.value)); setShowDays(14); }}>{[[1, "Today"], [7, "Last 7 days"], [30, "Last 30 days"], [90, "Last 90 days"]].map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
+        <label>Person <select value={user} onChange={(e) => { setUser(e.target.value); setShowDays(14); }}><option value="">Everyone</option>{(data?.summary || []).map((s) => <option key={s.email} value={s.email}>{s.name || s.email}</option>)}</select></label>
       </div>
       {data && !data.ready && <p className="note">Activity tracking is not set up in the database yet.</p>}
       {data?.ready && (<>
@@ -47,27 +49,40 @@ export default function ActivityLog() {
         </tbody></table></div>
 
         <h3 style={{ margin: "18px 0 2px" }}>Day by day</h3>
-        <p className="note" style={{ margin: "0 0 8px" }}>Each line is one place they opened, with how long they stayed there, or one thing they did. Each day ends with the total time they spent in the app.</p>
+        <p className="note" style={{ margin: "0 0 8px" }}>One line per day. Click a day to see who was in the app, where they went, what they did and how long they stayed.</p>
         {blocks.length === 0 && <p className="note">Nothing recorded in this period yet.</p>}
-        {blocks.slice(0, showDays).map(([day, people]) => (
-          <div key={day} className="act-dayblock">
-            <div className="act-day">{dayName(day)}</div>
-            {[...people.entries()].map(([email, rows]) => (
-              <div key={email} className="tablewrap"><table className="act-feed">
-                <caption>{who(sums.get(email), email)}</caption>
-                <thead><tr><th>Time</th><th>Opened or did</th><th>Detail</th><th>Time spent there</th></tr></thead>
-                <tbody>
-                  {rows.map((r) => (
-                    <tr key={r.id}>
-                      <td className="mono">{clock(r.at)}</td>
-                      <td>{r.kind === "page" ? <>Opened <b>{r.page}</b></> : r.kind === "visit" ? "Opened the app" : KIND_LABEL[r.kind] || r.kind}</td>
-                      <td className="wrap">{r.detail}</td>
-                      <td>{r.kind === "page" ? fmtDuration(r.secs) : ""}</td>
-                    </tr>))}
-                  <tr className="act-total"><td colSpan={3}>Total time in the app on this day</td><td>{fmtDuration(total(day, email))}</td></tr>
-                </tbody></table></div>))}
-          </div>))}
-        {blocks.length > showDays && <p><button type="button" className="btn" onClick={() => setShowDays((n) => n + 3)}>Show earlier days</button></p>}
+        {blocks.length > 0 && (
+          <div className="tablewrap"><table className="act-days">
+            <thead><tr><th>Day</th><th>People</th><th>Places opened</th><th>Actions</th><th>Total time in the app</th></tr></thead>
+            <tbody>
+              {blocks.slice(0, showDays).map(([day, people]) => {
+                const isOpen = open.has(day);
+                const all = [...people.values()].flat();
+                const dayTotal = [...people.keys()].reduce((n, e) => n + total(day, e), 0);
+                return (
+                  <Fragment key={day}>
+                    <tr className={`act-daybar${isOpen ? " open" : ""}`} onClick={() => toggle(day)}>
+                      <td><button type="button" className="act-tog" aria-expanded={isOpen} onClick={(e) => { e.stopPropagation(); toggle(day); }}>{isOpen ? "▾" : "▸"} {dayName(day)}</button></td>
+                      <td>{people.size === 1 ? who(sums.get([...people.keys()][0]), [...people.keys()][0]) : `${people.size} people`}</td>
+                      <td>{all.filter((r) => r.kind === "page").length}</td>
+                      <td>{all.filter((r) => r.kind !== "page" && r.kind !== "visit").length}</td>
+                      <td>{fmtDuration(dayTotal)}</td>
+                    </tr>
+                    {isOpen && [...people.entries()].map(([email, rows]) => (
+                      <Fragment key={email}>
+                        <tr className="act-person"><td colSpan={4}>{who(sums.get(email), email)}</td><td>{fmtDuration(total(day, email))}</td></tr>
+                        {rows.map((r) => (
+                          <tr key={r.id} className="act-line">
+                            <td className="mono">{clock(r.at)}</td>
+                            <td colSpan={2}>{r.kind === "page" ? <>Opened <b>{r.page}</b></> : r.kind === "visit" ? "Opened the app" : KIND_LABEL[r.kind] || r.kind}{r.detail ? <span className="muted"> · {r.detail}</span> : null}</td>
+                            <td></td>
+                            <td>{r.kind === "page" ? fmtDuration(r.secs) : ""}</td>
+                          </tr>))}
+                      </Fragment>))}
+                  </Fragment>);
+              })}
+            </tbody></table></div>)}
+        {blocks.length > showDays && <p><button type="button" className="btn" onClick={() => setShowDays((n) => n + 14)}>Show earlier days</button></p>}
       </>)}
     </section>
   );

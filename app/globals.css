@@ -1833,3 +1833,14 @@ table.ft td.num{width:1%;text-align:right}
 .sig-lane .gauge.tile{display:block;flex:1 1 auto;min-width:96px}
 .sig-lane .gauge.tile .gauge-pilltext{white-space:nowrap}
 .tile-top{flex-wrap:nowrap}
+
+/* v4.92: Log Activity, one line per day, expand for detail */
+.act-days{width:100%}
+.act-days th,.act-days td{padding:5px 10px;font-size:var(--tbl-font)}
+.act-daybar{cursor:pointer;background:var(--surface-2)}
+.act-daybar:hover td{background:rgba(var(--ink),.06)}
+.act-daybar.open td{border-bottom:1px solid var(--line-2)}
+.act-tog{all:unset;cursor:pointer;font-weight:700;color:var(--text-strong)}
+.act-tog:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.act-person td{font-weight:700;font-size:12px;color:var(--teal);padding-top:7px;border-top:1px solid var(--line)}
+.act-line td{padding-top:3px;padding-bottom:3px}
