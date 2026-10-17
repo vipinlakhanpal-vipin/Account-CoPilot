@@ -1827,3 +1827,9 @@ table.ft td.num{width:1%;text-align:right}
 .tablewrap table td.is-cut::after{content:"i";position:absolute;right:6px;top:50%;transform:translateY(-50%);width:15px;height:15px;border-radius:50%;border:1.3px solid var(--muted);color:var(--muted);font:italic 700 10px/12px Georgia,serif;text-align:center;background:var(--surface)}
 .tablewrap table td.is-cut:hover::after{background:#0F6E56;border-color:#0F6E56;color:#fff}
 .tablewrap table.prose td,.tablewrap table.prose th{white-space:normal}
+
+/* v4.91: the tile gauge pill must be a real block (relative + inline lost its size, so the timer text floated over the count) */
+.sig-lane .gauge.tile .gauge-pill{display:block;flex:none;position:relative;overflow:hidden}
+.sig-lane .gauge.tile{display:block;flex:1 1 auto;min-width:96px}
+.sig-lane .gauge.tile .gauge-pilltext{white-space:nowrap}
+.tile-top{flex-wrap:nowrap}

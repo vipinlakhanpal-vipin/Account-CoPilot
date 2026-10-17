@@ -4,8 +4,8 @@ import { createPortal } from "react-dom";
 import type { AriaAction, AriaChoice } from "./types";
 
 type Action = AriaAction;
-type Conv = { id: string; at: number; title: string; msgs: { role: "user" | "assistant"; content: string; display?: string; mode?: string; note?: string; ms?: number }[] };
-type Msg = { role: "user" | "assistant"; content: string; display?: string; actions?: Action[]; choices?: AriaChoice[]; mode?: string; note?: string; ms?: number };
+type Conv = { id: string; at: number; title: string; msgs: { role: "user" | "assistant"; content: string; display?: string; mode?: string; note?: string; ms?: number; redo?: string }[] };
+type Msg = { role: "user" | "assistant"; content: string; display?: string; actions?: Action[]; choices?: AriaChoice[]; mode?: string; note?: string; ms?: number; redo?: string };
 const GIVE_UP_MS = 90_000;
 
 const DEFAULT_EXAMPLES: [string, string][] = [
@@ -180,13 +180,13 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
     setHistory(list);
     try { localStorage.setItem(histKey, JSON.stringify(list)); } catch { /* optional: private mode or full */ }
   }, [histKey]);
-  // Every finished exchange is kept (without download buttons, which can't be reused later). Older than 90 days or beyond 100 chats is dropped.
+  // Every finished exchange is kept (without download buttons, which can't be reused later; a file answer keeps the request that built it so it can be created again). Older than 90 days or beyond 100 chats is dropped.
   useEffect(() => {
     if (busy || msgs.length === 0 || msgs === loaded.current || !msgs.some((m) => m.role === "user")) return;
     if (!convId.current) convId.current = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
     const first = msgs.find((m) => m.role === "user")!;
     const conv: Conv = { id: convId.current, at: Date.now(), title: (first.display || first.content).slice(0, 120),
-      msgs: msgs.map(({ role, content, display, mode, note, ms }) => ({ role, content, display, mode, note, ms })) };
+      msgs: msgs.map(({ role, content, display, mode, note, ms, actions, redo }, k) => ({ role, content, display, mode, note, ms, redo: redo || (actions && actions.length && k > 0 && msgs[k - 1].role === "user" ? msgs[k - 1].content : undefined) })) };
     const keep = history.filter((h) => h.id !== conv.id && Date.now() - h.at < 90 * 864e5).slice(0, 99);
     saveHistory([conv, ...keep]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -333,6 +333,10 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
                       <div className="aria-actions">{m.actions.map((a, j) => (
                         <button type="button" key={j} className="btn btn-dl big no-ic" disabled={filing === `${i}-${j}`} onClick={() => file(a, `${i}-${j}`)}>
                           {filing === `${i}-${j}` ? "Building…" : `⬇ ${a.label}`}</button>))}</div>
+                    )}
+                    {m.redo && !(m.actions && m.actions.length) && (
+                      <div className="aria-redo"><span>This file was built earlier, and the download button is not kept in History.</span>
+                        <button type="button" disabled={busy} onClick={() => { if (window.confirm("Create this file again with today's data?")) send(m.redo!, "Create this file again"); }}>↻ Create it again</button></div>
                     )}
                     {m.role === "assistant" && !busy && <button type="button" className="aria-clear" title="Remove this question and its answer from the screen" onClick={() => setMsgs((all) => all.filter((_, k) => k !== i && !(k === i - 1 && all[k].role === "user")))}>↩ Clear this answer</button>}
                     {m.note && <p className={`aria-note ${m.mode === "ai" ? "ai" : "free"}`}>{m.note}{m.ms !== undefined ? ` · ${(m.ms / 1000).toFixed(1)}s` : ""}</p>}

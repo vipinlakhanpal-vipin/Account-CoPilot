@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.90";
+export const APP_VERSION = "4.91";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,11 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.91", date: "2026-10-17", notes: "Excel and PDF still ask before building; History offers to create a file again; tile timers fixed.", changes: [
+      { what: "The Excel and PDF buttons under an Aria list keep the list's filters (status, platform, revenue range, exclusions) but no longer carry the size and order, so they ask \"how many\" and \"how to pick\" again, as before", where: "lib/aria/router.ts (nextSteps)", why: "v4.90 skipped the questions and built the file straight away" },
+      { what: "A file answer opened from History shows \"Create it again\" (it asks first), because download buttons are not kept in History", where: "packages/aria/AriaChat.tsx", why: "Reported — the Excel button in History did nothing" },
+      { what: "The scan timer in the vendor tiles is a proper green pill next to the count again; it no longer floats over the number", where: "app/globals.css", why: "Reported — the waiting timer overlapped the count" },
+    ] },
   { version: "4.90", date: "2026-10-16", notes: "The Excel and PDF buttons under an Aria list keep the list's filters.", changes: [
       { what: "The Excel contact list and PDF report buttons under a list now carry everything the list was filtered by (status, platform, ERP, revenue range, exclusions such as Coupa and SAP Ariba), its size (top N) and its order (largest revenue). Before, they kept only the status and the region, so the file held a wider set of companies than the ones shown. A file still lists only companies that have an email, phone or LinkedIn on file", where: "lib/aria/router.ts (nextSteps)", why: "Reported — the companies in the downloaded Excel differed from the ones Aria displayed" },
     ] },
