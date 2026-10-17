@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.92";
+export const APP_VERSION = "4.93";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.93", date: "2026-10-17", notes: "The vendor tile that is being scanned flashes in its own colour.", changes: [
+      { what: "In Market intelligence, the tile of the vendor being scanned (vendor, partner, customer or contacts scan) flashes in its own colour and shows a \"n scanning\" badge", where: "components/MarketIntel.tsx, app/globals.css", why: "Reported — with 3 scans running, no tile showed which vendor they belonged to" },
+    ] },
   { version: "4.92", date: "2026-10-17", notes: "Log Activity: one compact line per day, click to expand.", changes: [
       { what: "Setup → Team → Log Activity now lists one line per day (people, places opened, actions, total time). Click a day to see each person's places, actions and time spent, in one compact table", where: "components/ActivityLog.tsx", why: "Reported — the day-by-day list kept growing" },
     ] },

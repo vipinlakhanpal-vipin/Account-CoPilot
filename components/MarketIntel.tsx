@@ -81,6 +81,11 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
   const pending = allPending.filter((j) => j.mode === "market" && !j.customer && !j.partner && !j.contacts_only); // vendor scans: shown on the vendor tile
   const scanningRegions = (v: string) => [...new Set(pending.filter((j) => j.vendor === v || j.vendor === "all" || !j.vendor).map((j) => j.region))];
   const jobOfVendor = (v: string) => { const js = pending.filter((j) => j.vendor === v || j.vendor === "all" || !j.vendor); return js.find((j) => j.status === "running") || js[0]; };
+  // Every running or waiting job (vendor, partner, customer, contacts) belongs to a vendor, so its tile can flash
+  const vendorOfJob = (j: Job): string => j.vendor || (j.partner ? (data?.partners || []).find((p) => p.name === j.partner && p.region === j.region)?.vendor : undefined)
+    || (j.customer ? (data?.customers || []).find((c) => c.customer === j.customer && c.region === j.region)?.vendor : undefined)
+    || (j.slug ? (data?.customers || []).find((c) => c.slug === j.slug)?.vendor : undefined) || "";
+  const jobsOfTile = (v: string) => allPending.filter((j) => { const jv = vendorOfJob(j); return jv === v || jv === "all" || jv === ""; });
   const wasScanning = useRef<Record<string, boolean>>({});
   useEffect(() => {
     const now: Record<string, boolean> = {};
@@ -258,9 +263,9 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
           const custom = !!data?.custom_vendors?.includes(v);
           return (
             <span key={v} className="vendor-tile">
-              <button type="button" className={`sig-lane ${["c1", "c2", "c6", "c7", "c3", "c4", "c5", "c8"][i % 8]}`} aria-pressed={vendor === v} onClick={() => { setVendor(v); setOpenP(null); }}><span className="tile-top"><b>{countP(v)}</b>{(() => { const j = jobOfVendor(v); const n = pending.filter((x) => x.vendor === v || x.vendor === "all" || !x.vendor).length; const r = scanningRegions(v);
+              <button type="button" className={`sig-lane ${["c1", "c2", "c6", "c7", "c3", "c4", "c5", "c8"][i % 8]}${jobsOfTile(v).length ? " scanning" : ""}`} aria-pressed={vendor === v} onClick={() => { setVendor(v); setOpenP(null); }}><span className="tile-top"><b>{countP(v)}</b>{(() => { const j = jobOfVendor(v); const n = pending.filter((x) => x.vendor === v || x.vendor === "all" || !x.vendor).length; const r = scanningRegions(v);
                   return j ? <ScanGauge tile label={`Scanning ${r.join(", ")}`} requestedAt={j.requested_at} startedAt={j.started_at} expectedSecs={expectedSecs(j)} extra={n > 1 ? ` · ${n - 1} more waiting` : ""} />
-                    : flash[`v:${v}`] ? <DoneTick tile text="Done" /> : null; })()}</span>{(() => { const j = jobOfVendor(v); return <span className="tile-lbl"><span>{v} partners</span>{j && <em>{j.started_at ? `usually about ${Math.max(1, Math.round(expectedSecs(j) / 60))} min` : `waiting for a session, then about ${Math.max(1, Math.round(expectedSecs(j) / 60))} min`}</em>}</span>; })()}</button>
+                    : jobsOfTile(v).length ? <span className="tile-scan"><i className="fcj-dot" aria-hidden="true" />{jobsOfTile(v).length} scanning</span> : flash[`v:${v}`] ? <DoneTick tile text="Done" /> : null; })()}</span>{(() => { const j = jobOfVendor(v); return <span className="tile-lbl"><span>{v} partners</span>{j && <em>{j.started_at ? `usually about ${Math.max(1, Math.round(expectedSecs(j) / 60))} min` : `waiting for a session, then about ${Math.max(1, Math.round(expectedSecs(j) / 60))} min`}</em>}</span>; })()}</button>
               {custom && data?.is_super && <button type="button" className="vendor-x" aria-label={`Remove ${v}`} title={`Remove ${v} from the list`} onClick={() => removeVendor(v)}>×</button>}
             </span>);
         })}
