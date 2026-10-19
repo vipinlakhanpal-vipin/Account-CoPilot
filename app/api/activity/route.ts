@@ -6,7 +6,7 @@ import { ACTIVITY_KINDS, USAGE_AREAS, areaOf, pageLabel } from "@/lib/activity";
 
 // POST: any signed-in user records an action or a heartbeat. GET (Super Admin only): ?view=active = who is online now; otherwise the activity feed and a per-person summary.
 export const dynamic = "force-dynamic";
-const ONLINE_SECONDS = 120;
+const ONLINE_SECONDS = 300; // 5 minutes: a short switch to another tab or app does not drop someone from "online now"
 
 export async function POST(req: Request) {
   const user = await requireUser();

@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 
 type Who = { email: string; name: string; page: string; seconds: number };
-// Super Admins only: a green dot and a count of people active in the last two minutes, with who and where.
+// Super Admins only: a green dot and a count of people active in the last five minutes, with who and where.
 export default function OnlineNow() {
   const [active, setActive] = useState<Who[] | null>(null);
   const [open, setOpen] = useState(false);
@@ -31,7 +31,7 @@ export default function OnlineNow() {
           <b>Online now</b>
           {active.length === 0 ? <p className="note">No one is active right now.</p> : active.map((a) => (
             <div key={a.email} className="online-row"><i className="online-dot" aria-hidden="true" /><span><b>{a.name || a.email.split("@")[0]}</b><small>{a.email}</small></span><em>{a.page}<small>{ago(a.seconds)}</small></em></div>))}
-          <p className="note">Active in the last 2 minutes. Only Super Admins see this.</p>
+          <p className="note">Active in the last 5 minutes (the app open and in view). Only Super Admins see this.</p>
         </div>)}
     </span>
   );

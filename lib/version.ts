@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.96";
+export const APP_VERSION = "4.97";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.97", date: "2026-10-19", notes: "Online now keeps someone for 5 minutes; the engine knows the country codes of the newer regions.", changes: [
+      { what: "\"Online now\" counts a person as online for 5 minutes after the last signal (was 2), so a short switch to another tab does not drop them", where: "app/api/activity/route.ts, components/OnlineNow.tsx", why: "Reported — a colleague appeared online on and off" },
+      { what: "The engine instructions list the web-address endings for South Africa, Kenya, Morocco, UK and Germany, so a company found for those regions is filed under the right country", where: "ENGINE.md", why: "A newly activated region works without extra set-up" },
+    ] },
   { version: "4.96", date: "2026-10-19", notes: "Find New Company: a free search without names (5, 10, 30 or Max) comes first.", changes: [
       { what: "Find New Company now opens with a free \"Let the engine find companies\" card: pick 5, 10, 30 or Max and click one button. No names are needed. Adding by name sits below it, with a hint saying why it is greyed out until a name is typed", where: "components/FindCompany.tsx", why: "Reported — Add free was inactive without a name, and the 5/10/30 option was hidden at the bottom" },
     ] },
