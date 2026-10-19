@@ -3,7 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { getAccess, canSeeRegion } from "@/lib/access";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { normalizeDefinition } from "@/lib/icpDefinition.mjs";
-import { partnerId } from "@/lib/marketServer";
+import { partnerId, nk } from "@/lib/marketServer";
 import { vendorList, VENDORS_KEY, marketKey, cleanVendor, validVendor, DEFAULT_VENDORS, type MarketDoc } from "@/lib/market";
 
 // Market intelligence: partners of SAP, Coupa, Oracle and Microsoft per region and the customers they publish. Read-only, scoped to the user's regions.
@@ -20,9 +20,18 @@ export async function GET() {
   const def = normalizeDefinition((await db.from("settings").select("value").eq("key", "icp_definition").maybeSingle()).data?.value);
   const regions = Object.entries(def.regions).filter(([k, r]) => canSeeRegion(access, k) && (r as { status: string }).status === "active").map(([k]) => k);
   const jobs = ((await db.from("settings").select("value").eq("key", "engine_jobs").maybeSingle()).data?.value as { jobs: { mode: string; vendor?: string; customer?: string; slug?: string; contacts_only?: boolean; region: string; status: string; requested_at: string }[] } | null)?.jobs || [];
-  const { data: co } = await db.from("companies").select("slug");
+  const { data: co } = await db.from("companies").select('slug,company_name,merged:profile->"Merged companies"');
   const inApp = new Set((co || []).map((c) => c.slug as string));
+  // A customer is "in the app" by its saved slug, or by name: an account's own name, or a name it is known under (profile "Merged companies", for example Atlantis The Palm under Kerzner).
+  const aliasList: { key: string; slug: string; exact: boolean }[] = [];
+  for (const c of co || []) {
+    aliasList.push({ key: nk(String(c.company_name || "")), slug: c.slug as string, exact: true });
+    const m = (c as { merged?: unknown }).merged;
+    for (const x of Array.isArray(m) ? m : []) { const n = nk(String((x as { name?: string })?.name || "")); if (n.length >= 6) aliasList.push({ key: n, slug: c.slug as string, exact: false }); }
+  }
+  const slugByName = (name: string) => { const k = nk(name); if (!k) return ""; return aliasList.find((a) => a.exact && a.key === k)?.slug || aliasList.find((a) => !a.exact && (k === a.key || k.includes(a.key)))?.slug || ""; };
   // People already on file in the app for customers that are in the database (shown as a link to the account instead of "none published").
+  for (const d of docs) for (const c of d.customers || []) if (!c.slug || !inApp.has(c.slug)) { const s = slugByName(c.customer); if (s) c.slug = s; }
   const slugs = [...new Set(docs.flatMap((d) => (d.customers || []).map((c) => c.slug)).filter((x) => x && inApp.has(x)))];
   const people: Record<string, number> = {};
   if (slugs.length) {

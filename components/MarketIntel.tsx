@@ -6,7 +6,8 @@ import FindContactsButton from "@/components/FindContactsButton";
 import { ScanGauge, DoneTick } from "@/components/ScanGauge";
 import { expectedSecs } from "@/lib/scanTime";
 import { logActivity } from "@/lib/activityClient";
-import { PARTNERS_TIP, CUSTOMERS_TIP, regionOfCountry, type MContact, type PCustomer, type Partner, type Vendor } from "@/lib/market";
+import LongText from "@/components/LongText";
+import { PARTNERS_TIP, CUSTOMERS_TIP, regionOfCountry, projectShort, type MContact, type PCustomer, type Partner, type Vendor } from "@/lib/market";
 
 type Cust = PCustomer & { in_app: boolean; people_on_file: number };
 type Job = { mode: string; started_at?: string; phase?: string; seamless?: boolean; vendor?: string; customer?: string; partner?: string; slug?: string; contacts_only?: boolean; region: string; status: string; requested_at: string };
@@ -197,7 +198,7 @@ export default function MarketIntel({ embedded = false }: { embedded?: boolean }
         return (
           <tr key={c.id}>
             <td>{c.customer_website ? <a className="mkt-site" href={webUrl(c.customer_website)} target="_blank" rel="noopener noreferrer" title={`Open ${c.customer_website.replace(/^https?:\/\//, "")} in a new tab`}><b>{c.customer}</b><i aria-hidden="true">↗</i></a> : <b>{c.customer}</b>}<div className="muted">{c.region}</div></td>
-            <td><div className="clamp2" title={c.project}>{c.project || <span className="muted">—</span>}</div></td>
+            <td>{c.project ? <LongText text={c.project} lead={projectShort(c.project, c.vendor)} /> : <span className="muted">—</span>}</td>
             <td>{c.in_app ? <Link className="mkt-in" href={`/?open=${encodeURIComponent(c.slug)}&country=${encodeURIComponent(c.region)}`}>In database</Link>
               : <><span className="mkt-add">Not in database</span><div><Link className="mkt-addlink" href={addLink(c)}>+ Add</Link></div></>}</td>
             <td>{c.contacts.length > 0 ? c.contacts.map((k, i) => <Who key={i} c={k} />)

@@ -12,7 +12,7 @@ export function leadOf(text: string, max = 44): string {
   return lead.length > max ? lead.slice(0, max - 1).trimEnd() + "…" : lead + (lead.length < t.length ? "…" : "");
 }
 
-export default function LongText({ text }: { text: string }) {
+export default function LongText({ text, lead }: { text: string; lead?: string }) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const btn = useRef<HTMLButtonElement>(null);
@@ -31,7 +31,7 @@ export default function LongText({ text }: { text: string }) {
   };
   return (
     <span className="longtext">
-      <span className="longtext-lead">{leadOf(text)}</span>
+      <span className="longtext-lead">{lead || leadOf(text)}</span>
       <button type="button" ref={btn} className="longtext-i" aria-label="Show the full text" aria-expanded={open} onClick={toggle} title="Show the full text">i</button>
       {open && pos && createPortal(<div className="longtext-pop" role="dialog" style={{ left: pos.x, top: Math.min(pos.y, window.innerHeight - 160) }}>{text}</div>, document.body)}
     </span>

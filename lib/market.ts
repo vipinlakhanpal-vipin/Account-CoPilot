@@ -31,3 +31,28 @@ export const regionOfCountry = (c?: string) => (c ? COUNTRY_REGION[c.trim().toLo
 export function presenceOk(p: { office_address?: string; office_source?: string }, _region?: string): boolean {
   return !!(p.office_address && p.office_address.trim().length >= 8 && /^https?:\/\//.test(p.office_source || ""));
 }
+
+/** A project description cut to a short label for tables ("Coupa S2P", "SAP S/4HANA"); the full text stays one click away behind the i button. */
+export function projectShort(project: string, vendor = ""): string {
+  const t = String(project || "").replace(/\s+/g, " ").trim();
+  if (!t) return "";
+  const v = vendor === "all" ? "" : vendor;
+  const p2p = /\bp2p\b|procure[- ]to[- ]pay|invoic|accounts payable|\bap automation\b/i.test(t);
+  const s2c = /sourcing|\bs2c\b|\bcso\b|\bclm\b|contract lifecycle|supplier (information|management|risk)|\bsim\b|spend guard/i.test(t);
+  if (/coupa|ariba|ivalua|jaggaer|gep\b/i.test(v) || /coupa|ariba/i.test(t)) {
+    const name = v || (/ariba/i.test(t) ? "SAP Ariba" : "Coupa");
+    if (p2p && s2c) return `${name} S2P`;
+    if (p2p) return `${name} P2P`;
+    if (/\bclm\b|contract/i.test(t) && !/sourcing/i.test(t)) return `${name} CLM`;
+    if (s2c) return `${name} Sourcing`;
+    if (/expense/i.test(t)) return `${name} Expense`;
+  }
+  // Product or kind of work named in the text, in order of weight; the vendor leads when the label does not already name it.
+  const KINDS: [RegExp, string][] = [[/s\/?4\s?hana/i, "S/4HANA"], [/business one/i, "Business One"], [/\becc\b/i, "ECC"], [/sap erp|erp implementation|full erp/i, "ERP"], [/business central/i, "Business Central"],
+    [/dynamics 365/i, "Dynamics 365"], [/fusion/i, "Fusion"], [/netsuite/i, "NetSuite"], [/e-business suite|\bebs\b/i, "EBS"], [/boomi|mulesoft|integration/i, "Integration"],
+    [/client logo|listed client|reference/i, "Client reference"], [/digital transformation|roadmap/i, "Digital transformation"], [/support|managed service|\bams\b/i, "Support"]];
+  const kind = KINDS.find(([re]) => re.test(t));
+  if (kind) { const label = kind[1]; return v && !label.toLowerCase().includes(v.toLowerCase()) && /^(S\/4HANA|Business One|ECC|ERP|Business Central|Dynamics 365|Fusion|NetSuite|EBS|Integration|Support)$/.test(label) ? `${v} ${label}` : label; }
+  const words = t.split(" ").slice(0, 4).join(" ");
+  return words.length > 30 ? words.slice(0, 29).trimEnd() + "…" : words + (words.length < t.length ? "…" : "");
+}

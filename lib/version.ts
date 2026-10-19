@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.04";
+export const APP_VERSION = "5.05";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.05", date: "2026-10-19", notes: "Market intelligence customers: short project labels with an i button; known aliases count as in the database.", changes: [
+      { what: "In Market intelligence, the Project column of every vendor's customers shows a short label (Coupa S2P, Coupa P2P, SAP S/4HANA, SAP Business One, Client reference …) and an i button with the full description. The Excel download keeps the full text", where: "components/MarketIntel.tsx, lib/market.ts, components/LongText.tsx", why: "Requested — long project text made the table untidy" },
+      { what: "A customer counts as In database when its name matches an account's own name or a name the account is known under (for example Atlantis, The Palm, Dubai under Kerzner), so it no longer offers + Add for it", where: "app/api/market/route.ts", why: "Seen — Atlantis showed Not in database after being added under Kerzner" },
+    ] },
   { version: "5.04", date: "2026-10-19", notes: "India and Switzerland are now regions (Paused until a Super Admin activates them).", changes: [
       { what: "India (INR) and Switzerland (CHF) are defined regions with their own flag, ICP rule set and place names. Both start Paused, so no daily run starts until a Super Admin makes them Active in Define ICP (which sets 5 new companies and 25 revenue checks a day)", where: "lib/icpDefinition.mjs, lib/countries.ts, lib/findSearch.ts, lib/market.ts, ENGINE.md", why: "Requested — SCP's Hyderabad office and DPNow (Geneva) have no region to sit under" },
     ] },
