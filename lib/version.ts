@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.06";
+export const APP_VERSION = "5.07";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.07", date: "2026-10-19", notes: "A minimized Market intelligence or Buying signals window is a small bar again.", changes: [
+      { what: "Minimizing Market intelligence or Buying signals now leaves only the small bar with its title, a + to restore and Close. The whole window had stayed visible inside the bar", where: "app/globals.css", why: "Reported — the minimized window opened as a tall oval with all the content" },
+    ] },
   { version: "5.06", date: "2026-10-19", notes: "Home: About Account CoPilot and Setup Wizard are two clear, collapsible blocks.", changes: [
       { what: "The Home page no longer has a left menu that switches between About and the wizard. Under the numbers there are two stacked blocks, \"About Account CoPilot\" and \"Setup Wizard\", each opening and closing with its arrow. Both start closed and the page remembers what you left open. The wizard's six steps run along the top of its block", where: "components/HomeWorkspace.tsx, app/globals.css", why: "Requested — the About and Wizard tabs were confusing" },
     ] },

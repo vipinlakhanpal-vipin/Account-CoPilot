@@ -1891,3 +1891,5 @@ table.ft td.num{width:1%;text-align:right}
 .hw-steps-row .hw-step-group{display:none}
 .hw-steps-row .hw-step{width:auto;flex-direction:row;padding:7px 12px;white-space:nowrap}
 @media (max-width:860px){.hw.hw-stack{padding:8px}.hw-acc-body{padding:14px 14px 18px}}
+/* v5.07: a minimized Market intelligence / Buying signals window is just the small bar (title, restore, close); .appwin-body's display:block !important had kept the whole window showing inside the pill */
+.appwin.mini .appwin-body{display:none !important}
