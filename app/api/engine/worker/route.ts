@@ -263,7 +263,14 @@ export async function POST(req: Request) {
     const docs = new Map((data || []).map((r) => [r.key as string, r.value as MarketDoc]));
     const pairs = active.filter((r) => !b.region || r === b.region).flatMap((region) => vendors.filter((v) => !b.vendor || v === b.vendor).map((vendor) => { const d = docs.get(marketKey(vendor, region)); return { vendor, region, last_scan: d?.scanned_at || null, partners_known: d?.partners?.length || 0, known: (d?.partners || []).map((p) => p.name), partners_due: (d?.partners || []).filter((p) => !p.customers_scanned_at || Date.now() - new Date(p.customers_scanned_at).getTime() > 45 * 864e5).slice(0, 8).map((p) => ({ name: p.name, website: p.website })), partners_due_total: (d?.partners || []).filter((p) => !p.customers_scanned_at || Date.now() - new Date(p.customers_scanned_at).getTime() > 45 * 864e5).length, known_customers: b.vendor && b.region ? (d?.customers || []).slice(0, 1500).map((c) => ({ partner: c.partner, customer: c.customer })) : undefined, needs_contacts: (d?.customers || []).filter((c) => !c.contacts?.length).slice(0, 10).map((c) => ({ partner: c.partner, customer: c.customer, customer_website: c.customer_website })) }; }))
       .sort((x, y) => String(x.last_scan || "").localeCompare(String(y.last_scan || ""))).slice(0, b.limit);
-    return NextResponse.json({ targets: pairs, vendors });
+    // Customers are searched by default, nobody has to click: every Active vendor x region with a partner whose customers were never searched (or not in 45 days), the main vendors first.
+    // A partner hidden under "Other regions" (no confirmed local office) is left out; its customers would not show anyway.
+    const stale = (p: { customers_scanned_at?: string; presence_pending?: boolean }) => !p.presence_pending && (!p.customers_scanned_at || Date.now() - new Date(p.customers_scanned_at).getTime() > 45 * 864e5);
+    const customers_due = active.filter((r) => !b.region || r === b.region).flatMap((region) => vendors.filter((v) => !b.vendor || v === b.vendor).map((vendor) => {
+      const due = (docs.get(marketKey(vendor, region))?.partners || []).filter(stale);
+      return { vendor, region, partners_due_total: due.length, partners_due: due.slice(0, 8).map((p) => ({ name: p.name, website: p.website })) }; }))
+      .filter((x) => x.partners_due_total > 0).sort((x, y) => vendors.indexOf(x.vendor) - vendors.indexOf(y.vendor) || y.partners_due_total - x.partners_due_total).slice(0, 6);
+    return NextResponse.json({ targets: pairs, vendors, customers_due });
   }
   if (b.action === "add_market") {
     // Partners found on the vendor's partner directory / the partner's own site, and the customers the partner publishes. Public pages only; contacts follow the same rules as Find contacts.

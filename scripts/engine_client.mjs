@@ -16,7 +16,7 @@
 //   node scripts/engine_client.mjs add_contacts <slug> <file.json>      → saves people found on the public web for ONE company (a "contacts" job; format: see ENGINE.md "Find contacts")
 //   node scripts/engine_client.mjs signal_targets <REGION> [N]        → writes data/verification/signal_targets.json: the N companies (default 10) due a buying-signals scan
 //   node scripts/engine_client.mjs add_signals <file.json>             → saves buying signals: {"scanned":[slugs],"sweep_region":"UAE","signals":[...]} (format: see ENGINE.md "Buying signals")
-//   node scripts/engine_client.mjs market_targets [N] [VENDOR] [REGION]  → writes data/verification/market_targets.json: the vendor x region pairs due a market-intelligence scan (oldest first)
+//   node scripts/engine_client.mjs market_targets [N] [VENDOR] [REGION]  → writes data/verification/market_targets.json (the vendor x region pairs due a partner scan, oldest first) and customers_due.json (pairs with partners whose customers are due: searched by default, SAP and Coupa first)
 //   node scripts/engine_client.mjs add_market <file.json>              → saves partners and their published customers: {"vendor","region","partners":[...],"customers":[...]} (format: see ENGINE.md "Market intelligence")
 //   node scripts/engine_client.mjs pitch_facts <slug>                  → writes data/verification/pitch_facts.json: the facts on one account for a pitch plan (a "pitch" job)
 //   node scripts/engine_client.mjs save_pitch <slug> <file.txt>        → saves the written pitch plan on the account
@@ -84,7 +84,9 @@ else if (cmd === "queue") {
   const j = await call({ action: "market_targets", limit: Number(a) || 4, vendor: b || "", region: c || "" });
   fs.mkdirSync("data/verification", { recursive: true });
   fs.writeFileSync("data/verification/market_targets.json", JSON.stringify(j.targets, null, 1));
+  fs.writeFileSync("data/verification/customers_due.json", JSON.stringify(j.customers_due || [], null, 1));
   console.log(`${j.targets.length} vendor/region pairs due → data/verification/market_targets.json`);
+  console.log(`${(j.customers_due || []).length} vendor/region pairs have partners whose customers are due → data/verification/customers_due.json`);
   j.targets.forEach((t) => console.log(`  ${t.vendor} · ${t.region} · last scan ${t.last_scan || "never"} · ${t.partners_known} partners known`));
 } else if (cmd === "add_market") {
   const body = JSON.parse(fs.readFileSync(a || "data/verification/new_market.json", "utf8"));

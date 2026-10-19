@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.08";
+export const APP_VERSION = "5.09";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.09", date: "2026-10-19", notes: "The daily run now searches the customers of the partners by default.", changes: [
+      { what: "The daily run searches the published customers of up to 8 partners every morning (SAP and Coupa first, partners never searched or not in 45 days), on top of finding new partners. Nobody has to click Find more customers; unfinished partners carry over to the next run. Partners hidden under Other regions are skipped", where: "ENGINE.md, scripts/engine_client.mjs, app/api/engine/worker/route.ts", why: "Requested — customers should be searched by default, not only on a click" },
+    ] },
   { version: "5.08", date: "2026-10-19", notes: "A partner can carry other names it is listed under, so a scan never re-adds a duplicate.", changes: [
       { what: "A Market intelligence partner can hold other names (aka). A scan result under one of those names, or customers listed under it, goes to that one partner. WMS Solutions was merged into WMS Middle East LLC this way", where: "app/api/engine/worker/route.ts, lib/market.ts", why: "Requested — WMS Solutions is the same firm as WMS Middle East LLC" },
     ] },
