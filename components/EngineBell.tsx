@@ -92,7 +92,7 @@ export default function EngineBell() {
               const st = myRegions.find((m) => m.key === selected)?.status;
               return (<div className="bell-item" role="status">
                 <small>{nameOf(selected)}: no run yet</small>
-                {st === "active" ? <p className="note">{nameOf(selected)} is Active, so the daily run at <DailyRunLocalTime /> will look for its first companies and post the result here. To start now, open <b>Find company</b>, choose <b>Find New Company</b>, pick {nameOf(selected)} and ask for companies (free, usually about 2 minutes once a session picks it up).</p>
+                {st === "active" ? <p className="note">{nameOf(selected)} is Active, so the daily run at <DailyRunLocalTime /> will look for its first companies and post the result here. To start now, use the button below, or the <b>magnifier icon</b> in the top bar (Find company) and choose <b>Find New Company</b>, pick {nameOf(selected)} and ask for companies (free, usually about 2 minutes once a session picks it up).</p>
                   : <p className="note">{nameOf(selected)} is not Active yet ({st || "paused"}), so nothing runs for it. A Super Admin can activate it in Setup → Define ICP.</p>}
                 {st === "active" && <Link href={`/find?mode=new&region=${encodeURIComponent(selected)}`} className="btn tiny primary" onClick={() => setOpen(false)}>Find companies in {nameOf(selected)} →</Link>}
               </div>);

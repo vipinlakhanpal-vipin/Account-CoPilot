@@ -115,7 +115,7 @@ Every Anthropic-API route (`/api/research`, `/api/discover`, `/api/pitch`, and `
 - **Any new paid action** must use both the guard and `paidFetch`.
 
 ## Find company (v3.88+)
-- **Page:** `/find` (tab right after Dashboard; `components/FindCompany.tsx`). `Search Company` = `GET /api/find` (`lib/findSearch.ts`, read-only, scoped by `scopeData`); `Find New Company` = `POST /api/engine` queue (free) or `/api/research` (paid, PIN). `GET /api/engine?only=find` returns only the user's regions and jobs (no balance or spend).
+- **Page:** `/find` (icon-only magnifier in the top bar, not a text tab; `components/FindCompany.tsx`). `Search Company` = `GET /api/find` (`lib/findSearch.ts`, read-only, scoped by `scopeData`); `Find New Company` = `POST /api/engine` queue (free) or `/api/research` (paid, PIN). `GET /api/engine?only=find` returns only the user's regions and jobs (no balance or spend).
 - **Replaces the header search bar** (removed). The Mission Control "Search & refresh" tab stays for bulk jobs and the paid refresh and links here. Remove other search entry points only after the user confirms Find company works.
 - Standard users may queue, cancel, add and ignore for their own regions only (job region is checked server-side).
 

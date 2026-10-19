@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.94";
+export const APP_VERSION = "4.95";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.95", date: "2026-10-19", notes: "The bell's no-run note points to the magnifier icon.", changes: [
+      { what: "The \"no run yet\" note in the bell says Find company is the magnifier icon in the top bar", where: "components/EngineBell.tsx", why: "Reported — Find company is an icon, not a tab beside Dashboard" },
+    ] },
   { version: "4.94", date: "2026-10-19", notes: "The bell lists every region you can see, even one with no run yet.", changes: [
       { what: "The Scheduled runs bell now lists every region the person has access to (for example South Africa for a Standard User), with a note and a Find companies link when that region has had no run yet, instead of hiding it until the first run", where: "components/EngineBell.tsx, app/api/engine/route.ts", why: "Reported — Nardus could not see South Africa in the bell summary" },
     ] },
