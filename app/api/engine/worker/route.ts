@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { invalidateAllData } from "@/lib/dataCache";
 import { statusPatch, applyRevenueResult } from "@/lib/icpStatus.mjs";
-import { normalizeDefinition, rulesFor, regionOf, summarizeRules } from "@/lib/icpDefinition.mjs";
+import { normalizeDefinition, rulesFor, regionOf, canonCountry, summarizeRules } from "@/lib/icpDefinition.mjs";
 import { EMPTY_STORE, type Signal, type SignalStore } from "@/lib/signals";
 import { nk as marketNk, partnerId } from "@/lib/marketServer";
 import { pitchFacts } from "@/lib/pitchFacts";
@@ -39,9 +39,9 @@ const Result = z.object({ slug: z.string(), company_name: z.string(), checked_at
   source_kind: z.string(), revenue_status: z.enum(["FACT", "LIKELY", "UNVERIFIED", "UNKNOWN"]), employees: z.string().optional().default(""),
   employees_source_url: z.string().optional().default(""), icp_verdict: z.enum(["Verified ICP", "Likely ICP", "Below minimum", "Below $250M", "Revenue not found"]), reasoning: z.string() });
 const EntityType = z.enum(["Regional HQ", "Branch", "Foreign Branch", "Unknown"]).optional().default("Unknown");
-const NewCo = z.object({ name: z.string().min(2), website: z.string().optional().default(""), country: z.string().default("UAE"), industry: z.string().optional().default(""), watch: z.boolean().optional().default(false),
+const NewCo = z.object({ name: z.string().min(2), website: z.string().optional().default(""), country: z.string().default("UAE").transform((v) => canonCountry(v)), industry: z.string().optional().default(""), watch: z.boolean().optional().default(false),
   hq_city: z.string().optional().default(""), why_icp: z.string().optional().default(""), source_url: z.string().optional().default(""), entity_type: EntityType });
-const NewCoUpload = z.object({ name: z.string().min(2), website: z.string().optional().default(""), country: z.string().default("UAE"), industry: z.string().optional().default(""),
+const NewCoUpload = z.object({ name: z.string().min(2), website: z.string().optional().default(""), country: z.string().default("UAE").transform((v) => canonCountry(v)), industry: z.string().optional().default(""),
   hq_city: z.string().optional().default(""), notes: z.string().optional().default("") });
 const NewContact = z.object({ full_name: z.string().trim().min(3).max(120), title_verbatim: z.string().trim().min(2).max(200),
   email: z.string().trim().max(160).optional().default(""), phone: z.string().trim().max(40).optional().default(""), phone_type: z.enum(["Direct", "Mobile", "Switchboard", ""]).optional().default(""),

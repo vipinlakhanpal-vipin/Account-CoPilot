@@ -14,4 +14,4 @@ const ALIASES: Record<string, string> = { "united arab emirates": "UAE", uae: "U
   qatar: "Qatar", kuwait: "Kuwait", oman: "Oman", egypt: "Egypt", uk: "UK", "united kingdom": "UK", germany: "Germany", morocco: "Morocco", kenya: "Kenya",
   "south africa": "SouthAfrica" };
 /** Normalises a company's country value to one of the COUNTRIES codes (unknown values pass through). */
-export const countryCode = (v: unknown) => { const s = String(v ?? "").trim(); return ALIASES[s.toLowerCase()] || s || "Unknown"; };
+export const countryCode = (v: unknown) => { const s = String(v ?? "").trim(); return ALIASES[s.toLowerCase()] || (s.replace(/[^a-z]/gi, "").toLowerCase() === "southafrica" ? "SouthAfrica" : s) || "Unknown"; };

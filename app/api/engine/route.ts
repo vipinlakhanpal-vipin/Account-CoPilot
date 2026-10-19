@@ -4,7 +4,7 @@ import { requireUser } from "@/lib/auth";
 import { getAccess, canSeeRegion, canSeeCountry } from "@/lib/access";
 import { requirePaidApproval, pinSetting, savePin } from "@/lib/paidGuard";
 import { vendorList, VENDORS_KEY } from "@/lib/market";
-import { regionOf, normalizeDefinition, summarizeRules, REGIONS } from "@/lib/icpDefinition.mjs";
+import { regionOf, canonCountry, normalizeDefinition, summarizeRules, REGIONS } from "@/lib/icpDefinition.mjs";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { invalidateAllData } from "@/lib/dataCache";
 import { createHash, randomBytes } from "node:crypto";
@@ -60,7 +60,7 @@ async function openJobIssue(job: Job): Promise<string> {
 // Shared insert for a company found by a scheduled session (held pending region activation, or held pending the user's Add/Ignore review).
 function foundCompanyRow(p: { name: string; website?: string; country: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; watch?: boolean; entity_type?: "Regional HQ" | "Branch" | "Foreign Branch" | "Unknown" }, at: string) {
   const slug = "cd-" + p.name.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
-  return { slug, company_name: p.name, country: p.country, company_website: p.website || null,
+  return { slug, company_name: p.name, country: canonCountry(p.country), company_website: p.website || null,
     domain: (p.website || "").toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0] || null,
     hq_city: p.hq_city || null, industry: p.industry || null, research_channel: "Claude discovery", lists: ["Claude discovery"], icp_status: "Unknown", entity_type: p.entity_type || "Unknown",
     account_notes: `Found by a scheduled Claude session: ${p.why_icp || ""} Source: ${p.source_url || ""}`,

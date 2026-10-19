@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.98";
+export const APP_VERSION = "4.99";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.99", date: "2026-10-19", notes: "Companies found for South Africa are filed under South Africa, not Unknown.", changes: [
+      { what: "A country written as the region key (\"SouthAfrica\") is now read as that region, and every company the engine adds is stored with the region's own country spelling (\"South Africa\"). The five South Africa companies found today moved from Unknown to South Africa", where: "lib/icpDefinition.mjs, lib/countries.ts, app/api/engine/route.ts, app/api/engine/worker/route.ts", why: "Reported — 5 new companies showed under Unknown region and South Africa showed 0" },
+    ] },
   { version: "4.98", date: "2026-10-19", notes: "Standard Users can read their region's ICP but only a Super Admin changes it.", changes: [
       { what: "Define ICP and the Setup Wizard are read-only for Standard Users, with the message \"Consult Super Admin if any change is required.\" The server refuses an ICP save or preview from them too, so Active/Paused and the daily counts are a Super Admin decision", where: "app/api/icp/route.ts, components/IcpEditor.tsx, components/HomeWorkspace.tsx", why: "Requested — a Standard User could change their region's ICP and daily run" },
     ] },

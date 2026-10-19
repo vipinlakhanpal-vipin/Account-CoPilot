@@ -31,6 +31,7 @@ export const DEFAULT_RULES: Rules;
 export function defaultDefinition(): Definition;
 export function normalizeDefinition(def: any): Definition;
 export function regionOf(country: unknown): string;
+export function canonCountry(country: unknown): string;
 export function rulesFor(def: any, country: unknown): Rules;
 export function validateRules(key: string, r: Rules): string[];
 export function summarizeRules(key: string, r: Rules): string;
