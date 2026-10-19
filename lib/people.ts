@@ -45,7 +45,7 @@ export function buildPeople(contacts: Row[]): Person[] {
     const pick = (f: string) => s(best[f]) || s(rows.find((r) => s(r[f]))?.[f]);
     const title = s(rows.find((r) => r.is_reference && r.title_verbatim)?.title_verbatim) || pick("title_verbatim");
     out.push({ ...best, title_verbatim: title, email: pick("email"), email_status: s(best.email) ? best.email_status : s(rows.find((r) => s(r.email))?.email_status),
-      phone: pick("phone"), linkedin_url: pick("linkedin_url"), contact_tier: pick("contact_tier"), role_family: pick("role_family"),
+      phone: pick("phone"), linkedin_url: pick("linkedin_url"), business_unit: pick("business_unit"), email_candidate: pick("email_candidate"), contact_tier: pick("contact_tier"), role_family: pick("role_family"),
       person_key: k, rows, sources, trust, trust_reason: reason, best_id: best.id });
   }
   return out;

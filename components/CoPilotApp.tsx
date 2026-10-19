@@ -6,7 +6,7 @@ import CostNote from "@/components/CostNote";
 import CompanyLogo from "@/components/CompanyLogo";
 import { useCustomFilters, CustomFilterBar, type CustomFilter } from "@/components/CustomFilters";
 import InfoTip, { type Weights } from "@/components/InfoTip";
-import { useMemo, useState, useEffect, useRef, useCallback, createContext, useContext } from "react";
+import { Fragment, useMemo, useState, useEffect, useRef, useCallback, createContext, useContext } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { parseGlobalQuery } from "@/lib/globalSearch";
 import Hero from "@/components/Hero";
@@ -607,7 +607,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
       search={(p) => [p.company, p.full_name, p.title_verbatim, p.email, p.notes_contact].join(" ")}
       filters={[...(perPerson ? [{ label: "Trust", get: (p: Row) => p.trust }, { label: "Sources", get: (p: Row) => (p.sources || []).join(" + ") }] : [{ label: "Source", get: (p: Row) => simpleOrigin(coById[p.company_id]), tip: "source" }]),
         { label: "Persona fit", get: (p) => p.__pf?.label }, { label: "Tier", get: (p) => p.contact_tier }, { label: "Role family", get: (p) => famKey(p.role_family) }, { label: "Email status", get: (p) => p.email_status }]}
-      cols={[{ h: "Company", field: "company", cell: (p) => <Sn n={p.company} /> }, { h: "Full name", field: "full_name", cell: (p) => <><b>{p.full_name}</b><NewTag p={p} /></> }, { h: "Title (verbatim)", field: "title_verbatim", cell: (p) => p.title_verbatim, wrap: true },
+      cols={[{ h: "Company", field: "company", cell: (p) => <Sn n={p.company} /> }, ...(rows.some((p) => p.business_unit) ? [{ h: "Property / unit", field: "business_unit", cell: (p: Row) => str(p.business_unit) || "—" }] : []), { h: "Full name", field: "full_name", cell: (p) => <><b>{p.full_name}</b><NewTag p={p} /></> }, { h: "Title (verbatim)", field: "title_verbatim", cell: (p) => p.title_verbatim, wrap: true },
         { h: "Persona fit", tip: "personaFit", cell: (p) => p.__pf?.label === "No personas set" ? <span className="muted">—</span>
           : <span className={`pf ${p.__pf.score >= 99 ? "hi" : p.__pf.score >= 50 ? "mid" : "lo"}`} title={p.__pf.why}>{p.__pf.score}%<small>{p.__pf.label}</small></span> },
         ...(perPerson ? [{ h: "Trust", tip: "trust", field: "trust", cell: (p: Row) => <><TrustTag t={p.trust} why={p.trust_reason} /><div className="muted">{(p.sources || []).join(" + ")}</div></> }]
@@ -1021,12 +1021,23 @@ function Brief({ a, data, people, onClose, onContact, scores, criteria, isSuper 
             );
           })()}
           <div className="block"><h4>Stakeholders ({cs.length}) · select a person for their contact card</h4>
+            {(() => {
+              // With a property or business unit under the account (for example Atlantis The Palm under Kerzner) the list becomes a small tree: the account's own contacts first, then each unit with its people.
+              const unitOf = (p: Row) => str(p.business_unit);
+              const units = [...new Set(cs.map(unitOf).filter(Boolean))].sort();
+              const sections = units.length ? [{ unit: "", rows: cs.filter((p) => !unitOf(p)) }, ...units.map((u) => ({ unit: u, rows: cs.filter((p) => unitOf(p) === u) }))].filter((x) => x.rows.length || !x.unit) : [{ unit: "", rows: cs }];
+              let n = 0;
+              return (
             <div className="tablewrap"><table className="ft"><thead><tr><th className="num">#</th><th>Name</th><th>Title (verbatim)</th><th>Tier</th><th>Channel</th><th>Email</th><th>Phone</th><th>LinkedIn</th></tr></thead>
-              <tbody>{cs.map((p, i) => (
-                <tr key={p.id} className="click" tabIndex={0} onClick={(e) => { if (!(e.target as HTMLElement).closest("a")) onContact(p.id); }} onKeyDown={(e) => e.key === "Enter" && onContact(p.id)}><td className="num mono">{i + 1}</td><td><b>{p.full_name}</b><NewTag p={p} /><div className="muted">{p.role_family} · {p.verification_status}</div></td><td>{p.title_verbatim}</td>
-                  <td>{p.contact_tier}</td><td>{p.channel_state}</td><td className="mono">{p.email}<div className="muted">{p.email_status}</div></td>
-                  <td className="mono">{p.phone}</td><td><Ext href={p.linkedin_url}>profile</Ext></td></tr>))}
-              </tbody></table></div>
+              <tbody>{sections.map((sec) => (
+                <Fragment key={sec.unit || "main"}>
+                  {units.length > 0 && <tr className="tree-head"><td colSpan={8}><span className="tree-glyph" aria-hidden="true">{sec.unit ? "└─" : "▾"}</span> <b>{sec.unit || a.company_name}</b> <span className="muted">· {sec.unit ? "property under " + a.company_name : "group level"} · {sec.rows.length} contact{sec.rows.length === 1 ? "" : "s"}</span></td></tr>}
+                  {sec.rows.map((p) => { n++; return (
+                    <tr key={p.id} className="click" tabIndex={0} onClick={(e) => { if (!(e.target as HTMLElement).closest("a")) onContact(p.id); }} onKeyDown={(e) => e.key === "Enter" && onContact(p.id)}><td className="num mono">{n}</td><td><b>{p.full_name}</b><NewTag p={p} /><div className="muted">{p.role_family} · {p.verification_status}</div></td><td>{p.title_verbatim}</td>
+                  <td>{p.contact_tier}</td><td>{p.channel_state}</td><td className="mono">{p.email}<div className="muted">{p.email_status}</div>{!p.email && p.email_candidate && <div className="muted" title="Not verified. It is a prediction and is left out of campaign lists.">candidate: {String(p.email_candidate).split(" (")[0]} · not verified</div>}</td>
+                  <td className="mono">{p.phone}</td><td><Ext href={p.linkedin_url}>profile</Ext></td></tr>) ; })}
+                </Fragment>))}
+              </tbody></table></div>); })()}
           </div>
           <div className="pitch"><h4 style={{ margin: "0 0 6px", font: "600 12px var(--body)", letterSpacing: ".1em", textTransform: "uppercase" }}>Pitch planner</h4>
             <p className="note">Claude drafts a pitch plan from the evidence on this page: what to lead with, who to approach first, and what to validate on the first call.</p>

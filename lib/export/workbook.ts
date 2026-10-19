@@ -186,12 +186,12 @@ export async function buildWorkbook(d: AllData, icpDef?: unknown): Promise<Buffe
     const pf = personaFit(p, rulesFor(icpDef, co.country).personas); // buyer personas from Define ICP
     return { __domain: logoDomain(co), persona_score: pf.label === "No personas set" ? "" : pf.score, persona_label: pf.label === "No personas set" ? "" : pf.label, persona_why: pf.why,
       company: p.company || co.company_name || "", website: co.company_website || (co.domain ? `https://${co.domain}` : ""),
-      full_name: p.full_name, title: p.title_verbatim, phone: phones.join(" / "), email,
+      full_name: p.full_name, unit: p.business_unit || "", title: p.title_verbatim, phone: phones.join(" / "), email,
       location: p.location || [co.hq_city, co.country].filter(Boolean).join(", "), linkedin: p.linkedin_url || "",
       ...hubspotCols(hs, email) };
   }).filter((r) => r.email || r.phone || r.linkedin)
     .sort((a, b) => String(a.company).localeCompare(String(b.company)) || (Number(b.persona_score) || 0) - (Number(a.persona_score) || 0) || String(a.full_name).localeCompare(String(b.full_name)));
-  const listColsAll: Col[] = [["Company Name", "company", 30], ["Company Website", "website", 26, "url"], ["Contact Person (Full Name)", "full_name", 26], ["Job Title", "title", 34, "wrap"], ["Persona Fit %", "persona_score", 11, "num"], ["Persona Match", "persona_label", 20],
+  const listColsAll: Col[] = [["Company Name", "company", 30], ["Property / Business Unit", "unit", 22], ["Company Website", "website", 26, "url"], ["Contact Person (Full Name)", "full_name", 26], ["Job Title", "title", 34, "wrap"], ["Persona Fit %", "persona_score", 11, "num"], ["Persona Match", "persona_label", 20],
       ["Phone (Tel / Mobile)", "phone", 22], ["Official Email", "email", 30], ["Location", "location", 20], ["LinkedIn Profile", "linkedin", 32, "url"],
       ["Company in HubSpot", "scp_customer", 14], ["Company Stage (HubSpot)", "hs_stage", 20], ["Company Owner (HubSpot)", "hs_owner", 22],
       ["Deals (HubSpot)", "hs_deals", 26, "wrap"], ["Latest Deal (HubSpot)", "hs_latest", 44, "wrap"], ["Contact in HubSpot", "hs_contact", 14],
@@ -245,7 +245,7 @@ export async function buildWorkbook(d: AllData, icpDef?: unknown): Promise<Buffe
   // Stakeholders: every contact row as stored (nothing merged or dropped), in one sheet. This replaces the separate Contacts and
   // Stakeholders sheets, which held the same rows. Columns run from who they are, to how to reach them, to where it came from.
   const stkCols: Col[] = [
-    ["Company", "company", 26], ["Full Name", "full_name", 22], ["Title (Verbatim)", "title_verbatim", 32, "wrap"], ["Standardized Title", "standardized_title", 22],
+    ["Company", "company", 26], ["Property / Business Unit", "business_unit", 20], ["Full Name", "full_name", 22], ["Title (Verbatim)", "title_verbatim", 32, "wrap"], ["Standardized Title", "standardized_title", 22],
     ["Role Family", "role_family", 14], ["Contact Tier", "contact_tier", 9], ["Nationality", "nationality", 14],
     ["Email", "email", 28], ["Email Status", "email_status", 14], ["Email Source", "email_source", 12], ["Email Confidence", "email_confidence", 14],
     ["Unverified Email Candidate", "email_candidate", 30, "wrap"], ["Phone", "phone", 17], ["Phone Type", "phone_type", 11], ["Location", "location", 18],
