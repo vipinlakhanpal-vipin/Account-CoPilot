@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.13";
+export const APP_VERSION = "5.14";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,12 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.14", date: "2026-10-19", notes: "Tall table rows fixed everywhere, a scrollbar on top of long tables, a way back in Engine activity.", changes: [
+      { what: "Table cells marked wrap were picking up the page container's 56px bottom padding, so any table with such a column had rows about 75px tall (the Mission Control contacts table, for one). They are normal rows again, in every table", where: "app/globals.css", why: "Reported — the Mission Control contacts table was very tall" },
+      { what: "Long tables have a horizontal scrollbar on top as well as the one below, kept in step, so you no longer scroll to the bottom to go right. The header is opaque, so rows no longer show through it", where: "components/CoPilotApp.tsx, app/globals.css", why: "Reported" },
+      { what: "Save this filter says in a line what it does and why it is grey until you search or filter", where: "components/SavedReports.tsx", why: "Reported — unclear why the button was inactive" },
+      { what: "A region opened from Engine activity has a back button to the all-regions overview", where: "components/EngineActivity.tsx", why: "Reported — no way back" },
+    ] },
   { version: "5.13", date: "2026-10-19", notes: "Mission Control shows priority and today's plan; the bell drops the repeated line.", changes: [
       { what: "Mission Control → Engine activity lists each region's priority and its plan for today (new companies / checks) next to its latest run and the seven-day grid", where: "components/EngineActivity.tsx", why: "Requested — Today's plan also in Mission Control" },
       { what: "The bell no longer repeats the \"Today: n new companies · n verified\" line under the region name for an Active region, because Today's plan above already shows it. The line stays only for a region that is not Active", where: "components/EngineBell.tsx", why: "Requested — the line was duplicated" },

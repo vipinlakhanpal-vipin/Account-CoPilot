@@ -1922,3 +1922,15 @@ table.ft td.num{width:1%;text-align:right}
 .bell-plan-h{margin:0 0 4px;font:700 13px var(--body);color:var(--text-strong)}
 .bell-plan-h small{display:block;font:400 11px var(--body);color:var(--muted)}
 .bell-plan td.ok{color:#0B5A47;font-weight:600}
+
+.act-back{margin:10px 0 0}
+
+/* v5.14: the page-container class .wrap (max-width, auto margins, 56px bottom padding) also hit table cells marked "wrap", making those rows about 75px tall. A cell is a cell. */
+table td.wrap,table th.wrap{margin:0;padding:7px 8px}
+/* a horizontal scrollbar on top of long tables, kept in step with the one below */
+.topscroll{overflow-x:auto;overflow-y:hidden;height:14px;margin:0 0 2px;border-radius:7px}
+.topscroll::-webkit-scrollbar{height:10px}
+.topscroll::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:6px}
+/* an opaque header, so rows scrolling under it never show through */
+.tablewrap-tall thead th{background:var(--th-bg,var(--surface-2));z-index:2}
+.save-filter-wrap{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}.save-filter-wrap small{font-size:11px}

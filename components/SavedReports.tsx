@@ -49,8 +49,11 @@ export function SaveReportButton({ criteria, tableState, onSaved }:
       <button type="button" className="btn tiny primary" disabled={busy || !name.trim()} onClick={save}>{busy ? "Saving…" : "Save"}</button>
       <button type="button" className="btn tiny ghost" onClick={() => { setNaming(false); setName(""); }}>Cancel</button>
     </div>
-  ) : <button type="button" className="btn tiny primary" disabled={!isFiltered} title={isFiltered ? undefined : "Set a search, a dropdown or a custom filter first — nothing to save yet"}
-      onClick={() => setNaming(true)}>💾 Save this filter ({tableState.count.toLocaleString()})</button>;
+  ) : <span className="save-filter-wrap">
+      <button type="button" className="btn tiny primary" disabled={!isFiltered} title={isFiltered ? "Save this search and these filters under a name, to reopen them later with one click" : "Set a search, a dropdown or a custom filter first — nothing to save yet"}
+        onClick={() => setNaming(true)}>💾 Save this filter ({tableState.count.toLocaleString()})</button>
+      <small className="muted">{isFiltered ? "Saves your search and filters under a name; reopen it from Saved filters." : "Grey until you search or filter; it then saves that view under a name."}</small>
+    </span>;
 }
 
 export default function SavedReportsList({ items, onOpen, onDelete }:

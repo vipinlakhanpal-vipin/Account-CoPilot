@@ -69,6 +69,7 @@ export default function EngineActivity() {
     const run14 = selected.runs.filter((x) => Date.now() - new Date(x.at).getTime() < 14 * 86400000);
     return (
       <>
+        <button type="button" className="btn tiny act-back" onClick={() => { setRegion("All"); setQ(""); setAll(false); }}>← All regions</button>
         <h3 className="act-region">{selected.name}</h3>
         <p className="note"><span className={`act-pill ${selected.status}`}>{STATUS_LABEL[selected.status] || selected.status}</span> {selected.rules}</p>
         <div className="act-tiles">

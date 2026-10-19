@@ -304,6 +304,22 @@ function FilterTable({ title, note, rows, cols: colsIn, filters, search, onRow, 
   const [showAll, setShowAll] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const scrollH = (dx: number) => wrapRef.current?.scrollBy({ left: dx, behavior: "smooth" });
+  // A second horizontal scrollbar on top of the table, so a long table never needs a scroll down to the bottom just to go right. The two stay in step.
+  const topRef = useRef<HTMLDivElement>(null);
+  const [scrollW, setScrollW] = useState(0);
+  const syncing = useRef(false);
+  useEffect(() => {
+    const el = wrapRef.current; if (!el) return;
+    const measure = () => setScrollW(el.scrollWidth > el.clientWidth + 2 ? el.scrollWidth : 0);
+    measure();
+    const ro = new ResizeObserver(measure); ro.observe(el); const tbl = el.querySelector("table"); if (tbl) ro.observe(tbl);
+    return () => ro.disconnect();
+  });
+  const from = (src: "top" | "table") => () => {
+    if (syncing.current) { syncing.current = false; return; }
+    const a = src === "top" ? topRef.current : wrapRef.current, b = src === "top" ? wrapRef.current : topRef.current;
+    if (a && b && Math.abs(a.scrollLeft - b.scrollLeft) > 1) { syncing.current = true; b.scrollLeft = a.scrollLeft; }
+  };
   const options = useMemo(() => filters.map((f) => [...new Set(rows.map(f.get).filter(Boolean))].sort()), [rows, filters]);
   const visibleFields = useMemo(() => cols.map((c) => c.field).filter((f): f is string => !!f), [cols]);
   const cf = useCustomFilters(rows, title, initial?.cf, visibleFields);
@@ -365,7 +381,8 @@ function FilterTable({ title, note, rows, cols: colsIn, filters, search, onRow, 
         <button type="button" className="btn tiny" aria-label="Scroll table left" onClick={() => scrollH(-320)}>← </button>
         <button type="button" className="btn tiny" aria-label="Scroll table right" onClick={() => scrollH(320)}> →</button>
       </div>
-      <div className="tablewrap tablewrap-tall" ref={wrapRef}>
+      {scrollW > 0 && <div className="topscroll" ref={topRef} onScroll={from("top")} aria-hidden="true"><div style={{ width: scrollW, height: 1 }} /></div>}
+      <div className="tablewrap tablewrap-tall" ref={wrapRef} onScroll={from("table")}>
         <table className="ft">
           <thead><tr><th className="num">#</th>{cols.map((c) => <th key={c.h} className={c.cls}>{c.h}{c.tip && <InfoTip k={c.tip} w={tipW} />}</th>)}</tr></thead>
           <tbody>
