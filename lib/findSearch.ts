@@ -25,7 +25,7 @@ type Parsed = { tokens: string[]; revMin?: number; revMax?: number; empMin?: num
   signal: string[]; platform: string[]; contacts: boolean; understood: { label: string; without: string }[] };
 
 const REGION_WORDS: Record<string, string> = { uae: "UAE", emirates: "", dubai: "", ksa: "KSA", saudi: "KSA", "saudi arabia": "KSA", qatar: "Qatar", kuwait: "Kuwait", oman: "Oman",
-  bahrain: "Bahrain", egypt: "Egypt", usa: "USA", "united states": "USA", uk: "UK", "united kingdom": "UK", germany: "Germany", morocco: "Morocco", kenya: "Kenya", "south africa": "SouthAfrica" };
+  bahrain: "Bahrain", egypt: "Egypt", usa: "USA", "united states": "USA", uk: "UK", "united kingdom": "UK", germany: "Germany", morocco: "Morocco", kenya: "Kenya", "south africa": "SouthAfrica", india: "India", switzerland: "Switzerland" };
 const toM = (n: string, unit?: string) => { const v = Number(n.replace(/,/g, "")); const u = (unit || "").toLowerCase();
   return u.startsWith("b") ? v * 1000 : u.startsWith("k") ? v / 1000 : v; };
 const fmtM = (m: number) => (m >= 1000 ? `$${+(m / 1000).toFixed(2)}B` : `$${+m.toFixed(0)}M`);

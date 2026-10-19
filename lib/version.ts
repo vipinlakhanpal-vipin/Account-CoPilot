@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.03";
+export const APP_VERSION = "5.04";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.04", date: "2026-10-19", notes: "India and Switzerland are now regions (Paused until a Super Admin activates them).", changes: [
+      { what: "India (INR) and Switzerland (CHF) are defined regions with their own flag, ICP rule set and place names. Both start Paused, so no daily run starts until a Super Admin makes them Active in Define ICP (which sets 5 new companies and 25 revenue checks a day)", where: "lib/icpDefinition.mjs, lib/countries.ts, lib/findSearch.ts, lib/market.ts, ENGINE.md", why: "Requested — SCP's Hyderabad office and DPNow (Geneva) have no region to sit under" },
+    ] },
   { version: "5.03", date: "2026-10-19", notes: "Contacts can belong to a property under an account (Atlantis The Palm under Kerzner), shown as a tree and in every download.", changes: [
       { what: "A contact can carry a property or business unit. On the account page the Stakeholders list becomes a small tree: the account's own contacts (group level), then each property with its people. The Stakeholders tab gets a Property / unit column when any exist", where: "components/CoPilotApp.tsx, lib/people.ts, supabase/migrations/0009_contact_business_unit.sql", why: "Requested — show which Kerzner contacts belong to Atlantis" },
       { what: "The Excel contact list, the Master Book (Stakeholders and Contact List sheets) and the PDF stakeholder table carry a Property / Business Unit column, with the account's own contacts marked Group level and ordered first", where: "lib/xlsxReport.ts, lib/export/workbook.ts, lib/pdfReport.ts", why: "Requested — downloads of existing Coupa customers include the Atlantis association" },
