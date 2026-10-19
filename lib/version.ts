@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.93";
+export const APP_VERSION = "4.94";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.94", date: "2026-10-19", notes: "The bell lists every region you can see, even one with no run yet.", changes: [
+      { what: "The Scheduled runs bell now lists every region the person has access to (for example South Africa for a Standard User), with a note and a Find companies link when that region has had no run yet, instead of hiding it until the first run", where: "components/EngineBell.tsx, app/api/engine/route.ts", why: "Reported — Nardus could not see South Africa in the bell summary" },
+    ] },
   { version: "4.93", date: "2026-10-17", notes: "The vendor tile that is being scanned flashes in its own colour.", changes: [
       { what: "In Market intelligence, the tile of the vendor being scanned (vendor, partner, customer or contacts scan) flashes in its own colour and shows a \"n scanning\" badge", where: "components/MarketIntel.tsx, app/globals.css", why: "Reported — with 3 scans running, no tile showed which vendor they belonged to" },
     ] },

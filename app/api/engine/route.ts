@@ -117,11 +117,11 @@ function scopeLog<T extends LogEntry>(entries: T[], access: Awaited<ReturnType<t
   if (access.isSuper) return entries;
   return entries.flatMap((e) => {
     if ((e.details || []).some((d) => d.region)) {
-      const details = (e.details || []).filter((d) => d.region && canSeeRegion(access, d.region));
+      const details = (e.details || []).filter((d) => d.region && (canSeeRegion(access, d.region) || canSeeRegion(access, regionOf(d.region))));
       return details.length ? [{ ...e, details }] : [];
     }
     const region = e.region || e.summary.match(/^([^—]+)—/)?.[1]?.trim();
-    return region && canSeeRegion(access, region) ? [e] : [];
+    return region && (canSeeRegion(access, region) || canSeeRegion(access, regionOf(region))) ? [e] : [];
   });
 }
 
@@ -195,7 +195,10 @@ export async function GET(req: Request) {
   if (new URL(req.url).searchParams.get("only") === "log") {
     const log = await getSetting<{ entries: LogEntry[] }>(db, "engine_log", { entries: [] });
     const entries = await enrichRegions(db, log.entries);
-    return NextResponse.json({ entries: scopeLog(entries, access) }, { headers: { "Cache-Control": "no-store" } });
+    // the regions this user may see, with their status, so the bell can list a region that has not had a run yet
+    const def = normalizeDefinition(await getSetting<unknown>(db, "icp_definition", null));
+    const regions = REGIONS.filter((r: { key: string }) => canSeeRegion(access, r.key)).map((r: { key: string; name: string }) => ({ key: r.key, name: r.name, status: (def.regions[r.key]?.status || "paused") as string }));
+    return NextResponse.json({ entries: scopeLog(entries, access), regions }, { headers: { "Cache-Control": "no-store" } });
   }
   const log = await getSetting<{ entries: LogEntry[] }>(db, "engine_log", { entries: [] });
   const entries = await enrichRegions(db, log.entries);

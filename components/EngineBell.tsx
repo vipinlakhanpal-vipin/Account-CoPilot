@@ -21,13 +21,14 @@ const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "");
 // Bell in the top bar: notifications from the scheduled engine runs (6am daily). Unread = newer than the last time you opened it.
 export default function EngineBell() {
   const [entries, setEntries] = useState<Entry[]>([]);
+  const [myRegions, setMyRegions] = useState<{ key: string; name: string; status: string }[]>([]);
   const [seen, setSeen] = useState("");
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     try { setSeen(localStorage.getItem("engine-seen") || ""); } catch {}
     // Check now, every minute, and whenever the tab regains focus, so a run that finishes while the page is open still shows the red badge.
-    const load = () => fetch("/api/engine?only=log", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((j) => j && setEntries(j.entries || [])).catch(() => {});
+    const load = () => fetch("/api/engine?only=log", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((j) => { if (j) { setEntries(j.entries || []); setMyRegions(j.regions || []); } }).catch(() => {});
     load();
     const t = setInterval(load, 60000);
     const onFocus = () => { if (document.visibilityState === "visible") load(); };
@@ -56,7 +57,9 @@ export default function EngineBell() {
       .map((r) => (known(r) ? r : "Instant lookups"));
     return regs.map((r) => ({ at: e.at, region: r, rows: split ? rows.filter((d) => d.region === r) : rows, summary: e.summary }));
   });
-  const regionList = [...new Set(blocks.map((b) => b.region))].sort();
+  // every region this person may see is listed, even one that has not had a run yet (it then explains how to start one)
+  const nameOf = (k: string) => myRegions.find((m) => m.key === k)?.name || k;
+  const regionList = [...new Set([...blocks.map((b) => b.region), ...myRegions.map((m) => m.key)])].sort((a, b) => nameOf(a).localeCompare(nameOf(b)));
   const selected = picked === "All" || regionList.includes(picked) ? picked : blocks[0]?.region || "All";
   const choose = (r: string) => { setPicked(r); try { localStorage.setItem("bell-region", r); } catch {} };
   const toggle = () => {
@@ -74,17 +77,26 @@ export default function EngineBell() {
         <div className="bell-pop" role="dialog" aria-label="Engine notifications">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
             <span className="bell-title-row"><b>Scheduled runs</b>
-              {entries.length > 0 && <label className="bell-region-select"><span className="sr-only">Select region</span>
+              {regionList.length > 0 && <label className="bell-region-select"><span className="sr-only">Select region</span>
                 <select value={selected} onChange={(e) => choose(e.target.value)} aria-label="Select region">
                   <option value="All">All regions</option>
-                  {regionList.map((r) => <option key={r} value={r}>{r}</option>)}
+                  {regionList.map((r) => <option key={r} value={r}>{nameOf(r)}</option>)}
                 </select></label>}
             </span>
             <button type="button" className="btn tiny btn-close" onClick={() => setOpen(false)}>Close</button>
           </div>
-          {entries.length > 0 && <div className="bell-region-name">{selected === "All" ? "All regions" : selected}</div>}
+          {regionList.length > 0 && <div className="bell-region-name">{selected === "All" ? "All regions" : nameOf(selected)}</div>}
           <p className="bell-resize-hint">Drag the bottom-right corner to expand ↘</p>
-          {entries.length === 0 ? <p className="note">No runs yet. The engine runs every day at <DailyRunLocalTime /> and posts a summary here.</p>
+          {entries.length === 0 && selected === "All" ? <p className="note">No runs yet. The engine runs every day at <DailyRunLocalTime /> and posts a summary here.</p>
+            : selected !== "All" && !blocks.some((b) => b.region === selected) ? (() => {
+              const st = myRegions.find((m) => m.key === selected)?.status;
+              return (<div className="bell-item" role="status">
+                <small>{nameOf(selected)}: no run yet</small>
+                {st === "active" ? <p className="note">{nameOf(selected)} is Active, so the daily run at <DailyRunLocalTime /> will look for its first companies and post the result here. To start now, open <b>Find company</b>, choose <b>Find New Company</b>, pick {nameOf(selected)} and ask for companies (free, usually about 2 minutes once a session picks it up).</p>
+                  : <p className="note">{nameOf(selected)} is not Active yet ({st || "paused"}), so nothing runs for it. A Super Admin can activate it in Setup → Define ICP.</p>}
+                {st === "active" && <Link href={`/find?mode=new&region=${encodeURIComponent(selected)}`} className="btn tiny primary" onClick={() => setOpen(false)}>Find companies in {nameOf(selected)} →</Link>}
+              </div>);
+            })()
             : selected !== "All" ? (() => {
               const mine = blocks.filter((b) => b.region === selected).slice(0, 6);
               const lastAny = entries[0]?.at, lastMine = mine[0]?.at;
