@@ -30,6 +30,8 @@ import { dashboardTiles } from "@/lib/dashboardTiles";
 // Lets any table open the Reports dialog for the companies it is showing, without threading a prop through every view.
 type ReportRequest = { ids: string[]; title: string };
 const ReportsCtx = createContext<((req: ReportRequest) => void) | null>(null);
+// When every region is on screen (the All tile), each table gets a Region column so no row is ambiguous. `of` finds a row's region from its country or its company.
+const RegionColCtx = createContext<{ all: boolean; of: (r: Row) => string }>({ all: false, of: () => "" });
 import ReportDialog, { downloadReport } from "@/components/ReportDialog";
 import FreePitch from "@/components/FreePitch";
 import LongText from "@/components/LongText";
@@ -282,7 +284,7 @@ function RegionCompareChart({ accounts, onDrill }: { accounts: Row[]; onDrill: (
 type ColDef = { h: string; cell: (r: Row) => React.ReactNode; wrap?: boolean; cls?: string; tip?: string; field?: string };
 type FilterDef = { label: string; get: (r: Row) => string; tip?: string };
 
-function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "rows", tipW, empty, initial, onState, toggleExtra }: {
+function FilterTable({ title, note, rows, cols: colsIn, filters, search, onRow, unit = "rows", tipW, empty, initial, onState, toggleExtra }: {
   title: string; note?: React.ReactNode; tipW?: Weights; empty?: (q: string) => React.ReactNode; rows: Row[]; cols: ColDef[]; filters: FilterDef[]; search: (r: Row) => string; onRow?: (r: Row) => void; unit?: string;
   // initial: seeds the search box / dropdowns / custom filters once, when opening a saved report — pass a
   // changing `key` on the element to force a remount for a new seed to take effect (see tab === "reports").
@@ -290,6 +292,13 @@ function FilterTable({ title, note, rows, cols, filters, search, onRow, unit = "
   initial?: { q?: string; fv?: string[]; cf?: CustomFilter[] }; onState?: (s: { q: string; fv: string[]; cf: CustomFilter[]; count: number }) => void;
   toggleExtra?: React.ReactNode; // e.g. Reports' "Save this report", shown right next to the live filtered count
 }) {
+  const regionCol = useContext(RegionColCtx);
+  // Region column after the first one, when every region is shown and the table has no country / region column of its own.
+  const cols = useMemo<ColDef[]>(() => {
+    if (!regionCol.all || colsIn.some((c) => /^(country|region|location)$/i.test(c.h))) return colsIn;
+    const col: ColDef = { h: "Region", cell: (r) => regionCol.of(r) || "—" };
+    return [...colsIn.slice(0, 1), col, ...colsIn.slice(1)];
+  }, [colsIn, regionCol]);
   const [q, setQ] = useState(initial?.q || "");
   const [fv, setFv] = useState<string[]>(initial?.fv || filters.map(() => ""));
   const [showAll, setShowAll] = useState(false);
@@ -482,6 +491,8 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
   const [missionView, setMissionView] = useState<"saved" | "activity" | "search" | "runs">("saved");
   const [pdfOpen, setPdfOpen] = useState(false);
   const [pdfList, setPdfList] = useState<ReportRequest | null>(null);
+  const regionById = useMemo(() => new Map(all.accounts.map((a) => [a.id as string, regionOf(a.country)])), [all]);
+  const regionCol = useMemo(() => ({ all: country === ALL, of: (r: Row) => String(r.r_country || (r.country ? regionOf(r.country) : regionById.get((r.company_id || r.id) as string) || "")) }), [country, regionById]);
   const openReports = useCallback((req: ReportRequest) => { setPdfList(req); setPdfOpen(true); }, []);
   // ?view=activity deep-links straight to a Mission Control sub-tab (the bell uses it).
   const viewParam = params.get("view");
@@ -788,6 +799,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
 
   return (
     <ReportsCtx.Provider value={openReports}>
+    <RegionColCtx.Provider value={regionCol}>
     <div className={`app-shell${collapsed ? " dp-closed" : ""}`}>
     <DiscoveryPanel criteria={criteria} onApply={setCriteria} onSave={saveCriteria} savedMeta={savedMeta} teamCriteria={teamCriteria} collapsed={collapsed} onToggle={toggle}
       country={country} researchTargets={researchTargets} onResearch={researchMore} researchMsg={researchMsg} isSuper={isSuper} />
@@ -807,6 +819,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
       {contact && (() => { const p = P.find((x) => x.id === contact); return p ? <ContactCard p={p} data={data} onClose={() => setContact(null)} onAccount={(id) => { setContact(null); setOpen(id); }} /> : null; })()}
     </div>
     </div>
+    </RegionColCtx.Provider>
     </ReportsCtx.Provider>
   );
 }

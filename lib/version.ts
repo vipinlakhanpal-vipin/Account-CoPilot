@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.01";
+export const APP_VERSION = "5.02";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.02", date: "2026-10-19", notes: "Every table shows a Region column when all regions are on screen.", changes: [
+      { what: "With the All tile selected, every table (Accounts, Pipeline, Stakeholders, Signals, ERP and apps, Sources, Reports and the Dashboard drill-downs) gets a Region column after the first column, so rows from different regions are never ambiguous. Tables that already have a Country column keep theirs", where: "components/CoPilotApp.tsx", why: "Requested — the all-regions view mixes regions with no field saying which" },
+    ] },
   { version: "5.01", date: "2026-10-19", notes: "The report dialog picks the region for a one-region list.", changes: [
       { what: "When Reports (PDF / Excel) is opened from a list that sits in one region (for example UAE's existing Coupa customers), that region is already chosen and \"All regions\" is not offered", where: "components/ReportDialog.tsx", why: "Asked — the dialog asked for a region again and offered all regions for a list that was already UAE only" },
     ] },
