@@ -2,7 +2,7 @@
 import { ask, notify } from "@/components/Confirm";
 import InfoTip from "@/components/InfoTip";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { REGIONS, OPTIONS, DEFAULT_RULES, normalizeDefinition, validateRules, summarizeRules, type Definition, type Rules } from "@/lib/icpDefinition.mjs";
+import { REGIONS, OPTIONS, DEFAULT_RULES, normalizeDefinition, validateRules, summarizeRules, type Definition, type Rules, effectiveEngine } from "@/lib/icpDefinition.mjs";
 import { fmtDateTime } from "@/lib/dates";
 
 type Impact = Record<string, { before: Record<string, number>; after: Record<string, number>; changes: { company: string; from: string; to: string; why: string }[] }>;
@@ -226,9 +226,19 @@ export default function IcpEditor({ initial, counts, isSuper, allowed, roleLabel
               <Num label="New companies to find per day" value={r.engine.discover_per_day} onChange={(v) => set((x) => { x.engine.discover_per_day = v || 0; })} help="Added to Accounts each morning (0–50)." />
               <Num label="Companies to verify per day" value={r.engine.verify_per_day} onChange={(v) => set((x) => { x.engine.verify_per_day = v || 0; })} help="Revenue checks: the new ones first, then the queue (0–60)." />
             </div>
+            <div className="icp-prio" role="group" aria-label="Priority">
+              <span className="icp-prio-label">Priority <small>how much of the engine's day this region gets</small></span>
+              <span className="icp-prio-seg">
+                {(["high", "medium", "low"] as const).map((p) => (
+                  <button type="button" key={p} aria-pressed={(r.priority || "medium") === p} className={`p-${p}`} onClick={() => set((x) => { x.priority = p; })}>
+                    {p === "high" ? "High" : p === "medium" ? "Medium" : "Low"}<small>{p === "high" ? "full counts, first" : p === "medium" ? "half, then" : "a quarter, last"}</small></button>))}
+              </span>
+            </div>
+            <Toggle label="Market intelligence on for this region" value={!!r.market} onChange={(v) => set((x) => { x.market = v; })} help="Partner and customer scans (SAP, Coupa and the other vendors) run here each morning only when this is on. A scan you start yourself always runs." />
+            {(() => { const e = effectiveEngine(r); return (
             <p className="icp-hint">{r.status === "active"
-              ? `Each morning: about ${r.engine.discover_per_day} new ${region} companies, and ${r.engine.verify_per_day} revenue checks (≈ ${r.engine.discover_per_day * 30} new accounts a month). Runs on your Claude plan — no API cost. Keep the total across active regions to about 30 checks a day so one morning run can finish.`
-              : "Only used when this region is Active. Kept here so it is ready when you switch it on."}</p>
+              ? `Each morning: about ${e.discover_per_day} new ${region} companies and ${e.verify_per_day} revenue checks (${e.priority} priority = ${e.share === 1 ? "the full" : e.share === 0.5 ? "half the" : "a quarter of the"} counts above), worked ${e.priority === "high" ? "first" : e.priority === "medium" ? "after the High regions" : "last, so it is the first cut if the session runs short"}. Runs on your Claude plan, no API cost.`
+              : "Only used when this region is Active. Kept here so it is ready when you switch it on."}</p>); })()}
           </div>
           <div className="icp-row">
             <label className="icp-field"><span>Local currency (for conversion only)</span><input value={r.currency.code} onChange={(e) => set((x) => { x.currency.code = e.target.value.toUpperCase().slice(0, 4); })} /></label>

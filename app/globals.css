@@ -1893,3 +1893,26 @@ table.ft td.num{width:1%;text-align:right}
 @media (max-width:860px){.hw.hw-stack{padding:8px}.hw-acc-body{padding:14px 14px 18px}}
 /* v5.07: a minimized Market intelligence / Buying signals window is just the small bar (title, restore, close); .appwin-body's display:block !important had kept the whole window showing inside the pill */
 .appwin.mini .appwin-body{display:none !important}
+
+/* v5.10: region priority control in Define ICP */
+.icp-prio{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:10px 0 6px}
+.icp-prio-label{font:600 13px var(--body);color:var(--text-strong)}
+.icp-prio-label small{display:block;font:400 11px var(--body);color:var(--muted)}
+.icp-prio-seg{display:inline-flex;border:1px solid var(--line-2);border-radius:999px;overflow:hidden;background:var(--surface)}
+.icp-prio-seg button{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;padding:6px 16px;font:600 13px var(--body);color:var(--text)}
+.icp-prio-seg button small{font:400 10px var(--body);opacity:.75}
+.icp-prio-seg button+button{border-left:1px solid var(--line-2)}
+.icp-prio-seg button[aria-pressed="true"].p-high{background:#0B7A66;color:#fff}
+.icp-prio-seg button[aria-pressed="true"].p-medium{background:#B87900;color:#fff}
+.icp-prio-seg button[aria-pressed="true"].p-low{background:#5B6B80;color:#fff}
+.icp-prio-seg button:focus-visible{outline:2px solid var(--teal);outline-offset:-2px}
+.icp-prio-seg button:disabled{cursor:default}
+
+/* v5.10: bell: one-line status under the region name, with the region's priority */
+.bell-oneline{margin:2px 0 8px;font-size:12.5px;color:var(--text);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.bell-prio{font:700 10.5px var(--body);padding:2px 9px;border-radius:999px;color:#fff;letter-spacing:.02em}
+.bell-prio.p-high{background:#0B7A66}.bell-prio.p-medium{background:#B87900}.bell-prio.p-low{background:#5B6B80}
+
+.hw-prio-about{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+.hw-prio-about h4{margin:0 0 6px;font:700 15px var(--body);color:var(--text-strong)}
+.hw-prio-table td,.hw-prio-table th{vertical-align:top}

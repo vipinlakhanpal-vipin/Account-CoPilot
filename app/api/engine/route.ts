@@ -4,7 +4,7 @@ import { requireUser } from "@/lib/auth";
 import { getAccess, canSeeRegion, canSeeCountry } from "@/lib/access";
 import { requirePaidApproval, pinSetting, savePin } from "@/lib/paidGuard";
 import { vendorList, VENDORS_KEY } from "@/lib/market";
-import { regionOf, canonCountry, normalizeDefinition, summarizeRules, REGIONS } from "@/lib/icpDefinition.mjs";
+import { regionOf, canonCountry, normalizeDefinition, summarizeRules, effectiveEngine, REGIONS } from "@/lib/icpDefinition.mjs";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { invalidateAllData } from "@/lib/dataCache";
 import { createHash, randomBytes } from "node:crypto";
@@ -183,7 +183,7 @@ export async function GET(req: Request) {
       const mine = companies.filter((c) => regionOf(c.country) === r.key);
       const by: Record<string, number> = {};
       for (const c of mine) by[c.icp_status || "Unknown"] = (by[c.icp_status || "Unknown"] || 0) + 1;
-      return { region: r.key, name: r.name, status: rules.status as string, discover_per_day: rules.engine.discover_per_day, verify_per_day: rules.engine.verify_per_day,
+      return { region: r.key, name: r.name, status: rules.status as string, priority: effectiveEngine(rules).priority, market: !!rules.market, discover_per_day: effectiveEngine(rules).discover_per_day, verify_per_day: effectiveEngine(rules).verify_per_day, set_discover_per_day: rules.engine.discover_per_day, set_verify_per_day: rules.engine.verify_per_day,
         rules: summarizeRules(r.key, rules), accounts: mine.length, by_status: by };
     });
     return NextResponse.json({ now: new Date().toISOString(), regions, runs, companies: companies.map((c) => ({
@@ -197,7 +197,7 @@ export async function GET(req: Request) {
     const entries = await enrichRegions(db, log.entries);
     // the regions this user may see, with their status, so the bell can list a region that has not had a run yet
     const def = normalizeDefinition(await getSetting<unknown>(db, "icp_definition", null));
-    const regions = REGIONS.filter((r: { key: string }) => canSeeRegion(access, r.key)).map((r: { key: string; name: string }) => ({ key: r.key, name: r.name, status: (def.regions[r.key]?.status || "paused") as string }));
+    const regions = REGIONS.filter((r: { key: string }) => canSeeRegion(access, r.key)).map((r: { key: string; name: string }) => ({ key: r.key, name: r.name, status: (def.regions[r.key]?.status || "paused") as string, priority: effectiveEngine(def.regions[r.key]).priority, market: !!def.regions[r.key]?.market }));
     return NextResponse.json({ entries: scopeLog(entries, access), regions }, { headers: { "Cache-Control": "no-store" } });
   }
   const log = await getSetting<{ entries: LogEntry[] }>(db, "engine_log", { entries: [] });

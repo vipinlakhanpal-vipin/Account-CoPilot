@@ -21,7 +21,7 @@ const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "");
 // Bell in the top bar: notifications from the scheduled engine runs (6am daily). Unread = newer than the last time you opened it.
 export default function EngineBell() {
   const [entries, setEntries] = useState<Entry[]>([]);
-  const [myRegions, setMyRegions] = useState<{ key: string; name: string; status: string }[]>([]);
+  const [myRegions, setMyRegions] = useState<{ key: string; name: string; status: string; priority?: string; market?: boolean }[]>([]);
   const [seen, setSeen] = useState("");
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -86,6 +86,19 @@ export default function EngineBell() {
             <button type="button" className="btn tiny btn-close" onClick={() => setOpen(false)}>Close</button>
           </div>
           {regionList.length > 0 && <div className="bell-region-name">{selected === "All" ? "All regions" : nameOf(selected)}</div>}
+          {selected !== "All" && (() => {
+            // One line under the region name: what the latest run day did for it (new companies and companies verified), and its priority.
+            const mine = blocks.filter((b) => b.region === selected);
+            const meta = myRegions.find((m) => m.key === selected);
+            const chip = meta?.priority ? <span className={`bell-prio p-${meta.priority}`}>{meta.priority === "high" ? "High" : meta.priority === "medium" ? "Medium" : "Low"} priority</span> : null;
+            if (!mine.length) return chip ? <p className="bell-oneline">No run yet {chip}</p> : null;
+            const day = new Date(mine[0].at).toDateString(), sameDay = mine.filter((b) => new Date(b.at).toDateString() === day);
+            const rows = sameDay.flatMap((b) => b.rows);
+            const newN = rows.filter((d) => d.isNew).length;
+            const verN = rows.filter((d) => d.isVerified && !/market|pitch|contact|signal/i.test(d.status || "")).length;
+            const when = day === new Date().toDateString() ? "Today" : new Date(mine[0].at).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+            return <p className="bell-oneline"><b>{when}:</b> {newN} new {newN === 1 ? "company" : "companies"} · {verN} verified {chip}</p>;
+          })()}
           <p className="bell-resize-hint">Drag the bottom-right corner to expand ↘</p>
           {entries.length === 0 && selected === "All" ? <p className="note">No runs yet. The engine runs every day at <DailyRunLocalTime /> and posts a summary here.</p>
             : selected !== "All" && !blocks.some((b) => b.region === selected) ? (() => {

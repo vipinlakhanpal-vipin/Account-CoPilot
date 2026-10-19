@@ -270,6 +270,18 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                 <p>Net revenue ≥ $250M and ≥ 100 employees by default, no stock listing required — set per region in <b>Setup → Define ICP</b>, the
                   one rule set everything else reads.</p></div>
             </div>
+            <div className="hw-prio-about">
+              <h4>How the engine decides what to do first</h4>
+              <p>The engine cannot do everything in one morning, so it works by <b>priority</b>. Your own clicks (Find New Company, scans, contacts) always go first. After that, each region has a priority a Super Admin sets in <b>Setup → Define ICP</b>, and each kind of work has its own.</p>
+              <div className="tablewrap"><table className="hw-prio-table">
+                <thead><tr><th>Priority</th><th>Regions</th><th>Work</th></tr></thead>
+                <tbody>
+                  <tr><td><span className="bell-prio p-high">High</span></td><td>Full daily counts, worked first</td><td>Your queued jobs; verifying new companies; &quot;Needs check&quot; and &quot;Unknown&quot; accounts; the watch list</td></tr>
+                  <tr><td><span className="bell-prio p-medium">Medium</span></td><td>Half the counts, worked after High</td><td>Finding new companies; verifying &quot;Likely&quot; accounts; SAP and Coupa partners and their customers; buying signals (UAE and KSA)</td></tr>
+                  <tr><td><span className="bell-prio p-low">Low</span></td><td>A quarter of the counts, worked last</td><td>180-day re-checks; other vendors&apos; partners; contacts for accounts with no people; deep dives into one partner</td></tr>
+                </tbody></table></div>
+              <p className="note">Example: a region set to find 5 new companies and verify 25 a day does exactly that when High, about 3 and 13 when Medium, and 2 and 7 when Low. If the morning session runs short, Low regions are cut first. <b>Market intelligence</b> (partner and customer scans) runs each morning only in regions where it is switched on. The <b>bell</b> shows each region&apos;s latest run in one line. It costs no API credit: it uses your Claude plan.</p>
+            </div>
           </div>
   );
   const wizardBody = loading || !def ? <p className="note">Loading your current settings…</p> : (

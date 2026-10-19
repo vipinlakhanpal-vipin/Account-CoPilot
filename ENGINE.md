@@ -17,7 +17,7 @@ No install is needed: `scripts/engine_client.mjs` uses only built-in Node (fetch
 - `revenue.basis_*`: which revenue measure to report (general / banks / insurers); convert local currency with `currency.per_usd`.
 - `listing`, `ownership_allowed`, `entity_level`, `industries_include` / `industries_exclude`, `exclude.*` and `notes`: what to search for and what never to add.
 - `focus` (platforms, ERP, triggers): signals to look for and mention in the reasoning.
-- `active` lists the regions to work on and their daily counts (`discover_per_day`, `verify_per_day`). Never discover in a region that is not active.
+- `active` lists the regions to work on, **already in the order to work them (High priority first)**, each with its `priority` (high / medium / low), `market` (Market intelligence on or off) and its daily counts (`discover_per_day`, `verify_per_day`). The counts are the user's counts from Define ICP times the priority share (High 100%, Medium half, Low a quarter, rounded up; `set_*` shows the base). Use the counts as printed. Never discover in a region that is not active.
 
 ## 0c. Reading an uploaded list (ALWAYS check, before claiming a job)
 `node scripts/engine_client.mjs uploads` writes `data/verification/uploaded_lists.json`: `[{"id","filename","region","url"}]` — spreadsheets a user
@@ -162,7 +162,15 @@ Finish a job with `finish <id> done "<Vendor or all> · <Region>: P partners, C 
 Do not commit or push anything and do not change app code.
 
 ## 4. Default daily work (always, after any queued jobs)
-For **each region in `active`** of `icp_rules.json` (default: UAE, find 5, verify 25):
+**Priority (set by the Super Admin per region in Define ICP, and per kind of work here).** The user's own jobs always come first. Then work every region in the order `active` lists them (High, then Medium, then Low), finishing a region's steps 1 to 3 before the next. If the session runs short, the Low regions and the later steps are what get cut, never the High ones.
+
+| Priority | Work | When |
+|---|---|---|
+| **High** | queued jobs; verifying the companies you just added; "Needs check" and "Unknown" accounts; the watch list | every run, first |
+| **Medium** | finding new companies; verifying "Likely" accounts; Market intelligence partners and customers for SAP and Coupa (regions with `market` on); buying signals (UAE and KSA) | every run, after High |
+| **Low** | the 180-day re-checks; the other vendors' partner scans (Oracle, Microsoft, Boomi, MuleSoft, Ivalua, GEP, Jaggaer, added vendors); contacts for accounts with no people; deep dives into one partner | only with spare time, a slice per run |
+
+For **each region in `active`** of `icp_rules.json` (default: UAE, find 5, verify 25), in that order:
 1. **Discover `discover_per_day` new companies** in that region that meet its rules (entity level, size, listing, ownership, industries; never anything in
    `exclude` or `notes`; not already in the app).
    **First run `node scripts/engine_client.mjs names`** and read `data/verification/existing_companies.json`. Do not propose any company on it,
@@ -190,5 +198,5 @@ For **each region in `active`** of `icp_rules.json` (default: UAE, find 5, verif
 5. **Buying signals (UAE and KSA only, after the rest, if time allows)**: for each of UAE and KSA that is in `active`, run the **Buying signals** procedure: one tender sweep, then
    `signal_targets <REGION> 10` and scan those companies; save with `add_signals`. Skip it silently if the session is short on time; never let it delay the revenue work above.
 6. **Market intelligence (after everything above)**:
-   a. **Partners:** `market_targets 2`, then the **Partners** step of the Market intelligence procedure for those vendor x region pairs only (oldest-scanned first; do not search their customers in this step). Save with `add_market`.
+   a. **Partners:** `market_targets 2`, then the **Partners** step of the Market intelligence procedure for those vendor x region pairs only (do not search their customers in this step). The app already lists only Active regions whose `market` switch is on, High priority first, and SAP and Coupa before the other vendors; the other vendors get a turn once SAP and Coupa for that region were scanned in the last 7 days. Save with `add_market`.
    b. **Customers (the default: nobody has to click "Find more customers"):** the same command also writes `data/verification/customers_due.json`: Active vendor x region pairs with partners whose customers were never searched, or not in 45 days (SAP and Coupa first). Work down it until you have searched the customers of **8 partners in total this run**: run the **Customers** step for each one (exactly as in a `phase: "customers"` job), save with `add_market` and put every finished partner in `checked_partners` (a partner with no published customers still goes in, so it is not repeated). `customers_due` shrinks by itself as partners are checked, so unfinished partners carry over to the next run. Skip silently only if the session is short; the revenue work above always comes first.

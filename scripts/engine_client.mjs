@@ -107,7 +107,7 @@ else if (cmd === "queue") {
   fs.writeFileSync("data/verification/icp_rules.json", JSON.stringify(j, null, 1));
   console.log(`ICP definition (updated ${j.updated_at || "never — defaults"}${j.updated_by ? " by " + j.updated_by : ""}) written to data/verification/icp_rules.json`);
   j.summary.forEach((x) => console.log("  " + x));
-  console.log("Active regions: " + (j.active.map((a) => `${a.region} (find ${a.discover_per_day}, verify ${a.verify_per_day})`).join(", ") || "none"));
+  console.log("Active regions, in the order to work them (High priority first): " + (j.active.map((a) => `${a.region} [${a.priority}${a.market ? ", market intelligence on" : ""}] (find ${a.discover_per_day}, verify ${a.verify_per_day})`).join(", ") || "none"));
 } else if (cmd === "watch") {
   // watch            → writes the watch list that is due for a re-check to data/verification/revenue_queue.json
   // watch <slug>     → adds an existing company to the watch list

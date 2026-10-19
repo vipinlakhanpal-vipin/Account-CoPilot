@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.09";
+export const APP_VERSION = "5.10";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,12 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.10", date: "2026-10-19", notes: "Engine priority: High, Medium and Low regions and kinds of work; a one-line status per region in the bell.", changes: [
+      { what: "Each region has a priority (High, Medium, Low) and a Market intelligence switch in Define ICP, set by a Super Admin. High keeps its full daily counts and is worked first, Medium gets half, Low a quarter, last. The daily run follows that order, and market scans run only in regions with the switch on", where: "lib/icpDefinition.mjs, app/api/engine/worker/route.ts, components/IcpEditor.tsx, ENGINE.md", why: "Requested — tell the engine what to search and explore first" },
+      { what: "Kinds of work are tiered High / Medium / Low in the engine's instructions: your jobs and verifying new and Needs check accounts first, then discovery, Likely accounts and SAP and Coupa market work, then re-checks, other vendors and contacts", where: "ENGINE.md", why: "Requested" },
+      { what: "The bell shows one line under the region name: the latest run day's new companies and verified count, with the region's priority", where: "components/EngineBell.tsx", why: "Requested" },
+      { what: "Home → About Account CoPilot and the Guide explain how the engine decides what to do first", where: "components/HomeWorkspace.tsx, app/guide/page.tsx", why: "Requested; the Guide intro must follow engine changes" },
+    ] },
   { version: "5.09", date: "2026-10-19", notes: "The daily run now searches the customers of the partners by default.", changes: [
       { what: "The daily run searches the published customers of up to 8 partners every morning (SAP and Coupa first, partners never searched or not in 45 days), on top of finding new partners. Nobody has to click Find more customers; unfinished partners carry over to the next run. Partners hidden under Other regions are skipped", where: "ENGINE.md, scripts/engine_client.mjs, app/api/engine/worker/route.ts", why: "Requested — customers should be searched by default, not only on a click" },
     ] },

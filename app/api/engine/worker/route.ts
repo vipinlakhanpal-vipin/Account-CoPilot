@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { invalidateAllData } from "@/lib/dataCache";
 import { statusPatch, applyRevenueResult } from "@/lib/icpStatus.mjs";
-import { normalizeDefinition, rulesFor, regionOf, canonCountry, summarizeRules } from "@/lib/icpDefinition.mjs";
+import { normalizeDefinition, rulesFor, regionOf, canonCountry, summarizeRules, effectiveEngine, PRIORITY_ORDER } from "@/lib/icpDefinition.mjs";
 import { EMPTY_STORE, type Signal, type SignalStore } from "@/lib/signals";
 import { nk as marketNk, partnerId } from "@/lib/marketServer";
 import { pitchFacts } from "@/lib/pitchFacts";
@@ -120,7 +120,10 @@ export async function POST(req: Request) {
   const icpDef = normalizeDefinition((await db.from("settings").select("value").eq("key", "icp_definition").maybeSingle()).data?.value);
   if (b.action === "icp") {
     // The ICP definition the session must follow (Setup → Define ICP): every region's rules, which regions are active and their daily run.
-    const active = Object.entries(icpDef.regions).filter(([, r]) => r.status === "active").map(([k, r]) => ({ region: k, discover_per_day: r.engine.discover_per_day, verify_per_day: r.engine.verify_per_day }));
+    // Counts are the Define ICP counts times the region's priority share (high 1, medium 1/2, low 1/4), and the regions come High first, so a short session cuts Low first.
+    const active = Object.entries(icpDef.regions).filter(([, r]) => r.status === "active").map(([k, r]) => { const e = effectiveEngine(r);
+      return { region: k, priority: e.priority, market: !!r.market, discover_per_day: e.discover_per_day, verify_per_day: e.verify_per_day, set_discover_per_day: r.engine.discover_per_day, set_verify_per_day: r.engine.verify_per_day }; })
+      .sort((x, y) => PRIORITY_ORDER.indexOf(x.priority) - PRIORITY_ORDER.indexOf(y.priority));
     return NextResponse.json({ updated_at: icpDef.updated_at, updated_by: icpDef.updated_by, active, summary: Object.entries(icpDef.regions).map(([k, r]) => summarizeRules(k, r)), regions: icpDef.regions });
   }
   if (b.action === "queue") {
@@ -257,19 +260,24 @@ export async function POST(req: Request) {
   }
   if (b.action === "market_targets") {
     // The vendor x region pairs due a market-intelligence scan: every Active region, oldest scan first.
-    const active = Object.entries(icpDef.regions).filter(([, r]) => r.status === "active").map(([k]) => k);
+    // The daily default covers only Active regions with Market intelligence switched on, High priority first; a job that names a region always runs.
+    const prio = (k: string) => PRIORITY_ORDER.indexOf(effectiveEngine(icpDef.regions[k]).priority);
+    const active = Object.entries(icpDef.regions).filter(([k, r]) => r.status === "active" && (b.region ? true : !!r.market)).map(([k]) => k).sort((x, y) => prio(x) - prio(y));
     const vendors = vendorList((await get<{ custom?: string[] }>(db, VENDORS_KEY, {})).custom);
+    const vRank = (v: string) => (/^(sap|coupa)$/i.test(v) ? 0 : 1); // the two main vendors first
+    // SAP and Coupa first; once one of them was scanned in the last 7 days it waits, so the other vendors get their turn without a click.
+    const pRank = (x: { vendor: string; last_scan: string | null }) => (/^(sap|coupa)$/i.test(x.vendor) ? (x.last_scan && Date.now() - new Date(x.last_scan).getTime() < 7 * 864e5 ? 2 : 0) : 1);
     const { data } = await db.from("settings").select("key,value").like("key", "market_intel:%");
     const docs = new Map((data || []).map((r) => [r.key as string, r.value as MarketDoc]));
     const pairs = active.filter((r) => !b.region || r === b.region).flatMap((region) => vendors.filter((v) => !b.vendor || v === b.vendor).map((vendor) => { const d = docs.get(marketKey(vendor, region)); return { vendor, region, last_scan: d?.scanned_at || null, partners_known: d?.partners?.length || 0, known: (d?.partners || []).map((p) => p.name), partners_due: (d?.partners || []).filter((p) => !p.customers_scanned_at || Date.now() - new Date(p.customers_scanned_at).getTime() > 45 * 864e5).slice(0, 8).map((p) => ({ name: p.name, website: p.website })), partners_due_total: (d?.partners || []).filter((p) => !p.customers_scanned_at || Date.now() - new Date(p.customers_scanned_at).getTime() > 45 * 864e5).length, known_customers: b.vendor && b.region ? (d?.customers || []).slice(0, 1500).map((c) => ({ partner: c.partner, customer: c.customer })) : undefined, needs_contacts: (d?.customers || []).filter((c) => !c.contacts?.length).slice(0, 10).map((c) => ({ partner: c.partner, customer: c.customer, customer_website: c.customer_website })) }; }))
-      .sort((x, y) => String(x.last_scan || "").localeCompare(String(y.last_scan || ""))).slice(0, b.limit);
+      .sort((x, y) => prio(x.region) - prio(y.region) || pRank(x) - pRank(y) || String(x.last_scan || "").localeCompare(String(y.last_scan || ""))).slice(0, b.limit);
     // Customers are searched by default, nobody has to click: every Active vendor x region with a partner whose customers were never searched (or not in 45 days), the main vendors first.
     // A partner hidden under "Other regions" (no confirmed local office) is left out; its customers would not show anyway.
     const stale = (p: { customers_scanned_at?: string; presence_pending?: boolean }) => !p.presence_pending && (!p.customers_scanned_at || Date.now() - new Date(p.customers_scanned_at).getTime() > 45 * 864e5);
     const customers_due = active.filter((r) => !b.region || r === b.region).flatMap((region) => vendors.filter((v) => !b.vendor || v === b.vendor).map((vendor) => {
       const due = (docs.get(marketKey(vendor, region))?.partners || []).filter(stale);
       return { vendor, region, partners_due_total: due.length, partners_due: due.slice(0, 8).map((p) => ({ name: p.name, website: p.website })) }; }))
-      .filter((x) => x.partners_due_total > 0).sort((x, y) => vendors.indexOf(x.vendor) - vendors.indexOf(y.vendor) || y.partners_due_total - x.partners_due_total).slice(0, 6);
+      .filter((x) => x.partners_due_total > 0).sort((x, y) => prio(x.region) - prio(y.region) || vRank(x.vendor) - vRank(y.vendor) || y.partners_due_total - x.partners_due_total).slice(0, 6);
     return NextResponse.json({ targets: pairs, vendors, customers_due });
   }
   if (b.action === "add_market") {

@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export type Rules = {
   status: "active" | "paused" | "next";
+  priority: "high" | "medium" | "low";
+  market: boolean;
   currency: { code: string; per_usd: number };
   revenue: { min_usd_m: number; max_usd_m: number | null; basis_general: string; basis_banks: string; basis_insurers: string };
   employees: { min: number; max: number | null };
@@ -36,3 +38,8 @@ export function rulesFor(def: any, country: unknown): Rules;
 export function validateRules(key: string, r: Rules): string[];
 export function summarizeRules(key: string, r: Rules): string;
 export function describeRules(key: string, r: Rules): string;
+
+export const PRIORITY_SHARE: Record<"high" | "medium" | "low", number>;
+export const PRIORITY_ORDER: ("high" | "medium" | "low")[];
+export function priorityOf(r: unknown): "high" | "medium" | "low";
+export function effectiveEngine(r: unknown): { priority: "high" | "medium" | "low"; share: number; discover_per_day: number; verify_per_day: number };
