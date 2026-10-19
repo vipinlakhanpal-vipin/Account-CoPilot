@@ -287,7 +287,10 @@ export async function POST(req: Request) {
       }
       return out;
     };
-    for (const p of b.partners) {
+    for (const pIn of b.partners) {
+      // A name the firm is also listed under (partner.aka, for example WMS Solutions for WMS Middle East LLC) goes to the one partner, never a second entry.
+      const same = doc.partners.find((x) => (x.aka || []).some((a) => marketNk(a) === marketNk(pIn.name)));
+      const p = same ? { ...pIn, name: same.name } : pIn;
       const pending = !presenceOk(p, b.region); // kept, but hidden in the app until its base or an office in the region is confirmed
       const id = partnerId(b.vendor, b.region, p.name);
       const row: Partner = { id, vendor: b.vendor, region: b.region, name: p.name, website: p.website, tier: p.tier, services: p.services, hq_city: p.hq_city, hq_country: p.hq_country, branch: p.branch, office_address: p.office_address, office_source: p.office_source, scope_note: p.scope_note, branch_source: p.branch_source, presence_pending: pending || undefined, source_url: p.source_url, label: p.label, contacts: vet(p.contacts, p.website, p.name), found_at: now };
@@ -296,7 +299,7 @@ export async function POST(req: Request) {
       else { doc.partners.unshift(row); added.partners++; added.contacts += row.contacts.length; }
     }
     for (const c of b.customers) {
-      const partner = doc.partners.find((x) => nk(x.name) === nk(c.partner));
+      const partner = doc.partners.find((x) => nk(x.name) === nk(c.partner) || (x.aka || []).some((a) => nk(a) === nk(c.partner)));
       if (!partner) { skipped.push({ name: c.customer, why: `partner "${c.partner}" is not on the list yet; add it in the same file` }); continue; }
       const co = (have || []).find((x) => sameCompany(c.customer, c.customer_website, x.company_name, x.domain || ""));
       const id = createHash("sha1").update(`${partner.id}|${nk(c.customer)}`).digest("hex").slice(0, 14);

@@ -13,7 +13,7 @@ export function vendorList(custom: unknown): string[] {
   return out;
 }
 export type MContact = { name: string; title: string; email: string; phone: string; linkedin_url: string; source_url: string };
-export type Partner = { id: string; vendor: Vendor; region: string; name: string; website: string; tier: string; services: string; hq_city: string; source_url: string;
+export type Partner = { aka?: string[]; /* other names the same firm is listed under; a scan result under one of these goes to this partner */ id: string; vendor: Vendor; region: string; name: string; website: string; tier: string; services: string; hq_city: string; source_url: string;
   label: "FACT" | "LIKELY"; contacts: MContact[]; found_at: string; added_by?: string; customers_scanned_at?: string; hq_country?: string; branch?: boolean; branch_note?: string; coverage_only?: boolean; scope_note?: string; branch_source?: string; presence_pending?: boolean; office_address?: string; office_source?: string };
 export type PCustomer = { id: string; partner_id: string; partner: string; vendor: Vendor; region: string; customer: string; customer_website: string; slug: string; project: string;
   source_url: string; published: string; contacts: MContact[]; found_at: string };

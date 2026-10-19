@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.07";
+export const APP_VERSION = "5.08";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.08", date: "2026-10-19", notes: "A partner can carry other names it is listed under, so a scan never re-adds a duplicate.", changes: [
+      { what: "A Market intelligence partner can hold other names (aka). A scan result under one of those names, or customers listed under it, goes to that one partner. WMS Solutions was merged into WMS Middle East LLC this way", where: "app/api/engine/worker/route.ts, lib/market.ts", why: "Requested — WMS Solutions is the same firm as WMS Middle East LLC" },
+    ] },
   { version: "5.07", date: "2026-10-19", notes: "A minimized Market intelligence or Buying signals window is a small bar again.", changes: [
       { what: "Minimizing Market intelligence or Buying signals now leaves only the small bar with its title, a + to restore and Close. The whole window had stayed visible inside the bar", where: "app/globals.css", why: "Reported — the minimized window opened as a tall oval with all the content" },
     ] },
