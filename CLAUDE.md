@@ -9,7 +9,7 @@ B2B procurement-intelligence app for a Coupa / SAP Ariba implementation and mana
 - **Local Node is 18.** Run scripts and builds with Node 22 via npx: `npx -y -p node@22 node <script>`, and build with `npx -y -p node@22 node node_modules/next/dist/bin/next build`.
 
 ## Releasing
-Bump `APP_VERSION` in `lib/version.ts` (1.9 → 1.10 …), add a line to `RELEASES`, build, commit, `git tag -a v1.x`, `git push origin main --tags`. The in-app Refresh button shows a red badge when a new version is live. Commits end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
+Bump `APP_VERSION` in `lib/version.ts`. Numbering (user rule, 2026-10-19): two digits after the point, rolling over at 99, so 4.99 → 5.00 → 5.01 … 5.99 → 6.00 → 6.01 … 6.99 → 7.00; never 4.100, add a line to `RELEASES`, build, commit, `git tag -a v1.x`, `git push origin main --tags`. The in-app Refresh button shows a red badge when a new version is live. Commits end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
 
 ## Data rules (the user insists on these)
 - **Never overwrite reference data.** Rows from the user's workbook (`FINAL-UAE-Target-LIST-V3.1-SEP-2026.xlsx`: Vipin-Profiling, UAE Targets v3, Stakeholders) are kept verbatim. Channel-state values such as CoPilot or Claude-Seamless are theirs.
