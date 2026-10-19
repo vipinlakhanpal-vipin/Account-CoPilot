@@ -1871,3 +1871,23 @@ table.ft td.num{width:1%;text-align:right}
 .ft .tree-head td{background:var(--surface-2);padding:7px 10px;border-top:1px solid var(--line-2);font-size:12.5px}
 .ft .tree-head .tree-glyph{display:inline-block;width:22px;color:var(--teal);font-family:var(--mono)}
 .ft .tree-head + .click td:first-child,.ft .click td.num{white-space:nowrap}
+
+/* v5.06: Home: About Account CoPilot and Setup Wizard as two stacked collapsible blocks */
+.hw.hw-stack{display:flex;flex-direction:column;gap:10px;padding:12px;overflow:visible;background:transparent;border:0;box-shadow:none}
+.hw-acc{border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden}
+.hw-acc-head{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:none;border:0;padding:14px 16px;cursor:pointer;color:var(--text)}
+.hw-acc-head:hover{background:rgba(var(--ink),.04)}
+.hw-acc-head:focus-visible{outline:2px solid var(--teal);outline-offset:-2px}
+.hw-acc-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none;background:var(--teal-soft,rgba(15,110,86,.12));color:var(--teal)}
+.hw-acc.wizard .hw-acc-icon{background:var(--purple-soft);color:var(--purple)}
+.hw-acc-icon .ico{width:18px;height:18px}
+.hw-acc-text{display:flex;flex-direction:column;gap:1px}
+.hw-acc-title{font:700 16px var(--body);color:var(--text-strong)}
+.hw-acc-sub{font-size:12px;color:var(--muted)}
+.hw-acc.open>.hw-acc-head{border-bottom:1px solid var(--line)}
+.hw-acc-body{padding:18px 22px 24px}
+.hw-steps-row{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:0 0 16px;padding:0}
+.hw-steps-row li{margin:0}
+.hw-steps-row .hw-step-group{display:none}
+.hw-steps-row .hw-step{width:auto;flex-direction:row;padding:7px 12px;white-space:nowrap}
+@media (max-width:860px){.hw.hw-stack{padding:8px}.hw-acc-body{padding:14px 14px 18px}}

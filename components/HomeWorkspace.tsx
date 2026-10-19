@@ -79,8 +79,11 @@ const STEPS: { n: number; label: string; icon: keyof typeof ICON; cls: string; g
 ];
 
 export default function HomeWorkspace({ access }: { access: Access }) {
-  const [section, setSection] = useState<"about" | "wizard">("about");
-  const [expanded, setExpanded] = useState(true);
+  // Two stacked, collapsible blocks (About, then Setup Wizard); the choice is remembered in this browser.
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
+  useEffect(() => { try { setAboutOpen(localStorage.getItem("hw-about") === "1"); setWizardOpen(localStorage.getItem("hw-wizard") === "1"); } catch { /* optional */ } }, []);
+  const flip = (k: "hw-about" | "hw-wizard", set: (v: boolean) => void, v: boolean) => { set(v); try { localStorage.setItem(k, v ? "1" : "0"); } catch { /* optional */ } };
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -169,7 +172,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
   async function save() {
     if (!def) return;
     if (!access.isSuper) { notify("Consult Super Admin if any change is required.", "error"); return; }
-    if (!regions.length) { notify("Pick at least one region in step 1.", "error"); setSection("wizard"); setExpanded(true); setStep(1); return; }
+    if (!regions.length) { notify("Pick at least one region in step 1.", "error"); flip("hw-wizard", setWizardOpen, true); setStep(1); return; }
     const named: { key: string; s: SizeDraft }[] = regions.map((key) => ({ key, s: sizeFor(key) }));
     const badSize = named.find(({ s }) => !(s.revenue > 0) || !(s.employees >= 0));
     if (badSize) { notify(`${REGIONS.find((r) => r.key === badSize.key)?.name || badSize.key}: enter a valid revenue and employee count.`, "error"); return; }
@@ -211,43 +214,8 @@ export default function HomeWorkspace({ access }: { access: Access }) {
   const startingRegions = regions.filter((k) => def?.regions[k]?.status === "next").map((k) => REGIONS.find((r) => r.key === k)?.name || k);
   // Shared by the "Setup Wizard" label and the chevron, so both always behave the same way: switching in from
   // elsewhere opens the step list, and clicking again once already there toggles it open or closed.
-  const toggleWizard = () => {
-    if (section !== "wizard") { setSection("wizard"); setExpanded(true); }
-    else setExpanded((v) => !v);
-  };
 
-  return (
-    <section className="panel hw">
-      <nav className="hw-rail">
-        <button type="button" className={`hw-wizard-cta${section === "wizard" ? " on" : ""}`} aria-expanded={expanded} onClick={toggleWizard}>
-          <span className="hw-wizard-cta-icon"><Ico name="wand" /></span>
-          <span className="hw-wizard-cta-text">
-            <span className="hw-wizard-cta-title">Setup Wizard</span>
-            <span className="hw-wizard-cta-sub">Set up in about 5 minutes</span>
-          </span>
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" style={{ transition: "transform .18s ease", transform: expanded ? "none" : "rotate(-90deg)" }}>
-            <path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
-        </button>
-        {section === "wizard" && (
-          <button type="button" className="hw-back-link" onClick={() => { setSection("about"); setExpanded(false); }}>&larr; Back to About</button>
-        )}
-        {expanded && (
-          <ol className="hw-steps">
-            {STEPS.map((s, i) => (
-              <li key={s.n}>
-                {s.group === "mandatory" && STEPS[i - 1]?.group !== "mandatory" && <div className="hw-step-group hw-step-group--mandatory">Mandatory · affects the Agent</div>}
-                {s.group === "info" && STEPS[i - 1]?.group !== "info" && <div className="hw-step-group hw-step-group--info">Information only</div>}
-                <button type="button" className={`hw-step ${s.cls}`} aria-current={step === s.n && section === "wizard"}
-                  onClick={() => { setSection("wizard"); setStep(s.n); }}>
-                  <span className="hw-step-num">{s.n}</span><Ico name={s.icon} />{s.label}</button>
-              </li>
-            ))}
-          </ol>
-        )}
-      </nav>
-
-      <div className="hw-content">
-        {section === "about" ? (
+  const aboutBody = (
           <div>
             <h3 className="hw-h">About Account CoPilot — Your Account Intelligence Partner</h3>
             <p className="hw-lead hw-lead-justify">Account CoPilot is an <b>AI Agent</b> — it works on its own, not only when you ask. Every morning it looks for new
@@ -303,7 +271,8 @@ export default function HomeWorkspace({ access }: { access: Access }) {
                   one rule set everything else reads.</p></div>
             </div>
           </div>
-        ) : loading || !def ? <p className="note">Loading your current settings…</p> : (
+  );
+  const wizardBody = loading || !def ? <p className="note">Loading your current settings…</p> : (
           <div>
             {!access.isSuper && <p className="note" role="status"><b>Read only.</b> The Setup Wizard changes the ICP and the daily run. Consult Super Admin if any change is required.</p>}
             {step === 1 && (
@@ -563,7 +532,42 @@ export default function HomeWorkspace({ access }: { access: Access }) {
               {step < 6 && <button type="button" className="btn primary" onClick={() => setStep((s) => s + 1)}>Next</button>}
             </div>
           </div>
-        )}
+        );
+  const chev = (open: boolean) => (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" style={{ transition: "transform .18s ease", transform: open ? "none" : "rotate(-90deg)", marginLeft: "auto", flexShrink: 0 }}>
+      <path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+  );
+  return (
+    <section className="panel hw hw-stack">
+      <div className={`hw-acc about${aboutOpen ? " open" : ""}`}>
+        <button type="button" className="hw-acc-head" aria-expanded={aboutOpen} onClick={() => flip("hw-about", setAboutOpen, !aboutOpen)}>
+          <span className="hw-acc-icon"><Ico name="search" /></span>
+          <span className="hw-acc-text"><span className="hw-acc-title">About Account CoPilot</span><span className="hw-acc-sub">What the agent does, how it verifies, what it costs</span></span>
+          {chev(aboutOpen)}
+        </button>
+        {aboutOpen && <div className="hw-acc-body">{aboutBody}</div>}
+      </div>
+      <div className={`hw-acc wizard${wizardOpen ? " open" : ""}`}>
+        <button type="button" className="hw-acc-head" aria-expanded={wizardOpen} onClick={() => flip("hw-wizard", setWizardOpen, !wizardOpen)}>
+          <span className="hw-acc-icon"><Ico name="wand" /></span>
+          <span className="hw-acc-text"><span className="hw-acc-title">Setup Wizard</span><span className="hw-acc-sub">Set up in about 5 minutes</span></span>
+          {chev(wizardOpen)}
+        </button>
+        {wizardOpen && (
+          <div className="hw-acc-body">
+          <ol className="hw-steps hw-steps-row">
+              {STEPS.map((s, i) => (
+                <li key={s.n}>
+                  {s.group === "mandatory" && STEPS[i - 1]?.group !== "mandatory" && <div className="hw-step-group hw-step-group--mandatory">Mandatory · affects the Agent</div>}
+                  {s.group === "info" && STEPS[i - 1]?.group !== "info" && <div className="hw-step-group hw-step-group--info">Information only</div>}
+                  <button type="button" className={`hw-step ${s.cls}`} aria-current={step === s.n}
+                    onClick={() => setStep(s.n)}>
+                    <span className="hw-step-num">{s.n}</span><Ico name={s.icon} />{s.label}</button>
+                </li>
+              ))}
+            </ol>
+            {wizardBody}
+          </div>)}
       </div>
     </section>
   );
