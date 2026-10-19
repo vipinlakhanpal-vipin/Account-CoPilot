@@ -160,10 +160,10 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
   async function suggest() {
     if (!region) return;
     setWorking(true); setMsg(null);
-    const r = await fetch("/api/engine", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "queue", region, count: Number(suggestN), mode: "discover" }) });
+    const r = await fetch("/api/engine", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "queue", region, count: suggestN === "max" ? "max" : Number(suggestN), mode: "discover" }) });
     const j = await r.json().catch(() => ({}));
     setWorking(false);
-    if (r.ok) { setMsg({ ok: true, text: `Looking for ${suggestN} companies in ${region}. Results appear below.` }); loadInfo(); }
+    if (r.ok) { setMsg({ ok: true, text: `Looking for ${suggestN === "max" ? "as many as possible (about 50)" : suggestN} companies in ${region}. This is free. A scheduled session picks it up within a minute or two; progress and results appear below.` }); loadInfo(); }
     else setMsg({ ok: false, text: j.error || "Could not start the search." });
   }
   async function act(body: unknown, ok: string) {
@@ -340,6 +340,19 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
           {!info ? <p className="note">Loading your regions…</p> : info.regions.length === 0 ? (
             <p className="note">{allRegions.length ? "None of your regions is Active yet. A Super Admin can make one Active in Setup → Define ICP." : "No region is assigned to you yet. Ask a Super Admin to add one in Setup → Team."}</p>
           ) : (<>
+            <div className="find-auto">
+              <h3>Let the engine find companies for {regionInfo?.name || "the region"} <span className="find-free-tag">free · $0</span></h3>
+              <p>No names needed. It searches public sources for companies that fit this region's ICP and adds them to your accounts.</p>
+              <div className="find-auto-row">
+                <div className="find-count" role="group" aria-label="How many companies">
+                  {[["5", "5"], ["10", "10"], ["30", "30"], ["max", "Max"]].map(([v, l]) => <button type="button" key={v} className={suggestN === v ? "on" : ""} aria-pressed={suggestN === v} onClick={() => setSuggestN(v)}>{l}</button>)}
+                </div>
+                <button type="button" className="btn add-free" disabled={working || !region} onClick={suggest}>{working ? <span className="btn-spin">Working…</span> : `Find ${suggestN === "max" ? "as many as possible" : `${suggestN} companies`} · $0`}</button>
+              </div>
+              <small>{suggestN === "max" ? "Max means as many as one session can do, about 50, so it can take longer." : "Usually a few minutes."} A scheduled Claude session does the work; no paid API credit is used.</small>
+            </div>
+            <p className="find-or">or add specific companies by name</p>
+
             <div className="find-box big">
               <textarea rows={Math.min(Math.max(list.length, 2), 6)} value={names} onChange={(e) => { setNames(e.target.value); setDupes(null); setPausedHint(""); }} autoFocus
                 placeholder={"Company names, one per line"} aria-label="Company names" />
@@ -365,6 +378,7 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
               <div className="find-card">
                 <h3>Add free <Info text={FREE_INFO} /></h3>
                 <button type="button" className="btn add-free" disabled={working || !list.length} onClick={() => start("free")}>{working ? <span className="btn-spin">Working…</span> : `Add free${list.length > 1 ? ` (${list.length})` : ""} · $0`}</button>
+                {!list.length && <small className="muted">Type a company name above to use this. To search without names, use the box at the top.</small>}
               </div>
               <div className="find-card paid">
                 <h3>Research now <Info text={PAID_INFO} /></h3>
@@ -372,12 +386,6 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
               </div>
             </div>
             {msg && <p className={`find-msg ${msg.ok ? "ok" : "err"}`} role="status">{msg.text}</p>}
-
-            <div className="find-suggest">
-              <span>No name? Suggest companies for {regionInfo?.name || "the region"}:</span>
-              <select value={suggestN} onChange={(e) => setSuggestN(e.target.value)} aria-label="How many">{["5", "10", "30"].map((n) => <option key={n} value={n}>{n} companies</option>)}</select>
-              <button type="button" className="btn" disabled={working} onClick={suggest}>Suggest (free)</button>
-            </div>
 
             <div className="find-jobs">
               <h3>Your searches in {regionInfo?.name || region}</h3>

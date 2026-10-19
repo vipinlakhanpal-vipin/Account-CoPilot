@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.95";
+export const APP_VERSION = "4.96";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.96", date: "2026-10-19", notes: "Find New Company: a free search without names (5, 10, 30 or Max) comes first.", changes: [
+      { what: "Find New Company now opens with a free \"Let the engine find companies\" card: pick 5, 10, 30 or Max and click one button. No names are needed. Adding by name sits below it, with a hint saying why it is greyed out until a name is typed", where: "components/FindCompany.tsx", why: "Reported — Add free was inactive without a name, and the 5/10/30 option was hidden at the bottom" },
+    ] },
   { version: "4.95", date: "2026-10-19", notes: "The bell's no-run note points to the magnifier icon.", changes: [
       { what: "The \"no run yet\" note in the bell says Find company is the magnifier icon in the top bar", where: "components/EngineBell.tsx", why: "Reported — Find company is an icon, not a tab beside Dashboard" },
     ] },
