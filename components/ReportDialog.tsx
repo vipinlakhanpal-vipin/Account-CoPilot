@@ -1,6 +1,6 @@
 "use client";
 import { logActivity } from "@/lib/activityClient";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { REGIONS, rulesFor, describeRules, regionOf } from "@/lib/icpDefinition.mjs";
 import { notify } from "@/components/Confirm";
 import type { Row } from "@/lib/data";
@@ -57,6 +57,8 @@ export default function ReportDialog({ accounts, icpDef, onClose, companyIds, li
     return c;
   }, [accounts, listMode, idSet]);
   const regionKeys = REGIONS.map((r: { key: string }) => r.key).filter((k: string) => counts[k]);
+  // A list that sits in one region (for example UAE's existing Coupa customers) has nothing to choose: that region is picked for you.
+  useEffect(() => { if (listMode && !region && regionKeys.length === 1) setRegion(regionKeys[0]); }, [listMode, region, regionKeys.join("|")]); // eslint-disable-line react-hooks/exhaustive-deps
   const inRegion = (st: string) => region === "All" ? regionKeys.reduce((n: number, k: string) => n + (counts[k]?.[st] || 0), 0) : counts[region]?.[st] || 0;
   const matching = !region ? 0 : listMode ? inRegion("list") : picked.reduce((n, st) => n + inRegion(st), 0);
   const rules = region && region !== "All" ? rulesFor(icpDef, region) : null;
@@ -111,7 +113,7 @@ export default function ReportDialog({ accounts, icpDef, onClose, companyIds, li
             <label>Region
               <select value={region} onChange={(e) => setRegion(e.target.value)} aria-required="true">
                 <option value="" disabled>Choose a region…</option>
-                {format === "pdf" && <option value="All">All regions</option>}
+                {format === "pdf" && (!listMode || regionKeys.length > 1) && <option value="All">All regions</option>}
                 {regionKeys.map((k: string) => <option key={k} value={k}>{k}</option>)}
               </select></label>
             <div className="pdf-count" role="group" aria-label="How many companies">
