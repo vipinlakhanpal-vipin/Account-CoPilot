@@ -21,7 +21,7 @@ const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "");
 // Bell in the top bar: notifications from the scheduled engine runs (6am daily). Unread = newer than the last time you opened it.
 export default function EngineBell() {
   const [entries, setEntries] = useState<Entry[]>([]);
-  const [myRegions, setMyRegions] = useState<{ key: string; name: string; status: string; priority?: string; market?: boolean }[]>([]);
+  const [myRegions, setMyRegions] = useState<{ key: string; name: string; status: string; priority?: string; market?: boolean; plan_new?: number; plan_verify?: number }[]>([]);
   const [seen, setSeen] = useState("");
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -86,6 +86,29 @@ export default function EngineBell() {
             <button type="button" className="btn tiny btn-close" onClick={() => setOpen(false)}>Close</button>
           </div>
           {regionList.length > 0 && <div className="bell-region-name">{selected === "All" ? "All regions" : nameOf(selected)}</div>}
+          {(() => {
+            // Today's plan: what the engine intends for each Active region today (the Define ICP counts times its priority) next to what the latest run has done.
+            const todayKey = new Date().toDateString(), order = ["high", "medium", "low"];
+            const rows = myRegions.filter((m) => m.status === "active" && (selected === "All" || m.key === selected))
+              .sort((a, b) => order.indexOf(a.priority || "medium") - order.indexOf(b.priority || "medium") || nameOf(a.key).localeCompare(nameOf(b.key)))
+              .map((m) => {
+                const today = blocks.filter((b) => b.region === m.key && new Date(b.at).toDateString() === todayKey).flatMap((b) => b.rows);
+                const ran = blocks.some((b) => b.region === m.key && new Date(b.at).toDateString() === todayKey);
+                const newN = today.filter((d) => d.isNew).length, verN = today.filter((d) => d.isVerified && !/market|pitch|contact|signal/i.test(d.status || "")).length;
+                const pn = m.plan_new ?? 0, pv = m.plan_verify ?? 0;
+                const state = !ran ? "Not run yet" : newN >= pn && verN >= pv ? "Done" : `Partly: ${Math.max(0, pn - newN)} new and ${Math.max(0, pv - verN)} checks go to tomorrow`;
+                return { m, newN, verN, pn, pv, state, ran };
+              });
+            if (!rows.length) return null;
+            return (
+              <div className="bell-plan">
+                <p className="bell-plan-h">Today&apos;s plan <small>what the engine intends for each Active region today, and what it has done</small></p>
+                <table className="bell-table"><thead><tr><th>Region</th><th>Priority</th><th>Plan: new / checks</th><th>Done</th><th>Status</th></tr></thead>
+                  <tbody>{rows.map(({ m, newN, verN, pn, pv, state, ran }) => (
+                    <tr key={m.key}><td>{nameOf(m.key)}</td><td><span className={`bell-prio p-${m.priority || "medium"}`}>{m.priority === "high" ? "High" : m.priority === "low" ? "Low" : "Medium"}</span></td>
+                      <td>{pn} / {pv}</td><td>{ran ? `${newN} / ${verN}` : "—"}</td><td className={state === "Done" ? "ok" : "muted"}>{state}</td></tr>))}</tbody></table>
+              </div>);
+          })()}
           {selected !== "All" && (() => {
             // One line under the region name: what the latest run day did for it (new companies and companies verified), and its priority.
             const mine = blocks.filter((b) => b.region === selected);

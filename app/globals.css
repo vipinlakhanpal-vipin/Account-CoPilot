@@ -1916,3 +1916,9 @@ table.ft td.num{width:1%;text-align:right}
 .hw-prio-about{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
 .hw-prio-about h4{margin:0 0 6px;font:700 15px var(--body);color:var(--text-strong)}
 .hw-prio-table td,.hw-prio-table th{vertical-align:top}
+
+/* v5.11: bell: Today's plan */
+.bell-plan{margin:6px 0 12px}
+.bell-plan-h{margin:0 0 4px;font:700 13px var(--body);color:var(--text-strong)}
+.bell-plan-h small{display:block;font:400 11px var(--body);color:var(--muted)}
+.bell-plan td.ok{color:#0B5A47;font-weight:600}

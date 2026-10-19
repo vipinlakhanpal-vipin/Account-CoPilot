@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.10";
+export const APP_VERSION = "5.11";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.11", date: "2026-10-19", notes: "The bell has a Today's plan table: planned and done per Active region.", changes: [
+      { what: "The bell shows Today's plan at the top: for each Active region (or the chosen one), its priority, the planned new companies and checks for today, what the latest run has done, and what carries to tomorrow", where: "components/EngineBell.tsx, app/api/engine/route.ts", why: "Requested — see what the engine intended against what it did" },
+    ] },
   { version: "5.10", date: "2026-10-19", notes: "Engine priority: High, Medium and Low regions and kinds of work; a one-line status per region in the bell.", changes: [
       { what: "Each region has a priority (High, Medium, Low) and a Market intelligence switch in Define ICP, set by a Super Admin. High keeps its full daily counts and is worked first, Medium gets half, Low a quarter, last. The daily run follows that order, and market scans run only in regions with the switch on", where: "lib/icpDefinition.mjs, app/api/engine/worker/route.ts, components/IcpEditor.tsx, ENGINE.md", why: "Requested — tell the engine what to search and explore first" },
       { what: "Kinds of work are tiered High / Medium / Low in the engine's instructions: your jobs and verifying new and Needs check accounts first, then discovery, Likely accounts and SAP and Coupa market work, then re-checks, other vendors and contacts", where: "ENGINE.md", why: "Requested" },

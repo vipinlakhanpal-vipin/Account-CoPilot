@@ -197,7 +197,7 @@ export async function GET(req: Request) {
     const entries = await enrichRegions(db, log.entries);
     // the regions this user may see, with their status, so the bell can list a region that has not had a run yet
     const def = normalizeDefinition(await getSetting<unknown>(db, "icp_definition", null));
-    const regions = REGIONS.filter((r: { key: string }) => canSeeRegion(access, r.key)).map((r: { key: string; name: string }) => ({ key: r.key, name: r.name, status: (def.regions[r.key]?.status || "paused") as string, priority: effectiveEngine(def.regions[r.key]).priority, market: !!def.regions[r.key]?.market }));
+    const regions = REGIONS.filter((r: { key: string }) => canSeeRegion(access, r.key)).map((r: { key: string; name: string }) => ({ key: r.key, name: r.name, status: (def.regions[r.key]?.status || "paused") as string, priority: effectiveEngine(def.regions[r.key]).priority, market: !!def.regions[r.key]?.market, plan_new: effectiveEngine(def.regions[r.key]).discover_per_day, plan_verify: effectiveEngine(def.regions[r.key]).verify_per_day }));
     return NextResponse.json({ entries: scopeLog(entries, access), regions }, { headers: { "Cache-Control": "no-store" } });
   }
   const log = await getSetting<{ entries: LogEntry[] }>(db, "engine_log", { entries: [] });
