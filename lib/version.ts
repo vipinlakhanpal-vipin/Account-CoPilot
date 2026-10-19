@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.99";
+export const APP_VERSION = "4.100";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.100", date: "2026-10-19", notes: "Find company lists only its own searches, with company names.", changes: [
+      { what: "\"Your searches\" on Find company now shows only searches started there (engine's choice or by name). Market intelligence, contacts, signals and pitch jobs no longer appear in it", where: "components/FindCompany.tsx", why: "Reported — customer searches from Market intelligence showed up under Find company" },
+      { what: "The first column is named Search and reads \"Engine's choice: 5 new companies\"; once finished, each company the engine added is its own row with its name (a link to open it) and \"Added to your accounts\"", where: "components/FindCompany.tsx", why: "Reported — the Company column said \"Suggest 5 new\"" },
+    ] },
   { version: "4.99", date: "2026-10-19", notes: "Companies found for South Africa are filed under South Africa, not Unknown.", changes: [
       { what: "A country written as the region key (\"SouthAfrica\") is now read as that region, and every company the engine adds is stored with the region's own country spelling (\"South Africa\"). The five South Africa companies found today moved from Unknown to South Africa", where: "lib/icpDefinition.mjs, lib/countries.ts, app/api/engine/route.ts, app/api/engine/worker/route.ts", why: "Reported — 5 new companies showed under Unknown region and South Africa showed 0" },
     ] },

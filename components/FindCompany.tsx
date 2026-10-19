@@ -171,7 +171,17 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
     const j = await r.json().catch(() => ({}));
     if (r.ok) { notify(ok); loadInfo(); } else notify(j.error || "Something went wrong.", "error");
   }
-  const jobs = (info?.jobs || []).filter((j) => j.region === region).slice(0, 8);
+  // Only searches started here (find new companies, by name or by count). Market intelligence, contacts, signals and pitch jobs have their own windows and progress cards.
+  const jobs = (info?.jobs || []).filter((j) => j.region === region && (j.mode === "discover" || j.mode === "company")).slice(0, 8);
+  // A finished "engine's choice" search reports the names it added in its result text: "5 new … added and verified: A, B, C — all ICP Verified"
+  const addedNames = (j: Job) => {
+    if (j.mode !== "discover" || j.status !== "done" || j.company_names?.length) return null;
+    const m = String(j.result || "").match(/:\s*([^—–]+?)(?:\s+[—–]\s+(.+))?$/);
+    if (!m) return null;
+    const names = m[1].split(/,\s*/).map((x) => x.replace(/^and\s+/i, "").replace(/\.$/, "").trim()).filter(Boolean);
+    if (names.length < 1 || names.length > 12 || names.some((n) => n.length > 70 || /\b(added|found|verified|searched)\b/i.test(n))) return null;
+    return { names, note: (m[2] || "").replace(/^all\s+/i, "").replace(/\.$/, "").trim() };
+  };
 
   const openAccount = (it: { slug: string; region: string }) => `/?open=${encodeURIComponent(it.slug)}&country=${encodeURIComponent(it.region)}`;
   const goNew = (name: string) => {
@@ -391,7 +401,7 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
               <h3>Your searches in {regionInfo?.name || region}</h3>
               {jobs.length === 0 ? <p className="note">No searches yet.</p> : (
                 <div className="tablewrap"><table className="jobs-table">
-                  <thead><tr><th>Company</th><th>Status</th><th>Requested</th><th>Result</th><th></th></tr></thead>
+                  <thead><tr><th>Search</th><th>Status</th><th>Requested</th><th>Result</th><th></th></tr></thead>
                   <tbody>{jobs.flatMap((j) => {
                     const took = j.started_at && j.done_at ? Math.round((new Date(j.done_at).getTime() - new Date(j.started_at).getTime()) / 1000) : 0;
                     const st = j.status === "queued" || j.status === "running"
@@ -413,7 +423,16 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
                         </tr>)),
                         pending > 1 && <tr key={`${j.id}-all`}><td colSpan={5} className="jobs-addall"><button type="button" className="btn tiny" onClick={() => act({ action: "add_all_found", job_id: j.id }, `${pending} companies added.`)}>Add all {pending} to the app</button></td></tr>];
                     }
-                    const label = j.mode === "contacts" ? `Contacts: ${j.company_name || "one company"}` : j.mode === "company" ? j.company_name || "One company" : j.company_names?.length ? `${j.company_names.length} companies` : `Suggest ${j.count} new`;
+                    const label = j.mode === "company" ? j.company_name || "One company" : j.company_names?.length ? `${j.company_names.length} companies by name` : j.count === "max" ? "Engine's choice: as many as possible" : `Engine's choice: ${j.count} new companies`;
+                    const found = addedNames(j);
+                    if (found) return found.names.map((nm, i) => (
+                      <tr key={`${j.id}-n${i}`} className={i === 0 ? "run-group-top" : undefined}>
+                        <td className="wrap"><Link className="job-link" href={`/find?q=${encodeURIComponent(nm)}&region=${encodeURIComponent(region)}`}>{nm}</Link></td>
+                        {i === 0 && <td rowSpan={found.names.length}>{st}</td>}
+                        {i === 0 && <td className="muted" rowSpan={found.names.length}>{when}</td>}
+                        <td className="wrap">Added to your accounts{found.note ? ` · ${found.note}` : ""}</td>
+                        <td></td>
+                      </tr>));
                     const parsed = String(j.result || "").match(/^(.+)\(([A-Za-z ]+)\):\s*(.+)$/);
                     return [<tr key={j.id}>
                       <td className="wrap">{parsed ? parsed[1].trim() : label}</td><td>{st}</td><td className="muted">{when}</td>
