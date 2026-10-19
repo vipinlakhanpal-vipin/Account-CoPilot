@@ -78,7 +78,7 @@ const STEPS: { n: number; label: string; icon: keyof typeof ICON; cls: string; g
   { n: 6, label: "Review", icon: "clipboard", cls: "hw-step--review" },
 ];
 
-export default function HomeWorkspace({ access }: { access: Access }) {
+export default function HomeWorkspace({ access, layout = "stack" }: { access: Access; layout?: "stack" | "columns" }) {
   // Two stacked, collapsible blocks (About, then Setup Wizard); the choice is remembered in this browser.
   const [aboutOpen, setAboutOpen] = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
@@ -555,6 +555,33 @@ export default function HomeWorkspace({ access }: { access: Access }) {
     <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" style={{ transition: "transform .18s ease", transform: open ? "none" : "rotate(-90deg)", marginLeft: "auto", flexShrink: 0 }}>
       <path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
   );
+  const stepsList = (cls: string) => (
+          <ol className={`hw-steps ${cls}`}>
+              {STEPS.map((s, i) => (
+                <li key={s.n}>
+                  {s.group === "mandatory" && STEPS[i - 1]?.group !== "mandatory" && <div className="hw-step-group hw-step-group--mandatory">Mandatory · affects the Agent</div>}
+                  {s.group === "info" && STEPS[i - 1]?.group !== "info" && <div className="hw-step-group hw-step-group--info">Information only</div>}
+                  <button type="button" className={`hw-step ${s.cls}`} aria-current={step === s.n} onClick={() => setStep(s.n)}>
+                    <span className="hw-step-num">{s.n}</span><Ico name={s.icon} />{s.label}</button>
+                </li>
+              ))}
+            </ol>
+  );
+  if (layout === "columns") return (
+    <section className="hw-cols">
+      <div className="hw-colbox hw-col-about">
+        <div className="hw-acc-head static"><span className="hw-acc-icon"><Ico name="search" /></span><span className="hw-acc-text"><span className="hw-acc-title">About Account CoPilot</span><span className="hw-acc-sub">What the agent does, how it verifies, what it costs</span></span></div>
+        <div className="hw-acc-body">{aboutBody}</div>
+      </div>
+      <div className="hw-colbox hw-col-wiz">
+        <div className="hw-acc-head static wizard"><span className="hw-acc-icon"><Ico name="wand" /></span><span className="hw-acc-text"><span className="hw-acc-title">Setup Wizard</span><span className="hw-acc-sub">Pick a step on the left; it opens on the right</span></span></div>
+        <div className="hw-wizrow">
+          <nav className="hw-wizmenu" aria-label="Wizard steps">{stepsList("hw-steps-col")}</nav>
+          <div className="hw-wizpane">{wizardBody}</div>
+        </div>
+      </div>
+    </section>
+  );
   return (
     <section className="panel hw hw-stack">
       <div className={`hw-acc about${aboutOpen ? " open" : ""}`}>
@@ -573,17 +600,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
         </button>
         {wizardOpen && (
           <div className="hw-acc-body">
-          <ol className="hw-steps hw-steps-row">
-              {STEPS.map((s, i) => (
-                <li key={s.n}>
-                  {s.group === "mandatory" && STEPS[i - 1]?.group !== "mandatory" && <div className="hw-step-group hw-step-group--mandatory">Mandatory · affects the Agent</div>}
-                  {s.group === "info" && STEPS[i - 1]?.group !== "info" && <div className="hw-step-group hw-step-group--info">Information only</div>}
-                  <button type="button" className={`hw-step ${s.cls}`} aria-current={step === s.n}
-                    onClick={() => setStep(s.n)}>
-                    <span className="hw-step-num">{s.n}</span><Ico name={s.icon} />{s.label}</button>
-                </li>
-              ))}
-            </ol>
+            {stepsList("hw-steps-row")}
             {wizardBody}
           </div>)}
       </div>

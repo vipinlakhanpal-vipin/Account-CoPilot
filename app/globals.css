@@ -1934,3 +1934,28 @@ table td.wrap,table th.wrap{margin:0;padding:7px 8px}
 /* an opaque header, so rows scrolling under it never show through */
 .tablewrap-tall thead th{background:var(--th-bg,var(--surface-2));z-index:2}
 .save-filter-wrap{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}.save-filter-wrap small{font-size:11px}
+
+/* v5.15 New Home: two-column layout (About left, Setup Wizard right with its menu beside its content) */
+.hw-cols{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,8fr);gap:14px;align-items:start}
+.hw-colbox{border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden;min-width:0}
+.hw-acc-head.static{cursor:default;border-bottom:1px solid var(--line)}
+.hw-acc-head.static:hover{background:none}
+.hw-acc-head.static.wizard .hw-acc-icon{background:var(--purple-soft);color:var(--purple)}
+.hw-col-about .hw-acc-body{padding:14px 16px 18px}
+.hw-wizrow{display:grid;grid-template-columns:170px minmax(0,1fr)}
+.hw-wizmenu{border-right:1px solid var(--line);padding:10px;background:var(--panel-2,var(--surface-2))}
+.hw-steps-col{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px}
+.hw-steps-col .hw-step-group{display:block;margin:8px 4px 3px}
+.hw-wizpane{padding:16px 18px 22px;min-width:0}
+@media (max-width:1100px){.hw-cols{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:700px){.hw-wizrow{grid-template-columns:minmax(0,1fr)}.hw-wizmenu{border-right:0;border-bottom:1px solid var(--line)}}
+
+/* v5.15 New Home (option A): the regions board */
+.nh-h{margin:0 0 4px}
+.nh-table td,.nh-table th{vertical-align:middle}
+.nh-off td{color:var(--muted)}
+.nh-off td b{color:var(--text)}
+.nh-sel{font:600 12px var(--body);padding:3px 8px;border-radius:8px;border:1px solid var(--line-2);background:var(--surface);color:var(--text)}
+.nh-chip{font:600 11px var(--body);padding:3px 12px;border-radius:999px;border:1px solid var(--line-2);background:var(--surface);color:var(--muted);cursor:pointer}
+.nh-chip.on{background:color-mix(in srgb,#2ECC8F 22%,var(--surface));border-color:#0B7A66;color:#0B5A47}
+.nh-act{text-align:right;white-space:nowrap}

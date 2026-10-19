@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.14";
+export const APP_VERSION = "5.15";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.15", date: "2026-10-19", notes: "New Home (an experiment, option A): a regions board where a region is switched on or off in one click.", changes: [
+      { what: "A new tab, New Home, next to Home (Home is unchanged). Its first screen is a regions board: each region's state, priority, daily plan, accounts and Market intelligence switch, with Activate or Pause for a Super Admin, each with a confirm that says what happens. Below it are the About and Setup Wizard blocks", where: "app/home2/page.tsx, components/NewHome.tsx, components/Header.tsx", why: "Requested — activating regions was confusing on Home" },
+      { what: "The Setup Wizard component can lay out as two columns (About left, wizard right with its menu beside its content), ready for the other design options", where: "components/HomeWorkspace.tsx", why: "Prepared for options B and C" },
+    ] },
   { version: "5.14", date: "2026-10-19", notes: "Tall table rows fixed everywhere, a scrollbar on top of long tables, a way back in Engine activity.", changes: [
       { what: "Table cells marked wrap were picking up the page container's 56px bottom padding, so any table with such a column had rows about 75px tall (the Mission Control contacts table, for one). They are normal rows again, in every table", where: "app/globals.css", why: "Reported — the Mission Control contacts table was very tall" },
       { what: "Long tables have a horizontal scrollbar on top as well as the one below, kept in step, so you no longer scroll to the bottom to go right. The header is opaque, so rows no longer show through it", where: "components/CoPilotApp.tsx, app/globals.css", why: "Reported" },
