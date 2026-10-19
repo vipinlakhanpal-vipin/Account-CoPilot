@@ -113,6 +113,7 @@ export default function EngineBell() {
             // One line under the region name: what the latest run day did for it (new companies and companies verified), and its priority.
             const mine = blocks.filter((b) => b.region === selected);
             const meta = myRegions.find((m) => m.key === selected);
+            if (meta?.status === "active") return null; // an Active region is already in Today's plan above
             const chip = meta?.priority ? <span className={`bell-prio p-${meta.priority}`}>{meta.priority === "high" ? "High" : meta.priority === "medium" ? "Medium" : "Low"} priority</span> : null;
             if (!mine.length) return chip ? <p className="bell-oneline">No run yet {chip}</p> : null;
             const day = new Date(mine[0].at).toDateString(), sameDay = mine.filter((b) => new Date(b.at).toDateString() === day);

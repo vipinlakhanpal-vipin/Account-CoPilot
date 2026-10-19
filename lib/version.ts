@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.12";
+export const APP_VERSION = "5.13";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.13", date: "2026-10-19", notes: "Mission Control shows priority and today's plan; the bell drops the repeated line.", changes: [
+      { what: "Mission Control → Engine activity lists each region's priority and its plan for today (new companies / checks) next to its latest run and the seven-day grid", where: "components/EngineActivity.tsx", why: "Requested — Today's plan also in Mission Control" },
+      { what: "The bell no longer repeats the \"Today: n new companies · n verified\" line under the region name for an Active region, because Today's plan above already shows it. The line stays only for a region that is not Active", where: "components/EngineBell.tsx", why: "Requested — the line was duplicated" },
+    ] },
   { version: "5.12", date: "2026-10-19", notes: "The engine priority explanation on Home is rewritten in plain words.", changes: [
       { what: "Home → About: the High, Medium and Low table now says in plain words what each priority means for a region and what the engine does, with the terms Needs check, Unknown and Likely explained, and a worked example. It wraps in full instead of being cut", where: "components/HomeWorkspace.tsx", why: "Requested — the Regions and Work text was not clear enough" },
     ] },

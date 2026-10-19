@@ -4,7 +4,7 @@ import { fmtDate, fmtDateTime, fmtTimeShort } from "@/lib/dates";
 
 type Row = { name: string; status: string; revenue?: string; entity_type?: string; isNew: boolean };
 type Run = { at: string; region: string; source?: string; added: number; checked: number; summary: string; rows: Row[] };
-type RegionInfo = { region: string; name: string; status: string; discover_per_day: number; verify_per_day: number; rules: string; accounts: number; by_status: Record<string, number> };
+type RegionInfo = { region: string; name: string; status: string; priority?: string; discover_per_day: number; verify_per_day: number; rules: string; accounts: number; by_status: Record<string, number> };
 type Co = { slug: string; name: string; country: string | null; region: string; status: string | null; entity_type: string | null; added: string; revenue: string };
 type Activity = { now: string; regions: RegionInfo[]; runs: Run[]; companies: Co[] };
 
@@ -111,7 +111,7 @@ export default function EngineActivity() {
       <p className="note">Built from the regions that <b>should</b> run each morning (Active in Define ICP), so a region the engine skipped shows up as a gap instead of simply not appearing. The latest scheduled run was {fmtDateTime(view.due.toISOString())}.</p>
       {missed.length > 0 && <p className="act-alert" role="alert">⚠ No run recorded since the latest scheduled run for: <b>{missed.map((m) => m.name).join(", ")}</b>.</p>}
       {!selected ? (
-        <div className="tablewrap"><table className="run-history-table act-table"><thead><tr><th>Region</th><th>State</th><th>Daily target</th><th>Accounts</th><th>Verified</th><th>Likely</th><th>Latest run</th>
+        <div className="tablewrap"><table className="run-history-table act-table"><thead><tr><th>Region</th><th>State</th><th>Priority</th><th>Today's plan (new / checks)</th><th>Accounts</th><th>Verified</th><th>Likely</th><th>Latest run</th>
           {view.days.map((d) => <th key={d} className="act-day">{d.slice(5)}</th>)}<th>New, 7 days</th></tr></thead>
           <tbody>{shownRows.map((r) => {
             const active = r.status === "active";
@@ -122,7 +122,8 @@ export default function EngineActivity() {
               <tr key={r.region} className="act-row" onClick={() => setRegion(r.region)} tabIndex={0} onKeyDown={(e) => e.key === "Enter" && setRegion(r.region)}>
                 <td><b>{r.name}</b></td>
                 <td><span className={`act-pill ${r.status}`}>{STATUS_LABEL[r.status] || r.status}</span></td>
-                <td className="muted">{active ? `find ${r.discover_per_day} · verify ${r.verify_per_day}` : "—"}</td>
+                <td>{active && r.priority ? <span className={`bell-prio p-${r.priority}`}>{r.priority === "high" ? "High" : r.priority === "low" ? "Low" : "Medium"}</span> : <span className="muted">—</span>}</td>
+                <td className="muted">{active ? `${r.discover_per_day} / ${r.verify_per_day}` : "—"}</td>
                 <td>{r.accounts}</td><td>{r.by_status["ICP — Verified"] || 0}</td><td>{r.by_status["ICP — Likely"] || 0}</td>
                 <td>{flag}{r.latest && <div className="muted act-last">{fmtDate(r.latest.at)}</div>}</td>
                 {view.days.map((d) => { const c = r.byDay[d];
