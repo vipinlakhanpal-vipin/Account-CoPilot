@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.11";
+export const APP_VERSION = "5.12";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.12", date: "2026-10-19", notes: "The engine priority explanation on Home is rewritten in plain words.", changes: [
+      { what: "Home → About: the High, Medium and Low table now says in plain words what each priority means for a region and what the engine does, with the terms Needs check, Unknown and Likely explained, and a worked example. It wraps in full instead of being cut", where: "components/HomeWorkspace.tsx", why: "Requested — the Regions and Work text was not clear enough" },
+    ] },
   { version: "5.11", date: "2026-10-19", notes: "The bell has a Today's plan table: planned and done per Active region.", changes: [
       { what: "The bell shows Today's plan at the top: for each Active region (or the chosen one), its priority, the planned new companies and checks for today, what the latest run has done, and what carries to tomorrow", where: "components/EngineBell.tsx, app/api/engine/route.ts", why: "Requested — see what the engine intended against what it did" },
     ] },
