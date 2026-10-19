@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "4.97";
+export const APP_VERSION = "4.98";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "4.98", date: "2026-10-19", notes: "Standard Users can read their region's ICP but only a Super Admin changes it.", changes: [
+      { what: "Define ICP and the Setup Wizard are read-only for Standard Users, with the message \"Consult Super Admin if any change is required.\" The server refuses an ICP save or preview from them too, so Active/Paused and the daily counts are a Super Admin decision", where: "app/api/icp/route.ts, components/IcpEditor.tsx, components/HomeWorkspace.tsx", why: "Requested — a Standard User could change their region's ICP and daily run" },
+    ] },
   { version: "4.97", date: "2026-10-19", notes: "Online now keeps someone for 5 minutes; the engine knows the country codes of the newer regions.", changes: [
       { what: "\"Online now\" counts a person as online for 5 minutes after the last signal (was 2), so a short switch to another tab does not drop them", where: "app/api/activity/route.ts, components/OnlineNow.tsx", why: "Reported — a colleague appeared online on and off" },
       { what: "The engine instructions list the web-address endings for South Africa, Kenya, Morocco, UK and Germany, so a company found for those regions is filed under the right country", where: "ENGINE.md", why: "A newly activated region works without extra set-up" },

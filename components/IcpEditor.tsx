@@ -107,7 +107,7 @@ function Toggle({ label, value, onChange, help }: { label: string; value: boolea
 export default function IcpEditor({ initial, counts, isSuper, allowed, roleLabel }: { initial: Definition; counts: Record<string, number>; isSuper: boolean; allowed: string[]; roleLabel: string }) {
   // Roles: a Super Admin sees and changes every region; a Standard User sees and changes only their own region(s).
   const visible = REGIONS.filter((x) => allowed.includes(x.key));
-  const readOnly = false;
+  const readOnly = !isSuper; // Standard Users read their region's ICP; a Super Admin changes it
   const [saved, setSaved] = useState<Definition>(normalizeDefinition(initial));
   const [def, setDef] = useState<Definition>(normalizeDefinition(initial));
   const [region, setRegion] = useState(visible[0]?.key || "UAE");
@@ -182,10 +182,10 @@ export default function IcpEditor({ initial, counts, isSuper, allowed, roleLabel
           <p className="note">{saved.updated_at ? <>Last saved {when(saved.updated_at)} by <b>{saved.updated_by}</b>.</> : <>Using the default rules (never edited). Everything below is what the agent follows today.</>}</p>
         </div>
         <div className="icp-actions">
-          <label className="icp-auto" title="When on, a change of status saves at once and other edits save 2 seconds after you stop. A message confirms every save."><input type="checkbox" checked={auto} onChange={(e) => toggleAuto(e.target.checked)} /> Save automatically</label>
+          {!readOnly && <label className="icp-auto" title="When on, a change of status saves at once and other edits save 2 seconds after you stop. A message confirms every save."><input type="checkbox" checked={auto} onChange={(e) => toggleAuto(e.target.checked)} /> Save automatically</label>}
           <span className="icp-dirty" aria-live="polite">{problems.length ? `${problems.length} to fix (see below)` : busy === "save" ? "Saving…" : dirty ? (auto ? `Saving ${dirtyRegions.join(", ")} in a moment…` : `Unsaved: ${dirtyRegions.join(", ")}`) : lastSaved ? `Saved ${lastSaved}` : ""}</span>
-          <button type="button" className="btn" disabled={!dirty || !!busy} onClick={() => { setDef(clone(saved)); setResult(null); }}>Discard changes</button>
-          <button type="button" className="btn" disabled={!!busy || !!problems.length} onClick={() => call("preview")}>{busy === "preview" ? "Checking…" : "Preview impact"}</button>
+          {!readOnly && <button type="button" className="btn" disabled={!dirty || !!busy} onClick={() => { setDef(clone(saved)); setResult(null); }}>Discard changes</button>}
+          {!readOnly && <button type="button" className="btn" disabled={!!busy || !!problems.length} onClick={() => call("preview")}>{busy === "preview" ? "Checking…" : "Preview impact"}</button>}
           {!readOnly && <button type="button" className="btn primary" disabled={!dirty || !!busy || !!problems.length} onClick={() => call("save")}>{busy === "save" ? "Saving…" : "Save & apply"}</button>}
         </div>
       </div>
@@ -193,8 +193,8 @@ export default function IcpEditor({ initial, counts, isSuper, allowed, roleLabel
       <div className="icp-owner">
         <span className="lock" aria-hidden="true">{isSuper ? "🌍" : "📍"}</span>
         <span><b>{roleLabel}.</b> {isSuper
-          ? "You can see and change the ICP of every region. Standard users can change only the region assigned to them in Setup → Team."
-          : `You control the ICP for ${visible.map((x) => x.name).join(", ")} only. Other regions are managed by your Super Admin.`}</span>
+          ? "You can see and change the ICP of every region. Standard users can read the ICP of their own region only."
+          : `You can read the ICP for ${visible.map((x) => x.name).join(", ")}; it is changed by a Super Admin. Consult Super Admin if any change is required.`}</span>
       </div>
 
       <p className="icp-step"><b>Step 1</b> · Choose a region</p>

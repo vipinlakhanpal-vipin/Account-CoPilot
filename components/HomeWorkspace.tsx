@@ -168,6 +168,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
 
   async function save() {
     if (!def) return;
+    if (!access.isSuper) { notify("Consult Super Admin if any change is required.", "error"); return; }
     if (!regions.length) { notify("Pick at least one region in step 1.", "error"); setSection("wizard"); setExpanded(true); setStep(1); return; }
     const named: { key: string; s: SizeDraft }[] = regions.map((key) => ({ key, s: sizeFor(key) }));
     const badSize = named.find(({ s }) => !(s.revenue > 0) || !(s.employees >= 0));
@@ -304,6 +305,7 @@ export default function HomeWorkspace({ access }: { access: Access }) {
           </div>
         ) : loading || !def ? <p className="note">Loading your current settings…</p> : (
           <div>
+            {!access.isSuper && <p className="note" role="status"><b>Read only.</b> The Setup Wizard changes the ICP and the daily run. Consult Super Admin if any change is required.</p>}
             {step === 1 && (
               <div>
                 <div className="hw-tint hw-tint--region">

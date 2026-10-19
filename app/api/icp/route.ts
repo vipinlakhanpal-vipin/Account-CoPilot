@@ -78,6 +78,7 @@ export async function POST(req: Request) {
   const access = await getAccess(user);
   if (!body?.definition?.regions || !["preview", "save"].includes(String(body.action))) return NextResponse.json({ error: "Bad request." }, { status: 400 });
   if (!access.regions.length) return NextResponse.json({ ok: false, error: "No region is assigned to you." }, { status: 403 });
+  if (!access.isSuper) return NextResponse.json({ ok: false, error: "Consult Super Admin if any change is required." }, { status: 403 }); // the ICP and the daily run are changed by a Super Admin only
   const current = await load(db);
   // A Standard user's save can only change their own region(s): every other region is taken from the saved definition.
   const regions = Object.fromEntries(REGIONS.map(({ key }) => [key, canSeeRegion(access, key) && body.definition!.regions[key] ? body.definition!.regions[key] : current.regions[key]]));
