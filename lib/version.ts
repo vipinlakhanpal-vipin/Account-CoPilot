@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.44";
+export const APP_VERSION = "5.45";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.45", date: "2026-10-20", notes: "Market intelligence shows which vendor workspace you are in.", changes: [
+      { what: "Above the regions and partner cards, Market intelligence shows a title for the vendor you picked (SAP Partners, Coupa Partners, Oracle Partners and so on), a step smaller than the page title, with the vendor's initial in a small badge", where: "components/MarketIntel.tsx, app/globals.css", why: "Requested — it was not clear which vendor workspace you were in" },
+    ] },
   { version: "5.44", date: "2026-10-20", notes: "Left-panel counts say what they count.", changes: [
       { what: "The red number on Team is an amber pill that says how many people are waiting for your review (for example 3 to review), and the one on Daily run is a blue pill (2 new). Both disappear when the count is zero", where: "components/NavPanel.tsx, app/globals.css", why: "Asked — a bare red 3 was confusing" },
     ] },

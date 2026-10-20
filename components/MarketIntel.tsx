@@ -277,6 +277,7 @@ export default function MarketIntel({ embedded = false, initialVendor }: { embed
           </form>
         ) : <button type="button" className="sig-lane vendor-plus" onClick={() => setAdding(true)} title="Add another vendor to track, for example a competitor or integration platform"><b>+</b><span>Add vendor</span></button>)}
       </div>
+      <h2 className="mkt-vendor-h"><span aria-hidden="true">{vendor.slice(0, 1).toUpperCase()}</span>{vendor} Partners</h2>
       <div className="sig-body">
         <aside className="sig-side">
           <h3>Regions</h3>
