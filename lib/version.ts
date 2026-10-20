@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.66";
+export const APP_VERSION = "5.67";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.67", date: "2026-10-20", notes: "The daily run now sweeps every active Middle East region for tenders and buying signals.", changes: [
+      { what: "The daily engine's Buying signals step is no longer limited to UAE and KSA. It covers every Active Middle East region (UAE, KSA, Qatar, Kuwait, Oman, Bahrain, Egypt): High regions every run, Medium every 3 days, Low weekly. It looks for ERP, S2P and S2C tenders and RFPs, support and upgrade deals (SAP, Oracle and others), contract awards (who is exposed to a renewal), and upsell or cross-sell triggers at accounts already in the app. ENGINE.md has a new Middle East sweep playbook: what counts, the tender portals and news sites per country, typical queries, and the rule never to save a closed tender", where: "Daily run, Buying signals", why: "Nothing is missed on any day, and every region is covered, not two" },
+  ] },
   { version: "5.66", date: "2026-10-20", notes: "Market intelligence shows which partners the engine is searching for customers, and how many each has.", changes: [
       { what: "A small Customer search box sits beside the Market intelligence title, for all vendors and partners. It shows the customer searches running or waiting (partner name, vendor, region), the four partners searched most recently with how many customers each has and how long ago, and a total line: customers found and partners searched out of all partners", where: "Market intelligence, top right", why: "To see what the engine is doing on customers without opening each partner" },
   ] },

@@ -121,7 +121,7 @@ export default function BuyingSignals({ embedded = false }: { embedded?: boolean
           {data && shown.length === 0 && (
             <div className="sig-empty">
               <h3>{open.length === 0 && show === "open" ? "No signals yet" : "Nothing matches these filters"}</h3>
-              <p>{open.length === 0 && show === "open" ? "Nothing has been scanned yet. The daily 6am run scans UAE and KSA for tenders, ERP and S2P intent, and ECC owners. You do not have to wait: scan now (free, usually a few minutes)." : "Widen the strength or type, or switch to Done or Dismissed."}</p>
+              <p>{open.length === 0 && show === "open" ? "Nothing has been scanned yet. The daily 6am run scans every active Middle East region for tenders, ERP, S2P and S2C intent, support and upgrade deals, upsell and cross-sell, and ECC owners. You do not have to wait: scan now (free, usually a few minutes)." : "Widen the strength or type, or switch to Done or Dismissed."}</p>
               {open.length === 0 && show === "open" && <div className="sig-scanbar">{regionList.map((r) => <button type="button" key={r} className="btn primary" disabled={busy === r} onClick={() => scan(r)}>{busy === r ? "Queuing…" : `Scan ${r} now`}</button>)}</div>}
             </div>)}
           {shown.map((s) => {

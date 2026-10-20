@@ -284,7 +284,7 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
                     <td>Checks the revenue of companies it just found, and of companies it is unsure about (status &quot;Needs check&quot; or &quot;Unknown&quot;). Re-checks the companies you are watching.</td></tr>
                   <tr><td><span className="bell-prio p-medium">Medium</span></td>
                     <td>Important markets. They get half of their daily quota, after the High ones.</td>
-                    <td>Finds new companies that fit your ICP. Checks companies that look right but only have an estimated revenue (&quot;Likely&quot;). Finds SAP and Coupa partners and the customers they publish. Spots tenders and buying signals (UAE and KSA).</td></tr>
+                    <td>Finds new companies that fit your ICP. Checks companies that look right but only have an estimated revenue (&quot;Likely&quot;). Finds SAP and Coupa partners and the customers they publish. Spots tenders, awards and buying signals (ERP, S2P, S2C, support and upgrades, upsell and cross-sell) in every active Middle East region.</td></tr>
                   <tr><td><span className="bell-prio p-low">Low</span></td>
                     <td>Smaller markets. They get a quarter of their daily quota and are handled last, so they are the first to wait if time runs out.</td>
                     <td>Re-checks older results every few months. Looks at other vendors&apos; partners (Oracle, Microsoft, Boomi and more). Finds people for accounts that have none. Studies one partner in depth.</td></tr>

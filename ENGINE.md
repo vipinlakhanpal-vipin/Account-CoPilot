@@ -104,7 +104,7 @@ typed in) — see "Multi-name discover jobs" under step 2.
 
 ## Buying signals (job `signals`, and the daily step in section 4)
 Goal: find companies that are *seriously looking* for an ERP, a source-to-pay (S2P) solution or procurement consulting, public tenders and RFPs for those, and SAP ECC owners who will need an S/4HANA partner.
-Free: public web search only (no API key, no logins, no CAPTCHAs). Phase 1 regions: **UAE and KSA** only (skip any other region).
+Free: public web search only (no API key, no logins, no CAPTCHAs). Regions: every **Active Middle East region** (UAE, KSA, Qatar, Kuwait, Oman, Bahrain, Egypt), in the order `icp` lists them (since v5.67; it was UAE and KSA only). Skip a region outside the Middle East.
 Save signals with `node scripts/engine_client.mjs add_signals data/verification/new_signals.json`, a file shaped
 `{"scanned":["<slug>",...],"sweep_region":"UAE","signals":[{"lane","strength","label","company_name","slug","region","title","evidence","why","source_name","source_url","doc_url","needs_login","published","closes"}]}`.
 - A job with `lane` (`rfp`, `erp` or `ecc`) means search ONLY that lane; a job without `lane` covers all three.
@@ -121,7 +121,28 @@ leave `doc_url` empty and set `needs_login` true. Never log in, register, bypass
 **Company scan** (`node scripts/engine_client.mjs signal_targets <REGION> <N>` writes `data/verification/signal_targets.json`; or the job's own company): for each company search its website, annual report,
 press (last 12 months), and job posts for the three lanes. Typical queries: "<company> ERP implementation", "<company> procurement transformation", "<company> S/4HANA", "<company> SAP ECC", "<company> tender
 ERP", "<company> careers Coupa OR Ariba OR SAP". A company with nothing found is simply listed in `scanned` (so it rotates to the back of the queue).
-Finish a job with `finish <id> done "<Company or Region>: N signals added (X Hot)"` or `"... no signals found"`. Never add signals for a company outside UAE/KSA in phase 1.
+Finish a job with `finish <id> done "<Company or Region>: N signals added (X Hot)"` or `"... no signals found"`. Never add signals for a company outside the Middle East regions above.
+
+### Middle East sweep: what counts and where to look (v5.67)
+**What counts** (a tender, award, announcement or hiring signal for any of these, at an entity in the region):
+- **ERP**: new implementation or replacement, rollout to more entities, ERP support and application management (AMS), upgrades and migrations (SAP ECC to S/4HANA, RISE with SAP, Oracle EBS to Fusion, Dynamics, Infor, local ERPs), licence renewals and enterprise licence agreements (ELA), cloud and hosting for ERP, e-invoicing readiness (ZATCA in KSA, UAE e-invoicing) that forces an ERP change.
+- **S2P**: procurement or e-procurement platform, SAP Ariba, Coupa, Jaggaer, Ivalua, GEP, Oracle Procurement, supplier portals and supplier onboarding, invoice automation, P2P support services.
+- **S2C**: sourcing and e-tendering tools, contract lifecycle management, supplier management and risk, spend analytics, category management.
+- **Procurement transformation**: consulting, managed procurement services, shared-service centres.
+- **Upsell and cross-sell** (only for companies already in the app that run SAP, Ariba, Coupa or another platform): a new entity, acquisition or merger, a go-live announced, an Ariba customer facing the SAP Ariba move to SAP BTP, a Coupa customer hiring for modules it does not yet use (sourcing, CLM, supplier risk, spend analytics), a support contract coming to an end. Save these as lane `erp`, title starting "Upsell:" or "Cross-sell:", usually Warm or Watch.
+- **Awards** (a contract already given, e.g. "ERP support for three years awarded to X"): lane `erp`, strength Watch, label FACT, `closes` empty; say who won, the term and when the renewal window opens. This shows who is exposed to a competitor's renewal. Never save an award as a tender (`rfp` needs a still-open date).
+
+**Where to look** (public pages only; never register, log in or download-and-rehost):
+- KSA: Etimad (the notice pages), Saudi Aramco, SABIC, Ma'aden, STC, SEC and NEOM / PIF-company tender pages, ministries' and municipalities' tender sections, Argaam and Arab News for announcements.
+- UAE: Ministry of Finance (federal), Abu Dhabi (ADGPG, ADNOC, EWEC, Mubadala companies, ADQ companies), Dubai (Dubai Government eSupply, DEWA, RTA, Emaar, DP World), Sharjah and other emirates' entity tender pages; Zawya, Gulf News, Arabian Business, Khaleej Times, The National.
+- Qatar: Monaqasat (the Ministry of Finance portal; the notice and award pages are public), QatarEnergy, Ooredoo, Qatar Airways, Ashghal, Hamad Medical, Kahramaa.
+- Kuwait: Central Agency for Public Tenders (CAPT), KPC, KNPC, KIPIC, Zain, ministries' tender notices; Arab Times and Kuwait Times.
+- Oman: Oman Tender Board, OQ, PDO, Omantel, OMRAN, Oman Broadband and other companies' own "Invitation to Bid" PDFs; Times of Oman and Oman Observer.
+- Bahrain: Tender Board, Bapco, Alba, Batelco, Tamkeen, Mumtalakat companies; Gulf Daily News.
+- Egypt: eTenders portal, the holding companies under the Ministry of Public Enterprise Sector, EGPC and petroleum companies, banks; Amwal Al Ghad, Daily News Egypt, Ahram Online.
+- Aggregators (TendersOnTime, GlobalTenders, bidsfactory, TenderTiger): a listing page is only a pointer. Open the notice itself, confirm the title, issuer, dated `published` and a `closes` of today or later, and use the notice page as `source_url`. Many listings are already closed; do not save those as tenders.
+- Typical queries (add the country and the year): `ERP implementation tender`, `SAP S/4HANA RFP`, `SAP support services tender`, `application management services tender SAP OR Oracle`, `Oracle Fusion ERP tender`, `e-procurement system tender`, `source to pay RFP`, `Coupa OR Ariba tender OR implementation`, `contract lifecycle management tender`, `procurement transformation consultancy tender`, `supplier portal tender`, `ERP licence renewal tender`, `selects SAP OR Oracle OR Coupa OR Ariba` (press, last 12 months), `awarded ERP support`.
+- Search thin results honestly: if a region has no open tender today, say "no open tender found" in the job or run summary. Never fill a quiet day with closed tenders or marketing pages.
 
 ## Market intelligence (job `market`, and the daily step in section 4)
 Goal: for each vendor, list ALL its partners in a region (a busy region such as UAE has well over 20 for SAP) and the customers each partner publishes on its own website, with public contact details where they exist. Free: public web search only, no logins.
@@ -167,7 +188,7 @@ Do not commit or push anything and do not change app code.
 | Priority | Work | When |
 |---|---|---|
 | **High** | queued jobs; verifying the companies you just added; "Needs check" and "Unknown" accounts; the watch list | every run, first |
-| **Medium** | finding new companies; verifying "Likely" accounts; Market intelligence partners and customers for SAP and Coupa (regions with `market` on); buying signals (UAE and KSA) | every run, after High |
+| **Medium** | finding new companies; verifying "Likely" accounts; Market intelligence partners and customers for SAP and Coupa (regions with `market` on); buying signals (a tender sweep in every Active Middle East region: High regions daily, Medium every 3 days, Low weekly) | every run, after High |
 | **Low** | the 180-day re-checks; the other vendors' partner scans (Oracle, Microsoft, Boomi, MuleSoft, Ivalua, GEP, Jaggaer, added vendors); contacts for accounts with no people; deep dives into one partner | only with spare time, a slice per run |
 
 For **each region in `active`** of `icp_rules.json` (default: UAE, find 5, verify 25), in that order:
@@ -195,8 +216,9 @@ For **each region in `active`** of `icp_rules.json` (default: UAE, find 5, verif
    (counts are the ICP status of the checked companies after the check; mention any duplicates skipped). If a region's planned count can't be reached normally
    (e.g. its queue is empty) and you pad it with extra new companies to still hit the day's target, say so plainly in that region's own summary and flag it as
    over quota — the user reviews these.
-5. **Buying signals (UAE and KSA only, after the rest, if time allows)**: for each of UAE and KSA that is in `active`, run the **Buying signals** procedure: one tender sweep, then
-   `signal_targets <REGION> 10` and scan those companies; save with `add_signals`. Skip it silently if the session is short on time; never let it delay the revenue work above.
+5. **Buying signals (every Active Middle East region, after the rest, if time allows)**: for each region in `active` that is in the Middle East (UAE, KSA, Qatar, Kuwait, Oman, Bahrain, Egypt), in the order `icp` printed them, run the **Buying signals** procedure and the **Middle East sweep** above:
+   `signal_targets <REGION> N` (it also prints `last_sweep`). A High region gets a sweep every run and N = 10; a Medium region only when `last_sweep` is more than 3 days old (N = 5); a Low region only when it is more than 7 days old (N = 3).
+   The sweep searches all categories (ERP, S2P, S2C, support and upgrades, upsell and cross-sell, awards) in that region; then scan the returned companies; save with `add_signals` (`sweep_region` set). Skip it silently if the session is short on time; never let it delay the revenue work above.
 6. **Market intelligence (after everything above)**:
    a. **Partners:** `market_targets 2`, then the **Partners** step of the Market intelligence procedure for those vendor x region pairs only (do not search their customers in this step). The app already lists only Active regions whose `market` switch is on, High priority first, and SAP and Coupa before the other vendors; the other vendors get a turn once SAP and Coupa for that region were scanned in the last 7 days. Save with `add_market`.
    b. **Customers (the default: nobody has to click "Find more customers"):** the same command also writes `data/verification/customers_due.json`: Active vendor x region pairs with partners whose customers were never searched, or not in 45 days (SAP and Coupa first). Work down it until you have searched the customers of **8 partners in total this run**: run the **Customers** step for each one (exactly as in a `phase: "customers"` job), save with `add_market` and put every finished partner in `checked_partners` (a partner with no published customers still goes in, so it is not repeated). `customers_due` shrinks by itself as partners are checked, so unfinished partners carry over to the next run. Skip silently only if the session is short; the revenue work above always comes first.
