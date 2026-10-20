@@ -29,6 +29,7 @@ const GROUPS: { label: string; items: [string, string][]; hideLanding?: boolean;
   { label: "Market intelligence", items: [["/market", "Market intelligence"]], icon: true, tip: "Market intelligence - SAP, Coupa, Oracle and Microsoft partners and their customers", glyph: "network", win: "market" },
   { label: "Home", items: [["/home", "Home"]], icon: true, tip: "Home - where to start", glyph: "home" },
   { label: "New Home", items: [["/home2", "New Home"]], glyph: "home" },
+  { label: "New Layout", items: [["/nav/market", "New Layout"]], glyph: "dashboard" },
   { label: "Dashboard", items: [["/", "Dashboard"], ["/?tab=reports", "Mission Control"]], hideLanding: true, glyph: "dashboard" },
   { label: "Accounts", items: [["/?tab=accounts", "Accounts"], ["/?tab=pipeline", "Pipeline"], ["/?tab=stakeholders", "Stakeholders"], ["/?tab=signals", "S2P Signals"], ["/?tab=erp", "ERP & Apps"]], glyph: "accounts" },
   { label: "Data", items: [["/?tab=sources", "Sources"], ["/?tab=conflicts", "Conflicts"], ["/research", "Research Queue"]], glyph: "data" },
@@ -73,6 +74,8 @@ export default function Header({ meta }: { meta: string }) {
   const [sig, setSig] = useState({ new: 0, hot: 0 });
   const [win, setWin] = useState<"signals" | "market" | null>(null);
   useEffect(() => { window.dispatchEvent(new CustomEvent("act-view", { detail: win ? `/${win === "market" ? "market" : "signals"}` : null })); }, [win]);
+  // The New Layout pages can pop Market intelligence or Buying signals out as the floating window.
+  useEffect(() => { const on = (e: Event) => { const w = (e as CustomEvent<string>).detail; if (w === "market" || w === "signals") setWin(w); }; const off = () => setWin(null); window.addEventListener("appwin-open", on); window.addEventListener("appwin-close", off); return () => { window.removeEventListener("appwin-open", on); window.removeEventListener("appwin-close", off); }; }, []);
   // In-app alert: how many unseen Hot / Warm buying signals are waiting in the user's regions.
   useEffect(() => {
     let off = false;
@@ -131,7 +134,7 @@ export default function Header({ meta }: { meta: string }) {
   const path = usePathname();
   const params = useSearchParams();
   // On the dashboard page, tabs switch instantly on the client (the data is already loaded).
-  const current = path === "/" ? TAB_LABEL[params.get("tab") || ""] || "Dashboard" : PAGE_LABEL[path] || "Dashboard";
+  const current = path === "/" ? TAB_LABEL[params.get("tab") || ""] || "Dashboard" : path.startsWith("/nav") ? "New Layout" : PAGE_LABEL[path] || "Dashboard";
   useLayoutEffect(() => {
     const place = () => {
       const bar = barRef.current, row = subRef.current;

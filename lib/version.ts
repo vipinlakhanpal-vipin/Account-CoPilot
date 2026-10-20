@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.15";
+export const APP_VERSION = "5.16";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.16", date: "2026-10-20", notes: "New Layout (an experiment, option 3): a left panel with the chosen page on the right.", changes: [
+      { what: "A new tab, New Layout. Its left panel holds Market intelligence (with its vendors and their partner counts), Buying signals, About CoPilot, Setup wizard (with its six steps) and, pinned at the bottom, Settings (Define ICP, Engine and PIN, Team). The chosen page opens in the large area on the right. The current tabs and windows are unchanged", where: "app/nav/*, components/NavPanel.tsx, components/NavTool.tsx, components/NavWizard.tsx, components/Header.tsx", why: "Requested — a left panel instead of windows and separate tabs" },
+      { what: "Market intelligence and Buying signals in the right pane have a Pop out button that opens the same page as the floating window (drag, resize, minimise); the pane then shows a note and a Bring it back button, so one live copy runs", where: "components/NavTool.tsx", why: "Requested — keep the floating window as an option" },
+    ] },
   { version: "5.15", date: "2026-10-19", notes: "New Home (an experiment, option A): a regions board where a region is switched on or off in one click.", changes: [
       { what: "A new tab, New Home, next to Home (Home is unchanged). Its first screen is a regions board: each region's state, priority, daily plan, accounts and Market intelligence switch, with Activate or Pause for a Super Admin, each with a confirm that says what happens. Below it are the About and Setup Wizard blocks", where: "app/home2/page.tsx, components/NewHome.tsx, components/Header.tsx", why: "Requested — activating regions was confusing on Home" },
       { what: "The Setup Wizard component can lay out as two columns (About left, wizard right with its menu beside its content), ready for the other design options", where: "components/HomeWorkspace.tsx", why: "Prepared for options B and C" },

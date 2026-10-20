@@ -38,9 +38,9 @@ function Who({ c }: { c: MContact }) {
         <> · <a href={c.source_url} target="_blank" rel="noopener noreferrer">source</a></></div></div>);
 }
 
-export default function MarketIntel({ embedded = false }: { embedded?: boolean }) {
+export default function MarketIntel({ embedded = false, initialVendor }: { embedded?: boolean; initialVendor?: string }) {
   const [data, setData] = useState<Data | null>(null);
-  const [vendor, setVendor] = useState<Vendor>("SAP");
+  const [vendor, setVendor] = useState<Vendor>((initialVendor as Vendor) || "SAP");
   const [adding, setAdding] = useState(false);
   const [newVendor, setNewVendor] = useState("");
   const [addingP, setAddingP] = useState(false);

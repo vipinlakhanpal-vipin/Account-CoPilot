@@ -78,13 +78,16 @@ const STEPS: { n: number; label: string; icon: keyof typeof ICON; cls: string; g
   { n: 6, label: "Review", icon: "clipboard", cls: "hw-step--review" },
 ];
 
-export default function HomeWorkspace({ access, layout = "stack" }: { access: Access; layout?: "stack" | "columns" }) {
+export default function HomeWorkspace({ access, layout = "stack", forceStep, onStepChange }: { access: Access; layout?: "stack" | "columns" | "about" | "wizard"; forceStep?: number; onStepChange?: (n: number) => void }) {
   // Two stacked, collapsible blocks (About, then Setup Wizard); the choice is remembered in this browser.
   const [aboutOpen, setAboutOpen] = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
   useEffect(() => { try { setAboutOpen(localStorage.getItem("hw-about") === "1"); setWizardOpen(localStorage.getItem("hw-wizard") === "1"); } catch { /* optional */ } }, []);
   const flip = (k: "hw-about" | "hw-wizard", set: (v: boolean) => void, v: boolean) => { set(v); try { localStorage.setItem(k, v ? "1" : "0"); } catch { /* optional */ } };
-  const [step, setStep] = useState(1);
+  const [step, setStepRaw] = useState(1);
+  const setStep = (v: number | ((s: number) => number)) => setStepRaw((cur) => (typeof v === "function" ? v(cur) : v));
+  useEffect(() => { if (forceStep && forceStep >= 1 && forceStep <= 6) setStepRaw(forceStep); }, [forceStep]);
+  useEffect(() => { onStepChange?.(step); }, [step]); // eslint-disable-line react-hooks/exhaustive-deps
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [def, setDef] = useState<Definition | null>(null);
@@ -567,6 +570,8 @@ export default function HomeWorkspace({ access, layout = "stack" }: { access: Ac
               ))}
             </ol>
   );
+  if (layout === "about") return <section className="panel hw-solo">{aboutBody}</section>;
+  if (layout === "wizard") return <section className="panel hw-solo">{wizardBody}</section>;
   if (layout === "columns") return (
     <section className="hw-cols">
       <div className="hw-colbox hw-col-about">

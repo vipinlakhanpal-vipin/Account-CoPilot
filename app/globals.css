@@ -1959,3 +1959,30 @@ table td.wrap,table th.wrap{margin:0;padding:7px 8px}
 .nh-chip{font:600 11px var(--body);padding:3px 12px;border-radius:999px;border:1px solid var(--line-2);background:var(--surface);color:var(--muted);cursor:pointer}
 .nh-chip.on{background:color-mix(in srgb,#2ECC8F 22%,var(--surface));border-color:#0B7A66;color:#0B5A47}
 .nh-act{text-align:right;white-space:nowrap}
+
+/* v5.16 New Layout: a left panel (Market intelligence, Buying signals, About, Setup wizard, Settings at the bottom) and the chosen page on the right */
+.navapp{display:grid;grid-template-columns:230px minmax(0,1fr);gap:16px;align-items:start;max-width:1700px;margin:0 auto;padding:16px 16px 40px}
+.navpanel{position:sticky;top:150px;display:flex;flex-direction:column;min-height:calc(100vh - 190px);max-height:calc(100vh - 170px);overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px}
+.navpanel nav{display:flex;flex-direction:column;gap:2px}
+.navit{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;color:var(--text);text-decoration:none;font:500 13.5px var(--body)}
+.navit:hover{background:rgba(var(--ink),.05)}
+.navit.on{background:var(--bg-accent,rgba(15,110,86,.12));color:var(--teal);font-weight:600}
+.navit svg{flex:none;color:var(--teal)}
+.navsub{display:flex;flex-direction:column;margin:2px 0 6px 25px;padding-left:10px;border-left:1px solid var(--line)}
+.navsub a{display:flex;justify-content:space-between;gap:8px;padding:4px 8px;border-radius:7px;color:var(--muted);text-decoration:none;font:500 12.5px var(--body)}
+.navsub a:hover{background:rgba(var(--ink),.05)}
+.navsub a.on{color:var(--teal);font-weight:700}
+.navsub small{color:var(--muted);font-weight:400}
+.navbot{margin-top:auto;border-top:1px solid var(--line);padding-top:8px}
+.navnote{display:block;margin:6px 10px 0;color:var(--muted);font-size:11px}
+.navmain{min-width:0}
+.navmain .wrap{max-width:none;padding-inline:0}
+.nav-h{margin:0 0 10px;font:700 22px var(--display)}
+.navtool-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.navtool-head .nav-h{margin:0}
+.navtool-actions{margin-left:auto;display:flex;gap:8px}
+.navpop{border-color:var(--teal);color:var(--teal)}
+.navpopped{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 16px;border:1px dashed var(--line-2);border-radius:12px;background:var(--surface);color:var(--muted)}
+.nav-market .sig-lanes{display:none}
+.hw-solo{padding:18px 22px}
+@media (max-width:900px){.navapp{grid-template-columns:minmax(0,1fr)}.navpanel{position:static;min-height:0;max-height:none}}
