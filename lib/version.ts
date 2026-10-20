@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.43";
+export const APP_VERSION = "5.44";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.44", date: "2026-10-20", notes: "Left-panel counts say what they count.", changes: [
+      { what: "The red number on Team is an amber pill that says how many people are waiting for your review (for example 3 to review), and the one on Daily run is a blue pill (2 new). Both disappear when the count is zero", where: "components/NavPanel.tsx, app/globals.css", why: "Asked — a bare red 3 was confusing" },
+    ] },
   { version: "5.43", date: "2026-10-20", notes: "Archive and delete is now Archive user.", changes: [
       { what: "The button and confirm window on Inactive users are named Archive user (they were Archive and delete…). It still saves the snapshot first, then removes their sign-in, and they can be reactivated from Archived users", where: "components/InactiveUsers.tsx", why: "Requested" },
     ] },

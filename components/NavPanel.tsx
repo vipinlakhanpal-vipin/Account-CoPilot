@@ -67,7 +67,8 @@ export default function NavPanel({ isSuper, isOwner = false }: { isSuper: boolea
       {isOpen && kids}
     </>);
   };
-  const item = (href: string, icon: string, label: string, on: boolean, badge = 0) => <Link href={href} className={`navit${on ? " on" : ""}`} aria-current={on ? "page" : undefined}><Ic n={icon} />{label}{badge > 0 && <span className="navbadge" aria-label={`${badge} new`}>{badge > 99 ? "99+" : badge}</span>}</Link>;
+  // A count in a pill that says what it counts ("2 new", "3 to review"), so a bare number never has to be guessed at.
+  const item = (href: string, icon: string, label: string, on: boolean, badge = 0, word = "new", tone = "new") => <Link href={href} className={`navit${on ? " on" : ""}`} aria-current={on ? "page" : undefined}><Ic n={icon} />{label}{badge > 0 && <span className={`navbadge ${tone}`}>{badge > 99 ? "99+" : badge} {word}</span>}</Link>;
   return (
     <aside className="navpanel" aria-label="New Layout">
       <nav>
@@ -86,7 +87,7 @@ export default function NavPanel({ isSuper, isOwner = false }: { isSuper: boolea
       <div className="navbot">
         {group("wizard", "/nav/wizard", "wizard", "Setup wizard", onWizard,
           <div className="navsub">{STEPS.map((s, i) => <Link key={s} href={`/nav/wizard?step=${i + 1}`} className={onWizard && step === i + 1 ? "on" : ""}>{i + 1} {s}</Link>)}</div>)}
-        {item("/nav/team", "team", "Team", path.startsWith("/nav/team"), inactive)}
+        {item("/nav/team", "team", "Team", path.startsWith("/nav/team"), inactive, "to review", "review")}
         {group("settings", "/nav/settings/icp", "settings", "Settings", onSettings,
           <div className="navsub">
             <Link href="/nav/settings/icp" className={path.endsWith("/icp") ? "on" : ""}>Define ICP</Link>
