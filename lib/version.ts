@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.01";
+export const APP_VERSION = "6.02";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.02", date: "2026-10-20", notes: "Say in brackets that a company uses Coupa or SAP Ariba, and it is filed under that customer segment.", changes: [
+      { what: "In Find New Company you can put a platform in brackets after a company name, for example Almarai (Coupa), Savola (Ariba user), Aldrees (Jaggaer): the names are still separated by commas or lines. The brackets are removed from the name before searching, a yellow Coupa user (or SAP Ariba user, Other S2P user) tag shows on the name, and with Add free the company is added as a Confirmed Current Coupa, SAP Ariba or other-platform customer (so it shows in that Dashboard segment), recorded as stated by you. Research now ignores the tags", where: "Find and search, Find New Company", why: "You know your customers; the app should file them straight into the right segment" },
+  ] },
   { version: "6.01", date: "2026-10-20", notes: "Find New Company says what happens next, and that names can be separated by commas.", changes: [
       { what: "Find New Company now opens with a short What happens when you search box: a scheduled session searches for free and takes a few minutes; the results appear in the table at the bottom (Add, Ignore or Add all, while companies you name are added straight away); then the daily run checks revenue and researches ERP, S2P platform, signal and people. The count buttons gain 8 (5, 8, 10, 30, Max), and the names box says to separate names with commas or put one per line, with an example", where: "Find and search, Find New Company", why: "It was not clear how to ask for 5 to 8 companies or what happens afterwards" },
   ] },

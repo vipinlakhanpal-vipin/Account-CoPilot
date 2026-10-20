@@ -37,7 +37,7 @@ Do this for every pending upload before moving on to step 1.
 
 ## 1. Claim a job
 `node scripts/engine_client.mjs claim` prints e.g. `{"id":"ab12cd34","region":"UAE","count":50,"mode":"verify"}` or `null`.
-If `null`, do step 4. `count: "max"` = as many as you can in this session (aim for 50). A `mode: "discover"` job may also carry `company_names` (specific names the user
+If `null`, do step 4. `count: "max"` = as many as you can in this session (aim for 50). A `mode: "discover"` or `company` job may also carry `platforms` (`{"<name>":"Coupa" | "SAP Ariba" | "Other S2P"}`): the user said that company already uses that platform. Put `"user_platform":"<platform>"` on that company's record in the `add` file; the server files it as a Confirmed Current Coupa, Ariba or other-platform customer. A `mode: "discover"` job may also carry `company_names` (specific names the user
 typed in) — see "Multi-name discover jobs" under step 2.
 
 ## 2. Do the job
