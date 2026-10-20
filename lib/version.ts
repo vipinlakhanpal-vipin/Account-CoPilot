@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.55";
+export const APP_VERSION = "5.56";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.56", date: "2026-10-20", notes: "Aria has three games, and the Settings and Setup wizard tabs are filled colour tabs.", changes: [
+      { what: "Click Aria and pick a game: the Jigsaw puzzle (60 s, a new picture each time), Memory match (find the 6 pairs of procurement terms and their meanings, 60 s, best move count kept) or True or false (8 quick statements about source-to-pay and how CoPilot labels evidence, 45 s, each answer explained, best score kept)", where: "Left panel, Aria", why: "More to play than one puzzle, and the two new ones teach the words the app uses" },
+      { what: "The tabs on Settings and Setup wizard are now filled tabs: soft green when idle, deep teal with white text when open, joined to the page by a teal line", where: "Settings, Setup wizard", why: "The plain text tabs were hard to tell apart from the page" },
+  ] },
   { version: "5.55", date: "2026-10-20", notes: "Aria's puzzle gives 60 seconds, shows a different picture each game, and the bubble says Want to play? Click me!", changes: [
       { what: "The puzzle now gives 60 seconds (was 30). Each game shows a different picture, never the same twice in a row: Aria in purple, a Dubai skyline at dusk, Aria in teal, a circuit board and a dhow at sea. The speech bubble reads Want to play? Click me!, and the menu entry reads Want to play? (60 s puzzle)", where: "Left panel, Aria", why: "30 seconds was too short, and the same picture made the game stale" },
   ] },

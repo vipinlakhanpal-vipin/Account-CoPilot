@@ -2236,3 +2236,34 @@ header.top{background:var(--bg);padding-bottom:8px;box-shadow:0 10px 14px -12px 
 /* v5.55: the speech bubble has two lines ("Want to play? Click me!") */
 .agame-bubble{left:-48px;top:-84px;width:96px;white-space:normal;text-align:center;line-height:1.3;padding:5px 8px}
 .agame-bubble::after{left:44px}
+
+/* v5.56: Aria's two quick games (Memory match, True or false) share the puzzle's window */
+.agm-shell{width:min(560px,100%)}
+.agm-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:6px}
+.agm-card{all:unset;box-sizing:border-box;cursor:pointer;display:grid;place-items:center;text-align:center;min-height:86px;padding:6px;border-radius:12px;font:700 13px var(--body);color:#fff;background:#5B4BC4;border:2px solid rgba(255,255,255,.25);transition:transform .15s,background .15s}
+.agm-card:hover{transform:translateY(-2px)}
+.agm-card:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.agm-card.up{background:var(--surface-2,var(--surface));color:var(--text-strong);border-color:#5B4BC4}
+.agm-card.up.term{font-size:20px;font-family:var(--display)}
+.agm-card.ok{background:color-mix(in srgb,#2ECC8F 30%,var(--surface));border-color:#0B9E6F;cursor:default}
+.agm-end{display:flex;justify-content:center;margin-top:14px}
+.agm-q{min-height:210px;display:flex;flex-direction:column;gap:14px;padding:6px 2px}
+.agm-stmt{margin:8px 0 0;font:700 18px/1.4 var(--display);color:var(--text-strong);min-height:76px}
+.agm-tf{display:flex;gap:12px}
+.agm-tfb{flex:1;padding:12px;font-size:15px;font-weight:700}
+.agm-tfb.right{background:#0B9E6F;border-color:#0B9E6F;color:#fff}
+.agm-tfb.wrong{background:#D92D20;border-color:#D92D20;color:#fff}
+.agm-why{margin:0;min-height:40px;font-size:13px;line-height:1.45;color:var(--muted)}
+@media (max-width:520px){.agm-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (prefers-reduced-motion:reduce){.agm-card{transition:none}}
+
+/* v5.56: Settings and Setup wizard tabs are filled tabs in the app's teal and green: soft green when idle, deep teal when open, joined to the page below */
+.settabs{gap:5px;border-bottom:3px solid #0F6E56;padding:0 2px}
+.settabs a{padding:10px 20px 9px;font-weight:700;font-size:14px;border:0;border-radius:12px 12px 0 0;margin-bottom:0;color:var(--text);background:color-mix(in srgb,#2ECC8F 24%,var(--surface));box-shadow:inset 0 -1px 0 rgba(0,0,0,.08);transition:background .15s,color .15s}
+.settabs a:hover{background:color-mix(in srgb,#2ECC8F 42%,var(--surface));color:var(--text-strong)}
+.settabs a.on{background:#0F6E56;color:#fff;border-bottom:0;box-shadow:inset 0 3px 0 #2EC4A6}
+.settabs a:focus-visible{outline:2px solid var(--teal);outline-offset:-2px}
+:root[data-theme="light"] .settabs a{background:#DDF1EB;color:#0B3D35}
+:root[data-theme="light"] .settabs a:hover{background:#BFE7DA}
+:root[data-theme="light"] .settabs a.on{background:#0B7A66;color:#fff}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]) .settabs a{background:#DDF1EB;color:#0B3D35}:root:not([data-theme="dark"]) .settabs a:hover{background:#BFE7DA}:root:not([data-theme="dark"]) .settabs a.on{background:#0B7A66;color:#fff}}
