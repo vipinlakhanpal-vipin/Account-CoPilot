@@ -105,30 +105,47 @@ function Quiz({ onClose }: { onClose: () => void }) {
   );
 }
 
-const WORDS: { w: string; clue: string }[] = [
-  { w: "SUPPLIER", clue: "Sells goods or services to a company" }, { w: "INVOICE", clue: "The bill a supplier sends after delivery" },
-  { w: "CONTRACT", clue: "The signed agreement that sets price and terms" }, { w: "SOURCING", clue: "Finding and choosing suppliers" },
-  { w: "BUDGET", clue: "The money set aside to spend" }, { w: "TENDER", clue: "A formal invitation to bid for work" },
-  { w: "CATALOG", clue: "A list of items a buyer can order" }, { w: "APPROVAL", clue: "The yes that lets a purchase go ahead" },
-  { w: "VENDOR", clue: "Another word for supplier" }, { w: "SAVINGS", clue: "What good negotiation leaves in the bank" },
-  { w: "REVENUE", clue: "Money a company earns from sales" }, { w: "VERIFIED", clue: "Checked against an official source" },
-  { w: "PIPELINE", clue: "Prospects moving towards a deal" }, { w: "ACCOUNT", clue: "A company you are working to win" },
-  { w: "CATEGORY", clue: "A group of similar things a company buys" }, { w: "STAKEHOLDER", clue: "A person with a say in the decision" },
-  { w: "NEGOTIATE", clue: "Talk to agree better terms" }, { w: "COMPLIANCE", clue: "Following the rules and policies" },
+// Four levels of five words each: 3, 5, 7 and 10 letters. Every play draws five at random from the level's pool.
+const LEVELS: { name: string; len: number; pool: { w: string; clue: string }[] }[] = [
+  { name: "Level 1", len: 3, pool: [
+    { w: "ERP", clue: "The system a company runs its finance, stock and orders on" }, { w: "RFQ", clue: "What you send suppliers to ask for a price" },
+    { w: "BID", clue: "A supplier's offer to do the work at a price" }, { w: "PAY", clue: "The last step of purchase to pay" },
+    { w: "KPI", clue: "A number that tracks how well something is going" }, { w: "SAP", clue: "The company behind Ariba" },
+    { w: "ICP", clue: "The rules for which companies are worth tracking" }, { w: "SLA", clue: "A promise about service levels, in short" },
+    { w: "TCO", clue: "Total cost of ownership, in short" }, { w: "TAX", clue: "Added to an invoice by the government" } ] },
+  { name: "Level 2", len: 5, pool: [
+    { w: "PRICE", clue: "What a supplier charges" }, { w: "ORDER", clue: "What a purchase order places" },
+    { w: "COUPA", clue: "A source-to-pay platform with a spend-management focus" }, { w: "ARIBA", clue: "SAP's procurement network" },
+    { w: "SPEND", clue: "The money a company pays to suppliers" }, { w: "BUYER", clue: "The person who chooses what to purchase" },
+    { w: "QUOTE", clue: "A price a supplier gives before you order" }, { w: "TERMS", clue: "The conditions written into a contract" },
+    { w: "AUDIT", clue: "A check that the records are right" }, { w: "STOCK", clue: "Goods a company keeps on hand" } ] },
+  { name: "Level 3", len: 7, pool: [
+    { w: "INVOICE", clue: "The bill a supplier sends after delivery" }, { w: "CATALOG", clue: "A list of items a buyer can order" },
+    { w: "PROCURE", clue: "To obtain goods or services for a company" }, { w: "SAVINGS", clue: "What good negotiation leaves in the bank" },
+    { w: "REVENUE", clue: "Money a company earns from sales" }, { w: "ACCOUNT", clue: "A company you are working to win" },
+    { w: "PARTNER", clue: "A firm that implements a vendor's software" }, { w: "CONTACT", clue: "A person you can reach at a company" },
+    { w: "FINANCE", clue: "The department that manages the money" } ] },
+  { name: "Level 4", len: 10, pool: [
+    { w: "COMPLIANCE", clue: "Following the rules and policies" }, { w: "PURCHASING", clue: "The act of buying what a company needs" },
+    { w: "AUTOMATION", clue: "Letting software do the repetitive work" }, { w: "ONBOARDING", clue: "Bringing a new supplier or employee into the system" },
+    { w: "CATEGORIES", clue: "Groups of similar things a company buys" }, { w: "RECEIVABLE", clue: "Money owed to a company by its customers" },
+    { w: "BENCHMARKS", clue: "Standards you compare your results against" } ] },
 ];
-const WN = 8;
+const WN = 5;
 const scramble = (w: string) => { let a = shuffle(w.split("")); for (let t = 0; t < 8 && a.join("") === w; t++) a = shuffle(w.split("")); return a; };
+const draw = (lv: number) => shuffle(LEVELS[lv].pool).slice(0, WN);
 function Words({ onClose }: { onClose: () => void }) {
-  const fresh = () => shuffle(WORDS).slice(0, WN);
-  const [set, setSet] = useState(fresh);
+  const [lv, setLv] = useState(0);
+  const [set, setSet] = useState(() => draw(0));
   const [i, setI] = useState(0), [score, setScore] = useState(0), [hints, setHints] = useState(0), [usedHint, setUsedHint] = useState(false);
   const [tiles, setTiles] = useState<string[]>(() => scramble(set[0].w)), [pick, setPick] = useState<number[]>([]);
   const [state, setState] = useState<"play" | "right" | "wrong" | "end">("play");
   const cur = set[i], typed = pick.map((k) => tiles[k]).join("");
+  const begin = (level: number) => { const f = draw(level); setLv(level); setSet(f); setI(0); setScore(0); setHints(0); setTiles(scramble(f[0].w)); setPick([]); setState("play"); setUsedHint(false); };
   const load = (w: string) => { setTiles(scramble(w)); setPick([]); setState("play"); setUsedHint(false); };
   const check = (np: number[]) => {
     if (np.length !== cur.w.length) return;
-    if (np.map((k) => tiles[k]).join("") === cur.w) { setState("right"); setScore((s) => s + (usedHint ? 0 : 1)); } else setState("wrong");
+    if (np.map((k) => tiles[k]).join("") === cur.w) { setState("right"); setScore((x) => x + (usedHint ? 0 : 1)); } else setState("wrong");
   };
   const add = (k: number) => { if (state === "right" || state === "end" || pick.includes(k)) return; const np = [...pick, k]; setPick(np); setState("play"); check(np); };
   const drop = (n: number) => { if (state === "right" || state === "end") return; setPick((p) => p.filter((_, j) => j !== n)); setState("play"); };
@@ -139,8 +156,10 @@ function Words({ onClose }: { onClose: () => void }) {
     if (k < 0) return;
     np = [...np, k]; setPick(np); setHints((h) => h + 1); setUsedHint(true); setState("play"); check(np);
   };
-  const next = () => { if (i + 1 >= set.length) { setState("end"); return; } setI(i + 1); load(set[i + 1].w); };
-  const restart = () => { const f = fresh(); setSet(f); setI(0); setScore(0); setHints(0); setTiles(scramble(f[0].w)); setPick([]); setState("play"); setUsedHint(false); };
+  const next = () => {
+    if (i + 1 >= set.length) { setState("end"); try { const d = Number(localStorage.getItem("aria-words-level")) || 0; if (lv + 1 > d) localStorage.setItem("aria-words-level", String(lv + 1)); } catch { /* optional */ } return; }
+    setI(i + 1); load(set[i + 1].w);
+  };
   const keys = useRef({ add, drop, pick, tiles, state }); keys.current = { add, drop, pick, tiles, state };
   useEffect(() => {
     const on = (e: KeyboardEvent) => {
@@ -152,12 +171,20 @@ function Words({ onClose }: { onClose: () => void }) {
     };
     window.addEventListener("keydown", on); return () => window.removeEventListener("keydown", on);
   }); // eslint-disable-line react-hooks/exhaustive-deps
+  const L = LEVELS[lv], lastLevel = lv === LEVELS.length - 1;
   return (
-    <Shell title={state === "end" ? "All words done" : "Word scramble"}
-      sub={state === "end" ? `${score} of ${set.length} without a hint · ${hints} hint${hints === 1 ? "" : "s"} used` : "Put the letters in order. Tap them or type. No time limit."}
-      info={state === "end" ? "" : `Word ${i + 1} of ${set.length}`} info2={`${score} solved without a hint`} onClose={onClose} onRestart={restart}>
+    <Shell title={state === "end" ? `${L.name} done` : "Word scramble"}
+      sub={state === "end" ? `${score} of ${set.length} without a hint · ${hints} hint${hints === 1 ? "" : "s"} used` : `${L.name}: ${L.len}-letter words. Tap the letters or type. No time limit.`}
+      info={state === "end" ? "" : `Word ${i + 1} of ${set.length}`} info2={`${score} solved without a hint`} onClose={onClose} onRestart={() => begin(lv)}>
+      <div className="seg-toggle agm-levels" role="group" aria-label="Level">
+        {LEVELS.map((x, n) => <button type="button" key={x.name} aria-pressed={n === lv} onClick={() => begin(n)} title={`${x.len}-letter words`}>{x.name} · {x.len}</button>)}
+      </div>
       {state === "end" ? (
-        <div className="agm-end static"><button type="button" className="btn primary" onClick={restart}>Play again with new words</button></div>
+        <div className="agm-end static" style={{ gap: 10 }}>
+          <button type="button" className="btn" onClick={() => begin(lv)}>Play {L.name} again</button>
+          {!lastLevel ? <button type="button" className="btn primary" onClick={() => begin(lv + 1)}>Next: {LEVELS[lv + 1].name} ({LEVELS[lv + 1].len} letters)</button>
+            : <button type="button" className="btn primary" onClick={() => begin(0)}>Start again from Level 1</button>}
+        </div>
       ) : (
         <div className="agm-w">
           <p className="agm-clue">{cur.clue}</p>
@@ -171,7 +198,7 @@ function Words({ onClose }: { onClose: () => void }) {
           <div className="agm-row">
             <button type="button" className="btn tiny" onClick={() => { setPick([]); setState("play"); }} disabled={!pick.length || state === "right"}>Clear</button>
             <button type="button" className="btn tiny" onClick={hint} disabled={state === "right"}>Hint</button>
-            {state === "right" ? <button type="button" className="btn primary" onClick={next} autoFocus>{i + 1 >= set.length ? "Finish" : "Next word"}</button>
+            {state === "right" ? <button type="button" className="btn primary" onClick={next} autoFocus>{i + 1 >= set.length ? "Finish level" : "Next word"}</button>
               : <button type="button" className="btn tiny" onClick={next}>Skip</button>}
           </div>
         </div>

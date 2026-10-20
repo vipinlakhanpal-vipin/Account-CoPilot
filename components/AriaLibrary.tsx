@@ -16,8 +16,8 @@ export const GAMES: Game[] = [
     icon: svg(<><rect x="3" y="6" width="11" height="14" rx="2" /><path d="M17 8l3 1-3 10" /></>), best: () => { const b = num("aria-memory-best"); return b ? `Best ${b} moves` : "Not played yet"; } },
   { id: "quiz", name: "True or false", fill: "#FAC775", ink: "#633806", time: "45 s", timed: true, blurb: "Eight quick statements about source-to-pay and how CoPilot labels evidence.",
     icon: svg(<><circle cx="12" cy="12" r="9" /><path d="M8 12.5l2.7 2.7L16 9.5" /></>), best: () => { const b = num("aria-quiz-best"); return b ? `Best ${b} of 8` : "Not played yet"; } },
-  { id: "words", name: "Word scramble", fill: "#F5C4B3", ink: "#712B13", time: "No timer", timed: false, blurb: "Put the letters in order. Hints and Restart any time.",
-    icon: svg(<><path d="M4 18l4-11 4 11M5.6 14h4.8" /><path d="M15 9h3.5a2 2 0 0 1 0 4H15m0 0h4a2 2 0 0 1 0 4h-4z" /></>), best: () => "Play as long as you like" },
+  { id: "words", name: "Word scramble", fill: "#F5C4B3", ink: "#712B13", time: "No timer", timed: false, blurb: "Four levels of five words: 3, 5, 7 and 10 letters. Hints and Restart any time.",
+    icon: svg(<><path d="M4 18l4-11 4 11M5.6 14h4.8" /><path d="M15 9h3.5a2 2 0 0 1 0 4H15m0 0h4a2 2 0 0 1 0 4h-4z" /></>), best: () => { const d = num("aria-words-level"); return d ? `Level ${Math.min(d, 4)} cleared` : "No timer, 4 levels"; } },
 ];
 
 const POP_W = 340;

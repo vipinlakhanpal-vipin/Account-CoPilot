@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.72";
+export const APP_VERSION = "5.73";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.73", date: "2026-10-20", notes: "Word scramble has four levels of five words.", changes: [
+      { what: "Word scramble now has four levels, shown as tabs at the top of the game: Level 1 with 3-letter words, Level 2 with 5, Level 3 with 7 and Level 4 with 10 letters, five words each (such as ERP, QUOTE, INVOICE, COMPLIANCE), drawn at random from a bigger pool each time. Finish a level and the game offers the next one; Restart redeals the level; the library remembers the highest level you cleared", where: "Left panel, Aria, Word scramble", why: "A gentle start that builds up to long words" },
+  ] },
   { version: "5.72", date: "2026-10-20", notes: "Aria's speech bubble sits above her icon, not behind it.", changes: [
       { what: "The yellow bubble (Want to play? Click me!, and her funny messages) is anchored just above Aria's icon with a clear gap, so a longer message grows upward instead of sliding behind her. It is wider so the emoji stays on its line, and the panel no longer clips it at the top", where: "Left panel, Aria", why: "The bubble's lower part was hidden behind the icon" },
   ] },

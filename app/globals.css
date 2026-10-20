@@ -7,3 +7,8 @@
 .agame-bubble br+*{white-space:nowrap}
 .navmid{overflow:visible;z-index:3;min-height:200px}
 .agame{top:56%}
+
+/* v5.73: Word scramble levels */
+.agm-levels{margin:6px 0 4px}
+.agm-slots{flex-wrap:wrap}
+@media (max-width:620px){.agm-slot,.agm-tile{width:32px;height:40px;font-size:17px}}
