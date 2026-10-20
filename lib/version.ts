@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.29";
+export const APP_VERSION = "5.30";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,11 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.30", date: "2026-10-20", notes: "Aria roams and plays a rebuild-me puzzle; the left panel is a green to violet carbon weave; the tabs sit on a green bar.", changes: [
+      { what: "Aria floats around the free space in the middle of the left panel, with no hover text, and asks to be hit. A click shatters her into nine jigsaw pieces; drag them onto the board to rebuild her within 30 seconds (a countdown bar, pieces placed, best time kept in your browser). Chat with Aria is the small Ask Aria button below her", where: "components/AriaGame.tsx, components/NavPanel.tsx, app/globals.css", why: "Requested" },
+      { what: "The left panel uses the app's green to blue to violet gradient with a fine carbon-fibre twill weave over it, with light text", where: "app/globals.css", why: "Requested — the earlier texture did not look right" },
+      { what: "The top tabs (Dashboard, Accounts, Data) sit on a light green bar, the selected tab raised on a white tab", where: "app/globals.css", why: "Requested" },
+    ] },
   { version: "5.29", date: "2026-10-20", notes: "The left panel is on every page; the Home tab and the duplicated top-bar items are gone; Filters is a drawer.", changes: [
       { what: "The left panel (Find and search, About CoPilot, Daily run, Market intelligence, Buying signals, Setup wizard, Team, Settings, Version history, Suggestions, Aria and your profile) now sits on every signed-in page, including Dashboard, Accounts and Data. The top bar keeps the version badge, Online now, the theme switch, the Master Book (Super Admin) and the tabs Dashboard, Accounts and Data. The Home tab is gone, and so are the bell, history, bulb, Aria and profile circle that moved into the panel", where: "components/AppShell.tsx, app/layout.tsx, components/Header.tsx", why: "Requested" },
       { what: "Account Discovery Criteria is a Filters drawer: a Filters pill at the right edge (with a count when filters are active) opens it over the page; it starts closed", where: "components/CoPilotApp.tsx, components/DiscoveryPanel.tsx, app/globals.css", why: "Requested — no second left column" },

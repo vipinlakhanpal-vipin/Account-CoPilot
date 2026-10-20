@@ -2017,22 +2017,37 @@ body[data-nodl] .btn-dl:not(.keep),body[data-nodl] .aria-dl,body[data-nodl] .ari
   box-shadow:inset 0 -4px 6px rgba(5,20,90,.45),inset 0 3px 4px rgba(255,255,255,.5),0 4px 8px rgba(20,58,150,.45),0 1px 2px rgba(0,0,0,.3)}
 .profile-menu.pm-fixed{position:fixed;z-index:60}
 
-/* v5.23: the left panel is light green with a carbon-fibre weave, so it stands apart from the page beside it */
+/* v5.30: the left panel: the app's green to blue to violet gradient with a carbon-fibre twill weave over it, light text */
 .navpanel{
-  background-color:color-mix(in srgb,#2ECC8F 15%,var(--surface));
+  color:#fff;
+  background-color:#1E73B8;
   background-image:
-    radial-gradient(rgba(var(--ink),.10) 15%,transparent 17%),
-    radial-gradient(rgba(var(--ink),.10) 15%,transparent 17%),
-    radial-gradient(rgba(255,255,255,.28) 14%,transparent 21%),
-    radial-gradient(rgba(255,255,255,.28) 14%,transparent 21%);
-  background-size:12px 12px;
-  background-position:0 0,6px 6px,0 1px,6px 7px;
-  border-color:color-mix(in srgb,#0B7A66 35%,var(--line));
+    linear-gradient(27deg,rgba(0,0,0,.22) 3px,transparent 3px),
+    linear-gradient(207deg,rgba(0,0,0,.22) 3px,transparent 3px),
+    linear-gradient(27deg,rgba(0,0,0,.12) 3px,transparent 3px),
+    linear-gradient(207deg,rgba(0,0,0,.12) 3px,transparent 3px),
+    linear-gradient(90deg,rgba(0,0,0,.14) 6px,transparent 6px),
+    linear-gradient(rgba(255,255,255,.05) 25%,rgba(0,0,0,.08) 25%,rgba(0,0,0,.08) 50%,transparent 50%,transparent 75%,rgba(255,255,255,.09) 75%,rgba(255,255,255,.09)),
+    linear-gradient(160deg,#0E8A72 0%,#1B76B3 50%,#5B4BC4 100%);
+  background-size:12px 12px,12px 12px,12px 12px,12px 12px,12px 12px,12px 12px,100% 100%;
+  background-position:0 3px,6px 0,0 6px,6px 3px,0 0,0 0,0 0;
+  border-color:rgba(255,255,255,.28);
+  box-shadow:0 10px 26px rgba(20,40,110,.28);
 }
-.navpanel .navit.on,.navpanel .navrow.on{background:color-mix(in srgb,var(--teal) 24%,var(--surface))}
-.navpanel .navrow.on .navit{background:none}
-.navpanel .navit:hover,.navpanel .navchev:hover,.navpanel .navprof:hover{background:color-mix(in srgb,var(--surface) 55%,transparent)}
-.navpanel .navbot,.navpanel .navprof-wrap{border-top-color:color-mix(in srgb,#0B7A66 28%,var(--line))}
+.navpanel .navit{color:#F1F7FF}
+.navpanel .navit svg{color:#fff}
+.navpanel .navit:hover,.navpanel .navchev:hover,.navpanel .navprof:hover,.navpanel .navbtn:hover{background:rgba(255,255,255,.16)}
+.navpanel .navit.on,.navpanel .navrow.on{background:rgba(255,255,255,.26);color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
+.navpanel .navrow.on .navit{background:none;box-shadow:none}
+.navpanel .navsub{border-left-color:rgba(255,255,255,.35)}
+.navpanel .navsub a{color:rgba(255,255,255,.82)}
+.navpanel .navsub a:hover{background:rgba(255,255,255,.14)}
+.navpanel .navsub a.on{color:#fff;font-weight:700}
+.navpanel .navsub small,.navpanel .navver,.navpanel .navnote,.navpanel .navmid-label,.navpanel .navprof-t{color:rgba(255,255,255,.8)}
+.navpanel .navprof-t b{color:#fff}
+.navpanel .navchev{color:#fff}
+.navpanel .navbot,.navpanel .navprof-wrap{border-top-color:rgba(255,255,255,.3)}
+.navpanel .navit:focus-visible,.navpanel .navprof:focus-visible,.navpanel .navbtn:focus-visible,.navpanel .navchev:focus-visible{outline-color:#fff}
 
 /* v5.25: the bell's content as a page (Home -> Daily run) */
 .bell-inline{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 18px}
@@ -2040,14 +2055,40 @@ body[data-nodl] .btn-dl:not(.keep),body[data-nodl] .aria-dl,body[data-nodl] .ari
 .bell-inline .bell-table td{max-width:none;white-space:normal;overflow:visible;text-overflow:clip}
 .bell-inline .bell-title-row{gap:12px}
 
-/* v5.26: Aria floats in the middle of the left panel, in the space between the top and bottom groups */
-.navmid{flex:1;min-height:110px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+/* v5.30: Aria roams the free space in the middle of the left panel (no hover text), asks to be hit, and breaks into a jigsaw to rebuild in 30 seconds */
+.navmid{position:relative;flex:1;min-height:170px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;overflow:hidden}
+.navmid-chat{display:flex;align-items:center;gap:8px}
 .navmid-label{font:600 11.5px var(--body);color:var(--muted)}
-.nav-aria.aria-btn{width:68px;height:68px;animation:nav-float 3.4s ease-in-out infinite;box-shadow:0 10px 22px rgba(91,75,196,.45),0 2px 5px rgba(0,0,0,.25)}
-.nav-aria.aria-btn::after{inset:-7px}
-.nav-aria .aria-tip{display:none}
-@keyframes nav-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-@media (prefers-reduced-motion:reduce){.nav-aria.aria-btn{animation:none}}
+.nav-aria-mini.aria-btn{width:30px;height:30px;box-shadow:0 3px 8px rgba(91,75,196,.4)}
+.nav-aria-mini .aria-tip,.aria-btn .aria-tip{display:none}
+.agame{position:absolute;left:50%;top:40%;width:0;height:0;animation:agame-roam 16s ease-in-out infinite}
+.agame:hover,.agame:focus-within{animation-play-state:paused}
+.agame-bot{all:unset;position:absolute;left:-32px;top:-32px;width:64px;height:64px;border-radius:50%;cursor:pointer;display:grid;place-items:center;
+  background:radial-gradient(circle at 32% 26%,#9B8BFF 0%,#6A55E0 45%,#3E2FA3 100%);box-shadow:0 10px 22px rgba(91,75,196,.45),inset 0 -4px 6px rgba(20,10,80,.4),inset 0 3px 4px rgba(255,255,255,.4)}
+.agame-bot svg{width:76%;height:76%;filter:drop-shadow(0 1px 1px rgba(20,10,60,.35))}
+.agame-bot:hover{filter:brightness(1.1)}
+.agame-bot:focus-visible{outline:2px solid var(--teal);outline-offset:3px}
+.agame-bot.punched{animation:agame-punch .6s ease-out forwards}
+.agame-bubble{position:absolute;left:-26px;top:-62px;white-space:nowrap;background:var(--surface);border:1px solid var(--line-2);border-radius:12px;padding:3px 10px;font:700 11.5px var(--body);color:var(--text-strong);animation:agame-pulse 1.6s ease-in-out infinite}
+.agame-bubble::after{content:"";position:absolute;left:30px;bottom:-5px;width:8px;height:8px;background:var(--surface);border-right:1px solid var(--line-2);border-bottom:1px solid var(--line-2);transform:rotate(45deg)}
+@keyframes agame-roam{0%,100%{transform:translate(-50px,-34px)}20%{transform:translate(46px,-12px)}40%{transform:translate(14px,36px)}60%{transform:translate(-48px,22px)}80%{transform:translate(30px,-38px)}}
+@keyframes agame-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+@keyframes agame-punch{0%{transform:scale(1)}25%{transform:scale(.7,1.2) rotate(-8deg)}55%{transform:scale(1.25,.8) rotate(8deg)}100%{transform:scale(.2) rotate(40deg);opacity:0}}
+.agame-back{position:fixed;inset:0;z-index:90;background:rgba(10,14,30,.55);display:grid;place-items:center;padding:16px}
+.agame-card{background:var(--surface);border:1px solid var(--line-2);border-radius:16px;padding:16px 18px 18px;max-width:100%;overflow:auto;box-shadow:0 24px 60px rgba(0,0,0,.4)}
+.agame-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.agame-head b{display:block;font:700 18px var(--display);color:var(--text-strong)}
+.agame-head span{font-size:12.5px;color:var(--muted)}
+.agame-meter{height:8px;border-radius:999px;background:rgba(var(--ink),.14);overflow:hidden;margin:10px 0 4px}
+.agame-meter i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#2ECC8F,#0B9E6F);transition:width .12s linear}
+.agame-info{display:flex;justify-content:space-between;font:600 11.5px var(--mono);color:var(--muted);margin-bottom:6px}
+.agame-stage{position:relative;touch-action:none;user-select:none;border-radius:12px;background:repeating-linear-gradient(45deg,rgba(var(--ink),.05) 0 8px,transparent 8px 16px),var(--surface-2,var(--surface));border:1px dashed var(--line-2);overflow:hidden}
+.agame-board{position:absolute;border:2px dashed color-mix(in srgb,#5B4BC4 55%,transparent);border-radius:6px;background:color-mix(in srgb,#5B4BC4 8%,transparent)}
+.agame-piece{position:absolute;left:0;top:0;cursor:grab;transition:transform .7s cubic-bezier(.2,.8,.2,1);will-change:transform;filter:drop-shadow(0 3px 4px rgba(0,0,0,.3))}
+.agame-piece.drag{transition:none;cursor:grabbing;filter:drop-shadow(0 8px 10px rgba(0,0,0,.4))}
+.agame-piece.locked{cursor:default;filter:none;transition:transform .15s ease-out}
+.agame-end{position:absolute;inset:auto 0 18px 0;display:flex;justify-content:center;z-index:200}
+@media (prefers-reduced-motion:reduce){.agame{animation:none}.agame-bubble{animation:none}.agame-piece{transition:none}}
 
 .navbadge{margin-left:auto;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#D92D20;color:#fff;font:700 10.5px/18px var(--body);text-align:center}
 
@@ -2063,3 +2104,9 @@ body[data-nodl] .btn-dl:not(.keep),body[data-nodl] .aria-dl,body[data-nodl] .ari
 .dp-collapsed .dp-toggle{flex-direction:row;gap:8px;padding:8px 16px}
 .dp-collapsed .dp-vert{writing-mode:horizontal-tb;transform:none}
 @media (max-width:1100px){.dp{width:min(340px,calc(100vw - 32px))}}
+
+/* v5.30: the top tabs (Dashboard, Accounts, Data) sit on a light green bar */
+.navbar.has-sub nav.tabs{background:color-mix(in srgb,#2ECC8F 26%,var(--surface));border-radius:12px 12px 0 0;padding:0 8px;gap:4px;border:1px solid color-mix(in srgb,#0B7A66 30%,var(--line));border-bottom:0}
+.navbar.has-sub nav.tabs .tab{color:var(--text)}
+.navbar.has-sub nav.tabs .tab:hover{background:color-mix(in srgb,var(--surface) 55%,transparent)}
+.navbar.has-sub nav.tabs .tab[aria-selected="true"]{background:var(--surface);color:#0A5C4C;box-shadow:inset 0 3px 0 #0B7A66;font-weight:700}

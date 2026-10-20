@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import ProfileMenu from "@/components/ProfileMenu";
 import AccountCopilotAria from "@/components/AriaChat";
+import AriaGame from "@/components/AriaGame";
 import { APP_VERSION } from "@/lib/version";
 import { usePathname, useSearchParams } from "next/navigation";
 
@@ -72,8 +73,8 @@ export default function NavPanel({ isSuper }: { isSuper: boolean }) {
         {item("/nav/signals", "signals", "Buying signals", path.startsWith("/nav/signals"))}
       </nav>
       <div className="navmid">
-        <AccountCopilotAria buttonClassName="nav-aria" />
-        <span className="navmid-label">Ask Aria</span>
+        <AriaGame />
+        <div className="navmid-chat"><AccountCopilotAria buttonClassName="nav-aria-mini" /><span className="navmid-label">Ask Aria</span></div>
       </div>
       <div className="navbot">
         {group("wizard", "/nav/wizard", "wizard", "Setup wizard", onWizard,
