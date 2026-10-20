@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.64";
+export const APP_VERSION = "5.65";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.65", date: "2026-10-20", notes: "Setup wizard step 1 reads as a table: column names once at the top, Status as the last column on every row.", changes: [
+      { what: "The region rows in Setup wizard step 1 no longer repeat Region, Min net rev, Min employees, Stock listing, Which entities count and Status above each row. One header row names the columns, and each region is one line of values. Status is the last column for every region: Activated by (name and time), Paused or Not started yet", where: "Setup wizard, step 1 Region and size", why: "Less clutter, and the rows line up so regions are easy to compare" },
+  ] },
   { version: "5.64", date: "2026-10-20", notes: "In the logo, the arrow now moves in a circle instead of up and down.", changes: [
       { what: "The arrow slides out a little, travels once around in a small circle inside the logo (against the dot's direction, staying upright), and returns to the centre. The dot's run and the 10-second rest are unchanged", where: "Top bar and sign-in page logo", why: "A circular motion fits the round logo better than up and down" },
   ] },

@@ -2351,3 +2351,14 @@ header.top{background:var(--bg);padding-bottom:8px;box-shadow:0 10px 14px -12px 
   22%{transform:rotate(-360deg) translateX(3.5px) rotate(360deg)}
   28%,100%{transform:rotate(-360deg) translateX(0) rotate(360deg)}
 }
+
+/* v5.65: Setup wizard step 1: one header row names the columns, every region row holds only values, and Status is the last column for every region */
+.hw-region-list{gap:6px}
+.hw-region-grid{display:grid;grid-template-columns:150px 110px 110px 230px 230px minmax(190px,1fr);align-items:center;gap:6px 14px;min-width:960px}
+.hw-region-headrow{padding:0 12px;font:700 10px var(--body);letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.hw-region-grid>label{display:block;font:inherit;text-transform:none;letter-spacing:0;min-width:0}
+.hw-region-grid .hw-region-name{display:flex;font-size:13px}
+.hw-region-grid input[type="number"],.hw-region-grid input[type="text"],.hw-region-grid select{width:100%;min-width:0;box-sizing:border-box}
+.hw-region-grid .hw-region-activated{font-size:12px;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hw-region-grid .hw-region-activated.s-active{color:var(--ok-text,#0B7A66)}
+.hw-region-grid .hw-region-activated.s-paused{color:var(--warn-text,#8A5300)}

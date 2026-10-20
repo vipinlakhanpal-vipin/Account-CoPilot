@@ -306,35 +306,30 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
                     (your choice in step 5) once you save.</p>
                 </div>
                 <div className="hw-region-list">
+                  <div className="hw-region-grid hw-region-headrow" aria-hidden="true">
+                    <span>Region</span><span>Min net rev</span><span>Min employees</span><span>Stock listing</span><span>Which entities count</span><span>Status</span>
+                  </div>
                   {visibleRegions.map((r) => {
-                    const nextPhase = def.regions[r.key]?.status === "next";
+                    const st = def.regions[r.key]?.status;
                     const checked = regions.includes(r.key);
                     const s = sizeFor(r.key);
-                    const activatedBy = def.regions[r.key]?.status === "active" ? def.regions[r.key]?.activated_by : null;
+                    const activatedBy = st === "active" ? def.regions[r.key]?.activated_by : null;
                     const activatedAt = def.regions[r.key]?.activated_at;
+                    const statusText = st === "active" ? (activatedBy ? `Activated by ${activatedBy.split(" ")[0]}${activatedAt ? ` on ${fmtDateTime(activatedAt)}` : ""}` : "Active")
+                      : st === "paused" ? "Paused" : "Not started yet";
                     return (
-                      <div key={r.key} className={`hw-region-row ${checked ? "on" : ""}`}>
-                        <div className="hw-region-name-col">
-                          <span className="hw-region-head">Region</span>
-                          <label className="hw-region-name">
-                            <input type="checkbox" checked={checked} onChange={() => toggleRegion(r.key)} />
-                            {r.name} {nextPhase && <span className="hint">— not started yet</span>}
-                          </label>
-                        </div>
-                        <div className="hw-region-fields">
-                          <label>Min net rev<MoneyField value={s.revenue} onChange={(v) => setSize(r.key, { revenue: v })} /></label>
-                          <label>Min employees<input type="number" min={0} value={s.employees} onChange={(e) => setSize(r.key, { employees: Number(e.target.value) || 0 })} /></label>
-                          <label>Stock listing<select value={s.listing} onChange={(e) => setSize(r.key, { listing: e.target.value as Rules["listing"] })}>
-                            {OPTIONS.listing.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
-                          <label>Which entities count<select value={s.entity} onChange={(e) => setSize(r.key, { entity: e.target.value as Rules["entity_level"] })}>
-                            {OPTIONS.entity.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
-                        </div>
-                        {activatedBy && (
-                          <div className="hw-region-status-col">
-                            <span className="hw-region-head">Status</span>
-                            <span className="hw-region-activated">Activated by {activatedBy.split(" ")[0]}{activatedAt ? ` on ${fmtDateTime(activatedAt)}` : ""}</span>
-                          </div>
-                        )}
+                      <div key={r.key} className={`hw-region-row hw-region-grid ${checked ? "on" : ""}`}>
+                        <label className="hw-region-name">
+                          <input type="checkbox" checked={checked} onChange={() => toggleRegion(r.key)} />
+                          {r.name}
+                        </label>
+                        <label aria-label={`${r.name}: min net rev`}><MoneyField value={s.revenue} onChange={(v) => setSize(r.key, { revenue: v })} /></label>
+                        <label aria-label={`${r.name}: min employees`}><input type="number" min={0} value={s.employees} onChange={(e) => setSize(r.key, { employees: Number(e.target.value) || 0 })} /></label>
+                        <label aria-label={`${r.name}: stock listing`}><select value={s.listing} onChange={(e) => setSize(r.key, { listing: e.target.value as Rules["listing"] })}>
+                          {OPTIONS.listing.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
+                        <label aria-label={`${r.name}: which entities count`}><select value={s.entity} onChange={(e) => setSize(r.key, { entity: e.target.value as Rules["entity_level"] })}>
+                          {OPTIONS.entity.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
+                        <span className={`hw-region-activated s-${st || "next"}`}>{statusText}</span>
                       </div>
                     );
                   })}
