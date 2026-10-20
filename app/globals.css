@@ -2307,3 +2307,22 @@ header.top{background:var(--bg);padding-bottom:8px;box-shadow:0 10px 14px -12px 
 @keyframes acp-arrow{0%{transform:translateY(0)}10%{transform:translateY(-4.5px)}20%,100%{transform:translateY(0)}}
 @keyframes acp-orbit{0%{transform:rotate(0)}28%,100%{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.logo .acp-arrow,.logo .acp-orbit{animation:none}}
+
+/* v5.60: Word scramble (no timer, with Restart) */
+.agm-headbtns{display:flex;gap:6px}
+.agm-w{display:flex;flex-direction:column;gap:14px;padding:6px 2px;min-height:290px}
+.agm-clue{margin:6px 0 0;font:700 17px/1.4 var(--display);color:var(--text-strong);min-height:48px}
+.agm-slots{display:flex;gap:6px;flex-wrap:wrap}
+.agm-slot,.agm-tile{all:unset;box-sizing:border-box;display:grid;place-items:center;width:40px;height:46px;border-radius:10px;font:800 20px var(--display);cursor:pointer}
+.agm-slot{background:rgba(var(--ink),.08);border:2px dashed color-mix(in srgb,#0F6E56 55%,transparent);color:var(--text-strong)}
+.agm-slots.right .agm-slot{background:#0B9E6F;border:2px solid #0B9E6F;color:#fff}
+.agm-slots.wrong .agm-slot{border:2px solid #D92D20;animation:agm-shake .35s}
+.agm-tiles{display:flex;gap:7px;flex-wrap:wrap}
+.agm-tile{background:#5B4BC4;color:#fff;box-shadow:0 3px 0 rgba(20,10,80,.45);border:1px solid rgba(255,255,255,.25)}
+.agm-tile:hover:not(:disabled){transform:translateY(-2px)}
+.agm-tile:disabled{opacity:.25;cursor:default;box-shadow:none}
+.agm-slot:focus-visible,.agm-tile:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.agm-row{display:flex;gap:8px;align-items:center}
+@keyframes agm-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+@media (prefers-reduced-motion:reduce){.agm-slots.wrong .agm-slot{animation:none}}
+.agame-menu{left:-100px;width:200px}

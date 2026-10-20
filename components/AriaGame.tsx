@@ -194,6 +194,7 @@ export default function AriaGame({ onChat }: { onChat: () => void }) {
             <button type="button" role="menuitem" className="agame-opt" onClick={hit}>Jigsaw puzzle · 60 s</button>
             <button type="button" role="menuitem" className="agame-opt" onClick={() => { setMenu(false); setMini("memory"); }}>Memory match · 60 s</button>
             <button type="button" role="menuitem" className="agame-opt" onClick={() => { setMenu(false); setMini("quiz"); }}>True or false · 45 s</button>
+            <button type="button" role="menuitem" className="agame-opt" onClick={() => { setMenu(false); setMini("words"); }}>Word scramble · no timer</button>
           </div>)}
       </div>
       {open && typeof document !== "undefined" && createPortal(

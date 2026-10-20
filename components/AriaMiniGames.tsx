@@ -2,8 +2,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-// Two quick games Aria offers besides the jigsaw. Both are about the work the app is for (source-to-pay and the way CoPilot labels evidence), all in the browser, nothing stored but a best score.
-export type MiniGame = "memory" | "quiz";
+// Three quick games Aria offers besides the jigsaw (Words has no time limit). Both are about the work the app is for (source-to-pay and the way CoPilot labels evidence), all in the browser, nothing stored but a best score.
+export type MiniGame = "memory" | "quiz" | "words";
 
 const PAIRS: [string, string][] = [
   ["PO", "Purchase order"], ["RFQ", "Request for quotation"], ["S2P", "Source to pay"],
@@ -105,13 +105,88 @@ function Quiz({ onClose }: { onClose: () => void }) {
   );
 }
 
-function Shell({ title, sub, left, total, info, info2, onClose, children }: { title: string; sub: string; left: number; total: number; info: string; info2: string; onClose: () => void; children: React.ReactNode }) {
-  const bar = useMemo(() => Math.round((left / total) * 100), [left, total]);
+const WORDS: { w: string; clue: string }[] = [
+  { w: "SUPPLIER", clue: "Sells goods or services to a company" }, { w: "INVOICE", clue: "The bill a supplier sends after delivery" },
+  { w: "CONTRACT", clue: "The signed agreement that sets price and terms" }, { w: "SOURCING", clue: "Finding and choosing suppliers" },
+  { w: "BUDGET", clue: "The money set aside to spend" }, { w: "TENDER", clue: "A formal invitation to bid for work" },
+  { w: "CATALOG", clue: "A list of items a buyer can order" }, { w: "APPROVAL", clue: "The yes that lets a purchase go ahead" },
+  { w: "VENDOR", clue: "Another word for supplier" }, { w: "SAVINGS", clue: "What good negotiation leaves in the bank" },
+  { w: "REVENUE", clue: "Money a company earns from sales" }, { w: "VERIFIED", clue: "Checked against an official source" },
+  { w: "PIPELINE", clue: "Prospects moving towards a deal" }, { w: "ACCOUNT", clue: "A company you are working to win" },
+  { w: "CATEGORY", clue: "A group of similar things a company buys" }, { w: "STAKEHOLDER", clue: "A person with a say in the decision" },
+  { w: "NEGOTIATE", clue: "Talk to agree better terms" }, { w: "COMPLIANCE", clue: "Following the rules and policies" },
+];
+const WN = 8;
+const scramble = (w: string) => { let a = shuffle(w.split("")); for (let t = 0; t < 8 && a.join("") === w; t++) a = shuffle(w.split("")); return a; };
+function Words({ onClose }: { onClose: () => void }) {
+  const fresh = () => shuffle(WORDS).slice(0, WN);
+  const [set, setSet] = useState(fresh);
+  const [i, setI] = useState(0), [score, setScore] = useState(0), [hints, setHints] = useState(0), [usedHint, setUsedHint] = useState(false);
+  const [tiles, setTiles] = useState<string[]>(() => scramble(set[0].w)), [pick, setPick] = useState<number[]>([]);
+  const [state, setState] = useState<"play" | "right" | "wrong" | "end">("play");
+  const cur = set[i], typed = pick.map((k) => tiles[k]).join("");
+  const load = (w: string) => { setTiles(scramble(w)); setPick([]); setState("play"); setUsedHint(false); };
+  const check = (np: number[]) => {
+    if (np.length !== cur.w.length) return;
+    if (np.map((k) => tiles[k]).join("") === cur.w) { setState("right"); setScore((s) => s + (usedHint ? 0 : 1)); } else setState("wrong");
+  };
+  const add = (k: number) => { if (state === "right" || state === "end" || pick.includes(k)) return; const np = [...pick, k]; setPick(np); setState("play"); check(np); };
+  const drop = (n: number) => { if (state === "right" || state === "end") return; setPick((p) => p.filter((_, j) => j !== n)); setState("play"); };
+  const hint = () => {
+    if (state === "right" || state === "end") return;
+    let np = pick; if (typed !== cur.w.slice(0, typed.length)) np = []; // wrong so far: start the word again
+    const want = cur.w[np.length], k = tiles.findIndex((t, j) => t === want && !np.includes(j));
+    if (k < 0) return;
+    np = [...np, k]; setPick(np); setHints((h) => h + 1); setUsedHint(true); setState("play"); check(np);
+  };
+  const next = () => { if (i + 1 >= set.length) { setState("end"); return; } setI(i + 1); load(set[i + 1].w); };
+  const restart = () => { const f = fresh(); setSet(f); setI(0); setScore(0); setHints(0); setTiles(scramble(f[0].w)); setPick([]); setState("play"); setUsedHint(false); };
+  const keys = useRef({ add, drop, pick, tiles, state }); keys.current = { add, drop, pick, tiles, state };
+  useEffect(() => {
+    const on = (e: KeyboardEvent) => {
+      const k = keys.current; if (e.ctrlKey || e.metaKey || e.altKey || k.state === "end") return;
+      if (e.key === "Backspace") { k.drop(k.pick.length - 1); return; }
+      if (e.key === "Enter" && k.state === "right") { e.preventDefault(); next(); return; }
+      const ch = e.key.toUpperCase(); if (!/^[A-Z]$/.test(ch)) return;
+      const j = k.tiles.findIndex((t, n) => t === ch && !k.pick.includes(n)); if (j >= 0) k.add(j);
+    };
+    window.addEventListener("keydown", on); return () => window.removeEventListener("keydown", on);
+  }); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <Shell title={state === "end" ? "All words done" : "Word scramble"}
+      sub={state === "end" ? `${score} of ${set.length} without a hint · ${hints} hint${hints === 1 ? "" : "s"} used` : "Put the letters in order. Tap them or type. No time limit."}
+      info={state === "end" ? "" : `Word ${i + 1} of ${set.length}`} info2={`${score} solved without a hint`} onClose={onClose} onRestart={restart}>
+      {state === "end" ? (
+        <div className="agm-end static"><button type="button" className="btn primary" onClick={restart}>Play again with new words</button></div>
+      ) : (
+        <div className="agm-w">
+          <p className="agm-clue">{cur.clue}</p>
+          <div className={`agm-slots${state === "wrong" ? " wrong" : state === "right" ? " right" : ""}`} aria-live="polite">
+            {cur.w.split("").map((_, n) => <button type="button" key={n} className="agm-slot" onClick={() => drop(n)} aria-label={pick[n] !== undefined ? `Letter ${tiles[pick[n]]}, tap to remove` : "Empty"}>{pick[n] !== undefined ? tiles[pick[n]] : ""}</button>)}
+          </div>
+          <div className="agm-tiles">
+            {tiles.map((t, k) => <button type="button" key={k} className="agm-tile" disabled={pick.includes(k) || state === "right"} onClick={() => add(k)}>{t}</button>)}
+          </div>
+          <p className="agm-why" aria-live="polite">{state === "right" ? `Yes: ${cur.w}.${usedHint ? " (with a hint)" : ""}` : state === "wrong" ? "Not quite. Tap a letter in the answer to take it out, or use Hint." : ""}</p>
+          <div className="agm-row">
+            <button type="button" className="btn tiny" onClick={() => { setPick([]); setState("play"); }} disabled={!pick.length || state === "right"}>Clear</button>
+            <button type="button" className="btn tiny" onClick={hint} disabled={state === "right"}>Hint</button>
+            {state === "right" ? <button type="button" className="btn primary" onClick={next} autoFocus>{i + 1 >= set.length ? "Finish" : "Next word"}</button>
+              : <button type="button" className="btn tiny" onClick={next}>Skip</button>}
+          </div>
+        </div>
+      )}
+    </Shell>
+  );
+}
+
+function Shell({ title, sub, left, total, info, info2, onClose, onRestart, children }: { title: string; sub: string; left?: number; total?: number; info: string; info2: string; onClose: () => void; onRestart?: () => void; children: React.ReactNode }) {
+  const bar = useMemo(() => (left !== undefined && total ? Math.round((left / total) * 100) : 100), [left, total]);
   return (
     <div className="agame-back" role="dialog" aria-modal="true" aria-label={title}>
       <div className="agame-card agm-shell">
-        <div className="agame-head"><div><b>{title}</b><span>{sub}</span></div><button type="button" className="btn tiny" onClick={onClose}>Close</button></div>
-        <div className="agame-meter" aria-hidden="true"><i style={{ width: `${bar}%`, background: left < 10 ? "#D92D20" : undefined }} /></div>
+        <div className="agame-head"><div><b>{title}</b><span>{sub}</span></div><span className="agm-headbtns">{onRestart && <button type="button" className="btn tiny" onClick={onRestart}>Restart</button>}<button type="button" className="btn tiny" onClick={onClose}>Close</button></span></div>
+        {left !== undefined && <div className="agame-meter" aria-hidden="true"><i style={{ width: `${bar}%`, background: left < 10 ? "#D92D20" : undefined }} /></div>}
         <div className="agame-info"><span>{info}</span><span>{info2}</span></div>
         {children}
       </div>
@@ -121,5 +196,5 @@ function Shell({ title, sub, left, total, info, info2, onClose, children }: { ti
 
 export default function AriaMiniGames({ game, onClose }: { game: MiniGame | null; onClose: () => void }) {
   if (!game || typeof document === "undefined") return null;
-  return createPortal(game === "memory" ? <Memory onClose={onClose} /> : <Quiz onClose={onClose} />, document.body);
+  return createPortal(game === "memory" ? <Memory onClose={onClose} /> : game === "words" ? <Words onClose={onClose} /> : <Quiz onClose={onClose} />, document.body);
 }
