@@ -207,7 +207,7 @@ export default function AriaGame({ onChat }: { onChat: () => void }) {
       <div className="agame" ref={wrap}>
         {phase === "idle" && !menu && !mini && (mood
           ? <span className="agame-bubble funny" role="status">{mood}</span>
-          : <span className="agame-bubble" aria-hidden="true">Want to play?<br />Click me!</span>)}
+          : <span className="agame-bubble" aria-hidden="true">Want to play? 🎮<br />Click me! 👆</span>)}
         <button type="button" className={`agame-bot${phase === "punched" ? " punched" : ""}${mood && phase === "idle" ? " sad" : ""}`} onClick={() => setMenu((m) => !m)} aria-expanded={menu} aria-label="Aria: ask a question, or play a game">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="12" cy="2.9" r="1.35" fill="#FFE08A" /><path d="M12 4.2v2.3" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" />

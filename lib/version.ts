@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.61";
+export const APP_VERSION = "5.62";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.62", date: "2026-10-20", notes: "Aria's bubble speaks in a playful rounded font with emoji.", changes: [
+      { what: "The bubble above Aria now reads Want to play? 🎮 Click me! 👆 in a rounded, playful font (Fredoka) on sunny yellow, with dark text so it stays easy to read in light and dark mode. Her funny messages use the same style", where: "Left panel, Aria", why: "More fun, and still readable" },
+  ] },
   { version: "5.61", date: "2026-10-20", notes: "Aria now and then flashes a funny message, like Talk to me, I'm bored.", changes: [
       { what: "Every 40 to 70 seconds, while she is idle, Aria flashes a funny little message in an amber bubble for 7 seconds and wobbles (Talk to me, I'm bored; Is it just me, or is it quiet in here?; Ask me for a list. Any list. Please). Ten messages, never the same one twice in a row. It does not appear while the menu or a game is open, or while the tab is in the background; people with reduced motion get the text without the wobble", where: "Left panel, Aria", why: "To make Aria feel alive and invite people to talk to her" },
   ] },

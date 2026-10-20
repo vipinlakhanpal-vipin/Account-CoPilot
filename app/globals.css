@@ -2335,3 +2335,10 @@ header.top{background:var(--bg);padding-bottom:8px;box-shadow:0 10px 14px -12px 
 @keyframes agame-pop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.08);opacity:1}100%{transform:scale(1)}}
 @keyframes agame-sad{0%,100%{transform:rotate(0)}20%{transform:rotate(-7deg)}40%{transform:rotate(6deg)}60%{transform:rotate(-4deg)}80%{transform:rotate(3deg)}}
 @media (prefers-reduced-motion:reduce){.agame-bubble.funny,.agame-bot.sad{animation:none}}
+
+/* v5.62: Aria's speech bubbles use a rounded, playful face (Fredoka) in sunny yellow, easy to read in both themes */
+.agame-bubble{font:600 15px/1.25 "Fredoka","Baloo 2","Comic Sans MS",var(--body);letter-spacing:.01em;color:#3B2400;border:2px solid #F5A623;background:linear-gradient(180deg,#FFF0A8,#FFD966);text-shadow:none;transform-origin:50% 100%;
+  left:-66px;top:-90px;width:132px;padding:6px 8px;box-shadow:0 5px 12px rgba(0,0,0,.25);border-radius:16px}
+.agame-bubble::after{left:58px;border-right:2px solid #F5A623;border-bottom:2px solid #F5A623;background:#FFD966}
+.agame-bubble.funny{left:-86px;top:-104px;width:172px;font-size:14px;background:linear-gradient(180deg,#FFE9B0,#FFC76B);color:#3B2400}
+.agame-bubble.funny::after{left:80px;background:#FFC76B}

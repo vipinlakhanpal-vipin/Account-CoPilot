@@ -37,7 +37,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {/* Apply the saved light/dark choice before first paint (no flash). */}
         <script dangerouslySetInnerHTML={{ __html: "try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}" }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" />
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Fredoka:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" />
       </head>
       <body data-nodl={access && access.isSuper && !access.canDownload ? "1" : undefined}><Suspense fallback={null}><Header meta={await headerMeta()} /></Suspense><AppShell isSuper={!!access?.isSuper} isOwner={!!access?.isOwner}>{children}</AppShell><ConfirmHost /><ContactsJobTracker /><Suspense fallback={null}><ActivityTracker /></Suspense><TableNeat /><footer className="site-footer">Designed and developed by <b>Vipin</b></footer></body>
     </html>
