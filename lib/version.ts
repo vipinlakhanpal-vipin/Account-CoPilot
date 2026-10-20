@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.54";
+export const APP_VERSION = "5.55";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.55", date: "2026-10-20", notes: "Aria's puzzle gives 60 seconds, shows a different picture each game, and the bubble says Want to play? Click me!", changes: [
+      { what: "The puzzle now gives 60 seconds (was 30). Each game shows a different picture, never the same twice in a row: Aria in purple, a Dubai skyline at dusk, Aria in teal, a circuit board and a dhow at sea. The speech bubble reads Want to play? Click me!, and the menu entry reads Want to play? (60 s puzzle)", where: "Left panel, Aria", why: "30 seconds was too short, and the same picture made the game stale" },
+  ] },
   { version: "5.54", date: "2026-10-20", notes: "The Online now window opens in the right place.", changes: [
       { what: "The window that opens when you click Online now opens to the right of its button instead of to the left, so it is fully on screen. It scrolls if the list is long and fills the width on a phone", where: "Top bar, Online now", why: "After the button moved next to the name, a window opening to the left would have been cut off" },
   ] },
