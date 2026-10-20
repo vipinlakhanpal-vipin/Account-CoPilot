@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.73";
+export const APP_VERSION = "5.74";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.74", date: "2026-10-20", notes: "Aria's games move to a Game room page on the right.", changes: [
+      { what: "Clicking Aria now opens a Game room page in the right-hand area, and there is a Game room item in the left panel. The page has a bookshelf of slim game books (Jigsaw puzzle, Memory match, True or false, Word scramble; the shelf scrolls when more are added), the picked game's card with its best score, and a play area right in the page, so no game opens as a pop-up any more and nothing is cut off by the panel. Ask Aria a question is a button on the page", where: "Left panel, Aria and Game room", why: "The pop-up library was cut off at the edge of the panel; the page has room for the games" },
+  ] },
   { version: "5.73", date: "2026-10-20", notes: "Word scramble has four levels of five words.", changes: [
       { what: "Word scramble now has four levels, shown as tabs at the top of the game: Level 1 with 3-letter words, Level 2 with 5, Level 3 with 7 and Level 4 with 10 letters, five words each (such as ERP, QUOTE, INVOICE, COMPLIANCE), drawn at random from a bigger pool each time. Finish a level and the game offers the next one; Restart redeals the level; the library remembers the highest level you cleared", where: "Left panel, Aria, Word scramble", why: "A gentle start that builds up to long words" },
   ] },

@@ -1,9 +1,7 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 
 // Three quick games Aria offers besides the jigsaw (Words has no time limit). Both are about the work the app is for (source-to-pay and the way CoPilot labels evidence), all in the browser, nothing stored but a best score.
-export type MiniGame = "memory" | "quiz" | "words";
 
 const PAIRS: [string, string][] = [
   ["PO", "Purchase order"], ["RFQ", "Request for quotation"], ["S2P", "Source to pay"],
@@ -39,7 +37,7 @@ function useCountdown(total: number, running: boolean, onEnd: () => void) {
 }
 
 type Card = { id: number; pair: number; text: string; term: boolean };
-function Memory({ onClose }: { onClose: () => void }) {
+export function Memory({ onClose }: { onClose: () => void }) {
   const deal = () => shuffle(PAIRS.flatMap(([a, b], i) => [{ id: i * 2, pair: i, text: a, term: true }, { id: i * 2 + 1, pair: i, text: b, term: false }] as Card[]));
   const [cards, setCards] = useState<Card[]>(deal);
   const [up, setUp] = useState<number[]>([]), [done, setDone] = useState<number[]>([]), [moves, setMoves] = useState(0);
@@ -72,7 +70,7 @@ function Memory({ onClose }: { onClose: () => void }) {
 }
 
 const QN = 8;
-function Quiz({ onClose }: { onClose: () => void }) {
+export function Quiz({ onClose }: { onClose: () => void }) {
   const [qs, setQs] = useState(() => shuffle(FACTS).slice(0, QN));
   const [i, setI] = useState(0), [score, setScore] = useState(0), [pick, setPick] = useState<boolean | null>(null);
   const [phase, setPhase] = useState<"play" | "won" | "lost">("play"), [best, setBest] = useState<number | null>(getBest("aria-quiz-best"));
@@ -134,7 +132,7 @@ const LEVELS: { name: string; len: number; pool: { w: string; clue: string }[] }
 const WN = 5;
 const scramble = (w: string) => { let a = shuffle(w.split("")); for (let t = 0; t < 8 && a.join("") === w; t++) a = shuffle(w.split("")); return a; };
 const draw = (lv: number) => shuffle(LEVELS[lv].pool).slice(0, WN);
-function Words({ onClose }: { onClose: () => void }) {
+export function Words({ onClose }: { onClose: () => void }) {
   const [lv, setLv] = useState(0);
   const [set, setSet] = useState(() => draw(0));
   const [i, setI] = useState(0), [score, setScore] = useState(0), [hints, setHints] = useState(0), [usedHint, setUsedHint] = useState(false);
@@ -210,18 +208,11 @@ function Words({ onClose }: { onClose: () => void }) {
 function Shell({ title, sub, left, total, info, info2, onClose, onRestart, children }: { title: string; sub: string; left?: number; total?: number; info: string; info2: string; onClose: () => void; onRestart?: () => void; children: React.ReactNode }) {
   const bar = useMemo(() => (left !== undefined && total ? Math.round((left / total) * 100) : 100), [left, total]);
   return (
-    <div className="agame-back" role="dialog" aria-modal="true" aria-label={title}>
-      <div className="agame-card agm-shell">
+    <div className="agame-card agm-shell agm-inline" role="region" aria-label={title}>
         <div className="agame-head"><div><b>{title}</b><span>{sub}</span></div><span className="agm-headbtns">{onRestart && <button type="button" className="btn tiny" onClick={onRestart}>Restart</button>}<button type="button" className="btn tiny" onClick={onClose}>Close</button></span></div>
         {left !== undefined && <div className="agame-meter" aria-hidden="true"><i style={{ width: `${bar}%`, background: left < 10 ? "#D92D20" : undefined }} /></div>}
         <div className="agame-info"><span>{info}</span><span>{info2}</span></div>
         {children}
       </div>
-    </div>
   );
-}
-
-export default function AriaMiniGames({ game, onClose }: { game: MiniGame | null; onClose: () => void }) {
-  if (!game || typeof document === "undefined") return null;
-  return createPortal(game === "memory" ? <Memory onClose={onClose} /> : game === "words" ? <Words onClose={onClose} /> : <Quiz onClose={onClose} />, document.body);
 }
