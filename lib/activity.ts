@@ -28,3 +28,6 @@ const KIND_AREA: Record<string, string> = { report: "Reports (PDF or Excel)", co
 /** Which usage area a log row belongs to, or "" when it is not one (an account page, a ping). */
 export const areaOf = (kind: string, path: string) => (kind === "page" ? pageLabel(path) : KIND_AREA[kind] || "");
 export const fmtDuration = (secs: number) => (secs < 60 ? (secs > 0 ? "under a minute" : "—") : secs < 3600 ? `${Math.round(secs / 60)} min` : `${Math.floor(secs / 3600)} h ${Math.round((secs % 3600) / 60)} min`);
+
+/** The playroom is play, not work: its time stays out of "time in the app" and top pages (its visits still show in the feed). */
+export const isPlayPath = (path: string | null | undefined) => (path || "").startsWith("/nav/games");

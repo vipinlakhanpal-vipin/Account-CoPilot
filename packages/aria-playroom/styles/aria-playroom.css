@@ -334,7 +334,12 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 @keyframes agame-tickle{0%,100%{transform:rotate(0) scale(1)}20%{transform:rotate(-9deg) scale(1.06)}40%{transform:rotate(8deg) scale(.95)}60%{transform:rotate(-6deg) scale(1.04)}80%{transform:rotate(5deg) scale(1)}}
 @media (prefers-reduced-motion:reduce){.agame-bot.tickled{animation:none}}
 .agame-bubble.wide{width:220px;left:var(--bx,-110px)}
-.agame-legend{position:absolute;left:10px;right:10px;bottom:6px;margin:0;text-align:center;font-size:11px;line-height:1.4;color:rgba(255,255,255,.78);text-shadow:0 1px 2px rgba(0,0,0,.4);pointer-events:none}
+.agame-legend{position:absolute;left:10px;right:10px;bottom:6px;text-align:center;font-size:11px;line-height:1.4;color:rgba(255,255,255,.78);text-shadow:0 1px 2px rgba(0,0,0,.4)}
+.agame-legend p{margin:0 0 4px}
+.agame-legend button{all:unset;cursor:pointer;text-decoration:underline;color:#fff;font-weight:700}
+.agame-toggles{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.agame-toggles label{display:inline-flex;align-items:center;gap:5px;cursor:pointer}
+.agame-toggles input{accent-color:#2EC4A6}
 
 /* tab colour tokens used by the games' tabs, chips and switches */
 :root{--tab-bg:color-mix(in srgb,#2ECC8F 24%,var(--surface));--tab-hover:color-mix(in srgb,#2ECC8F 42%,var(--surface));--tab-fg:var(--text);--tab-on:#0F6E56;--tab-on-fg:#fff;--tab-accent:#2EC4A6;--tab-line:#0F6E56}

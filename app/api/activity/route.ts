@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
 import { getAccess } from "@/lib/access";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { ACTIVITY_KINDS, USAGE_AREAS, areaOf, pageLabel } from "@/lib/activity";
+import { ACTIVITY_KINDS, USAGE_AREAS, areaOf, pageLabel, isPlayPath } from "@/lib/activity";
 
 // POST: any signed-in user records an action or a heartbeat. GET (Super Admin only): ?view=active = who is online now; otherwise the activity feed and a per-person summary.
 export const dynamic = "force-dynamic";
@@ -67,7 +67,7 @@ export async function GET(req: Request) {
   const secs = (r: { created_at: string; last_seen: string | null }) => Math.max(0, Math.round((new Date(r.last_seen || r.created_at).getTime() - new Date(r.created_at).getTime()) / 1000));
   // Total time per person per day: the pages' time spans merged, so two tabs open at once are not counted twice.
   const spans = new Map<string, [number, number][]>();
-  for (const r of rows) if (r.kind === "page") { const a = new Date(r.created_at).getTime(), b2 = new Date(r.last_seen || r.created_at).getTime(); const k = `${dubaiDay(a)}|${r.email}`; (spans.get(k) || spans.set(k, []).get(k)!).push([a, b2]); }
+  for (const r of rows) if (r.kind === "page" && !isPlayPath(r.path)) { const a = new Date(r.created_at).getTime(), b2 = new Date(r.last_seen || r.created_at).getTime(); const k = `${dubaiDay(a)}|${r.email}`; (spans.get(k) || spans.set(k, []).get(k)!).push([a, b2]); }
   const totals = [...spans.entries()].map(([k, list]) => {
     list.sort((x, y) => x[0] - y[0]); let total = 0, end = -1, start = 0;
     for (const [a, b2] of list) { if (a > end) { if (end >= 0) total += end - start; start = a; end = b2; } else end = Math.max(end, b2); }
@@ -77,7 +77,7 @@ export async function GET(req: Request) {
   const emails = new Set<string>([...rows.map((r) => r.email), ...(pres || []).map((p) => p.email), ...[...people.values()].map((p) => p.email)].filter(Boolean));
   const summary = [...emails].map((email) => {
     const mine = rows.filter((r) => r.email === email), pr = (pres || []).find((p) => p.email === email), p = [...people.values()].find((x) => x.email === email);
-    const pages = new Map<string, number>(); mine.filter((r) => r.kind === "page").forEach((r) => pages.set(pageLabel(r.path), (pages.get(pageLabel(r.path)) || 0) + secs(r)));
+    const pages = new Map<string, number>(); mine.filter((r) => r.kind === "page" && !isPlayPath(r.path)).forEach((r) => pages.set(pageLabel(r.path), (pages.get(pageLabel(r.path)) || 0) + secs(r)));
     return { email, name: p?.name || "", last_sign_in: p?.last_sign_in || null, last_seen: pr?.last_seen || null, visits: mine.filter((r) => r.kind === "visit").length, actions: mine.filter((r) => !["visit", "page"].includes(r.kind)).length,
       time_secs: totals.filter((t) => t.email === email).reduce((n, t) => n + t.secs, 0), top_pages: [...pages.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, n]) => k) };
   }).sort((a, b) => String(b.last_seen || b.last_sign_in || "").localeCompare(String(a.last_seen || a.last_sign_in || "")));

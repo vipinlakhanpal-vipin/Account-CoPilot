@@ -22,6 +22,16 @@ function Roamer() {
   const router = useRouter(), path = usePathname();
   const [mood, setMood] = useState<string | null>(null), lastMood = useRef(-1);
   const [punched, setPunched] = useState(false), [away, setAway] = useState(false);
+  // Quiet mode: your own switch (kept in this browser) beats the Super Admin's default for everyone. Quiet means no roaming, no funny messages, no teasing; she waits calmly and a click still opens the playroom.
+  const [pref, setPref] = useState<"1" | "0" | null>(null), [def, setDef] = useState<{ quietDefault: boolean; canSet: boolean }>({ quietDefault: false, canSet: false });
+  useEffect(() => { try { const v = localStorage.getItem("aria-quiet"); if (v === "1" || v === "0") setPref(v); } catch { /* optional */ } fetch("/api/aria-prefs", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((j) => j && setDef(j)).catch(() => {}); }, []);
+  const quiet = pref !== null ? pref === "1" : def.quietDefault, quietRef = useRef(false); quietRef.current = quiet;
+  const setQuiet = (on: boolean) => { setPref(on ? "1" : "0"); try { localStorage.setItem("aria-quiet", on ? "1" : "0"); } catch { /* optional */ } setMood(null); setTease(null); };
+  const setEveryone = (on: boolean) => { fetch("/api/aria-prefs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ quietDefault: on }) }).then((r) => r.ok && setDef((d) => ({ ...d, quietDefault: on }))).catch(() => {}); };
+  // she never speaks while you are typing: a field has focus, or a key was pressed in the last few seconds
+  const lastKey = useRef(0);
+  useEffect(() => { const k = () => { lastKey.current = Date.now(); }; window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k); }, []);
+  const typing = () => { const a = document.activeElement as HTMLElement | null, t = a?.tagName; return (!!a && (t === "INPUT" || t === "TEXTAREA" || t === "SELECT" || a.isContentEditable)) || Date.now() - lastKey.current < 4000; };
   const [hint, setHint] = useState(0); // the idle bubble alternates between inviting you to play and explaining her click tricks
   useEffect(() => { const t = setInterval(() => setHint((h) => (h + 1) % 2), 6500); return () => clearInterval(t); }, []);
   const [tease, setTease] = useState<{ t: string; m: (typeof TEASED)[number]["m"] } | null>(null), teaseRef = useRef({ last: 0, n: 0, first: 0, timer: undefined as ReturnType<typeof setTimeout> | undefined });
@@ -30,7 +40,7 @@ function Roamer() {
     let t1: ReturnType<typeof setTimeout>, t2: ReturnType<typeof setTimeout>;
     const loop = (first: boolean) => {
       t1 = setTimeout(() => {
-        if (document.visibilityState === "visible") {
+        if (document.visibilityState === "visible" && !quietRef.current && !typing()) {
           let k = Math.floor(Math.random() * MOODS.length); if (k === lastMood.current) k = (k + 1) % MOODS.length;
           lastMood.current = k; setMood(MOODS[k]);
           t2 = setTimeout(() => setMood(null), 7000);
@@ -56,14 +66,14 @@ function Roamer() {
     const draw = () => {
       const W = area.clientWidth, H = area.clientHeight;
       const minX = R + PAD, maxX = Math.max(minX, W - R - PAD), minY = R + PAD, bubbleH = el.querySelector<HTMLElement>(".agame-bubble")?.offsetHeight || 66;
-      const maxY = Math.max(minY, H - GAP - bubbleH - PAD);
+      const maxY = Math.max(minY, H - GAP - bubbleH - PAD - 46); // 46: room for the legend at the foot
       return { W, minX, maxX, minY, maxY };
     };
     const tick = (ts: number) => {
       raf = requestAnimationFrame(tick);
       const dt = Math.min(0.05, (ts - (st.last || ts)) / 1000); st.last = ts;
       const b = draw();
-      if (!reduced && !st.hover && document.visibilityState === "visible") {
+      if (!reduced && !st.hover && !quietRef.current && document.visibilityState === "visible") {
         st.x += st.vx * dt; st.y += st.vy * dt;
         if (st.x <= b.minX) { st.x = b.minX; st.vx = Math.abs(st.vx); bump("bump-x"); } else if (st.x >= b.maxX) { st.x = b.maxX; st.vx = -Math.abs(st.vx); bump("bump-x"); }
         if (st.y <= b.minY) { st.y = b.minY; st.vy = Math.abs(st.vy); bump("bump-y"); } else if (st.y >= b.maxY) { st.y = b.maxY; st.vy = -Math.abs(st.vy); bump("bump-y"); }
@@ -80,7 +90,7 @@ function Roamer() {
     return () => { cancelAnimationFrame(raf); el.removeEventListener("mouseenter", over); el.removeEventListener("mouseleave", out); };
   }, []);
   const onHover = () => {
-    const r = teaseRef.current, now = Date.now(); if (away || now - r.last < 3500) return;
+    const r = teaseRef.current, now = Date.now(); if (away || quietRef.current || typing() || now - r.last < 3500) return;
     r.last = now; if (now - r.first > 20000) { r.first = now; r.n = 0; } r.n += 1;
     const pickT = r.n >= 5 ? TEASED_TOO_MUCH : TEASED[Math.floor(Math.random() * TEASED.length)];
     if (r.n >= 5) r.n = 0;
@@ -91,7 +101,7 @@ function Roamer() {
   return (
     <>
     <div className={`agame${away ? " gone" : ""}`} ref={wrap} onMouseEnter={onHover}>
-      {!punched && !away && (tease || mood
+      {!punched && !away && !quiet && (tease || mood
         ? <button type="button" className="agame-bubble funny" onClick={go} title="Open Aria's playroom">{tease ? tease.t : mood}</button>
         : hint === 0
           ? <button type="button" className="agame-bubble" onClick={go} title="Open Aria's playroom">Want to play? 🎮<br />Press here 👆</button>
@@ -100,7 +110,15 @@ function Roamer() {
           <AriaFace mood={tease ? tease.m : mood ? "oops" : "happy"} />
         </button>
     </div>
-    {!away && <p className="agame-legend">Click Aria: she follows your mouse. Double-click: she goes home. Press her bubble: games.</p>}
+    {!away && <div className="agame-legend">
+      {quiet
+        ? <p>Quiet mode is on: Aria stays calm and does not interrupt. <button type="button" onClick={go}>Open the playroom</button></p>
+        : <p>Click Aria: she follows your mouse. Double-click: she goes home. Press her bubble: games.</p>}
+      <span className="agame-toggles">
+        <label><input type="checkbox" checked={quiet} onChange={(e) => setQuiet(e.target.checked)} /> Quiet mode</label>
+        {def.canSet && <label title="The default for everyone who has not chosen for themselves"><input type="checkbox" checked={def.quietDefault} onChange={(e) => setEveryone(e.target.checked)} /> Quiet for everyone</label>}
+      </span>
+    </div>}
     {away && <><p className="agame-note">Aria is out exploring. Double-click her, or press Esc, to call her home.</p><AriaTraveller getHome={getHome} onHome={() => setAway(false)} /></>}
     </>
   );
