@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.91";
+export const APP_VERSION = "5.92";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.92", date: "2026-10-20", notes: "The region table in Setup wizard step 1 uses the same text size as its description.", changes: [
+      { what: "The values in the region table (the names, the revenue and employee boxes, both drop-downs and the status) are now 13 px, the same size as the description above them; they were larger because the boxes took the browser's default size", where: "Setup wizard, step 1", why: "The table text looked bigger than the text around it" },
+  ] },
   { version: "5.91", date: "2026-10-20", notes: "Aria gets a Quiet mode, never speaks while you type, and playroom time stays out of your usage figures.", changes: [
       { what: "Quiet mode: a switch under Aria. When on, she does not roam, tease or flash funny messages, and just waits; the playroom is still one click away. Each person chooses for themselves (kept in their browser); the Super Admin also gets Quiet for everyone, a default for people who have not chosen. Aria also never speaks or reacts while you are typing (a field has focus, or you pressed a key in the last four seconds). And the playroom is play, not work: its time no longer counts in Time in the app or Top pages in Team activity (the visit still shows in the feed), and it was never part of % used", where: "Aria; Team activity", why: "Aria is safe to leave on for everyone and does not distort the usage numbers" },
   ] },

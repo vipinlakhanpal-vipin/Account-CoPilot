@@ -2718,3 +2718,8 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 .agame-toggles{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
 .agame-toggles label{display:inline-flex;align-items:center;gap:5px;cursor:pointer}
 .agame-toggles input{accent-color:#2EC4A6}
+
+/* v5.92: the region table's values match the description above it (13 px): names, the money and employee boxes, both drop-downs and the status */
+.hw-region-grid .hw-region-name,.hw-region-grid .hw-region-activated{font-size:13px}
+.hw-region-grid input[type="number"],.hw-region-grid input[type="text"],.hw-region-grid select{font-family:var(--body);font-size:13px;font-weight:500;line-height:1.3;padding:6px 10px}
+.hw-region-headrow{font-size:10.5px}
