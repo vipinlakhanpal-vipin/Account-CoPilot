@@ -2342,3 +2342,12 @@ header.top{background:var(--bg);padding-bottom:8px;box-shadow:0 10px 14px -12px 
 .agame-bubble::after{left:58px;border-right:2px solid #F5A623;border-bottom:2px solid #F5A623;background:#FFD966}
 .agame-bubble.funny{left:-86px;top:-104px;width:172px;font-size:14px;background:linear-gradient(180deg,#FFE9B0,#FFC76B);color:#3B2400}
 .agame-bubble.funny::after{left:80px;background:#FFC76B}
+
+/* v5.64: the arrow travels once in a small circle (counter-clockwise, staying upright) instead of up and down; the dot keeps its run around it */
+.logo .acp-arrow{transform-box:view-box;transform-origin:50% 50%;animation:acp-arrow-circle 14s ease-in-out infinite}
+@keyframes acp-arrow-circle{
+  0%{transform:rotate(0) translateX(0) rotate(0)}
+  6%{transform:rotate(0) translateX(3.5px) rotate(0)}
+  22%{transform:rotate(-360deg) translateX(3.5px) rotate(360deg)}
+  28%,100%{transform:rotate(-360deg) translateX(0) rotate(360deg)}
+}

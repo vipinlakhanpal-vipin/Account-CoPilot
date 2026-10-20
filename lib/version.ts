@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.63";
+export const APP_VERSION = "5.64";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.64", date: "2026-10-20", notes: "In the logo, the arrow now moves in a circle instead of up and down.", changes: [
+      { what: "The arrow slides out a little, travels once around in a small circle inside the logo (against the dot's direction, staying upright), and returns to the centre. The dot's run and the 10-second rest are unchanged", where: "Top bar and sign-in page logo", why: "A circular motion fits the round logo better than up and down" },
+  ] },
   { version: "5.63", date: "2026-10-20", notes: "Admins can no longer open the Team tab; only the Super Admin can.", changes: [
       { what: "The Team item is gone from the Admin's left panel. If an Admin opens the address, the page says only the Super Admin opens Team. The server also refuses: adding, changing, resetting or removing people, and the activity log and usage figures, are for the Super Admin only. Admins keep the Online now chip", where: "Team, Admin role", why: "Only the owner should manage people and see how everyone uses the app" },
   ] },
