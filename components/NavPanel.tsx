@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import ProfileMenu from "@/components/ProfileMenu";
+import AccountCopilotAria from "@/components/AriaChat";
 import { usePathname, useSearchParams } from "next/navigation";
 
 const STEPS = ["Region & size", "Add Data", "Domains", "Daily plan", "Data sources", "Review"];
@@ -58,6 +59,10 @@ export default function NavPanel({ isSuper }: { isSuper: boolean }) {
             <Link key={v} href={`/nav/market?vendor=${encodeURIComponent(v)}`} className={onMarket && vendor === v ? "on" : ""}>{v}{count(v) !== null && <small>{count(v)}</small>}</Link>))}</div>)}
         {item("/nav/signals", "signals", "Buying signals", path.startsWith("/nav/signals"))}
       </nav>
+      <div className="navmid">
+        <AccountCopilotAria buttonClassName="nav-aria" />
+        <span className="navmid-label">Ask Aria</span>
+      </div>
       <div className="navbot">
         {group("wizard", "/nav/wizard", "wizard", "Setup wizard", onWizard,
           <div className="navsub">{STEPS.map((s, i) => <Link key={s} href={`/nav/wizard?step=${i + 1}`} className={onWizard && step === i + 1 ? "on" : ""}>{i + 1} {s}</Link>)}</div>)}

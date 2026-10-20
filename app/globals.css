@@ -2039,3 +2039,12 @@ body[data-nodl] .btn-dl:not(.keep),body[data-nodl] .aria-dl,body[data-nodl] .ari
 .bell-inline .bell-table{width:100%}
 .bell-inline .bell-table td{max-width:none;white-space:normal;overflow:visible;text-overflow:clip}
 .bell-inline .bell-title-row{gap:12px}
+
+/* v5.26: Aria floats in the middle of the left panel, in the space between the top and bottom groups */
+.navmid{flex:1;min-height:110px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+.navmid-label{font:600 11.5px var(--body);color:var(--muted)}
+.nav-aria.aria-btn{width:68px;height:68px;animation:nav-float 3.4s ease-in-out infinite;box-shadow:0 10px 22px rgba(91,75,196,.45),0 2px 5px rgba(0,0,0,.25)}
+.nav-aria.aria-btn::after{inset:-7px}
+.nav-aria .aria-tip{display:none}
+@keyframes nav-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@media (prefers-reduced-motion:reduce){.nav-aria.aria-btn{animation:none}}

@@ -29,7 +29,7 @@ const EXAMPLES: [string, string][] = [
 ];
 
 // Account CoPilot's Aria: the shared chat (packages/aria) plus this app's PIN prompt, file downloads and cost note.
-export default function AccountCopilotAria() {
+export default function AccountCopilotAria({ buttonClassName = "bell-btn" }: { buttonClassName?: string }) {
   return (
     <AriaChat
       endpoint="/api/aria"
@@ -38,7 +38,7 @@ export default function AccountCopilotAria() {
       examples={EXAMPLES}
       welcomeText={<>Ask me anything that lives in Account CoPilot: companies, contacts, signals, technology, sources, ICP rules, engine runs. I answer in tables, and I can build a detailed <b>PDF</b> or an <b>Excel</b> contact list for you. Type below, or tap the microphone and speak.</>}
       placeholder="Ask about companies, contacts, platforms, signals…"
-      buttonClassName="bell-btn"
+      buttonClassName={buttonClassName}
     />
   );
 }

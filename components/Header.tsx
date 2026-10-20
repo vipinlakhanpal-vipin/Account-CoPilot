@@ -253,8 +253,8 @@ export default function Header({ meta }: { meta: string }) {
                   </button>
                   <OnlineNow />
                   <EngineBell />
-                  <SuggestionsButton />
-                  <AriaChat />
+                  {!path.startsWith("/nav") && <SuggestionsButton />}
+                  {!path.startsWith("/nav") && <AriaChat />}
                 </span>
               </div>
               <span className="brand-sub">{TAGLINE}</span>
