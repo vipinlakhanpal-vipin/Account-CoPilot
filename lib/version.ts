@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.05";
+export const APP_VERSION = "6.06";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.06", date: "2026-10-20", notes: "Atlantis, The Palm is the main account with Kerzner as its child group, and Agthia is no longer a Coupa customer.", changes: [
+      { what: "The structure is reversed: the account is now Atlantis, The Palm (main), and Kerzner International, its management company, is the child group, with its corporate contact and email (Mohammad Alatiyat, mohammad.alatiyat@kerzner.com). The ten Atlantis people are the account's own contacts. The tree, the PDF and the Excel call the unit-less contacts the Main account, and the child Child group under Atlantis, The Palm. Also: Agthia is taken out of the Coupa customers (its Coupa tag was only an unverified Seamless technographic); it stays in Accounts, and with its strong S2P transformation signal it is back in Pipeline and Priority accounts", where: "Account page, reports, Dashboard", why: "Your instructions" },
+  ] },
   { version: "6.05", date: "2026-10-20", notes: "Aria sits in the middle of the free space.", changes: [
       { what: "Aria now starts in the middle of the free space of the left panel (between the menu above and her buttons below, with her speech bubble under her) instead of at the top, and roams only a little around that middle, bouncing off the edges of a small box. In Quiet mode she stays in the middle", where: "Left panel, Aria", why: "She looks better in the centre" },
   ] },

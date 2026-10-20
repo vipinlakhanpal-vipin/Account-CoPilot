@@ -45,9 +45,9 @@ export async function buildCampaignList(d: AllData, o: CampaignOptions) {
       hq: [s(a.hq_city), s(a.country)].filter(Boolean).join(", "), tier: s(p.contact_tier), unit: s(p.business_unit) };
   }).filter((r) => r.name && (!o.emailOnly || r.email || r.phone || r.linkedin)) // reachable: an official email, a phone or a LinkedIn profile
     .sort((x, y) => x.company.localeCompare(y.company) || (x.unit ? 1 : 0) - (y.unit ? 1 : 0) || x.unit.localeCompare(y.unit) || x.tier.localeCompare(y.tier) || x.name.localeCompare(y.name));
-  // A company with a property or business unit (for example Atlantis The Palm under Kerzner) names the account's own contacts "Group level", so the tree reads: company, then group contacts, then each property.
+  // A company with a property or business unit (for example Kerzner International under Atlantis, The Palm) names the account's own contacts "Main account", so the tree reads: company, then group contacts, then each property.
   const hasUnits = new Set(rows.filter((r) => r.unit).map((r) => r.company));
-  rows.forEach((r) => { if (hasUnits.has(r.company) && !r.unit) r.unit = "Group level"; });
+  rows.forEach((r) => { if (hasUnits.has(r.company) && !r.unit) r.unit = "Main account"; });
 
   // One block per company, so each company is listed once with its people beneath it.
   const groups: Out[][] = [];

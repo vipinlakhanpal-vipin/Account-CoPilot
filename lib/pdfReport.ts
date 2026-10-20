@@ -258,7 +258,7 @@ export async function buildReport(all: AllData, def: unknown, opt: ReportOptions
     const people = all.contacts.filter((p) => p.company_id === a.id);
     const seen = new Set<string>(), cs = people.filter((p) => { const k = `${s(p.full_name)}|${s(p.title_verbatim)}`.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; })
       .sort((x, y) => (s(x.business_unit) ? 1 : 0) - (s(y.business_unit) ? 1 : 0) || s(x.business_unit).localeCompare(s(y.business_unit)) || s(x.contact_tier).localeCompare(s(y.contact_tier)));
-    const hasUnit = cs.some((p) => s(p.business_unit)); // a property under the account (for example Atlantis The Palm under Kerzner)
+    const hasUnit = cs.some((p) => s(p.business_unit)); // a property under the account (for example Kerzner International under Atlantis, The Palm)
     const sigs = all.signals.filter((x) => x.company_id === a.id);
     const apps = all.apps.filter((x) => x.company_id === a.id && x.category !== "ERP (core)");
     const srcs = all.sources.filter((x) => x.company_id === a.id);
@@ -354,7 +354,7 @@ export async function buildReport(all: AllData, def: unknown, opt: ReportOptions
     w.h2(`Stakeholders (${cs.length})`, 150);
     if (cs.length) w.table(hasUnit ? ["Name", "Property / unit", "Title", "Tier", "Email", "Phone", "LinkedIn"] : ["Name", "Title", "Tier", "Email", "Phone", "LinkedIn"],
       cs.slice(0, 25).map((p) => { const li = s(p.linkedin_url).replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
-        return hasUnit ? [s(p.full_name), s(p.business_unit) || "Group level", s(p.title_verbatim), s(p.contact_tier), s(p.email), s(p.phone), li] : [s(p.full_name), s(p.title_verbatim), s(p.contact_tier), s(p.email), s(p.phone), li]; }),
+        return hasUnit ? [s(p.full_name), s(p.business_unit) || "Main account", s(p.title_verbatim), s(p.contact_tier), s(p.email), s(p.phone), li] : [s(p.full_name), s(p.title_verbatim), s(p.contact_tier), s(p.email), s(p.phone), li]; }),
       hasUnit ? [0.13, 0.11, 0.2, 0.05, 0.17, 0.13, 0.21] : [0.15, 0.22, 0.06, 0.2, 0.15, 0.22], 8);
     else w.p("No stakeholder contacts are on file for this company yet. The daily engine finds companies and verifies revenue; it does not collect people. Contacts reach the app from your reference workbook or from Seamless enrichment.", { size: 8.5, color: MUTED });
 

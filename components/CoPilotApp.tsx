@@ -1038,7 +1038,7 @@ function Brief({ a, data, people, onClose, onContact, scores, criteria, isSuper 
           })()}
           <div className="block"><h4>Stakeholders ({cs.length}) · select a person for their contact card</h4>
             {(() => {
-              // With a property or business unit under the account (for example Atlantis The Palm under Kerzner) the list becomes a small tree: the account's own contacts first, then each unit with its people.
+              // With a property or business unit under the account (for example Kerzner International under Atlantis, The Palm) the list becomes a small tree: the account's own contacts first, then each unit with its people.
               const unitOf = (p: Row) => str(p.business_unit);
               const units = [...new Set(cs.map(unitOf).filter(Boolean))].sort();
               const sections = units.length ? [{ unit: "", rows: cs.filter((p) => !unitOf(p)) }, ...units.map((u) => ({ unit: u, rows: cs.filter((p) => unitOf(p) === u) }))].filter((x) => x.rows.length || !x.unit) : [{ unit: "", rows: cs }];
@@ -1047,7 +1047,7 @@ function Brief({ a, data, people, onClose, onContact, scores, criteria, isSuper 
             <div className="tablewrap"><table className="ft"><thead><tr><th className="num">#</th><th>Name</th><th>Title (verbatim)</th><th>Tier</th><th>Channel</th><th>Email</th><th>Phone</th><th>LinkedIn</th></tr></thead>
               <tbody>{sections.map((sec) => (
                 <Fragment key={sec.unit || "main"}>
-                  {units.length > 0 && <tr className="tree-head"><td colSpan={8}><span className="tree-glyph" aria-hidden="true">{sec.unit ? "└─" : "▾"}</span> <b>{sec.unit || a.company_name}</b> <span className="muted">· {sec.unit ? "property under " + a.company_name : "group level"} · {sec.rows.length} contact{sec.rows.length === 1 ? "" : "s"}</span></td></tr>}
+                  {units.length > 0 && <tr className="tree-head"><td colSpan={8}><span className="tree-glyph" aria-hidden="true">{sec.unit ? "└─" : "▾"}</span> <b>{sec.unit || a.company_name}</b> <span className="muted">· {sec.unit ? "child group under " + a.company_name : "main account"} · {sec.rows.length} contact{sec.rows.length === 1 ? "" : "s"}</span></td></tr>}
                   {sec.rows.map((p) => { n++; return (
                     <tr key={p.id} className="click" tabIndex={0} onClick={(e) => { if (!(e.target as HTMLElement).closest("a")) onContact(p.id); }} onKeyDown={(e) => e.key === "Enter" && onContact(p.id)}><td className="num mono">{n}</td><td><b>{p.full_name}</b><NewTag p={p} /><div className="muted">{p.role_family} · {p.verification_status}</div></td><td>{p.title_verbatim}</td>
                   <td>{p.contact_tier}</td><td>{p.channel_state}</td><td className="mono">{p.email}<div className="muted">{p.email_status}</div>{!p.email && p.email_candidate && <div className="muted" title="Not verified. It is a prediction and is left out of campaign lists.">candidate: {String(p.email_candidate).split(" (")[0]} · not verified</div>}</td>
