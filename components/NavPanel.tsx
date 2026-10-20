@@ -80,8 +80,8 @@ export default function NavPanel({ isSuper, isOwner = false }: { isSuper: boolea
         {item("/nav/signals", "signals", "Buying signals", path.startsWith("/nav/signals"))}
       </nav>
       <div className="navmid">
-        <AriaGame />
-        <div className="navmid-chat"><AccountCopilotAria buttonClassName="nav-aria-mini" /><span className="navmid-label">Ask Aria</span></div>
+        <AriaGame onChat={() => document.querySelector<HTMLButtonElement>(".nav-aria-mini")?.click()} />
+        <div hidden><AccountCopilotAria buttonClassName="nav-aria-mini" /></div>
       </div>
       <div className="navbot">
         {group("wizard", "/nav/wizard", "wizard", "Setup wizard", onWizard,

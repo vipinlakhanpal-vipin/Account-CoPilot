@@ -59,7 +59,10 @@ function PieceSvg({ r, c }: { r: number; c: number }) {
 
 const slot = (r: number, c: number) => ({ x: BOARD_X + c * S - PAD, y: BOARD_Y + r * S - PAD });
 
-export default function AriaGame() {
+export default function AriaGame({ onChat }: { onChat: () => void }) {
+  const [menu, setMenu] = useState(false);
+  const wrap = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (!menu) return; const away = (e: MouseEvent) => { if (!wrap.current?.contains(e.target as Node)) setMenu(false); }; document.addEventListener("mousedown", away); return () => document.removeEventListener("mousedown", away); }, [menu]);
   const [phase, setPhase] = useState<"idle" | "punched" | "play" | "won" | "lost">("idle");
   const [open, setOpen] = useState(false);
   const [pieces, setPieces] = useState<Piece[]>([]);
@@ -76,7 +79,7 @@ export default function AriaGame() {
     // the shatter: from the solved picture, every piece flies to a random spot on the right
     setTimeout(() => setPieces(solved.map((p, i) => ({ ...p, x: 300 + Math.random() * 190 - (i % 2) * 10, y: 70 + Math.random() * 260, z: 2 + i }))), 60);
   }, []);
-  const hit = () => { setPhase("punched"); setOpen(true); setTimeout(start, 650); };
+  const hit = () => { setMenu(false); setPhase("punched"); setOpen(true); setTimeout(start, 650); };
   const close = () => { setOpen(false); setPhase("idle"); };
 
   useEffect(() => {
@@ -119,15 +122,20 @@ export default function AriaGame() {
 
   return (
     <>
-      <div className="agame">
-        {phase === "idle" && <span className="agame-bubble" aria-hidden="true">Hit me!</span>}
-        <button type="button" className={`agame-bot${phase === "punched" ? " punched" : ""}`} onClick={hit} aria-label="Play with Aria: hit her and rebuild her in 30 seconds">
+      <div className="agame" ref={wrap}>
+        {phase === "idle" && !menu && <span className="agame-bubble" aria-hidden="true">Click me!</span>}
+        <button type="button" className={`agame-bot${phase === "punched" ? " punched" : ""}`} onClick={() => setMenu((m) => !m)} aria-expanded={menu} aria-label="Aria: ask a question, or play the 30-second puzzle">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="12" cy="2.9" r="1.35" fill="#FFE08A" /><path d="M12 4.2v2.3" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" />
             <rect x="4.6" y="6.4" width="14.8" height="11" rx="3.4" fill="#fff" /><rect x="2.3" y="9.6" width="1.9" height="4.6" rx="0.95" fill="#fff" /><rect x="19.8" y="9.6" width="1.9" height="4.6" rx="0.95" fill="#fff" />
             <circle cx="9.1" cy="11.4" r="1.7" fill="#5B4BC4" /><circle cx="14.9" cy="11.4" r="1.7" fill="#5B4BC4" /><path d="M9.4 14.9h5.2" stroke="#19D3B0" strokeWidth="1.6" strokeLinecap="round" /><rect x="8" y="18.4" width="8" height="2.6" rx="1.3" fill="#fff" />
           </svg>
         </button>
+        {menu && (
+          <div className="agame-menu" role="menu">
+            <button type="button" role="menuitem" className="agame-opt" onClick={() => { setMenu(false); onChat(); }}>Ask Aria</button>
+            <button type="button" role="menuitem" className="agame-opt" onClick={hit}>Hit me! (30 s puzzle)</button>
+          </div>)}
       </div>
       {open && typeof document !== "undefined" && createPortal(
         <div className="agame-back" role="dialog" aria-modal="true" aria-label="Rebuild Aria">
