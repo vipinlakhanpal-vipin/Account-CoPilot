@@ -2016,3 +2016,20 @@ body[data-nodl] .btn-dl:not(.keep),body[data-nodl] .aria-dl,body[data-nodl] .ari
   background:radial-gradient(circle at 32% 26%,#9CCBFF 0%,#4A90F5 34%,#1E5BD8 70%,#143A96 100%);
   box-shadow:inset 0 -4px 6px rgba(5,20,90,.45),inset 0 3px 4px rgba(255,255,255,.5),0 4px 8px rgba(20,58,150,.45),0 1px 2px rgba(0,0,0,.3)}
 .profile-menu.pm-fixed{position:fixed;z-index:60}
+
+/* v5.23: the left panel is light green with a carbon-fibre weave, so it stands apart from the page beside it */
+.navpanel{
+  background-color:color-mix(in srgb,#2ECC8F 22%,var(--surface));
+  background-image:
+    radial-gradient(rgba(var(--ink),.20) 15%,transparent 17%),
+    radial-gradient(rgba(var(--ink),.20) 15%,transparent 17%),
+    radial-gradient(rgba(255,255,255,.42) 14%,transparent 21%),
+    radial-gradient(rgba(255,255,255,.42) 14%,transparent 21%);
+  background-size:12px 12px;
+  background-position:0 0,6px 6px,0 1px,6px 7px;
+  border-color:color-mix(in srgb,#0B7A66 35%,var(--line));
+}
+.navpanel .navit.on,.navpanel .navrow.on{background:color-mix(in srgb,var(--teal) 24%,var(--surface))}
+.navpanel .navrow.on .navit{background:none}
+.navpanel .navit:hover,.navpanel .navchev:hover,.navpanel .navprof:hover{background:color-mix(in srgb,var(--surface) 55%,transparent)}
+.navpanel .navbot,.navpanel .navprof-wrap{border-top-color:color-mix(in srgb,#0B7A66 28%,var(--line))}
