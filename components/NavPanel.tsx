@@ -4,9 +4,8 @@ import Link from "next/link";
 import ProfileMenu from "@/components/ProfileMenu";
 import AccountCopilotAria from "@/components/AriaChat";
 import AriaGame from "@/components/AriaGame";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 
-type Mk = { vendors: string[]; partners: { vendor: string; region: string; presence_pending?: boolean }[]; regions: string[] };
 const P = { fill: "none", stroke: "currentColor", strokeWidth: 1.7, strokeLinecap: "round", strokeLinejoin: "round" } as const;
 const ICON: Record<string, React.ReactNode> = {
   market: <><circle cx="12" cy="5" r="2.4" /><circle cx="5" cy="18" r="2.4" /><circle cx="19" cy="18" r="2.4" /><path d="M11 7.2 6.2 15.8M13 7.2l4.8 8.6M7.4 18h9.2" /></>,
@@ -22,11 +21,9 @@ const ICON: Record<string, React.ReactNode> = {
 };
 const Ic = ({ n }: { n: string }) => <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" {...P}>{ICON[n]}</svg>;
 
-// The New Layout's left panel: Market intelligence (with its vendors), Buying signals, About CoPilot, Setup wizard (with its steps) and, pinned at the bottom, Settings.
+// The left panel: plain items only (Market intelligence, Settings and the Setup wizard show their own tabs on the right).
 export default function NavPanel({ isSuper, isOwner = false }: { isSuper: boolean; isOwner?: boolean }) {
-  const path = usePathname(), params = useSearchParams();
-  const [mk, setMk] = useState<Mk | null>(null);
-  useEffect(() => { fetch("/api/market", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((j) => j && setMk(j)).catch(() => {}); }, []);
+  const path = usePathname();
   // The bell's red badge moves here: runs posted since you last opened Daily run.
   const [unread, setUnread] = useState(0);
   useEffect(() => {
@@ -45,27 +42,7 @@ export default function NavPanel({ isSuper, isOwner = false }: { isSuper: boolea
     load(); const t = setInterval(load, 300000); window.addEventListener("inactive-changed", load);
     return () => { clearInterval(t); window.removeEventListener("inactive-changed", load); };
   }, [isOwner]);
-  const vendor = params.get("vendor") || "SAP";
-  // Drop-downs: Market intelligence, Setup wizard and Settings open and close with their arrow (remembered in this browser) and open by themselves when you go into them.
-  const [open, setOpen] = useState<Record<string, boolean>>({});
-  useEffect(() => { try { const r = JSON.parse(localStorage.getItem("nav-open") || "{}"); if (r && typeof r === "object") setOpen(r); } catch { /* optional */ } }, []);
-  const flip = (k: string, v?: boolean) => setOpen((cur) => { const n = { ...cur, [k]: v ?? !cur[k] }; try { localStorage.setItem("nav-open", JSON.stringify(n)); } catch { /* optional */ } return n; });
   const onMarket = path.startsWith("/nav/market"), onWizard = path.startsWith("/nav/wizard"), onSettings = path.startsWith("/nav/settings");
-  // Going into a section opens its list; after that the arrow can close it, even while you stay on that page.
-  useEffect(() => { if (onMarket) flip("market", true); }, [onMarket]); // eslint-disable-line react-hooks/exhaustive-deps
-  const count = (v: string) => (mk ? mk.partners.filter((p) => p.vendor === v && !p.presence_pending && mk.regions.includes(p.region)).length : null);
-  const group = (key: string, href: string, icon: string, label: string, on: boolean, kids: React.ReactNode) => {
-    const isOpen = open[key] ?? on; // an explicit open or close wins, even on that page
-    return (<>
-      <div className={`navrow${on ? " on" : ""}`}>
-        <Link href={href} className={`navit${on ? " on" : ""}`} aria-current={on ? "page" : undefined} onClick={(e) => { if (on) { e.preventDefault(); flip(key, !isOpen); } else flip(key, true); }}><Ic n={icon} />{label}</Link>
-        <button type="button" className="navchev" aria-expanded={isOpen} aria-label={`${isOpen ? "Close" : "Open"} ${label}`} onClick={() => flip(key, !isOpen)}>
-          <svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true" style={{ transform: isOpen ? "none" : "rotate(-90deg)", transition: "transform .15s" }}><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
-        </button>
-      </div>
-      {isOpen && kids}
-    </>);
-  };
   // A count in a pill that says what it counts ("2 new", "3 to review"), so a bare number never has to be guessed at.
   const item = (href: string, icon: string, label: string, on: boolean, badge = 0, word = "new", tone = "new") => <Link href={href} className={`navit${on ? " on" : ""}`} aria-current={on ? "page" : undefined}><Ic n={icon} />{label}{badge > 0 && <span className={`navbadge ${tone}`}>{badge > 99 ? "99+" : badge} {word}</span>}</Link>;
   return (
@@ -74,9 +51,7 @@ export default function NavPanel({ isSuper, isOwner = false }: { isSuper: boolea
         {item("/nav/find", "find", "Find and search", path.startsWith("/nav/find"))}
         {item("/nav/about", "about", "About CoPilot", path.startsWith("/nav/about"))}
         {item("/nav/daily-run", "bell", "Daily run", path.startsWith("/nav/daily-run"), path.startsWith("/nav/daily-run") ? 0 : unread)}
-        {group("market", "/nav/market", "market", "Market intelligence", onMarket,
-          <div className="navsub">{(mk?.vendors || ["SAP", "Coupa", "Oracle", "Microsoft"]).map((v) => (
-            <Link key={v} href={`/nav/market?vendor=${encodeURIComponent(v)}`} className={onMarket && vendor === v ? "on" : ""}>{v}{count(v) !== null && <small>{count(v)}</small>}</Link>))}</div>)}
+        {item("/nav/market", "market", "Market intelligence", onMarket)}
         {item("/nav/signals", "signals", "Buying signals", path.startsWith("/nav/signals"))}
       </nav>
       <div className="navmid">

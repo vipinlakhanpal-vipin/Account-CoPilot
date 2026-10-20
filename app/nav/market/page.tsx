@@ -1,6 +1,4 @@
 import NavTool from "@/components/NavTool";
 export const dynamic = "force-dynamic";
-export default async function NavMarket({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  const sp = await searchParams; const v = Array.isArray(sp.vendor) ? sp.vendor[0] : sp.vendor;
-  return <NavTool kind="market" vendor={v || "SAP"} />;
-}
+// The vendors are tabs inside the page (components/MarketIntel.tsx); the left panel has just the one item.
+export default function NavMarket() { return <NavTool kind="market" />; }

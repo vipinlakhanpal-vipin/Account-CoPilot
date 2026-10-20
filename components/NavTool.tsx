@@ -14,7 +14,7 @@ export default function NavTool({ kind, vendor }: { kind: "market" | "signals"; 
     return () => window.removeEventListener("act-view", on);
   }, [kind]);
   const scan = (d: string) => window.dispatchEvent(new CustomEvent("appwin-scan", { detail: d }));
-  const title = kind === "market" ? `Market intelligence${vendor ? ` / ${vendor}` : ""}` : "Buying signals";
+  const title = kind === "market" ? "Market intelligence" : "Buying signals";
   return (
     <div className={`navtool nav-${kind}`}>
       <div className="navtool-head">

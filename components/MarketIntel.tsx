@@ -259,25 +259,30 @@ export default function MarketIntel({ embedded = false, initialVendor }: { embed
       {allPending.length > 0 && (
         <div className="mkt-stopbar" role="status"><span className="fcj-dot" aria-hidden="true" /><span>{allPending.length} scan{allPending.length === 1 ? "" : "s"} running or waiting</span>
           <button type="button" className="btn tiny danger" disabled={busy === "stop"} onClick={stopScans}>■ Stop scanning</button></div>)}
-      <div className="sig-lanes" role="group" aria-label="Vendor">
-        {(data?.vendors || ["SAP", "Coupa", "Oracle", "Microsoft"]).map((v, i) => {
-          const custom = !!data?.custom_vendors?.includes(v);
+      <div className="mkt-tabs" role="tablist" aria-label="Vendor">
+        {(data?.vendors || ["SAP", "Coupa", "Oracle", "Microsoft"]).map((v) => {
+          const custom = !!data?.custom_vendors?.includes(v), busyN = jobsOfTile(v).length;
           return (
-            <span key={v} className="vendor-tile">
-              <button type="button" className={`sig-lane ${["c1", "c2", "c6", "c7", "c3", "c4", "c5", "c8"][i % 8]}${jobsOfTile(v).length ? " scanning" : ""}`} aria-pressed={vendor === v} onClick={() => { setVendor(v); setOpenP(null); }}><span className="tile-top"><b>{countP(v)}</b>{(() => { const j = jobOfVendor(v); const n = pending.filter((x) => x.vendor === v || x.vendor === "all" || !x.vendor).length; const r = scanningRegions(v);
-                  return j ? <ScanGauge tile label={`Scanning ${r.join(", ")}`} requestedAt={j.requested_at} startedAt={j.started_at} expectedSecs={expectedSecs(j)} extra={n > 1 ? ` · ${n - 1} more waiting` : ""} />
-                    : jobsOfTile(v).length ? <span className="tile-scan"><i className="fcj-dot" aria-hidden="true" />{jobsOfTile(v).length} scanning</span> : flash[`v:${v}`] ? <DoneTick tile text="Done" /> : null; })()}</span>{(() => { const j = jobOfVendor(v); return <span className="tile-lbl"><span>{v} partners</span>{j && <em>{j.started_at ? `usually about ${Math.max(1, Math.round(expectedSecs(j) / 60))} min` : `waiting for a session, then about ${Math.max(1, Math.round(expectedSecs(j) / 60))} min`}</em>}</span>; })()}</button>
-              {custom && data?.is_super && <button type="button" className="vendor-x" aria-label={`Remove ${v}`} title={`Remove ${v} from the list`} onClick={() => removeVendor(v)}>×</button>}
+            <span key={v} className="mkt-tabwrap">
+              <button type="button" role="tab" aria-selected={vendor === v} className={`mkt-tab${busyN ? " scanning" : ""}`} onClick={() => { setVendor(v); setOpenP(null); }}
+                title={busyN ? `Scanning ${scanningRegions(v).join(", ") || "now"}` : `${v}: ${countP(v)} partner${countP(v) === 1 ? "" : "s"} in your regions`}>
+                {v}<span className="mkt-count">{countP(v)}</span>
+                {busyN ? <i className="fcj-dot" aria-label="Scanning" /> : flash[`v:${v}`] ? <DoneTick compact text="Done" /> : null}
+              </button>
+              {custom && data?.is_super && <button type="button" className="mkt-x" aria-label={`Remove ${v}`} title={`Remove ${v} from the list`} onClick={() => removeVendor(v)}>×</button>}
             </span>);
         })}
         {data?.is_super && (adding ? (
-          <form className="sig-lane vendor-add" onSubmit={(e) => { e.preventDefault(); addVendor(); }}>
+          <form className="mkt-addv" onSubmit={(e) => { e.preventDefault(); addVendor(); }}>
             <input autoFocus value={newVendor} onChange={(e) => setNewVendor(e.target.value)} placeholder="Vendor name, e.g. Zycus" maxLength={30} aria-label="New vendor name" />
-            <span className="vendor-add-acts"><button type="submit" className="btn tiny primary">Add</button><button type="button" className="btn tiny" onClick={() => { setAdding(false); setNewVendor(""); }}>Cancel</button></span>
+            <button type="submit" className="btn tiny primary">Add</button><button type="button" className="btn tiny" onClick={() => { setAdding(false); setNewVendor(""); }}>Cancel</button>
           </form>
-        ) : <button type="button" className="sig-lane vendor-plus" onClick={() => setAdding(true)} title="Add another vendor to track, for example a competitor or integration platform"><b>+</b><span>Add vendor</span></button>)}
+        ) : <button type="button" className="mkt-tab mkt-plus" onClick={() => setAdding(true)} title="Add another vendor to track, for example a competitor or integration platform">+ Add vendor</button>)}
       </div>
       <h2 className="mkt-vendor-h"><span aria-hidden="true">{vendor.slice(0, 1).toUpperCase()}</span>{vendor} Partners</h2>
+      {(() => { const j = jobOfVendor(vendor); if (!j) return null; const n = pending.filter((x) => x.vendor === vendor || x.vendor === "all" || !x.vendor).length;
+        return <div className="mkt-scanline"><ScanGauge label={`Scanning ${scanningRegions(vendor).join(", ")}`} requestedAt={j.requested_at} startedAt={j.started_at} expectedSecs={expectedSecs(j)} extra={n > 1 ? ` · ${n - 1} more waiting` : ""} />
+          <em>{j.started_at ? `usually about ${Math.max(1, Math.round(expectedSecs(j) / 60))} min` : `waiting for a session, then about ${Math.max(1, Math.round(expectedSecs(j) / 60))} min`}</em></div>; })()}
       <div className="sig-body">
         <aside className="sig-side">
           <h3>Regions</h3>
