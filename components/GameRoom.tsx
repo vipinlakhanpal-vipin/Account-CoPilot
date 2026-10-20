@@ -170,7 +170,7 @@ export default function GameRoom() {
   const [awards, setAwards] = useState<Stored[]>([]), [shown, setShown] = useState<Award | null>(null);
   const [owned, setOwned] = useState<GameId[]>(() => GAMES.filter((g) => g.starter).map((g) => g.id)), [getting, setGetting] = useState<GameId | null>(null);
   const [filter, setFilter] = useState<"all" | "mine" | "new">("all");
-  const [tip, setTip] = useState<{ i: number; left: number; bottom: number } | null>(null), wrapRef = useRef<HTMLDivElement>(null);
+  const [hover, setHover] = useState<number | null>(null);
   const [msgs, setMsgs] = useState<{ who: "you" | "aria"; text: string }[]>([]), [q, setQ] = useState(""), [offerFull, setOfferFull] = useState(false), logRef = useRef<HTMLDivElement>(null);
   useEffect(() => { setAwards(loadAwards()); setOwned(loadOwned()); }, []);
   const speak = useCallback((text: string, m: Mood, a: "" | "hop" | "shake" | "spin" | "peek" = "") => {
@@ -221,14 +221,15 @@ export default function GameRoom() {
     }
   }, [speak]);
   const g = GAMES[pick], has = owned.includes(g.id);
-  const choose = (i: number) => { setPick(i); setPlaying(false); setShown(null); setTip(null); speak(owned.includes(GAMES[i].id) ? INTRO[GAMES[i].id] : `${GAMES[i].name} trains ${GAMES[i].skill.toLowerCase()}. Press Get game and I'll add it to your shelf.`, "happy", "hop"); try { localStorage.setItem("aria-game-pick", GAMES[i].id); } catch { /* optional */ } };
+  const choose = (i: number) => { setPick(i); setPlaying(false); setShown(null); speak(owned.includes(GAMES[i].id) ? INTRO[GAMES[i].id] : `${GAMES[i].name} trains ${GAMES[i].skill.toLowerCase()}. Press Get game and I'll add it to your shelf.`, "happy", "hop"); try { localStorage.setItem("aria-game-pick", GAMES[i].id); } catch { /* optional */ } };
   const play = () => { setRun((r) => r + 1); setPlaying(true); setShown(null); };
-  const getGame = () => {
-    setGetting(g.id);
+  const getGame = (x: typeof g = g) => {
+    if (getting) return;
+    setGetting(x.id);
     setTimeout(() => {
-      const next = owned.includes(g.id) ? owned : [...owned, g.id]; setOwned(next); setGetting(null);
+      const next = owned.includes(x.id) ? owned : [...owned, x.id]; setOwned(next); setGetting(null);
       try { localStorage.setItem(OWNED_KEY, JSON.stringify(next)); } catch { /* optional */ }
-      speak(`${g.name} is on your shelf now. Want to play it?`, "cheer", "hop");
+      speak(`${x.name} is on your shelf now. Want to play it?`, "cheer", "hop");
     }, 900);
   };
   const removeGame = () => {
@@ -250,12 +251,6 @@ export default function GameRoom() {
     setTimeout(() => logRef.current?.scrollTo({ top: 1e5 }), 30);
   };
   const count = (m: Medal) => awards.filter((a) => a.m === m).length;
-  // the small window that describes a game while the pointer (or keyboard focus) is on its book
-  const showTip = (i: number, el: HTMLElement) => {
-    const wrap = wrapRef.current; if (!wrap) return;
-    const W = 270, center = el.offsetLeft - (el.parentElement?.scrollLeft || 0) + el.offsetWidth / 2;
-    setTip({ i, left: Math.max(4, Math.min(wrap.clientWidth - W - 4, center - W / 2)), bottom: wrap.clientHeight - el.offsetTop + 8 });
-  };
   return (
     <div className="gr">
       <div className="gr-host" ref={hostRef}>
@@ -285,27 +280,28 @@ export default function GameRoom() {
         </span>
         <button type="button" className="btn tiny" onClick={restoreStarters} title="Keep only the three starter games">Restore starter set</button>
       </div>
-      <div className="gr-shelfwrap" ref={wrapRef} onMouseLeave={() => setTip(null)}>
-        <div className="gr-shelf" role="tablist" aria-label="Aria's games" onScroll={() => setTip(null)}>
+      <div className="gr-shelfwrap" onMouseLeave={() => setHover(null)}>
+        <div className="gr-shelf" role="tablist" aria-label="Aria's games">
           {GAMES.map((x, i) => {
             const mine = owned.includes(x.id);
             if ((filter === "mine" && !mine) || (filter === "new" && mine)) return null;
+            const h = spineH(x.name) + (i === pick ? 12 : 0);
             return (
-              <button type="button" key={x.id} role="tab" aria-selected={i === pick} className={`gr-spine${mine ? "" : " away"}${wiggle === i ? " wiggle" : ""}`} onClick={() => choose(i)}
-                onMouseEnter={(e) => showTip(i, e.currentTarget)} onFocus={(e) => showTip(i, e.currentTarget)} onBlur={() => setTip(null)}
-                style={{ height: spineH(x.name) + (i === pick ? 12 : 0), background: x.fill, color: x.ink }} aria-label={`${x.name}${mine ? "" : ", not downloaded yet"}`}>
-                {x.icon}<span>{x.name}</span>
-                {!mine && <svg className="gr-dl" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 20h14" /></svg>}
-              </button>);
+              <div key={x.id} className="gr-book" style={{ height: h }} onMouseEnter={() => setHover(i)}>
+                <button type="button" role="tab" aria-selected={i === pick} className={`gr-spine${mine ? "" : " away"}${wiggle === i ? " wiggle" : ""}`} onClick={() => choose(i)}
+                  onFocus={() => setHover(i)} onBlur={() => setHover(null)} style={{ height: h, background: x.fill, color: x.ink }} aria-label={`${x.name}${mine ? "" : ", not downloaded yet"}`}>
+                  {x.icon}<span>{x.name}</span>
+                </button>
+                {!mine && <button type="button" className="gr-dlbtn" onClick={() => getGame(x)} disabled={!!getting} aria-label={`Download ${x.name}`} title={`Download ${x.name}`} style={{ color: x.ink }}>
+                  {getting === x.id ? <i className="gr-spin" aria-hidden="true" /> : <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 20h14" /></svg>}
+                </button>}
+              </div>);
           })}
           <div className="gr-shelf-fill" aria-hidden="true" />
         </div>
-        {tip && <div className="gr-tip" role="tooltip" style={{ left: tip.left, bottom: tip.bottom }}>
-          <b>{GAMES[tip.i].name}</b>
-          <span className="gr-tip-meta">{GAMES[tip.i].timed ? "⏱ " : "∞ "}{GAMES[tip.i].time} · {GAMES[tip.i].skill}</span>
-          <p>{GAMES[tip.i].blurb}</p>
-          <em>{owned.includes(GAMES[tip.i].id) ? "On your shelf" : "Not downloaded yet"}</em>
-        </div>}
+        <p className="gr-preview" aria-live="polite">{hover !== null
+          ? <><b>{GAMES[hover].name}</b> · {GAMES[hover].timed ? "⏱ " : "∞ "}{GAMES[hover].time} · {GAMES[hover].skill}. {GAMES[hover].blurb} <em>{owned.includes(GAMES[hover].id) ? "On your shelf." : "Not downloaded: press the arrow on the book."}</em></>
+          : "Move over a book to read about it. Click it to select. A book with a download arrow can be downloaded right there."}</p>
       </div>
 
       <div className="gr-row">
@@ -318,7 +314,7 @@ export default function GameRoom() {
         {has
           ? <span className="gr-go-wrap"><button type="button" className="btn primary gr-go" onClick={play}>{playing ? "Play again" : "Play with Aria"}</button>
               <button type="button" className="btn tiny gr-remove" onClick={removeGame} title="Take it off your shelf; you can download it again later">Remove</button></span>
-          : <button type="button" className="btn primary gr-go" onClick={getGame} disabled={getting === g.id}>
+          : <button type="button" className="btn primary gr-go" onClick={() => getGame()} disabled={getting === g.id}>
               <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ marginRight: 6, verticalAlign: -2 }}><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 20h14" /></svg>{getting === g.id ? "Downloading…" : "Get game"}</button>}
       </div>
 
