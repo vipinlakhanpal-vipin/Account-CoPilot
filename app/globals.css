@@ -2326,3 +2326,12 @@ header.top{background:var(--bg);padding-bottom:8px;box-shadow:0 10px 14px -12px 
 @keyframes agm-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 @media (prefers-reduced-motion:reduce){.agm-slots.wrong .agm-slot{animation:none}}
 .agame-menu{left:-100px;width:200px}
+
+/* v5.61: now and then Aria flashes a funny, slightly sad message ("Talk to me, I'm bored") and wobbles a little */
+.agame-bubble{pointer-events:none}
+.agame-bubble.funny{left:-80px;top:-92px;width:160px;padding:7px 10px;font-weight:700;font-size:12px;line-height:1.35;border-color:#F5A623;background:color-mix(in srgb,#F5A623 22%,var(--surface));animation:agame-pop .45s ease-out,agame-pulse 1.6s ease-in-out .45s infinite}
+.agame-bubble.funny::after{left:76px;border-color:#F5A623;background:color-mix(in srgb,#F5A623 22%,var(--surface))}
+.agame-bot.sad{animation:agame-sad 1.4s ease-in-out infinite}
+@keyframes agame-pop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.08);opacity:1}100%{transform:scale(1)}}
+@keyframes agame-sad{0%,100%{transform:rotate(0)}20%{transform:rotate(-7deg)}40%{transform:rotate(6deg)}60%{transform:rotate(-4deg)}80%{transform:rotate(3deg)}}
+@media (prefers-reduced-motion:reduce){.agame-bubble.funny,.agame-bot.sad{animation:none}}

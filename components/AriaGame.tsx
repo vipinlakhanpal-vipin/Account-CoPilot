@@ -5,6 +5,12 @@ import AriaMiniGames, { type MiniGame } from "@/components/AriaMiniGames";
 
 // Aria floats in the left panel and asks to be hit. A click (the "hit") shatters her into nine jigsaw pieces and she asks to be rebuilt in 60 seconds, with a different picture each time (five designs).
 // Drag each piece to its place on the board; a piece clicks into place when it is close. Best time is kept in this browser.
+// Now and then, while Aria sits idle, she flashes one of these for a few seconds (never while a game or the menu is open).
+const MOODS = [
+  "Talk to me, I'm bored 😢", "Psst… nobody has asked me anything in ages 🥲", "I know every account. Ask me one? 😞",
+  "Is it just me, or is it quiet in here? 😔", "I could be useful right now… 😢", "Want to play? I'll go easy on you 🥺",
+  "My jigsaw is lonely. So am I 😭", "Ask me for a list. Any list. Please 🥲", "Beep boop. Bored boop 😞", "I did my homework. Test me? 😢",
+];
 const N = 3, S = 66, PAD = Math.round(S * 0.32), LIMIT = 60, DESIGNS = 5;
 const SIZE = N * S;
 const STAGE_W = 560, STAGE_H = 400, BOARD_X = 36, BOARD_Y = 96;
@@ -114,9 +120,28 @@ const slot = (r: number, c: number) => ({ x: BOARD_X + c * S - PAD, y: BOARD_Y +
 export default function AriaGame({ onChat }: { onChat: () => void }) {
   const [menu, setMenu] = useState(false);
   const [mini, setMini] = useState<MiniGame | null>(null);
+  const [mood, setMood] = useState<string | null>(null), lastMood = useRef(-1), quiet = useRef(true); // quiet: idle with nothing open, so she may speak
   const wrap = useRef<HTMLDivElement>(null);
   useEffect(() => { if (!menu) return; const away = (e: MouseEvent) => { if (!wrap.current?.contains(e.target as Node)) setMenu(false); }; document.addEventListener("mousedown", away); return () => document.removeEventListener("mousedown", away); }, [menu]);
   const [phase, setPhase] = useState<"idle" | "punched" | "play" | "won" | "lost">("idle");
+  quiet.current = phase === "idle" && !menu && !mini;
+  // Every 40 to 70 seconds, if she is idle and the tab is in view, she flashes a message for 7 seconds.
+  useEffect(() => {
+    let t1: ReturnType<typeof setTimeout>, t2: ReturnType<typeof setTimeout>;
+    const loop = (first: boolean) => {
+      t1 = setTimeout(() => {
+        if (quiet.current && document.visibilityState === "visible") {
+          let k = Math.floor(Math.random() * MOODS.length); if (k === lastMood.current) k = (k + 1) % MOODS.length;
+          lastMood.current = k; setMood(MOODS[k]);
+          t2 = setTimeout(() => setMood(null), 7000);
+        }
+        loop(false);
+      }, first ? 20000 : 40000 + Math.random() * 30000);
+    };
+    loop(true);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []);
+  useEffect(() => { if (!quiet.current) setMood(null); }, [phase, menu, mini]);
   const [open, setOpen] = useState(false);
   const [pieces, setPieces] = useState<Piece[]>([]);
   const [left, setLeft] = useState(LIMIT);
@@ -180,8 +205,10 @@ export default function AriaGame({ onChat }: { onChat: () => void }) {
   return (
     <>
       <div className="agame" ref={wrap}>
-        {phase === "idle" && !menu && <span className="agame-bubble" aria-hidden="true">Want to play?<br />Click me!</span>}
-        <button type="button" className={`agame-bot${phase === "punched" ? " punched" : ""}`} onClick={() => setMenu((m) => !m)} aria-expanded={menu} aria-label="Aria: ask a question, or play a game">
+        {phase === "idle" && !menu && !mini && (mood
+          ? <span className="agame-bubble funny" role="status">{mood}</span>
+          : <span className="agame-bubble" aria-hidden="true">Want to play?<br />Click me!</span>)}
+        <button type="button" className={`agame-bot${phase === "punched" ? " punched" : ""}${mood && phase === "idle" ? " sad" : ""}`} onClick={() => setMenu((m) => !m)} aria-expanded={menu} aria-label="Aria: ask a question, or play a game">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="12" cy="2.9" r="1.35" fill="#FFE08A" /><path d="M12 4.2v2.3" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" />
             <rect x="4.6" y="6.4" width="14.8" height="11" rx="3.4" fill="#fff" /><rect x="2.3" y="9.6" width="1.9" height="4.6" rx="0.95" fill="#fff" /><rect x="19.8" y="9.6" width="1.9" height="4.6" rx="0.95" fill="#fff" />
