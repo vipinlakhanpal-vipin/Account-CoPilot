@@ -11,7 +11,7 @@ type U = { id: string; email: string; name: string; invited_by: string; joined_f
 const ROLE: Record<Role, string> = { super_admin: "Super Admin", admin: "Admin", standard: "Standard User" };
 const ROLE_HELP: Record<Role, string> = {
   super_admin: "The owner. Sees every region, manages the team, the engine and every ICP, and is the only one who can download (Master Book, PDF and Excel).",
-  admin: "Everything a Super Admin can do except download: no Master Book, PDF or Excel. Sees all data on screen. Manages Standard Users only.",
+  admin: "Everything a Super Admin can do except download: no Master Book, PDF or Excel. Sees all data on screen. Cannot open the Team tab.",
   standard: "Sees only their region(s)' accounts, contacts and Master Book, and controls only those regions' ICP. One person can be given several regions.",
 };
 

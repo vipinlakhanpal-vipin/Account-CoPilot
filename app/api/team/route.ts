@@ -21,11 +21,11 @@ async function superOnly() {
   const me = await requireUser();
   if (!me) return { error: NextResponse.json({ error: "Sign in required" }, { status: 401 }) };
   const access = await getAccess(me);
-  if (!access.isSuper) return { error: NextResponse.json({ error: "Only a Super Admin or an Admin can manage the team." }, { status: 403 }) };
+  if (!access.isOwner) return { error: NextResponse.json({ error: "Only the Super Admin can open the team." }, { status: 403 }) };
   return { me, access };
 }
 
-// An Admin manages Standard Users only: they cannot create, change, reset or delete an Admin or a Super Admin. Only the Super Admin does.
+// Since v5.63 only the Super Admin reaches this route at all (superOnly checks isOwner); the Admin guard below is kept as a second lock.
 const OWNER_ONLY = NextResponse.json({ error: "Only the Super Admin can add or change an Admin or a Super Admin." }, { status: 403 });
 async function targetIsStandard(db: ReturnType<typeof supabaseAdmin>, id: string) {
   const { data } = await db.from("user_access").select("role").eq("user_id", id).maybeSingle();

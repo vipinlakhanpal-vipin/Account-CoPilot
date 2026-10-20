@@ -27,8 +27,11 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
   const user = await requireUser();
   if (!user) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
-  if (!(await getAccess(user)).isSuper) return NextResponse.json({ error: "Only a Super Admin can see activity." }, { status: 403 });
+  const acc = await getAccess(user);
+  if (!acc.isSuper) return NextResponse.json({ error: "Only a Super Admin can see activity." }, { status: 403 });
   const db = supabaseAdmin(), sp = new URL(req.url).searchParams;
+  // The activity log and usage figures belong to the Team tab, which only the Super Admin opens; Admins keep just the Online now chip.
+  if (sp.get("view") !== "active" && !acc.isOwner) return NextResponse.json({ error: "Only the Super Admin can see the activity log." }, { status: 403 });
   const { data: au } = await db.auth.admin.listUsers({ perPage: 200 });
   const people = new Map((au?.users || []).map((u) => [u.id, { email: u.email || "", name: String((u.user_metadata as Record<string, unknown> | null)?.name || (u.user_metadata as Record<string, unknown> | null)?.full_name || ""), last_sign_in: u.last_sign_in_at || null }]));
   if (sp.get("view") === "active") {

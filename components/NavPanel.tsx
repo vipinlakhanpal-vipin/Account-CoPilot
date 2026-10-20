@@ -60,7 +60,7 @@ export default function NavPanel({ isSuper, isOwner = false }: { isSuper: boolea
       </div>
       <div className="navbot">
         {item("/nav/wizard", "wizard", "Setup wizard", onWizard)}
-        {item("/nav/team", "team", "Team", path.startsWith("/nav/team"), inactive, "to review", "review")}
+        {isOwner && item("/nav/team", "team", "Team", path.startsWith("/nav/team"), inactive, "to review", "review")}
         <button type="button" className="navit navbtn" onClick={() => window.dispatchEvent(new CustomEvent("history-open"))} title="What changed in each update"><Ic n="history" />Version history</button>
         {item("/nav/suggestions", "bulb", "Suggestions", path.startsWith("/nav/suggestions"))}
         {item("/nav/settings/icp", "settings", "Settings", onSettings)}
