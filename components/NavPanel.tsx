@@ -46,6 +46,7 @@ export default function NavPanel({ isSuper }: { isSuper: boolean }) {
           <Link href="/nav/settings/icp" className={path.endsWith("/icp") ? "on" : ""}>Define ICP</Link>
           <Link href="/nav/settings/engine" className={path.endsWith("/engine") ? "on" : ""}>Engine and PIN</Link>
           <Link href="/nav/settings/team" className={path.endsWith("/team") ? "on" : ""}>Team</Link>
+          <Link href="/nav/settings/guide" className={path.endsWith("/guide") ? "on" : ""}>Learn me</Link>
         </div>}
         {item("/nav/suggestions", "bulb", "Suggestions", path.startsWith("/nav/suggestions"))}
         {!isSuper && <small className="navnote">Some settings are read-only for you.</small>}

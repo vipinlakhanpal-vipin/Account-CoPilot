@@ -24,16 +24,10 @@ import { APP_VERSION, TAGLINE, RELEASES, RELEASE_AUTHOR } from "@/lib/version";
 // what's actually shown, for a group (like Dashboard) where that first item is just the main tab's own page
 // and has no other siblings worth presenting it alongside, unlike Accounts' 5 genuinely distinct pages.
 const GROUPS: { label: string; items: [string, string][]; hideLanding?: boolean; icon?: boolean; tip?: string; glyph?: "search" | "pulse" | "network" | "home" | "dashboard" | "accounts" | "data" | "setup"; win?: "signals" | "market" }[] = [
-  { label: "Find company", items: [["/find", "Find company"]], icon: true, tip: "Find company - search or add a new one", glyph: "search" },
-  { label: "Buying signals", items: [["/signals", "Buying signals"]], icon: true, tip: "Buying signals - tenders, RFPs, ERP and S2P intent, ECC to S/4HANA", glyph: "pulse", win: "signals" },
-  { label: "Market intelligence", items: [["/market", "Market intelligence"]], icon: true, tip: "Market intelligence - SAP, Coupa, Oracle and Microsoft partners and their customers", glyph: "network", win: "market" },
-  { label: "Home", items: [["/home", "Home"]], icon: true, tip: "Home - where to start", glyph: "home" },
-  { label: "New Home", items: [["/home2", "New Home"]], glyph: "home" },
-  { label: "New Layout", items: [["/nav/about", "New Layout"]], glyph: "dashboard" },
+  { label: "Home", items: [["/nav/about", "Home"]], icon: true, tip: "Home - find and search, about, daily run, market intelligence, buying signals, setup wizard, settings", glyph: "home" },
   { label: "Dashboard", items: [["/", "Dashboard"], ["/?tab=reports", "Mission Control"]], hideLanding: true, glyph: "dashboard" },
   { label: "Accounts", items: [["/?tab=accounts", "Accounts"], ["/?tab=pipeline", "Pipeline"], ["/?tab=stakeholders", "Stakeholders"], ["/?tab=signals", "S2P Signals"], ["/?tab=erp", "ERP & Apps"]], glyph: "accounts" },
   { label: "Data", items: [["/?tab=sources", "Sources"], ["/?tab=conflicts", "Conflicts"], ["/research", "Research Queue"]], glyph: "data" },
-  { label: "Setup", items: [["/icp", "Define ICP"], ["/settings", "Settings"], ["/guide", "Learn Me"], ["/team", "Team"]], icon: true, tip: "Setup - Define ICP, Settings, Learn Me, Team", glyph: "setup" },
 ];
 const SUB_LABEL: Record<string, string> = { Accounts: "All accounts" };
 
@@ -47,7 +41,7 @@ const HistoryIcon = () => (
 const TAB_LABEL: Record<string, string> = { pipeline: "Pipeline", accounts: "Accounts", stakeholders: "Stakeholders", signals: "S2P Signals", erp: "ERP & Apps",
   conflicts: "Conflicts", sources: "Sources", reports: "Mission Control" };
 
-const PAGE_LABEL: Record<string, string> = { "/research": "Research Queue", "/settings": "Settings", "/guide": "Learn Me", "/icp": "Define ICP", "/team": "Team", "/home": "Home", "/home2": "New Home", "/find": "Find company", "/signals": "Buying signals", "/market": "Market intelligence" };
+const PAGE_LABEL: Record<string, string> = { "/research": "Research Queue", "/settings": "Home", "/guide": "Home", "/icp": "Home", "/team": "Home", "/home": "Home", "/home2": "Home", "/find": "Home", "/signals": "Home", "/market": "Home" };
 
 const P = { fill: "none", stroke: "currentColor", strokeLinecap: "round", strokeLinejoin: "round" } as const;
 // Short outline icons for the main tabs (16 px grid). Home, Find company, Buying signals and Market intelligence show only the icon; the others sit beside their title.
@@ -134,7 +128,7 @@ export default function Header({ meta }: { meta: string }) {
   const path = usePathname();
   const params = useSearchParams();
   // On the dashboard page, tabs switch instantly on the client (the data is already loaded).
-  const current = path === "/" ? TAB_LABEL[params.get("tab") || ""] || "Dashboard" : path.startsWith("/nav") ? "New Layout" : PAGE_LABEL[path] || "Dashboard";
+  const current = path === "/" ? TAB_LABEL[params.get("tab") || ""] || "Dashboard" : path.startsWith("/nav") ? "Home" : PAGE_LABEL[path] || "Dashboard";
   useLayoutEffect(() => {
     const place = () => {
       const bar = barRef.current, row = subRef.current;

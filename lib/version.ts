@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.18";
+export const APP_VERSION = "5.19";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.19", date: "2026-10-20", notes: "The left-panel layout is now Home; New Home and New Layout are gone.", changes: [
+      { what: "Home is now the left-panel layout: Find and search, About CoPilot, Daily run, Market intelligence, Buying signals, and at the bottom Setup wizard, Settings (Define ICP, Engine and PIN, Team, Learn me) and Suggestions. The top bar keeps Home, Dashboard, Accounts and Data. The separate icons for Find company, Buying signals, Market intelligence, Home and Setup are removed from the top bar, and the old Home page opens About CoPilot", where: "components/Header.tsx, app/nav/*, app/home/page.tsx", why: "Requested — make the new layout final" },
+      { what: "The New Home experiment (regions board) and the New Layout tab are removed. About CoPilot shows the Companies tracked and Active regions numbers again", where: "app/home2, components/NewHome.tsx, app/nav/about/page.tsx", why: "Requested" },
+    ] },
   { version: "5.18", date: "2026-10-20", notes: "New Layout: new order, Daily run and Suggestions pages, icons on every item.", changes: [
       { what: "The New Layout left panel now runs: Find and search, About CoPilot, Daily run, Market intelligence, Buying signals, and at the bottom Setup wizard, Settings and Suggestions. Every item has an icon, and the tab opens on About CoPilot", where: "components/NavPanel.tsx, app/nav/*, components/Header.tsx", why: "Requested" },
       { what: "Daily run is the bell as a page: today's plan, each region's latest run and the seven-day grid, and the run-by-run history. Suggestions (the bulb) is a page too. Find and search opens inside the layout. The top-bar bell and bulb stay for the badge and quick access", where: "components/NavDailyRun.tsx, components/SuggestionsButton.tsx, app/nav/find, app/nav/daily-run, app/nav/suggestions", why: "Requested" },
