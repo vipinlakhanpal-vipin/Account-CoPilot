@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.89";
+export const APP_VERSION = "5.90";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.90", date: "2026-10-20", notes: "Aria tells you about her click tricks.", changes: [
+      { what: "The idle speech bubble now alternates between Want to play? Press here and One click: I follow you / Double-click: I go home, and a small line under her always says Click Aria: she follows your mouse. Double-click: she goes home. Press her bubble: games", where: "Left panel, Aria", why: "People can discover what a click and a double-click do" },
+  ] },
   { version: "5.89", date: "2026-10-20", notes: "Tease the roaming Aria and she pulls faces and answers back.", changes: [
       { what: "When your pointer hovers over Aria in the left panel she wiggles, pulls a face and says something: Don't tease me, I'm shy! (with blushing cheeks), Hey, personal space please, Stop staring… I'm blushing!, Hehe, you're tickling my pixels!, Bleh!, Boo! Did I scare you?, I can see you hovering, Careful, I bite. Just kidding. Mostly., and more. Three new expressions: shy, silly (tongue out) and wow. She answers at most every few seconds, and after five teases in a short time she says Okay, now you're just teasing me", where: "Left panel, Aria", why: "More character when you play with her" },
   ] },

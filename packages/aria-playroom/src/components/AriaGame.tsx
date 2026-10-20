@@ -22,6 +22,8 @@ function Roamer() {
   const router = useRouter(), path = usePathname();
   const [mood, setMood] = useState<string | null>(null), lastMood = useRef(-1);
   const [punched, setPunched] = useState(false), [away, setAway] = useState(false);
+  const [hint, setHint] = useState(0); // the idle bubble alternates between inviting you to play and explaining her click tricks
+  useEffect(() => { const t = setInterval(() => setHint((h) => (h + 1) % 2), 6500); return () => clearInterval(t); }, []);
   const [tease, setTease] = useState<{ t: string; m: (typeof TEASED)[number]["m"] } | null>(null), teaseRef = useRef({ last: 0, n: 0, first: 0, timer: undefined as ReturnType<typeof setTimeout> | undefined });
   // Every 40 to 70 seconds, if the tab is in view and she is not being clicked, she flashes a message for 7 seconds.
   useEffect(() => {
@@ -91,11 +93,14 @@ function Roamer() {
     <div className={`agame${away ? " gone" : ""}`} ref={wrap} onMouseEnter={onHover}>
       {!punched && !away && (tease || mood
         ? <button type="button" className="agame-bubble funny" onClick={go} title="Open Aria's playroom">{tease ? tease.t : mood}</button>
-        : <button type="button" className="agame-bubble" onClick={go} title="Open Aria's playroom">Want to play? 🎮<br />Press here 👆</button>)}
+        : hint === 0
+          ? <button type="button" className="agame-bubble" onClick={go} title="Open Aria's playroom">Want to play? 🎮<br />Press here 👆</button>
+          : <button type="button" className="agame-bubble wide" onClick={go} title="Open Aria's playroom">One click: I follow you 🐾<br />Double-click: I go home 🏠</button>)}
         <button type="button" className={`agame-bot${punched ? " punched" : ""}${tease ? " tickled" : mood && !punched ? " sad" : ""}`} onClick={() => { setMood(null); setAway(true); }} aria-label="Aria: send her exploring around the page (double-click her to bring her home)" title="Click me and I will follow your mouse">
           <AriaFace mood={tease ? tease.m : mood ? "oops" : "happy"} />
         </button>
     </div>
+    {!away && <p className="agame-legend">Click Aria: she follows your mouse. Double-click: she goes home. Press her bubble: games.</p>}
     {away && <><p className="agame-note">Aria is out exploring. Double-click her, or press Esc, to call her home.</p><AriaTraveller getHome={getHome} onHome={() => setAway(false)} /></>}
     </>
   );
