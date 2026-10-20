@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { GAMES, type GameEvent, type GameId } from "@/components/games/registry";
 import { AriaOrb, type Mood } from "@/components/AriaFace";
 import Jigsaw from "@/components/games/Jigsaw";
-import { Memory, Quiz, Words } from "@/components/AriaMiniGames";
+import { Quiz, Words } from "@/components/AriaMiniGames";
 
 // Aria's playroom: she is the host. She greets you, introduces each game, cheers when you get something right, groans when you don't, nudges you when you are stuck, and congratulates you at the end.
 // Her face and the little hop or shake follow what happens in the game (each game reports its events through onEvent).
@@ -20,7 +20,6 @@ const LINES: Record<GameEvent | "arrive" | "idle", string[]> = {
 };
 const INTRO: Record<GameId, string> = {
   jigsaw: "I'll fall to pieces and you put me back together. Ready?",
-  memory: "Match each term with its meaning. I'll count your moves.",
   quiz: "Eight quick true-or-false questions. I'll keep score.",
   words: "Four levels, no clock. I'll only speak up when you ask for a hint.",
 };
@@ -30,7 +29,6 @@ const pickOne = (a: string[], not: string) => { const b = a.filter((x) => x !== 
 
 function View({ id, onClose, onEvent }: { id: GameId; onClose: () => void; onEvent: (e: GameEvent, d?: string) => void }) {
   if (id === "jigsaw") return <Jigsaw onClose={onClose} onEvent={onEvent} />;
-  if (id === "memory") return <Memory onClose={onClose} onEvent={onEvent} />;
   if (id === "quiz") return <Quiz onClose={onClose} onEvent={onEvent} />;
   return <Words onClose={onClose} onEvent={onEvent} />;
 }

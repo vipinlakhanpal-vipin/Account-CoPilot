@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.77";
+export const APP_VERSION = "5.78";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.78", date: "2026-10-20", notes: "Memory match is removed.", changes: [
+      { what: "Memory match is taken out of Aria's playroom, because it was confusing. The shelf now has Jigsaw puzzle, True or false and Word scramble", where: "Aria, the playroom", why: "It was not clear how to play it" },
+  ] },
   { version: "5.77", date: "2026-10-20", notes: "Aria hosts her own playroom, and reacts to every move.", changes: [
       { what: "The Game room tab is gone from the left panel. Games now start only with Aria: click her (she asks Want to play?) and she takes you to her playroom, where a big 3D Aria is the host. She greets you, introduces each game, and reacts to what you do: her face changes (smile, cheering eyes, oops, thinking), she hops when you get something right and shakes when you don't, says encouraging lines, warns you when time is nearly up, nudges you if you go quiet, and congratulates you with your result. The roaming Aria in the panel steps aside while you play and shows a Done playing button", where: "Aria, the playroom", why: "The games should feel like playing with Aria, not like a games section of an app" },
   ] },

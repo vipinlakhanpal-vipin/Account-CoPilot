@@ -3,12 +3,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { GameEvent } from "@/components/games/registry";
 type Ev = (e: GameEvent, detail?: string) => void;
 
-// Three quick games Aria offers besides the jigsaw (Words has no time limit). Both are about the work the app is for (source-to-pay and the way CoPilot labels evidence), all in the browser, nothing stored but a best score.
+// Two quick games Aria offers besides the jigsaw: True or false, and Word scramble (no time limit). Both are about the work the app is for (source-to-pay and the way CoPilot labels evidence), all in the browser, nothing stored but a best score.
 
-const PAIRS: [string, string][] = [
-  ["PO", "Purchase order"], ["RFQ", "Request for quotation"], ["S2P", "Source to pay"],
-  ["GRN", "Goods received note"], ["SLA", "Service level agreement"], ["TCO", "Total cost of ownership"],
-];
 const FACTS: { q: string; a: boolean; why: string }[] = [
   { q: "A purchase order is raised after the supplier's invoice has been paid.", a: false, why: "A PO comes first: it is the order, then goods arrive, then the invoice is matched and paid." },
   { q: "Three-way match compares the PO, the goods receipt and the invoice.", a: true, why: "If the three agree, the invoice can be paid without more checks." },
@@ -36,41 +32,6 @@ function useCountdown(total: number, running: boolean, onEnd: () => void) {
     return () => clearInterval(t);
   }, [running, total]);
   return left;
-}
-
-type Card = { id: number; pair: number; text: string; term: boolean };
-export function Memory({ onClose, onEvent }: { onClose: () => void; onEvent?: Ev }) {
-  const deal = () => shuffle(PAIRS.flatMap(([a, b], i) => [{ id: i * 2, pair: i, text: a, term: true }, { id: i * 2 + 1, pair: i, text: b, term: false }] as Card[]));
-  const [cards, setCards] = useState<Card[]>(deal);
-  const [up, setUp] = useState<number[]>([]), [done, setDone] = useState<number[]>([]), [moves, setMoves] = useState(0);
-  const [phase, setPhase] = useState<"play" | "won" | "lost">("play"), [best, setBest] = useState<number | null>(getBest("aria-memory-best"));
-  const left = useCountdown(60, phase === "play", () => { setPhase("lost"); onEvent?.("lose"); });
-  useEffect(() => { onEvent?.("start"); }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  const again = () => { onEvent?.("start"); setCards(deal()); setUp([]); setDone([]); setMoves(0); setPhase("play"); };
-  const flip = (c: Card) => {
-    if (phase !== "play" || up.length >= 2 || up.includes(c.id) || done.includes(c.pair)) return;
-    const nu = [...up, c.id]; setUp(nu);
-    if (nu.length === 2) {
-      setMoves((m) => m + 1);
-      const [a, b] = nu.map((id) => cards.find((x) => x.id === id)!);
-      if (a.pair === b.pair) onEvent?.("good"); else onEvent?.("bad");
-      if (a.pair === b.pair) setTimeout(() => { setDone((d) => { const nd = [...d, a.pair]; if (nd.length === PAIRS.length) { setPhase("won"); onEvent?.("win", `${moves + 1} moves`); const m = moves + 1; setBest((bb) => { const n = bb === null || m < bb ? m : bb; setBestKey("aria-memory-best", n); return n; }); } return nd; }); setUp([]); }, 350);
-      else setTimeout(() => setUp([]), 800);
-    }
-  };
-  return (
-    <Shell title={phase === "won" ? "All matched!" : phase === "lost" ? "Time's up" : "Match the term to its meaning"}
-      sub={phase === "won" ? `${moves} moves${best !== null ? ` · best ${best}` : ""}` : phase === "lost" ? `${done.length} of ${PAIRS.length} pairs found` : "Flip two cards. 60 seconds."}
-      left={left} total={60} info={`${Math.ceil(left)} s left`} info2={`${done.length} / ${PAIRS.length} pairs · ${moves} moves`} onClose={onClose}>
-      <div className="agm-grid">
-        {cards.map((c) => {
-          const shown = up.includes(c.id) || done.includes(c.pair);
-          return <button type="button" key={c.id} className={`agm-card${shown ? " up" : ""}${done.includes(c.pair) ? " ok" : ""}${c.term ? " term" : ""}`} onClick={() => flip(c)} aria-label={shown ? c.text : "Hidden card"}>{shown ? c.text : "?"}</button>;
-        })}
-      </div>
-      {phase !== "play" && <div className="agm-end"><button type="button" className="btn primary" onClick={again}>{phase === "won" ? "Beat my moves" : "Try again"}</button></div>}
-    </Shell>
-  );
 }
 
 const QN = 8;
