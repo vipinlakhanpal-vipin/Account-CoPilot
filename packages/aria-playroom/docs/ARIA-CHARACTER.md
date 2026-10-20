@@ -10,6 +10,7 @@
 - Moves by physics in `AriaGame.tsx`: slow drift, bounces off the left, right, top and bottom of her area (never past them), a small squash on each hit (`bump-x`, `bump-y`). Pauses while the pointer is on her, while the tab is hidden, and stays still with reduced motion.
 - Speech bubble: "Want to play? 🎮 / Click me! 👆" in Fredoka on sunny yellow, below her with its pointer up. Its position is kept inside her area through the CSS variables `--bx` and `--ax`.
 - Every 40 to 70 seconds she flashes one of ten funny, slightly sad messages for 7 seconds (`MOODS` in `AriaGame.tsx`) and wobbles.
+- While she travels, resting the pointer on a tab, sub-tab or menu item makes her comment on it with the person's first name (`ON_TAB` in `AriaTraveller.tsx`; the name comes from `GET /api/aria-prefs`).
 - Click on the orb: she goes exploring (`AriaTraveller.tsx`): she leaves her spot, follows the pointer over the whole page and stops about 78 px from it, stretches and squashes along her direction, spins, morphs between a circle, square, diamond, star and blob, pulls faces and says things. Double-click her or press Escape and she flies home. She only catches pointer events on her own body.
 - Click on her speech bubble (Want to play? Press here): a short "punch" animation, then the playroom opens.
 - In the playroom the roaming Aria steps aside; the panel shows "Playing with Aria" and Done playing.

@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.95";
+export const APP_VERSION = "5.96";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.96", date: "2026-10-20", notes: "Travelling Aria comments on the tab you rest the pointer on, using your first name.", changes: [
+      { what: "While Aria is following your mouse, when the pointer rests on a tab, sub-tab or menu item she says something funny about it using your first name: on Review, What do you want to review, Vipin? Everything looks fine to me!; on Add data, Feeding me data, Vipin? Yum, I'm hungry!; on Team, Checking on the team, Vipin? Who's been naughty? and so on for every tab and menu item (a polite fallback for any other name)", where: "Aria, travelling", why: "She reacts to where you are, which makes her feel alive" },
+  ] },
   { version: "5.95", date: "2026-10-20", notes: "The switches under Aria are left-aligned and clearly clickable.", changes: [
       { what: "The tips and the Quiet mode switches under Aria are now left-aligned, the labels are white and bold, and the tick boxes are filled with sunny yellow (turning teal with a white tick when on), so it is clear they can be clicked", where: "Left panel, under Aria", why: "The old boxes were pale and the labels hard to read" },
   ] },

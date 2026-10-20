@@ -13,7 +13,9 @@ export async function GET() {
   if (!user) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
   const { data } = await supabaseAdmin().from("settings").select("value").eq("key", KEY).maybeSingle();
   const access = await getAccess(user);
-  return NextResponse.json({ quietDefault: !!(data?.value as { quietDefault?: boolean } | null)?.quietDefault, canSet: access.isOwner });
+  const meta = (user.user_metadata || {}) as Record<string, unknown>, full = String(meta.full_name || meta.name || "").trim();
+  const name = (full.split(/\s+/)[0] || String(user.email || "").split("@")[0] || "").replace(/^./, (c) => c.toUpperCase());
+  return NextResponse.json({ quietDefault: !!(data?.value as { quietDefault?: boolean } | null)?.quietDefault, canSet: access.isOwner, name });
 }
 export async function POST(req: Request) {
   const user = await requireUser();

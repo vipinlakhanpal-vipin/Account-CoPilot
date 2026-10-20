@@ -23,7 +23,7 @@ function Roamer() {
   const [mood, setMood] = useState<string | null>(null), lastMood = useRef(-1);
   const [punched, setPunched] = useState(false), [away, setAway] = useState(false);
   // Quiet mode: your own switch (kept in this browser) beats the Super Admin's default for everyone. Quiet means no roaming, no funny messages, no teasing; she waits calmly and a click still opens the playroom.
-  const [pref, setPref] = useState<"1" | "0" | null>(null), [def, setDef] = useState<{ quietDefault: boolean; canSet: boolean }>({ quietDefault: false, canSet: false });
+  const [pref, setPref] = useState<"1" | "0" | null>(null), [def, setDef] = useState<{ quietDefault: boolean; canSet: boolean; name?: string }>({ quietDefault: false, canSet: false });
   useEffect(() => { try { const v = localStorage.getItem("aria-quiet"); if (v === "1" || v === "0") setPref(v); } catch { /* optional */ } fetch("/api/aria-prefs", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((j) => j && setDef(j)).catch(() => {}); }, []);
   const quiet = pref !== null ? pref === "1" : def.quietDefault, quietRef = useRef(false); quietRef.current = quiet;
   const setQuiet = (on: boolean) => { setPref(on ? "1" : "0"); try { localStorage.setItem("aria-quiet", on ? "1" : "0"); } catch { /* optional */ } setMood(null); setTease(null); };
@@ -119,7 +119,7 @@ function Roamer() {
         {def.canSet && <label title="The default for everyone who has not chosen for themselves"><input type="checkbox" checked={def.quietDefault} onChange={(e) => setEveryone(e.target.checked)} /> Quiet for everyone</label>}
       </span>
     </div>}
-    {away && <><p className="agame-note">Aria is out exploring. Double-click her, or press Esc, to call her home.</p><AriaTraveller getHome={getHome} onHome={() => setAway(false)} /></>}
+    {away && <><p className="agame-note">Aria is out exploring. Double-click her, or press Esc, to call her home.</p><AriaTraveller getHome={getHome} onHome={() => setAway(false)} name={def.name || ""} /></>}
     </>
   );
 }
