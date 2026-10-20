@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.45";
+export const APP_VERSION = "5.46";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.46", date: "2026-10-20", notes: "Setup wizard opens on an introduction, not on step 1.", changes: [
+      { what: "Clicking Setup wizard shows what the wizard is, what it does, how it works and what to know (cost, who can save), with the six steps described as cards, and a Start button. Step 1 only opens when you pick a step in the left panel or press Start", where: "components/NavWizard.tsx, components/NavPanel.tsx, app/nav/wizard/page.tsx", why: "Requested — the Region step opened by default and was confusing" },
+    ] },
   { version: "5.45", date: "2026-10-20", notes: "Market intelligence shows which vendor workspace you are in.", changes: [
       { what: "Above the regions and partner cards, Market intelligence shows a title for the vendor you picked (SAP Partners, Coupa Partners, Oracle Partners and so on), a step smaller than the page title, with the vendor's initial in a small badge", where: "components/MarketIntel.tsx, app/globals.css", why: "Requested — it was not clear which vendor workspace you were in" },
     ] },

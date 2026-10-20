@@ -46,7 +46,7 @@ export default function NavPanel({ isSuper, isOwner = false }: { isSuper: boolea
     load(); const t = setInterval(load, 300000); window.addEventListener("inactive-changed", load);
     return () => { clearInterval(t); window.removeEventListener("inactive-changed", load); };
   }, [isOwner]);
-  const vendor = params.get("vendor") || "SAP", step = Number(params.get("step")) || 1;
+  const vendor = params.get("vendor") || "SAP", step = Number(params.get("step")) || 0;
   // Drop-downs: Market intelligence, Setup wizard and Settings open and close with their arrow (remembered in this browser) and open by themselves when you go into them.
   const [open, setOpen] = useState<Record<string, boolean>>({});
   useEffect(() => { try { const r = JSON.parse(localStorage.getItem("nav-open") || "{}"); if (r && typeof r === "object") setOpen(r); } catch { /* optional */ } }, []);
