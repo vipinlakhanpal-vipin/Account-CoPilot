@@ -8,7 +8,7 @@ const TABS: Record<string, string> = { pipeline: "Accounts → Pipeline", accoun
 const PAGES: Record<string, string> = { "/research": "Data → Research Queue", "/settings": "Setup → Settings", "/guide": "Setup → Learn Me", "/icp": "Setup → Define ICP", "/team": "Setup → Team", "/home": "Home",
   "/find": "Find company", "/signals": "Buying signals", "/market": "Market intelligence",
   "/nav/find": "Find company", "/nav/about": "Home", "/nav/daily-run": "Home → Daily run", "/nav/market": "Market intelligence", "/nav/signals": "Buying signals", "/nav/wizard": "Home → Setup wizard",
-  "/nav/settings/icp": "Setup → Define ICP", "/nav/settings/engine": "Setup → Settings", "/nav/settings/team": "Setup → Team", "/nav/settings/guide": "Setup → Learn Me", "/nav/suggestions": "Suggestions" };
+  "/nav/settings/icp": "Setup → Define ICP", "/nav/settings/engine": "Setup → Settings", "/nav/team": "Setup → Team", "/nav/settings/guide": "Setup → Learn Me", "/nav/suggestions": "Suggestions" };
 /** A readable name for a path such as "/?tab=pipeline" or "/find": the section, then the tab or page. */
 export function pageLabel(path: string): string {
   const [p, q = ""] = path.split("?");

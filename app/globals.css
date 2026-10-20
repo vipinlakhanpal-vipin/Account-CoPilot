@@ -1995,3 +1995,12 @@ body[data-nodl] .btn-dl:not(.keep),body[data-nodl] .aria-dl,body[data-nodl] .ari
 .navit svg .spark.s2{animation-delay:.7s}.navit svg .spark.s3{animation-delay:1.3s}.navit svg .spark.s4{animation-delay:1.9s}
 @keyframes nav-twinkle{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.65)}}
 @media (prefers-reduced-motion:reduce){.navit svg .spark{animation:none}}
+
+/* v5.21: drop-down items in the left panel: the label goes to the page, the arrow opens or closes the list */
+.navrow{display:flex;align-items:center;border-radius:9px}
+.navrow .navit{flex:1;min-width:0}
+.navrow.on{background:var(--bg-accent,rgba(15,110,86,.12))}
+.navrow.on .navit{background:none}
+.navchev{all:unset;cursor:pointer;display:flex;align-items:center;justify-content:center;width:28px;height:28px;margin-right:4px;border-radius:7px;color:var(--muted)}
+.navchev:hover{background:rgba(var(--ink),.08);color:var(--text)}
+.navchev:focus-visible{outline:2px solid var(--teal);outline-offset:-2px}
