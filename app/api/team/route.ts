@@ -51,7 +51,7 @@ export async function GET() {
   const db = supabaseAdmin();
   const { data, error } = await db.auth.admin.listUsers({ perPage: 200 });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  const { data: acc, error: e2 } = await db.from("user_access").select("user_id,role,regions,updated_at,updated_by");
+  const { data: acc, error: e2 } = await db.from("user_access").select("user_id,role,regions,updated_at,updated_by,suspended_at,kept_at");
   const byId = new Map((acc || []).map((a) => [a.user_id, a]));
   // invited_by is stored as the inviter's email (a stable id); shown here as their name when they have one set,
   // resolved fresh each time so it stays correct even if the inviter's name changes later.
@@ -59,7 +59,7 @@ export async function GET() {
   return NextResponse.json({ ready: !e2, users: data.users.map((u) => { const invitedByEmail = u.user_metadata?.invited_by || "";
     return { id: u.id, email: u.email, name: u.user_metadata?.full_name || "", invited_by: nameByEmail.get(invitedByEmail.toLowerCase()) || invitedByEmail,
       joined_from: u.user_metadata?.joined_from || "", created_at: u.created_at, last_sign_in: u.last_sign_in_at,
-      role: byId.get(u.id)?.role || (e2 ? "super_admin" : "standard"), regions: byId.get(u.id)?.regions || [] }; }) });
+      role: byId.get(u.id)?.role || (e2 ? "super_admin" : "standard"), regions: byId.get(u.id)?.regions || [], suspended_at: byId.get(u.id)?.suspended_at || null, kept_at: byId.get(u.id)?.kept_at || null }; }) });
 }
 
 // Invite a colleague with a role and region. mode "password" creates the account with a one-time temporary password (no email needed);

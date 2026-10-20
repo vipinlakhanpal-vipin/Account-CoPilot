@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.40";
+export const APP_VERSION = "5.41";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.41", date: "2026-10-20", notes: "The Team table shows each person's status: Active, Suspended or Kept.", changes: [
+      { what: "The Team table has a Status column: Active, Suspended (with the date) or Kept (with the date you pressed Keep, for the 15 days after it)", where: "components/TeamSettings.tsx, app/api/team/route.ts", why: "Asked — after Keep there was nowhere to see the status" },
+    ] },
   { version: "5.40", date: "2026-10-20", notes: "The left panel uses the fine diagonal-line pattern on navy fading to teal.", changes: [
       { what: "The left panel is deep navy with fine diagonal lines, fading to teal towards the bottom, like the banner you sent. The weave is switched off; text and icons stay white", where: "app/globals.css", why: "Requested" },
     ] },

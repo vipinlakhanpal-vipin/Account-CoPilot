@@ -2169,3 +2169,8 @@ header.top{background:var(--bg);padding-bottom:8px;box-shadow:0 10px 14px -12px 
 
 /* v5.40: the panel uses the fine diagonal-line pattern on deep navy fading to teal (the weave is switched off) */
 .navpanel::before,.navpanel::after{display:none}
+
+.team-status{font:700 10.5px var(--body);padding:2px 9px;border-radius:999px;white-space:nowrap}
+.team-status.ok{background:color-mix(in srgb,#2ECC8F 22%,var(--surface));color:#0B5A47}
+.team-status.kept{background:color-mix(in srgb,#2E7CF6 18%,var(--surface));color:#14419A}
+.team-status.susp{background:color-mix(in srgb,#E5484D 18%,var(--surface));color:#9B1C1C}

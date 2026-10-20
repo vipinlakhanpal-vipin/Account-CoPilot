@@ -7,7 +7,7 @@ import { ask, notify } from "@/components/Confirm";
 type DraftEmail = { subject: string; body: string };
 
 type Role = "super_admin" | "admin" | "standard";
-type U = { id: string; email: string; name: string; invited_by: string; joined_from: string; created_at: string; last_sign_in: string | null; role: Role; regions: string[] };
+type U = { id: string; email: string; name: string; invited_by: string; joined_from: string; created_at: string; last_sign_in: string | null; role: Role; regions: string[]; suspended_at?: string | null; kept_at?: string | null };
 const ROLE: Record<Role, string> = { super_admin: "Super Admin", admin: "Admin", standard: "Standard User" };
 const ROLE_HELP: Record<Role, string> = {
   super_admin: "The owner. Sees every region, manages the team, the engine and every ICP, and is the only one who can download (Master Book, PDF and Excel).",
@@ -165,12 +165,15 @@ export default function TeamSettings({ isOwner = false }: { isOwner?: boolean })
         </div>
       )}
       <div className="tablewrap" style={{ marginTop: 12 }}><table>
-        <thead><tr><th className="num">#</th><th>Name</th><th>Email</th><th>Role</th><th>Region(s)</th><th>Change access</th><th>Invited by</th><th>Joined</th><th>Last sign-in</th><th title="Share of the places and features this person opened in the last 30 days. Hover a value to see what they have and have not used.">% used</th><th>Reset password</th><th>Delete</th></tr></thead>
+        <thead><tr><th className="num">#</th><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Region(s)</th><th>Change access</th><th>Invited by</th><th>Joined</th><th>Last sign-in</th><th title="Share of the places and features this person opened in the last 30 days. Hover a value to see what they have and have not used.">% used</th><th>Reset password</th><th>Delete</th></tr></thead>
         <tbody>{users.map((u, i) => {
           const x = edit[u.id];
           return (
             <tr key={u.id} className={deleting === u.id ? "team-deleting" : undefined} aria-busy={deleting === u.id}><td className="num mono">{i + 1}</td><td><b>{u.name || "—"}</b></td><td className="mono">{u.email}</td>
               <td><span className={`role-tag ${u.role}`}>{ROLE[u.role]}</span></td>
+              <td>{u.suspended_at ? <span className="team-status susp" title="No activity for 15 days. They cannot sign in. Decide in Inactive users above.">Suspended {new Date(u.suspended_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}</span>
+                : u.kept_at && Date.now() - new Date(u.kept_at).getTime() < 15 * 864e5 ? <span className="team-status kept" title="You chose Keep; their 15 days restarted on this date.">Kept {new Date(u.kept_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}</span>
+                : <span className="team-status ok">Active</span>}</td>
               <td>{u.role !== "standard" ? "All regions" : u.regions.join(", ") || "Not set"}</td>
               <td>{x ? <div className="team-edit"><AccessPicker isOwner={isOwner} role={x.role} regions={x.regions} onChange={(r, g) => setEdit((m) => ({ ...m, [u.id]: { role: r, regions: g } }))} />
                   <div className="team-edit-actions">
