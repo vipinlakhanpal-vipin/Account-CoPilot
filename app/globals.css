@@ -2557,3 +2557,54 @@ header.top{background:var(--bg);padding-bottom:8px;box-shadow:0 10px 14px -12px 
 .agm-why.ok{background:#0B7A66;border:1px solid #0A5C4C}
 .agm-why.no{background:#C8372D;border:1px solid #9E2820}
 .agm-why.ok b,.agm-why.no b{color:#fff;font-size:15px}
+
+/* v5.82: the game row (one line: icon, title, skill, description, best, Play or Get game at the right end), the shelf with downloadable books and hover windows, and the Gaming Square */
+.gr-shelfwrap{position:relative;margin-top:12px}
+.gr-shelf{margin-top:0}
+.gr-spine{position:relative}
+.gr-spine.away{opacity:.62}
+.gr-spine.away:hover,.gr-spine.away:focus-visible,.gr-spine.away[aria-selected="true"]{opacity:1}
+.gr-dl{position:absolute;bottom:6px;left:50%;margin-left:-7px;opacity:.85}
+.gr-spine.away span{margin-bottom:18px}
+.gr-tip{position:absolute;z-index:20;width:270px;padding:10px 12px;border-radius:12px;background:var(--surface);color:var(--text);border:1px solid var(--line-2);box-shadow:0 12px 30px rgba(0,0,0,.35);pointer-events:none;text-shadow:none}
+.gr-tip b{display:block;font:700 14px var(--body);color:var(--text-strong)}
+.gr-tip-meta{display:block;margin-top:2px;font-size:11.5px;color:var(--muted)}
+.gr-tip p{margin:6px 0;font-size:12.5px;line-height:1.5;color:var(--text)}
+.gr-tip em{font:600 11.5px var(--body);font-style:normal;color:#0B7A66}
+.gr-row{display:flex;align-items:center;gap:14px;margin-top:12px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.gr-row-main{flex:1;min-width:0}
+.gr-row-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.gr-row-title b{font:700 15px var(--body);color:var(--text-strong)}
+.gr-chip.skill{background:var(--tab-bg);color:var(--tab-fg);margin-top:0}
+.gr-row-title .gr-chip{margin-top:0}
+.gr-row-main p{margin:3px 0 0;font-size:13px;line-height:1.45;color:var(--muted)}
+.gr-row-best{font-size:12.5px;color:var(--muted);white-space:nowrap}
+.gr-go{white-space:nowrap;flex:none}
+.gr-square{margin-top:12px;border-radius:16px;padding:12px 12px 14px;color:#fff;background-color:#0B1A34;
+  background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.07) 0 1px,transparent 1px 7px),repeating-linear-gradient(45deg,rgba(0,0,0,.2) 3px 4px,transparent 4px 7px),linear-gradient(165deg,#0A1630 0%,#2A2478 55%,#15535B 100%);
+  border:1px solid rgba(190,175,255,.45);box-shadow:0 0 0 3px rgba(91,75,196,.18),0 14px 34px rgba(20,10,80,.35)}
+.gr-square-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:0 4px 10px}
+.gr-square-head b{font:700 17px var(--display);letter-spacing:.02em;background:linear-gradient(90deg,#FFFFFF,#8BF5D6 45%,#FFD27A);-webkit-background-clip:text;background-clip:text;color:transparent}
+.gr-square-head span{font-size:12.5px;color:rgba(255,255,255,.82)}
+.gr-square .gr-play{margin:0;border:0;border-radius:12px;background:var(--surface);min-height:330px}
+.gr-body{display:block}
+@media (max-width:760px){.gr-row{flex-wrap:wrap}.gr-go{margin-left:auto}}
+/* the brain games */
+.cg-pads{display:grid;grid-template-columns:repeat(2,minmax(0,140px));gap:12px;justify-content:center;margin:12px 0}
+.cg-pad{all:unset;box-sizing:border-box;height:110px;border-radius:18px;background:color-mix(in srgb,var(--pc) 45%,var(--surface));border:2px solid color-mix(in srgb,var(--pc) 70%,transparent);cursor:pointer;transition:background .1s,transform .1s,box-shadow .1s}
+.cg-pad:disabled{cursor:default}
+.cg-pad:not(:disabled):hover{transform:translateY(-2px)}
+.cg-pad.lit{background:var(--pc);transform:scale(1.05);box-shadow:0 0 28px 6px color-mix(in srgb,var(--pc) 70%,transparent)}
+.cg-pad:focus-visible{outline:2px solid var(--teal);outline-offset:3px}
+.cg-q{display:flex;flex-direction:column;align-items:center;gap:14px;padding:10px 0 4px}
+.cg-big{margin:6px 0 0;font:700 30px var(--display);color:var(--text-strong);text-align:center}
+.cg-qm{color:#7A67E8}
+.cg-opts{display:grid;grid-template-columns:repeat(2,minmax(120px,1fr));gap:10px;width:min(420px,100%)}
+.cg-opt{padding:12px;font:700 18px var(--mono)}
+.cg-opt.right{background:#0B9E6F;border-color:#0B9E6F;color:#fff}
+.cg-opt.wrong{background:#D92D20;border-color:#D92D20;color:#fff}
+.cg-ink{display:flex;align-items:center;justify-content:center;gap:8px;font:700 15px var(--body)}
+.cg-ink i{width:16px;height:16px;border-radius:50%;display:inline-block}
+.cg-word{margin:10px 0 4px;font:800 56px var(--display);letter-spacing:.04em;transition:transform .12s}
+.cg-word.ok{transform:scale(1.08)}
+.cg-word.no{transform:translateX(-4px)}

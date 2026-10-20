@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { GameEvent, WinData } from "@/components/games/registry";
-type Ev = (e: GameEvent, detail?: string, data?: WinData) => void;
+export type Ev = (e: GameEvent, detail?: string, data?: WinData) => void;
 
 // Two quick games Aria offers besides the jigsaw: True or false, and Word scramble (no time limit). Both are about the work the app is for (source-to-pay and the way CoPilot labels evidence), all in the browser, nothing stored but a best score.
 
@@ -17,11 +17,11 @@ const FACTS: { q: string; a: boolean; why: string }[] = [
   { q: "The app's default ICP needs a stock-exchange listing.", a: false, why: "A listing is recorded separately; the default rule is revenue and headcount." },
   { q: "A contract is signed before an RFP is written.", a: false, why: "An RFP invites proposals; the contract follows once a supplier is chosen." },
 ];
-const shuffle = <T,>(a: T[]) => { const r = [...a]; for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; };
-const getBest = (k: string) => { try { return Number(localStorage.getItem(k)) || null; } catch { return null; } };
-const setBestKey = (k: string, v: number) => { try { localStorage.setItem(k, String(v)); } catch { /* optional */ } };
+export const shuffle = <T,>(a: T[]) => { const r = [...a]; for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; };
+export const getBest = (k: string) => { try { return Number(localStorage.getItem(k)) || null; } catch { return null; } };
+export const setBestKey = (k: string, v: number) => { try { localStorage.setItem(k, String(v)); } catch { /* optional */ } };
 
-function useCountdown(total: number, running: boolean, onEnd: () => void) {
+export function useCountdown(total: number, running: boolean, onEnd: () => void) {
   const [left, setLeft] = useState(total);
   const t0 = useRef(0), end = useRef(onEnd);
   end.current = onEnd;
@@ -172,7 +172,7 @@ export function Words({ onClose, onEvent }: { onClose: () => void; onEvent?: Ev 
   );
 }
 
-function Shell({ title, sub, left, total, info, info2, onClose, onRestart, children }: { title: string; sub: string; left?: number; total?: number; info: string; info2: string; onClose: () => void; onRestart?: () => void; children: React.ReactNode }) {
+export function Shell({ title, sub, left, total, info, info2, onClose, onRestart, children }: { title: string; sub: string; left?: number; total?: number; info: string; info2: string; onClose: () => void; onRestart?: () => void; children: React.ReactNode }) {
   const bar = useMemo(() => (left !== undefined && total ? Math.round((left / total) * 100) : 100), [left, total]);
   return (
     <div className="agame-card agm-shell agm-inline" role="region" aria-label={title}>

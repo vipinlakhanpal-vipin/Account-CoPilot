@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.81";
+export const APP_VERSION = "5.82";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.82", date: "2026-10-20", notes: "The playroom has a one-line game row, a Gaming Square, seven games (four new brain-training ones), downloadable games and hover descriptions.", changes: [
+      { what: "The picked game now sits in one full-width row: its icon, title, time, the skill it trains, a short description, your best score and the Play button at the right end. Below it is the Gaming Square, a coloured playground panel where the game opens. The shelf holds seven games: Jigsaw puzzle, True or false and Word scramble, plus four new brain-training games: Pattern memory (working memory), Math sprint (mental arithmetic and speed), Colour clash (attention and self-control) and Number series (logical reasoning). The first three are on your shelf from the start; the new four show a download mark and a Get game button, and install in a moment (kept in this browser). Hover or focus a book and a small window describes the game and disappears when you move away. Aria knows the new games too: she introduces them, reacts to your moves, answers questions about them, and awards medals", where: "Aria, the playroom", why: "A fuller library with games that exercise different thinking skills" },
+  ] },
   { version: "5.81", date: "2026-10-20", notes: "True or false feedback is a green or red banner.", changes: [
       { what: "The Correct! or Incorrect message in True or false is now a filled banner with white text: green for correct, red for incorrect, with the explanation inside it", where: "Aria, True or false", why: "The colour tells you at a glance" },
   ] },

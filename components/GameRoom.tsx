@@ -4,6 +4,7 @@ import { GAMES, type GameEvent, type GameId, type WinData } from "@/components/g
 import { AriaOrb, type Mood } from "@/components/AriaFace";
 import Jigsaw from "@/components/games/Jigsaw";
 import { Quiz, Words } from "@/components/AriaMiniGames";
+import { PatternMemory, MathSprint, ColourClash, NumberSeries } from "@/components/games/Cognitive";
 
 // Aria's playroom: she is the host. She greets you, introduces each game, cheers when you get something right, groans when you don't, nudges you when you are stuck, and congratulates you at the end.
 // Her face and the little hop or shake follow what happens in the game (each game reports its events through onEvent).
@@ -22,6 +23,10 @@ const INTRO: Record<GameId, string> = {
   jigsaw: "I'll fall to pieces and you put me back together. Ready?",
   quiz: "Eight quick true-or-false questions. I'll keep score.",
   words: "Four levels, no clock. I'll only speak up when you ask for a hint.",
+  pattern: "Watch the pads, then repeat the order. How long a chain can you hold in your head?",
+  math: "Sums against the clock. Quick fingers, quick mind.",
+  stroop: "Careful: the word and its colour will disagree. Trust your eyes, not your reading.",
+  series: "Find what comes next. Every answer comes with the rule behind it.",
 };
 const MOOD: Record<GameEvent, Mood> = { start: "happy", good: "cheer", bad: "oops", hint: "think", hurry: "oops", win: "cheer", lose: "oops" };
 const spineH = (name: string) => Math.min(150, Math.max(104, 50 + name.length * 6.5));
@@ -40,6 +45,10 @@ function awardFor(id: GameId, d: WinData): Award {
     const sc = d.score ?? 0, medal: Medal = sc >= 8 ? "gold" : sc >= 6 ? "silver" : sc >= 4 ? "bronze" : "ribbon";
     return { medal, title: MEDAL_NAME[medal], line: `${sc} of ${d.total ?? 8} right.`, badge: sc >= 8 ? "Perfect round" : undefined };
   }
+  if (id === "pattern") { const sc = d.score ?? 0, medal: Medal = sc >= 8 ? "gold" : sc >= 6 ? "silver" : "bronze"; return { medal, title: MEDAL_NAME[medal], line: `You held a chain of ${sc}.`, badge: sc >= 8 ? "Sharp memory" : undefined }; }
+  if (id === "math") { const sc = d.score ?? 0, medal: Medal = sc >= 15 ? "gold" : sc >= 11 ? "silver" : "bronze"; return { medal, title: MEDAL_NAME[medal], line: `${sc} right in 45 seconds.`, badge: sc >= 15 ? "Human calculator" : undefined }; }
+  if (id === "stroop") { const sc = d.score ?? 0, medal: Medal = sc >= 20 ? "gold" : sc >= 15 ? "silver" : "bronze"; return { medal, title: MEDAL_NAME[medal], line: `${sc} right in 30 seconds.`, badge: sc >= 20 ? "Laser focus" : undefined }; }
+  if (id === "series") { const sc = d.score ?? 0, medal: Medal = sc >= 8 ? "gold" : sc >= 6 ? "silver" : "bronze"; return { medal, title: MEDAL_NAME[medal], line: `${sc} of ${d.total ?? 8} right.`, badge: sc >= 8 ? "Pattern spotter" : undefined }; }
   const h = d.hints ?? 0, medal: Medal = h === 0 ? "gold" : h === 1 ? "silver" : "bronze";
   return { medal, title: MEDAL_NAME[medal], line: `Level ${d.level ?? 1} cleared${h ? ` with ${h} hint${h === 1 ? "" : "s"}` : " with no hints"}.`, badge: h === 0 ? "No hints" : undefined };
 }
@@ -53,26 +62,40 @@ const HOW: Record<GameId, string> = {
   jigsaw: "Press Play and I break into nine pieces. Drag each piece onto the dashed board where it fits; it clicks into place when it's close. You have 60 seconds, and the picture is new every game.",
   quiz: "You get eight statements about source-to-pay and how CoPilot works. Press True or False for each one, and I explain the answer. You have 45 seconds in all.",
   words: "I show a clue and scrambled letters. Tap the letters, or just type them, in the right order. There are four levels (3, 5, 7 and 10 letters, five words each) and no timer. Hint places the next right letter.",
+  pattern: "Press Play and watch the four pads light up in an order. Then press them in the same order. Each round adds one more. A mistake ends the game, and the longest chain you held is your score.",
+  math: "Each question is a sum with four possible answers. Press the right one. You have 45 seconds and the sums get harder as you go.",
+  stroop: "A colour name appears written in a different colour. Press the colour the letters are painted in, not the colour the word says. You have 30 seconds.",
+  series: "You see five numbers in a pattern. Pick the number that comes next. There are eight questions, no timer, and every answer shows the rule."
 };
 const TIPS: Record<GameId, string> = {
   jigsaw: "Start with the corners and the pieces with a flat edge. Keep the board in view, and don't drag a piece far: it snaps in when it's close.",
   quiz: "Read the whole statement before you answer. Words like always or only are often a warning sign. And read my explanation after each answer: that's how you learn the words the app uses.",
   words: "Start from the clue and guess the first letter. Use Hint when you're stuck, but a word solved with a hint can't earn gold.",
+  pattern: "Say the colours quietly to yourself, or group them in twos and threes. Don't look away while it plays.",
+  math: "Round to tens, then adjust. Skip nothing: a wrong answer costs only time, so keep moving.",
+  stroop: "Look at the colour first and ignore what the word says. It gets easier after a few tries.",
+  series: "Look at the gaps between numbers first. If they are not equal, check whether the gaps themselves grow, or whether the numbers multiply."
 };
 const SCORING: Record<GameId, string> = {
   jigsaw: "Medals by time: gold up to 35 seconds, silver up to 48, bronze up to 60. Beat your own best and I add a New best badge.",
   quiz: "Medals by score: gold for 8 of 8, silver for 6 or 7, bronze for 4 or 5, and a ribbon below that. Time's up means no medal.",
   words: "Each level gives a medal: gold with no hints, silver with one hint, bronze with two or more.",
+  pattern: "Win a medal by holding a chain of 4 or more: bronze for 4 or 5, silver for 6 or 7, gold for 8 or more.",
+  math: "Medals by right answers: bronze for 7, silver for 11, gold for 15 or more.",
+  stroop: "Medals by right answers: bronze for 10, silver for 15, gold for 20 or more.",
+  series: "Medals by score: bronze for 5, silver for 6 or 7, gold for 8 of 8."
 };
-const TIME: Record<GameId, string> = { jigsaw: "The jigsaw gives you 60 seconds.", quiz: "True or false gives you 45 seconds for all eight questions.", words: "Word scramble has no timer at all. Take as long as you like." };
-const NAMES: [RegExp, number][] = [[/jigsaw|puzzle|pieces/, 0], [/true|false|quiz/, 1], [/word|scramble|letters/, 2]];
+const TIME: Record<GameId, string> = { jigsaw: "The jigsaw gives you 60 seconds.", quiz: "True or false gives you 45 seconds for all eight questions.", words: "Word scramble has no timer at all. Take as long as you like.", pattern: "Pattern memory has no timer. It ends when you make a mistake.", math: "Math sprint gives you 45 seconds.", stroop: "Colour clash gives you 30 seconds.", series: "Number series has no timer." };
+const NAMES: [RegExp, GameId][] = [[/jigsaw|puzzle|pieces/, "jigsaw"], [/true|false|quiz/, "quiz"], [/word|scramble|letters/, "words"], [/pattern|simon|pads/, "pattern"], [/math|sprint|sums|arithmetic/, "math"], [/colou?r|clash|stroop|ink/, "stroop"], [/series|sequence|next number/, "series"]];
 function reply(q: string, idx: number, bestOf: (i: number) => string): { text: string; full?: boolean } {
-  const t = q.toLowerCase(), named = NAMES.find(([r]) => r.test(t)), i = named ? named[1] : idx, id = GAMES[i].id as GameId;
-  const lead = named && named[1] !== idx ? `About ${GAMES[i].name}: ` : "";
+  const t = q.toLowerCase(), named = NAMES.find(([r]) => r.test(t)), ni = named ? GAMES.findIndex((g) => g.id === named[1]) : -1, i = ni >= 0 ? ni : idx, id = GAMES[i].id as GameId;
+  const lead = ni >= 0 && ni !== idx ? `About ${GAMES[i].name}: ` : "";
   if (/^(hi|hello|hey)\b/.test(t)) return { text: "Hi! Ask me how a game works, for tips, or how the medals are won." };
   if (/medal|award|gold|silver|bronze|score|point|trophy/.test(t)) return { text: lead + SCORING[id] };
   if (/best|record/.test(t)) return { text: `Your best in ${GAMES[i].name}: ${bestOf(i)}.` };
   if (/time|how long|second|clock|timer|minute/.test(t)) return { text: lead + TIME[id] };
+  if (/download|get game|install|own/.test(t)) return { text: "Books on the shelf with a download mark are not in your games yet. Select one and press Get game: it installs in a moment, and then you can play it." };
+  if (/skill|brain|train|cognitive|memory/.test(t)) return { text: "Each game trains something: " + GAMES.map((g) => `${g.name} (${g.skill.toLowerCase()})`).join(", ") + "." };
   if (/level/.test(t)) return { text: "Levels are in Word scramble: Level 1 has 3-letter words, Level 2 has 5, Level 3 has 7 and Level 4 has 10, five words each. Pick any level from the tabs." };
   if (/tip|hint|help|stuck|trick|advice/.test(t)) return { text: lead + TIPS[id] };
   if (/restart|again|stop|quit|close|leave|exit/.test(t)) return { text: "Use Play again to start over, or Close inside the game to stop. Done playing in the left panel takes you back to your work." };
@@ -83,6 +106,10 @@ function reply(q: string, idx: number, bestOf: (i: number) => string): { text: s
 function View({ id, onClose, onEvent }: { id: GameId; onClose: () => void; onEvent: (e: GameEvent, d?: string, data?: WinData) => void }) {
   if (id === "jigsaw") return <Jigsaw onClose={onClose} onEvent={onEvent} />;
   if (id === "quiz") return <Quiz onClose={onClose} onEvent={onEvent} />;
+  if (id === "pattern") return <PatternMemory onClose={onClose} onEvent={onEvent} />;
+  if (id === "math") return <MathSprint onClose={onClose} onEvent={onEvent} />;
+  if (id === "stroop") return <ColourClash onClose={onClose} onEvent={onEvent} />;
+  if (id === "series") return <NumberSeries onClose={onClose} onEvent={onEvent} />;
   return <Words onClose={onClose} onEvent={onEvent} />;
 }
 
@@ -101,12 +128,17 @@ function AwardCard({ a, onClose }: { a: Award; onClose: () => void }) {
   );
 }
 
+const OWNED_KEY = "aria-games-owned";
+const loadOwned = (): GameId[] => { try { const v = JSON.parse(localStorage.getItem(OWNED_KEY) || "null"); if (Array.isArray(v)) return v; } catch { /* optional */ } return GAMES.filter((g) => g.starter).map((g) => g.id); };
+
 export default function GameRoom() {
   const [pick, setPick] = useState(0), [run, setRun] = useState(0), [playing, setPlaying] = useState(false), [, tick] = useState(0);
   const [say, setSay] = useState(LINES.arrive[0]), [mood, setMood] = useState<Mood>("happy"), [anim, setAnim] = useState<"" | "hop" | "shake">(""), last = useRef(""), idleAt = useRef(Date.now());
   const [awards, setAwards] = useState<Stored[]>([]), [shown, setShown] = useState<Award | null>(null);
+  const [owned, setOwned] = useState<GameId[]>(() => GAMES.filter((g) => g.starter).map((g) => g.id)), [getting, setGetting] = useState<GameId | null>(null);
+  const [tip, setTip] = useState<{ i: number; left: number; bottom: number } | null>(null), wrapRef = useRef<HTMLDivElement>(null);
   const [msgs, setMsgs] = useState<{ who: "you" | "aria"; text: string }[]>([]), [q, setQ] = useState(""), [offerFull, setOfferFull] = useState(false), logRef = useRef<HTMLDivElement>(null);
-  useEffect(() => { setAwards(loadAwards()); }, []);
+  useEffect(() => { setAwards(loadAwards()); setOwned(loadOwned()); }, []);
   const speak = useCallback((text: string, m: Mood, a: "" | "hop" | "shake" = "") => {
     last.current = text; idleAt.current = Date.now(); setSay(text); setMood(m); setAnim(""); if (a) setTimeout(() => setAnim(a), 20);
   }, []);
@@ -116,6 +148,7 @@ export default function GameRoom() {
     const t = setInterval(() => { if (!playing && Date.now() - idleAt.current > 25000) speak(pickOne(LINES.idle, last.current), "think"); }, 5000);
     return () => clearInterval(t);
   }, [playing, speak]);
+  const pickRef = useRef(0); pickRef.current = pick;
   const react = useCallback((e: GameEvent, d = "", data?: WinData) => {
     speak(pickOne(LINES[e], last.current).replace("{d}", d), MOOD[e], e === "good" || e === "win" ? "hop" : e === "bad" || e === "lose" ? "shake" : "");
     if (e === "win" && data) { // she presents a medal
@@ -125,19 +158,32 @@ export default function GameRoom() {
       setAwards(all); setShown(a); speak(MEDAL_LINE[a.medal], "cheer", "hop");
     }
   }, [speak]);
-  const pickRef = useRef(0); pickRef.current = pick;
-  const g = GAMES[pick];
-  const choose = (i: number) => { setPick(i); setPlaying(false); setShown(null); speak(INTRO[GAMES[i].id], "happy", "hop"); try { localStorage.setItem("aria-game-pick", GAMES[i].id); } catch { /* optional */ } };
+  const g = GAMES[pick], has = owned.includes(g.id);
+  const choose = (i: number) => { setPick(i); setPlaying(false); setShown(null); setTip(null); speak(owned.includes(GAMES[i].id) ? INTRO[GAMES[i].id] : `${GAMES[i].name} trains ${GAMES[i].skill.toLowerCase()}. Press Get game and I'll add it to your shelf.`, "happy", "hop"); try { localStorage.setItem("aria-game-pick", GAMES[i].id); } catch { /* optional */ } };
   const play = () => { setRun((r) => r + 1); setPlaying(true); setShown(null); };
+  const getGame = () => {
+    setGetting(g.id);
+    setTimeout(() => {
+      const next = owned.includes(g.id) ? owned : [...owned, g.id]; setOwned(next); setGetting(null);
+      try { localStorage.setItem(OWNED_KEY, JSON.stringify(next)); } catch { /* optional */ }
+      speak(`${g.name} is on your shelf now. Want to play it?`, "cheer", "hop");
+    }, 900);
+  };
   const askAria = () => document.querySelector<HTMLButtonElement>(".nav-aria-mini")?.click();
   const ask = (text: string) => {
     const t = text.trim(); if (!t) return;
     const r = reply(t, pick, (i) => GAMES[i].best().replace(/^Best /, ""));
-    const named = NAMES.find(([re]) => re.test(t.toLowerCase())); if (named && named[1] !== pick) { setPick(named[1]); setPlaying(false); }
+    const named = NAMES.find(([re]) => re.test(t.toLowerCase())), ni = named ? GAMES.findIndex((x) => x.id === named[1]) : -1; if (ni >= 0 && ni !== pick) { setPick(ni); setPlaying(false); }
     setMsgs((m) => [...m.slice(-7), { who: "you", text: t }, { who: "aria", text: r.text }]); setOfferFull(!!r.full); speak(r.text, "happy"); setQ("");
     setTimeout(() => logRef.current?.scrollTo({ top: 1e5 }), 30);
   };
   const count = (m: Medal) => awards.filter((a) => a.m === m).length;
+  // the small window that describes a game while the pointer (or keyboard focus) is on its book
+  const showTip = (i: number, el: HTMLElement) => {
+    const wrap = wrapRef.current; if (!wrap) return;
+    const W = 270, center = el.offsetLeft - (el.parentElement?.scrollLeft || 0) + el.offsetWidth / 2;
+    setTip({ i, left: Math.max(4, Math.min(wrap.clientWidth - W - 4, center - W / 2)), bottom: wrap.clientHeight - el.offsetTop + 8 });
+  };
   return (
     <div className="gr">
       <div className="gr-host">
@@ -155,33 +201,54 @@ export default function GameRoom() {
           <button type="submit" className="btn primary">Ask</button>
         </div>
         <div className="gr-chips">
-          {["How do I play?", "Any tips?", "How do I win a medal?", "How long do I have?"].map((c) => <button type="button" key={c} onClick={() => ask(c)}>{c}</button>)}
+          {["How do I play?", "Any tips?", "How do I win a medal?", "Which skills do these train?"].map((c) => <button type="button" key={c} onClick={() => ask(c)}>{c}</button>)}
           {offerFull && <button type="button" className="full" onClick={askAria}>Open my full chat</button>}
         </div>
       </form>
-      <div className="gr-shelf" role="tablist" aria-label="Aria's games">
-        {GAMES.map((x, i) => (
-          <button type="button" key={x.id} role="tab" aria-selected={i === pick} className="gr-spine" onClick={() => choose(i)} title={x.name}
-            style={{ height: spineH(x.name) + (i === pick ? 12 : 0), background: x.fill, color: x.ink }}>
-            {x.icon}<span>{x.name}</span>
-          </button>))}
-        <div className="gr-shelf-fill" aria-hidden="true" />
-      </div>
-      <div className="gr-body">
-        <div className="gr-card">
-          <div className="gr-card-top">
-            <span className="gr-ic" style={{ background: g.fill, color: g.ink }}>{g.icon}</span>
-            <div><b>{g.name}</b><span className="gr-chip">{g.timed ? "⏱ " : "∞ "}{g.time}</span></div>
-          </div>
-          <p>{g.blurb}</p>
-          <div className="gr-foot"><span>🏆 {g.best()}</span><button type="button" className="btn primary" onClick={play}>{playing ? "Play again" : "Play with Aria"}</button></div>
+
+      <div className="gr-shelfwrap" ref={wrapRef} onMouseLeave={() => setTip(null)}>
+        <div className="gr-shelf" role="tablist" aria-label="Aria's games" onScroll={() => setTip(null)}>
+          {GAMES.map((x, i) => {
+            const mine = owned.includes(x.id);
+            return (
+              <button type="button" key={x.id} role="tab" aria-selected={i === pick} className={`gr-spine${mine ? "" : " away"}`} onClick={() => choose(i)}
+                onMouseEnter={(e) => showTip(i, e.currentTarget)} onFocus={(e) => showTip(i, e.currentTarget)} onBlur={() => setTip(null)}
+                style={{ height: spineH(x.name) + (i === pick ? 12 : 0), background: x.fill, color: x.ink }} aria-label={`${x.name}${mine ? "" : ", not downloaded yet"}`}>
+                {x.icon}<span>{x.name}</span>
+                {!mine && <svg className="gr-dl" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 20h14" /></svg>}
+              </button>);
+          })}
+          <div className="gr-shelf-fill" aria-hidden="true" />
         </div>
+        {tip && <div className="gr-tip" role="tooltip" style={{ left: tip.left, bottom: tip.bottom }}>
+          <b>{GAMES[tip.i].name}</b>
+          <span className="gr-tip-meta">{GAMES[tip.i].timed ? "⏱ " : "∞ "}{GAMES[tip.i].time} · {GAMES[tip.i].skill}</span>
+          <p>{GAMES[tip.i].blurb}</p>
+          <em>{owned.includes(GAMES[tip.i].id) ? "On your shelf" : "Not downloaded yet"}</em>
+        </div>}
+      </div>
+
+      <div className="gr-row">
+        <span className="gr-ic" style={{ background: g.fill, color: g.ink }}>{g.icon}</span>
+        <div className="gr-row-main">
+          <div className="gr-row-title"><b>{g.name}</b><span className="gr-chip">{g.timed ? "⏱ " : "∞ "}{g.time}</span><span className="gr-chip skill">{g.skill}</span></div>
+          <p>{g.blurb}</p>
+        </div>
+        <span className="gr-row-best">🏆 {g.best()}</span>
+        {has
+          ? <button type="button" className="btn primary gr-go" onClick={play}>{playing ? "Play again" : "Play with Aria"}</button>
+          : <button type="button" className="btn primary gr-go" onClick={getGame} disabled={getting === g.id}>
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ marginRight: 6, verticalAlign: -2 }}><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 20h14" /></svg>{getting === g.id ? "Downloading…" : "Get game"}</button>}
+      </div>
+
+      <section className="gr-square" aria-label="Gaming Square">
+        <div className="gr-square-head"><b>Gaming Square</b><span>Aria&apos;s playground. Pick a game above and we play right here.</span></div>
         <div className="gr-play">
           {shown && <AwardCard a={shown} onClose={() => setShown(null)} />}
-          {playing ? <View key={`${g.id}-${run}`} id={g.id} onClose={() => { setPlaying(false); speak("Good game! Pick another book whenever you like.", "happy"); }} onEvent={react} />
-            : <div className="gr-idle"><span className="gr-ic big" style={{ background: g.fill, color: g.ink }}>{g.icon}</span><b>{g.name}</b><span>Press Play with Aria. We play right here.</span></div>}
+          {playing && has ? <View key={`${g.id}-${run}`} id={g.id} onClose={() => { setPlaying(false); speak("Good game! Pick another book whenever you like.", "happy"); }} onEvent={react} />
+            : <div className="gr-idle"><span className="gr-ic big" style={{ background: g.fill, color: g.ink }}>{g.icon}</span><b>{g.name}</b><span>{has ? "Press Play with Aria. The game opens right here." : "This game is not on your shelf yet. Press Get game to download it."}</span></div>}
         </div>
-      </div>
+      </section>
     </div>
   );
 }
