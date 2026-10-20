@@ -2206,3 +2206,11 @@ header.top{background:var(--bg);padding-bottom:8px;box-shadow:0 10px 14px -12px 
 .navbot{margin-top:8px}
 .navmid{min-height:170px}
 .navprof-wrap{margin-top:0}
+
+/* v5.49: Settings is one item in the left panel; its three pages are tabs above the page. */
+.settabs-wrap{padding-block:14px 0}
+.settabs{display:flex;gap:6px;border-bottom:2px solid rgba(var(--ink),.12);overflow-x:auto;scrollbar-width:none}
+.settabs::-webkit-scrollbar{display:none}
+.settabs a{padding:9px 18px;font-weight:700;font-size:14px;text-decoration:none;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap}
+.settabs a:hover{color:var(--text-strong)}
+.settabs a.on{color:var(--text-strong);border-bottom-color:#2EC4A6}

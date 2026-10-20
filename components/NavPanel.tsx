@@ -53,7 +53,7 @@ export default function NavPanel({ isSuper, isOwner = false }: { isSuper: boolea
   const flip = (k: string, v?: boolean) => setOpen((cur) => { const n = { ...cur, [k]: v ?? !cur[k] }; try { localStorage.setItem("nav-open", JSON.stringify(n)); } catch { /* optional */ } return n; });
   const onMarket = path.startsWith("/nav/market"), onWizard = path.startsWith("/nav/wizard"), onSettings = path.startsWith("/nav/settings");
   // Going into a section opens its list; after that the arrow can close it, even while you stay on that page.
-  useEffect(() => { if (onMarket) flip("market", true); if (onWizard) flip("wizard", true); if (onSettings) flip("settings", true); }, [onMarket, onWizard, onSettings]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (onMarket) flip("market", true); if (onWizard) flip("wizard", true); }, [onMarket, onWizard]); // eslint-disable-line react-hooks/exhaustive-deps
   const count = (v: string) => (mk ? mk.partners.filter((p) => p.vendor === v && !p.presence_pending && mk.regions.includes(p.region)).length : null);
   const group = (key: string, href: string, icon: string, label: string, on: boolean, kids: React.ReactNode) => {
     const isOpen = open[key] ?? on; // an explicit open or close wins, even on that page
@@ -84,12 +84,7 @@ export default function NavPanel({ isSuper, isOwner = false }: { isSuper: boolea
         {group("wizard", "/nav/wizard", "wizard", "Setup wizard", onWizard,
           <div className="navsub">{STEPS.map((s, i) => <Link key={s} href={`/nav/wizard?step=${i + 1}`} className={onWizard && step === i + 1 ? "on" : ""}>{i + 1} {s}</Link>)}</div>)}
         {item("/nav/team", "team", "Team", path.startsWith("/nav/team"), inactive, "to review", "review")}
-        {group("settings", "/nav/settings/icp", "settings", "Settings", onSettings,
-          <div className="navsub">
-            <Link href="/nav/settings/icp" className={path.endsWith("/icp") ? "on" : ""}>Define ICP</Link>
-            <Link href="/nav/settings/engine" className={path.endsWith("/engine") ? "on" : ""}>Engine and PIN</Link>
-            <Link href="/nav/settings/guide" className={path.endsWith("/guide") ? "on" : ""}>Learn me</Link>
-          </div>)}
+        {item("/nav/settings/icp", "settings", "Settings", onSettings)}
         <button type="button" className="navit navbtn" onClick={() => window.dispatchEvent(new CustomEvent("history-open"))} title="What changed in each update"><Ic n="history" />Version history</button>
         {item("/nav/suggestions", "bulb", "Suggestions", path.startsWith("/nav/suggestions"))}
         {!isSuper && <small className="navnote">Some settings are read-only for you.</small>}

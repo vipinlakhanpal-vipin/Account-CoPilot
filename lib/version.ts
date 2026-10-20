@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.48";
+export const APP_VERSION = "5.49";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.49", date: "2026-10-20", notes: "Settings is one item in the left panel; Define ICP, Engine and PIN and Learn me are tabs on the right.", changes: [
+      { what: "Settings no longer has a drop-down in the left panel. Clicking it opens Settings with three tabs above the page (Define ICP, Engine and PIN, Learn me); Define ICP is the one showing first", where: "Left panel → Settings", why: "The Settings list took up room in the panel and was open before you clicked it" },
+  ] },
   { version: "5.48", date: "2026-10-20", notes: "Define ICP lists the active regions first, then the paused ones.", changes: [
       { what: "Region tiles in Step 1 show every active region together first, and the paused or next-phase ones after them", where: "Setup → Define ICP", why: "Active regions are the ones you work in; paused ones were mixed in between" },
   ] },
