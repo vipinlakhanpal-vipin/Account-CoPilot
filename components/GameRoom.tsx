@@ -19,6 +19,14 @@ const LINES: Record<GameEvent | "arrive" | "idle", string[]> = {
   win: ["You did it! {d}. Want to beat that?", "{d}. I'm impressed.", "Well played! {d}."],
   lose: ["Time's up! We'll get it next round.", "Ouch, that was close. Again?"],
 };
+// Mischief: while nobody is playing she teases, pokes a book on the shelf, spins and peeks, and she giggles when poked. Her eyes follow the pointer.
+const TEASE = [
+  "Are you going to play, or just stare at me? 😏", "Psst… Colour clash is harder than it looks. Dare you?", "I bet you can't beat the jigsaw in 35 seconds. Prove me wrong.",
+  "Look at that shelf. Those books won't open themselves.", "Don't make me pick a game for you. I will. Whoa, I just did.", "I can do this all day. Can you? 😜",
+  "Pattern memory says you'll forget by round 5. Just saying.", "Click me. Go on. I dare you.",
+];
+const POKED = ["Hehe, that tickles!", "Ooh, do that again.", "Hey! I'm working here. Sort of.", "Boop! 😄", "Careful, I'm ticklish."];
+const DIZZY = "Okay okay, stop poking me! I'm dizzy 😵";
 const INTRO: Record<GameId, string> = {
   jigsaw: "I'll fall to pieces and you put me back together. Ready?",
   quiz: "Eight quick true-or-false questions. I'll keep score.",
@@ -133,13 +141,13 @@ const loadOwned = (): GameId[] => { try { const v = JSON.parse(localStorage.getI
 
 export default function GameRoom() {
   const [pick, setPick] = useState(0), [run, setRun] = useState(0), [playing, setPlaying] = useState(false), [, tick] = useState(0);
-  const [say, setSay] = useState(LINES.arrive[0]), [mood, setMood] = useState<Mood>("happy"), [anim, setAnim] = useState<"" | "hop" | "shake">(""), last = useRef(""), idleAt = useRef(Date.now());
+  const [say, setSay] = useState(LINES.arrive[0]), [mood, setMood] = useState<Mood>("happy"), [anim, setAnim] = useState<"" | "hop" | "shake" | "spin" | "peek">(""), last = useRef(""), idleAt = useRef(Date.now());
   const [awards, setAwards] = useState<Stored[]>([]), [shown, setShown] = useState<Award | null>(null);
   const [owned, setOwned] = useState<GameId[]>(() => GAMES.filter((g) => g.starter).map((g) => g.id)), [getting, setGetting] = useState<GameId | null>(null);
   const [tip, setTip] = useState<{ i: number; left: number; bottom: number } | null>(null), wrapRef = useRef<HTMLDivElement>(null);
   const [msgs, setMsgs] = useState<{ who: "you" | "aria"; text: string }[]>([]), [q, setQ] = useState(""), [offerFull, setOfferFull] = useState(false), logRef = useRef<HTMLDivElement>(null);
   useEffect(() => { setAwards(loadAwards()); setOwned(loadOwned()); }, []);
-  const speak = useCallback((text: string, m: Mood, a: "" | "hop" | "shake" = "") => {
+  const speak = useCallback((text: string, m: Mood, a: "" | "hop" | "shake" | "spin" | "peek" = "") => {
     last.current = text; idleAt.current = Date.now(); setSay(text); setMood(m); setAnim(""); if (a) setTimeout(() => setAnim(a), 20);
   }, []);
   useEffect(() => { setSay(pickOne(LINES.arrive, "")); try { const i = GAMES.findIndex((g) => g.id === localStorage.getItem("aria-game-pick")); if (i >= 0) setPick(i); } catch { /* optional */ } }, []);
@@ -149,6 +157,34 @@ export default function GameRoom() {
     return () => clearInterval(t);
   }, [playing, speak]);
   const pickRef = useRef(0); pickRef.current = pick;
+  const hostRef = useRef<HTMLDivElement>(null), pokes = useRef({ n: 0, at: 0 }), [wiggle, setWiggle] = useState(-1);
+  // eyes follow the pointer
+  useEffect(() => {
+    const on = (e: MouseEvent) => {
+      const h = hostRef.current, orb = h?.querySelector<HTMLElement>(".aria-orb"); if (!h || !orb) return;
+      const r = orb.getBoundingClientRect(), dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2), d = Math.hypot(dx, dy) || 1, k = Math.min(1, d / 260);
+      h.style.setProperty("--ex", String((dx / d) * 0.75 * k)); h.style.setProperty("--ey", String((dy / d) * 0.6 * k));
+    };
+    window.addEventListener("mousemove", on); return () => window.removeEventListener("mousemove", on);
+  }, []);
+  // every so often, while idle, she gets up to something
+  const playingRef = useRef(false); playingRef.current = playing;
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const t = setInterval(() => {
+      if (playingRef.current || Date.now() - idleAt.current < 9000) return;
+      const r = Math.floor(Math.random() * 4);
+      if (r === 0) speak(pickOne(TEASE, last.current), "wink", "hop");
+      else if (r === 1) { const i = Math.floor(Math.random() * GAMES.length); setWiggle(i); setTimeout(() => setWiggle(-1), 1800); speak(`Psst, try ${GAMES[i].name}. ${GAMES[i].skill} needs a workout.`, "wink", "hop"); }
+      else if (r === 2) speak("Wheee!", "cheer", "spin");
+      else speak("Peekaboo! 👀", "wink", "peek");
+    }, 7000);
+    return () => clearInterval(t);
+  }, [speak]);
+  const poke = () => {
+    const n = Date.now(), p = pokes.current; p.n = n - p.at < 1600 ? p.n + 1 : 1; p.at = n;
+    if (p.n >= 5) { p.n = 0; speak(DIZZY, "dizzy", "spin"); } else speak(pickOne(POKED, last.current), "wink", "hop");
+  };
   const react = useCallback((e: GameEvent, d = "", data?: WinData) => {
     speak(pickOne(LINES[e], last.current).replace("{d}", d), MOOD[e], e === "good" || e === "win" ? "hop" : e === "bad" || e === "lose" ? "shake" : "");
     if (e === "win" && data) { // she presents a medal
@@ -186,8 +222,8 @@ export default function GameRoom() {
   };
   return (
     <div className="gr">
-      <div className="gr-host">
-        <AriaOrb mood={mood} size={104} anim={anim} />
+      <div className="gr-host" ref={hostRef}>
+        <span className="gr-bob"><AriaOrb mood={mood} size={104} anim={anim} onClick={poke} /></span>
         <div className="gr-say" role="status" aria-live="polite"><b>Aria</b><p>{say}</p></div>
         <div className="gr-awards" title="Medals Aria has given you (kept in this browser)" aria-label="Your medals">
           <span className="gr-awards-h">Your medals</span>
@@ -211,7 +247,7 @@ export default function GameRoom() {
           {GAMES.map((x, i) => {
             const mine = owned.includes(x.id);
             return (
-              <button type="button" key={x.id} role="tab" aria-selected={i === pick} className={`gr-spine${mine ? "" : " away"}`} onClick={() => choose(i)}
+              <button type="button" key={x.id} role="tab" aria-selected={i === pick} className={`gr-spine${mine ? "" : " away"}${wiggle === i ? " wiggle" : ""}`} onClick={() => choose(i)}
                 onMouseEnter={(e) => showTip(i, e.currentTarget)} onFocus={(e) => showTip(i, e.currentTarget)} onBlur={() => setTip(null)}
                 style={{ height: spineH(x.name) + (i === pick ? 12 : 0), background: x.fill, color: x.ink }} aria-label={`${x.name}${mine ? "" : ", not downloaded yet"}`}>
                 {x.icon}<span>{x.name}</span>
