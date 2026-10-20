@@ -2115,3 +2115,7 @@ body[data-nodl] .btn-dl:not(.keep),body[data-nodl] .aria-dl,body[data-nodl] .ari
 .navpanel .navit,.navpanel .navbtn{justify-content:flex-start;text-align:left}
 .navpanel .navit svg,.navpanel .navbtn svg{flex:none;width:18px;height:18px}
 .navpanel .navbtn{color:#F1F7FF}
+
+/* v5.32: every label in the left panel is bold, top to bottom (items, sub-items, Ask Aria) */
+.navpanel .navit,.navpanel .navbtn,.navpanel .navsub a,.navpanel .navmid-label{font-weight:700}
+.navpanel .navsub small{font-weight:600}

@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.31";
+export const APP_VERSION = "5.32";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.32", date: "2026-10-20", notes: "Left panel labels are all bold.", changes: [
+      { what: "Every label in the left panel is bold: the items, their sub-items and Ask Aria, top to bottom", where: "app/globals.css", why: "Requested" },
+    ] },
   { version: "5.31", date: "2026-10-20", notes: "Left panel items line up; Version history no longer shows the number.", changes: [
       { what: "Every item in the left panel (icon, then label) starts from the same left edge. Version history is aligned like the rest and no longer shows the version number; the number is in the window it opens", where: "app/globals.css, components/NavPanel.tsx", why: "Requested — keep the tabs neat and clean" },
     ] },
