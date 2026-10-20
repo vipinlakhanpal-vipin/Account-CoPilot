@@ -1,3 +1,3 @@
 import { redirect } from "next/navigation";
-// Home now lives in the left-panel layout (About CoPilot is its first page).
-export default function HomePage() { redirect("/nav/about"); }
+// Home is the Dashboard (the first tab of the top bar).
+export default function HomePage() { redirect("/"); }

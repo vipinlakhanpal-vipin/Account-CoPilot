@@ -2757,3 +2757,18 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 .agame-legend .agame-play{all:unset;box-sizing:border-box;display:block;cursor:pointer;margin:2px 0 9px;padding:7px 14px;border-radius:999px;background:linear-gradient(180deg,#FFF0A8,#FFD966);border:2px solid #F5A623;color:#3B2400;font:700 13px "Fredoka","Baloo 2",var(--body);text-shadow:none;text-align:center;box-shadow:0 3px 8px rgba(0,0,0,.3);text-decoration:none}
 .agame-legend .agame-play:hover{filter:brightness(1.06);transform:translateY(-1px)}
 .agame-legend .agame-play:focus-visible{outline:2px solid #fff;outline-offset:3px}
+
+/* v5.99: Aria's data chat has its own button; the tips and Quiet mode switches fold behind an arrow */
+.agame-actions{display:flex;flex-direction:column;gap:7px;margin-bottom:6px}
+.agame-legend .agame-ask{all:unset;box-sizing:border-box;display:block;cursor:pointer;padding:7px 14px;border-radius:999px;background:linear-gradient(180deg,#9FE8D6,#4FD1B3);border:2px solid #1D9E75;color:#073B30;font:700 13px "Fredoka","Baloo 2",var(--body);text-shadow:none;text-align:center;box-shadow:0 3px 8px rgba(0,0,0,.3)}
+.agame-legend .agame-ask:hover{filter:brightness(1.06);transform:translateY(-1px)}
+.agame-legend .agame-ask:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.agame-legend .agame-play{margin:0}
+.agame-legend .agame-more{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font:700 11.5px var(--body);color:rgba(255,255,255,.9);text-decoration:none;padding:2px 2px}
+.agame-legend .agame-more:hover{color:#fff}
+.agame-legend .agame-more:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.agame-more-body{margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.25)}
+
+/* v5.99: the logo and the app name go home (the Dashboard) */
+.brand-home,.appname-link{display:inline-flex;color:inherit;text-decoration:none}
+.brand-home:focus-visible,.appname-link:focus-visible{outline:2px solid #fff;outline-offset:3px;border-radius:8px}

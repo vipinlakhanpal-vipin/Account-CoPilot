@@ -235,10 +235,10 @@ export default function Header({ meta }: { meta: string }) {
       <header className="top">
         <div className="navbar has-sub" ref={barRef}>
           <div className="brand">
-            <Logo />
+            <Link href="/" className="brand-home" aria-label="Account CoPilot home: the Dashboard" title="Home: the Dashboard"><Logo /></Link>
             <div className="brand-text">
               <div className="brand-row">
-                <span className="appname">Account CoPilot</span>
+                <Link href="/" className="appname-link" title="Home: the Dashboard"><span className="appname">Account CoPilot</span></Link>
               </div>
               <span className="brand-sub">{TAGLINE}</span>
             </div>

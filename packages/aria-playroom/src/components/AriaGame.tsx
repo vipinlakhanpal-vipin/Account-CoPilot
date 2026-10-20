@@ -66,7 +66,7 @@ function Roamer() {
     const draw = () => {
       const W = area.clientWidth, H = area.clientHeight;
       const minX = R + PAD, maxX = Math.max(minX, W - R - PAD), minY = R + PAD, bubbleH = el.querySelector<HTMLElement>(".agame-bubble")?.offsetHeight || 66;
-      const maxY = Math.max(minY, H - GAP - bubbleH - PAD - 46); // 46: room for the legend at the foot
+      const maxY = Math.max(minY, H - GAP - bubbleH - PAD - ((area.querySelector<HTMLElement>(".agame-legend")?.offsetHeight || 46) + 6)); // room for the legend at the foot, however tall it is
       return { W, minX, maxX, minY, maxY };
     };
     const tick = (ts: number) => {
@@ -96,6 +96,9 @@ function Roamer() {
     if (r.n >= 5) r.n = 0;
     setTease(pickT); setMood(null); clearTimeout(r.timer); r.timer = setTimeout(() => setTease(null), 3000);
   };
+  const [tips, setTips] = useState(false);
+  useEffect(() => { try { setTips(localStorage.getItem("aria-tips-open") === "1"); } catch { /* optional */ } }, []);
+  const openChat = () => document.querySelector<HTMLButtonElement>(".nav-aria-mini")?.click(); // Aria's data chat (the assistant that answers questions about the accounts, contacts and signals)
   const getHome = () => wrap.current?.querySelector<HTMLElement>(".agame-bot")?.getBoundingClientRect() || null;
   const go = () => { setMood(null); setPunched(true); setTimeout(() => { setPunched(false); if (!path.startsWith("/nav/games")) router.push("/nav/games"); }, 450); };
   return (
@@ -111,14 +114,19 @@ function Roamer() {
         </button>
     </div>
     {!away && <div className="agame-legend">
-      {quiet
-        ? <p>Quiet mode is on: Aria stays calm and does not interrupt. Press the button below to play.</p>
-        : <p>Click Aria: she follows your mouse. Double-click: she goes home.</p>}
-      <button type="button" className="agame-play" onClick={go}>🎮 Play games with Aria</button>
-      <span className="agame-toggles">
-        <label><input type="checkbox" checked={quiet} onChange={(e) => setQuiet(e.target.checked)} /> Quiet mode</label>
-        {def.canSet && <label title="The default for everyone who has not chosen for themselves"><input type="checkbox" checked={def.quietDefault} onChange={(e) => setEveryone(e.target.checked)} /> Quiet for everyone</label>}
-      </span>
+      <div className="agame-actions">
+        <button type="button" className="agame-ask" onClick={openChat}>💬 Ask Aria about your data</button>
+        <button type="button" className="agame-play" onClick={go}>🎮 Play games with Aria</button>
+      </div>
+      <button type="button" className="agame-more" aria-expanded={tips} onClick={() => { const n = !tips; setTips(n); try { localStorage.setItem("aria-tips-open", n ? "1" : "0"); } catch { /* optional */ } }}>
+        <svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true" style={{ transform: tips ? "none" : "rotate(-90deg)", transition: "transform .15s" }}><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg> Tips and settings</button>
+      {tips && <div className="agame-more-body">
+        {quiet ? <p>Quiet mode is on: Aria stays calm and does not interrupt.</p> : <p>Click Aria: she follows your mouse. Double-click: she goes home.</p>}
+        <span className="agame-toggles">
+          <label title="Only for you, in this browser: no roaming, teasing or funny messages"><input type="checkbox" checked={quiet} onChange={(e) => setQuiet(e.target.checked)} /> Quiet mode (just me)</label>
+          {def.canSet && <label title="The default for every other user who has not chosen for themselves. Their own switch still wins."><input type="checkbox" checked={def.quietDefault} onChange={(e) => setEveryone(e.target.checked)} /> Quiet for everyone (default for other users)</label>}
+        </span>
+      </div>}
     </div>}
     {away && <><p className="agame-note">Aria is out exploring. Double-click her, or press Esc, to call her home.</p><AriaTraveller getHome={getHome} onHome={() => setAway(false)} name={def.name || ""} /></>}
     </>
@@ -132,7 +140,7 @@ export default function AriaGame() {
     <div className="agame-away">
       <b>Playing with Aria</b>
       <span>She is hosting the playroom. Take your time.</span>
-      <button type="button" className="btn tiny" onClick={() => (window.history.length > 1 ? router.back() : router.push("/nav/about"))}>Done playing</button>
+      <button type="button" className="btn tiny" onClick={() => (window.history.length > 1 ? router.back() : router.push("/"))}>Done playing</button>
     </div>);
   return <Roamer />;
 }
