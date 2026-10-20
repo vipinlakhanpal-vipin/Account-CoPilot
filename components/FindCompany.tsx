@@ -27,17 +27,15 @@ type Sel = { region: string[]; status: string[]; listing: string[]; signal: stri
 const EMPTY_SEL: Sel = { region: [], status: [], listing: [], signal: [], platform: [], contacts: false };
 const EXAMPLES = ["SAP verified KSA", "revenue > 1B", "coupa", "has contacts"];
 const ST_CLASS: Record<string, string> = { "ICP — Verified": "st-v", "ICP — Likely": "st-l", "ICP — Needs check": "st-l", "Not ICP": "st-n" };
-// Names can be separated by commas or lines. A platform can follow in brackets: "Almarai (Coupa user), Savola (Ariba)". Brackets may hold commas, so they are split on outside them.
-type Platform = "Coupa" | "SAP Ariba" | "Jaggaer" | "Ivalua" | "GEP" | "Zycus" | "Oracle Procurement" | "Other S2P";
-const platformOf = (tag: string): Platform | undefined => (/coupa/i.test(tag) ? "Coupa" : /ariba/i.test(tag) ? "SAP Ariba" : /jaggaer/i.test(tag) ? "Jaggaer" : /ivalua/i.test(tag) ? "Ivalua" : /\bgep\b/i.test(tag) ? "GEP" : /zycus/i.test(tag) ? "Zycus" : /oracle/i.test(tag) ? "Oracle Procurement" : /(other|s2p)/i.test(tag) ? "Other S2P" : undefined);
-function parseEntries(v: string): { name: string; platform?: Platform }[] {
+// Names can be separated by commas or lines. What you are looking for at a company can follow in brackets: "Almarai (S/4HANA support), Savola (procurement platform)". Brackets may hold commas, so names are split outside them.
+function parseEntries(v: string): { name: string; focus?: string }[] {
   const parts: string[] = []; let depth = 0, cur = "";
   for (const ch of v) { if (ch === "(" || ch === "[") depth++; if (ch === ")" || ch === "]") depth = Math.max(0, depth - 1); if ((ch === "," || ch === "\n") && depth === 0) { parts.push(cur); cur = ""; } else cur += ch; }
   parts.push(cur);
-  const seen = new Set<string>(), out: { name: string; platform?: Platform }[] = [];
+  const seen = new Set<string>(), out: { name: string; focus?: string }[] = [];
   for (const raw of parts) {
-    const m = raw.trim().match(/^(.*?)\s*[([]\s*([^)\]]*)[)\]]\s*$/), name = (m ? m[1] : raw).trim(), platform = m ? platformOf(m[2]) : undefined;
-    if (name.length >= 2 && !seen.has(name.toLowerCase())) { seen.add(name.toLowerCase()); out.push({ name, platform }); }
+    const m = raw.trim().match(/^(.*?)\s*[([]\s*([^)\]]*)[)\]]\s*$/), name = (m ? m[1] : raw).trim(), focus = m ? m[2].trim().slice(0, 120) : "";
+    if (name.length >= 2 && !seen.has(name.toLowerCase())) { seen.add(name.toLowerCase()); out.push({ name, ...(focus ? { focus } : {}) }); }
   }
   return out.slice(0, 30);
 }
@@ -122,15 +120,15 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
   };
 
   // ── Find New Company actions
-  const entries = parseEntries(names), list = entries.map((e) => e.name), platformByName = Object.fromEntries(entries.filter((e) => e.platform).map((e) => [e.name, e.platform as Platform]));
+  const entries = parseEntries(names), list = entries.map((e) => e.name), focusByName = Object.fromEntries(entries.filter((e) => e.focus).map((e) => [e.name, e.focus as string]));
   const regionInfo = info?.regions.find((r) => r.key === region);
   const per = info?.est.update ?? 0.55;
   async function queueFree(use: string[]) {
     if (!region || !use.length) return;
     setWorking(true);
-    const platforms = Object.fromEntries(use.filter((n) => platformByName[n]).map((n) => [n, platformByName[n]]));
-    const body = use.length === 1 ? { action: "queue", region, count: 1, mode: "company", company_name: use[0], website: website.trim(), platforms }
-      : { action: "queue", region, count: use.length, mode: "discover", company_names: use, platforms };
+    const focus = Object.fromEntries(use.filter((n) => focusByName[n]).map((n) => [n, focusByName[n]]));
+    const body = use.length === 1 ? { action: "queue", region, count: 1, mode: "company", company_name: use[0], website: website.trim(), focus }
+      : { action: "queue", region, count: use.length, mode: "discover", company_names: use, focus };
     const r = await fetch("/api/engine", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     const j = await r.json().catch(() => ({}));
     setWorking(false);
@@ -385,15 +383,15 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
               <small>{suggestN === "max" ? "Max means as many as one session can do, about 50, so it can take longer." : "Usually a few minutes."} A scheduled Claude session does the work; no paid API credit is used.</small>
             </div>
             <p className="find-or">or add specific companies by name: <b>separate them with commas, or put one per line</b> (up to 30)</p>
-            <p className="find-tagnote">Know a company already uses Coupa or SAP Ariba? Put it in brackets after the name, for example <b>Almarai (Coupa), Savola (Ariba user), Aldrees (Jaggaer)</b>. With <b>Add free</b> it is filed under that customer segment as confirmed by you. Tags are not used by Research now.</p>
+            <p className="find-tagnote">Looking for something specific at a company? Put it in brackets after the name: a product, a solution or a service. For example <b>Almarai (S/4HANA support), Savola (procurement platform), Aldrees (managed services)</b>. The engine researches that for the company and keeps it on the account. Tags are not used by Research now.</p>
 
             <div className="find-box big">
               <textarea rows={Math.min(Math.max(list.length, 2), 6)} value={names} onChange={(e) => { setNames(e.target.value); setDupes(null); setPausedHint(""); }} autoFocus
-                placeholder={"Company names, separated by commas or one per line. Add (Coupa) or (Ariba) after a name if it uses that platform. For example: Almarai (Coupa), Savola (Ariba), Aldrees"} aria-label="Company names" />
+                placeholder={"Company names, separated by commas or one per line. In brackets after a name, say what you are looking for. For example: Almarai (S/4HANA support), Savola (procurement platform), Aldrees"} aria-label="Company names" />
             </div>
             {pausedHint && <p className="find-msg err" role="status">{pausedHint}</p>}
             {list.length > 0 && (
-              <div className="find-names">{list.map((n) => <span key={n}>{n}{platformByName[n] && <b className="find-plat">{platformByName[n]} user</b>}<button type="button" aria-label={`Remove ${n}`} onClick={() => setNames(list.filter((x) => x !== n).join("\n"))}>×</button></span>)}
+              <div className="find-names">{list.map((n) => <span key={n}>{n}{focusByName[n] && <b className="find-plat" title="What you are looking for at this company">{focusByName[n]}</b>}<button type="button" aria-label={`Remove ${n}`} onClick={() => setNames(list.filter((x) => x !== n).join("\n"))}>×</button></span>)}
                 <em>{list.length} {list.length === 1 ? "company" : "companies"} · {region}</em></div>)}
             {list.length === 1 && <label className="find-site">Website (optional)<input value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="e.g. almarai.com" /></label>}
 

@@ -46,7 +46,7 @@ const Result = z.object({ slug: z.string(), company_name: z.string(), checked_at
 const EntityType = z.enum(["Regional HQ", "Branch", "Foreign Branch", "Unknown"]).optional().default("Unknown");
 const NewCo = z.object({ name: z.string().min(2), website: z.string().optional().default(""), country: z.string().default("UAE").transform((v) => canonCountry(v)), industry: z.string().optional().default(""), watch: z.boolean().optional().default(false),
   hq_city: z.string().optional().default(""), why_icp: z.string().optional().default(""), source_url: z.string().optional().default(""), entity_type: EntityType,
-  user_platform: z.enum(["Coupa", "SAP Ariba", "Jaggaer", "Ivalua", "GEP", "Zycus", "Oracle Procurement", "Other S2P"]).optional() }); // set when the user who asked for the company said it already uses that platform
+  user_platform: z.enum(["Coupa", "SAP Ariba", "Jaggaer", "Ivalua", "GEP", "Zycus", "Oracle Procurement", "Other S2P"]).optional(), focus: z.string().trim().max(160).optional() }); // set when the user who asked for the company said it already uses that platform
 const NewCoUpload = z.object({ name: z.string().min(2), website: z.string().optional().default(""), country: z.string().default("UAE").transform((v) => canonCountry(v)), industry: z.string().optional().default(""),
   hq_city: z.string().optional().default(""), notes: z.string().optional().default("") });
 const NewContact = z.object({ full_name: z.string().trim().min(3).max(120), title_verbatim: z.string().trim().min(2).max(200),
@@ -415,10 +415,10 @@ export async function POST(req: Request) {
       const row = {
         slug: "cd-" + c.name.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60), company_name: c.name, country: c.country,
         company_website: c.website || null, domain: dom(c.website) || null, hq_city: c.hq_city || null, industry: c.industry || null, research_channel: "Claude discovery",
-        lists: ["Claude discovery"], icp_status: "Unknown", entity_type: c.entity_type || "Unknown", account_notes: `Found by a scheduled Claude session on ${day}: ${c.why_icp} Source: ${c.source_url}`,
+        lists: ["Claude discovery"], icp_status: "Unknown", entity_type: c.entity_type || "Unknown", account_notes: `Found by a scheduled Claude session on ${day}: ${c.why_icp} Source: ${c.source_url}${c.focus ? ` Requested focus: ${c.focus}.` : ""}`,
         // a platform the user stated when asking for the company is recorded as confirmed, so it lands in that customer segment
         ...(c.user_platform ? { existing_s2p_product: c.user_platform, s2p_platform_status: "Confirmed Current", existing_s2p_detail: `Stated by the user who asked for this company (${day}).` } : {}),
-        profile: { "Claude discovery": { why: c.why_icp, source_url: c.source_url, via: "scheduled session (no API cost)" }, ...(c.user_platform ? { "User-confirmed platform": { platform: c.user_platform, at: now } } : {}), ...(c.watch ? { Watch: { since: now, reason: "requested in Settings" } } : {}) } };
+        profile: { "Claude discovery": { why: c.why_icp, source_url: c.source_url, via: "scheduled session (no API cost)" }, ...(c.user_platform ? { "User-confirmed platform": { platform: c.user_platform, at: now } } : {}), ...(c.focus ? { "User focus": { text: c.focus, at: now } } : {}), ...(c.watch ? { Watch: { since: now, reason: "requested in Settings" } } : {}) } };
       const { error } = await db.from("companies").upsert([row], { onConflict: "slug", ignoreDuplicates: true });
       if (!error) { added.push({ slug: row.slug, company_name: row.company_name }); pool.push({ name: row.company_name, domain: row.domain || "", as: row.company_name }); }
     }

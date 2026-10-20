@@ -2789,3 +2789,6 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 
 /* v6.03: the two Aria buttons sit on one line each, in the standard font, so they never make the panel taller */
 .agame-legend .agame-ask,.agame-legend .agame-play{white-space:nowrap;font:700 12px var(--body);padding:8px 8px;overflow:hidden;letter-spacing:0}
+
+/* v6.04: the bracket tag shows what you are looking for (any product, solution or service) */
+.find-plat{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom}

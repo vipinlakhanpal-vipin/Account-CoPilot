@@ -19,7 +19,7 @@ export const dynamic = "force-dynamic";
 const EST = { update: 0.55, discovery: 0.75, profile: 0.55 }; // USD per Quick research / discovery search / new-company profile
 
 type JobDetail = { name: string; status?: string; revenue?: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; country?: string; decided?: "added" | "ignored"; entity_type?: "Regional HQ" | "Branch" | "Foreign Branch" | "Unknown" };
-type Job = { id: string; region: string; count: number | "max"; mode: "verify" | "discover" | "both" | "company" | "contacts" | "signals" | "market" | "pitch"; vendor?: string; customer?: string; partner?: string; contacts_only?: boolean; phase?: "partners" | "customers"; lane?: "erp" | "rfp" | "ecc"; company_name?: string; slug?: string; seamless?: boolean; website?: string; platforms?: Record<string, string>; company_names?: string[]; requested_by: string; requested_at: string;
+type Job = { id: string; region: string; count: number | "max"; mode: "verify" | "discover" | "both" | "company" | "contacts" | "signals" | "market" | "pitch"; vendor?: string; customer?: string; partner?: string; contacts_only?: boolean; phase?: "partners" | "customers"; lane?: "erp" | "rfp" | "ecc"; company_name?: string; slug?: string; seamless?: boolean; website?: string; focus?: Record<string, string>; company_names?: string[]; requested_by: string; requested_at: string;
   status: "queued" | "running" | "done" | "error"; done_at?: string; result?: string; details?: JobDetail[] };
 type IgnoredCo = { id: string; name: string; country: string; region: string; industry?: string; hq_city?: string; why_icp?: string; source_url?: string; ignored_at: string; ignored_by: string; recheck_at: string };
 type Batch = { id: string; region: string; update_count: number; new_count: number; budget: number; available: number; planned_update: number; planned_new: number;
@@ -207,7 +207,7 @@ export async function GET(req: Request) {
 
 const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("queue"), region: z.string().min(2).max(40), count: z.union([z.number().int().min(1).max(500), z.literal("max")]), mode: z.enum(["verify", "discover", "both", "company", "contacts", "signals", "market", "pitch"]), vendor: z.string().trim().max(30).optional(), customer: z.string().trim().max(160).optional(), partner: z.string().trim().max(140).optional(), contacts_only: z.boolean().optional(), phase: z.enum(["partners", "customers"]).optional(), lane: z.enum(["erp", "rfp", "ecc"]).optional(),
-    slug: z.string().trim().max(120).optional(), seamless: z.boolean().optional(), company_name: z.string().trim().max(120).optional(), website: z.string().trim().max(200).optional(), company_names: z.array(z.string().trim().min(2).max(120)).max(30).optional(), platforms: z.record(z.string().max(120), z.enum(["Coupa", "SAP Ariba", "Jaggaer", "Ivalua", "GEP", "Zycus", "Oracle Procurement", "Other S2P"])).optional() }),
+    slug: z.string().trim().max(120).optional(), seamless: z.boolean().optional(), company_name: z.string().trim().max(120).optional(), website: z.string().trim().max(200).optional(), company_names: z.array(z.string().trim().min(2).max(120)).max(30).optional(), focus: z.record(z.string().max(120), z.string().trim().max(120)).optional() }),
   z.object({ action: z.literal("add_found"), job_id: z.string(), name: z.string() }),
   z.object({ action: z.literal("ignore_found"), job_id: z.string(), name: z.string() }),
   z.object({ action: z.literal("add_all_found"), job_id: z.string() }),
@@ -376,7 +376,7 @@ export async function POST(req: Request) {
       const names = b.mode === "discover" ? (b.company_names || []).filter((n) => n.length >= 2) : [];
       const job: Job = { id, region: b.region, count: b.mode === "company" ? 1 : names.length ? names.length : b.count, mode: b.mode,
         ...(b.mode === "company" ? { company_name: b.company_name, website: b.website || "" } : {}), ...(names.length ? { company_names: names } : {}),
-        ...(b.platforms && Object.keys(b.platforms).length && ["company", "discover"].includes(b.mode) ? { platforms: b.platforms } : {}),
+        ...(b.focus && Object.keys(b.focus).length && ["company", "discover"].includes(b.mode) ? { focus: b.focus } : {}),
         requested_by: user.email || "", requested_at: now, status: "queued" };
       st.jobs.unshift(job);
       trigger = await wake(job, st.jobs);
