@@ -2050,3 +2050,8 @@ body[data-nodl] .btn-dl:not(.keep),body[data-nodl] .aria-dl,body[data-nodl] .ari
 @media (prefers-reduced-motion:reduce){.nav-aria.aria-btn{animation:none}}
 
 .navbadge{margin-left:auto;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#D92D20;color:#fff;font:700 10.5px/18px var(--body);text-align:center}
+
+.navbtn{all:unset;box-sizing:border-box;width:100%;cursor:pointer}
+.navbtn:hover{background:color-mix(in srgb,var(--surface) 55%,transparent)}
+.navbtn:focus-visible{outline:2px solid var(--teal);outline-offset:-2px}
+.navver{margin-left:auto;color:var(--muted);font:500 10.5px var(--mono)}

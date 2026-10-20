@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import ProfileMenu from "@/components/ProfileMenu";
 import AccountCopilotAria from "@/components/AriaChat";
+import { APP_VERSION } from "@/lib/version";
 import { usePathname, useSearchParams } from "next/navigation";
 
 const STEPS = ["Region & size", "Add Data", "Domains", "Daily plan", "Data sources", "Review"];
@@ -15,6 +16,7 @@ const ICON: Record<string, React.ReactNode> = {
   bell: <><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.7 21a2 2 0 0 1-3.4 0" /></>,
   bulb: <><path d="M9 18h6M10 21h4" /><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z" /></>,
   team: <><circle cx="9" cy="8" r="3.2" /><path d="M2.8 20c.4-3.4 3-5.4 6.2-5.4s5.8 2 6.2 5.4" /><circle cx="17.5" cy="9" r="2.4" /><path d="M16.5 14.4c2.6-.2 4.4 1.4 4.7 4.4" /></>,
+  history: <><path d="M12 7v5l3.5 2" /><path d="M21 12a9 9 0 1 1-3-6.7" /><path d="M21 4v5h-5" /></>,
   about: <><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 7.6v.2" /></>,
   wizard: <><path d="M3.5 20.5 13.5 10.5" strokeWidth="2.1" /><path d="M16 3.2l1 2.4 2.4 1-2.4 1-1 2.4-1-2.4-2.4-1 2.4-1z" fill="currentColor" className="spark s1" /><path d="M20 12l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z" fill="currentColor" strokeWidth="0.6" className="spark s2" /><path d="M7.3 3.6l.5 1.2 1.2.5-1.2.5-.5 1.2-.5-1.2-1.2-.5 1.2-.5z" fill="currentColor" strokeWidth="0.6" className="spark s3" /><circle cx="20.2" cy="3.6" r=".9" fill="currentColor" stroke="none" className="spark s4" /><circle cx="11" cy="14.6" r=".7" fill="currentColor" stroke="none" className="spark s2" /></>,
   settings: <><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></>,
@@ -83,6 +85,7 @@ export default function NavPanel({ isSuper }: { isSuper: boolean }) {
             <Link href="/nav/settings/engine" className={path.endsWith("/engine") ? "on" : ""}>Engine and PIN</Link>
             <Link href="/nav/settings/guide" className={path.endsWith("/guide") ? "on" : ""}>Learn me</Link>
           </div>)}
+        <button type="button" className="navit navbtn" onClick={() => window.dispatchEvent(new CustomEvent("history-open"))} title="What changed in each update"><Ic n="history" />Version history<small className="navver">v{APP_VERSION}</small></button>
         {item("/nav/suggestions", "bulb", "Suggestions", path.startsWith("/nav/suggestions"))}
         {!isSuper && <small className="navnote">Some settings are read-only for you.</small>}
         <div className="navprof-wrap"><ProfileMenu variant="panel" /></div>

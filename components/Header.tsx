@@ -68,6 +68,8 @@ export default function Header({ meta }: { meta: string }) {
   const [sig, setSig] = useState({ new: 0, hot: 0 });
   const [win, setWin] = useState<"signals" | "market" | null>(null);
   useEffect(() => { window.dispatchEvent(new CustomEvent("act-view", { detail: win ? `/${win === "market" ? "market" : "signals"}` : null })); }, [win]);
+  // The left panel opens the version history from its own item.
+  useEffect(() => { const on = () => setShowHistory(true); window.addEventListener("history-open", on); return () => window.removeEventListener("history-open", on); }, []);
   // The New Layout pages can pop Market intelligence or Buying signals out as the floating window.
   useEffect(() => { const on = (e: Event) => { const w = (e as CustomEvent<string>).detail; if (w === "market" || w === "signals") setWin(w); }; const off = () => setWin(null); window.addEventListener("appwin-open", on); window.addEventListener("appwin-close", off); return () => { window.removeEventListener("appwin-open", on); window.removeEventListener("appwin-close", off); }; }, []);
   // In-app alert: how many unseen Hot / Warm buying signals are waiting in the user's regions.
@@ -247,10 +249,10 @@ export default function Header({ meta }: { meta: string }) {
                     title={latest ? `Version v${latest} is available. Click to load it.` : "Reload the latest data"}>
                     <Spin />v{APP_VERSION}{latest && <span className="dot" aria-label={`New version v${latest} available`} />}
                   </button>
-                  <button type="button" className="history-btn" onClick={() => setShowHistory(true)} aria-label="Version history">
+                  {!path.startsWith("/nav") && <button type="button" className="history-btn" onClick={() => setShowHistory(true)} aria-label="Version history">
                     <HistoryIcon />
                     <span className="tip-pill" role="tooltip"><span className="tip-dot" aria-hidden="true" />Version history - what changed in each update</span>
-                  </button>
+                  </button>}
                   <OnlineNow />
                   {!path.startsWith("/nav") && <EngineBell />}
                   {!path.startsWith("/nav") && <SuggestionsButton />}
