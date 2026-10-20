@@ -330,6 +330,9 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 .atrav-body .aria-orb{animation:none;transition:clip-path .7s ease;clip-path:circle(50%)}
 .atrav-body .aria-orb::before,.atrav-body .aria-orb::after{display:none}
 @media (prefers-reduced-motion:reduce){.settabs a::before,.settabs a::after{animation:none;opacity:0}.atrav-body .aria-orb{transition:none}}
+.agame-bot.tickled{animation:agame-tickle .5s ease-in-out 3}
+@keyframes agame-tickle{0%,100%{transform:rotate(0) scale(1)}20%{transform:rotate(-9deg) scale(1.06)}40%{transform:rotate(8deg) scale(.95)}60%{transform:rotate(-6deg) scale(1.04)}80%{transform:rotate(5deg) scale(1)}}
+@media (prefers-reduced-motion:reduce){.agame-bot.tickled{animation:none}}
 
 /* tab colour tokens used by the games' tabs, chips and switches */
 :root{--tab-bg:color-mix(in srgb,#2ECC8F 24%,var(--surface));--tab-hover:color-mix(in srgb,#2ECC8F 42%,var(--surface));--tab-fg:var(--text);--tab-on:#0F6E56;--tab-on-fg:#fff;--tab-accent:#2EC4A6;--tab-line:#0F6E56}

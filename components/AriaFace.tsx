@@ -1,10 +1,14 @@
 // Aria's face, shared by the roaming orb in the left panel and the host in her playroom. The mood changes her eyes and mouth: happy (default), cheer, oops, think, neutral.
-export type Mood = "happy" | "cheer" | "oops" | "think" | "neutral" | "wink" | "dizzy";
+export type Mood = "happy" | "cheer" | "oops" | "think" | "neutral" | "wink" | "dizzy" | "shy" | "silly" | "wow";
 const look = { transform: "translate(calc(var(--ex,0) * 1px), calc(var(--ey,0) * 1px))" } as const; // her pupils follow the pointer (the playroom sets --ex and --ey)
 
 export function AriaFace({ mood = "happy" }: { mood?: Mood }) {
   const eyes = mood === "cheer"
     ? <><path d="M7.4 12.3q1.7-2.4 3.4 0" stroke="#2A1E80" strokeWidth="1.3" strokeLinecap="round" fill="none" /><path d="M13.2 12.3q1.7-2.4 3.4 0" stroke="#2A1E80" strokeWidth="1.3" strokeLinecap="round" fill="none" /></>
+    : mood === "shy"
+    ? <><g style={{ transform: "translate(-0.9px,0.5px)" }}><circle cx="9.1" cy="11.5" r="1.85" fill="url(#ar-eye)" /><circle cx="8.5" cy="10.9" r=".55" fill="#fff" /><circle cx="14.9" cy="11.5" r="1.85" fill="url(#ar-eye)" /><circle cx="14.3" cy="10.9" r=".55" fill="#fff" /></g></>
+    : mood === "wow"
+    ? <><circle cx="9.1" cy="11.4" r="2.3" fill="url(#ar-eye)" /><circle cx="8.3" cy="10.6" r=".75" fill="#fff" /><circle cx="14.9" cy="11.4" r="2.3" fill="url(#ar-eye)" /><circle cx="14.1" cy="10.6" r=".75" fill="#fff" /></>
     : mood === "dizzy"
     ? <><path d="M7.6 10.2l3 3M10.6 10.2l-3 3M13.4 10.2l3 3M16.4 10.2l-3 3" stroke="#2A1E80" strokeWidth="1.2" strokeLinecap="round" /></>
     : <>
@@ -13,7 +17,10 @@ export function AriaFace({ mood = "happy" }: { mood?: Mood }) {
           : <g style={look}><circle cx="9.1" cy={mood === "think" ? 11 : 11.5} r="1.85" fill="url(#ar-eye)" /><circle cx={mood === "think" ? 9.4 : 8.5} cy={mood === "think" ? 10.2 : 10.8} r=".55" fill="#fff" /></g>}
         <g style={look}><circle cx="14.9" cy={mood === "think" ? 11 : 11.5} r="1.85" fill="url(#ar-eye)" /><circle cx={mood === "think" ? 15.2 : 14.3} cy={mood === "think" ? 10.2 : 10.8} r=".55" fill="#fff" /></g>
       </>;
-  const mouth = mood === "wink" ? <path d="M8.8 14.3q3.2 3.2 6.4 0" stroke="#19D3B0" strokeWidth="1.5" strokeLinecap="round" fill="none" filter="url(#ar-glow)" />
+  const mouth = mood === "shy" ? <><ellipse cx="6.7" cy="14.3" rx="1.4" ry=".85" fill="#FF8FB1" opacity=".8" /><ellipse cx="17.3" cy="14.3" rx="1.4" ry=".85" fill="#FF8FB1" opacity=".8" /><path d="M10.2 15.5q.9-.8 1.8 0t1.8 0" stroke="#19D3B0" strokeWidth="1.2" strokeLinecap="round" fill="none" filter="url(#ar-glow)" /></>
+    : mood === "silly" ? <><path d="M8.8 14.4h6.4q-.3 2.5-3.2 2.5t-3.2-2.5z" fill="#19D3B0" filter="url(#ar-glow)" /><ellipse cx="12" cy="16.5" rx="1.3" ry="1.1" fill="#FF8FB1" /></>
+    : mood === "wow" ? <circle cx="12" cy="15.3" r="1.4" fill="#19D3B0" filter="url(#ar-glow)" />
+    : mood === "wink" ? <path d="M8.8 14.3q3.2 3.2 6.4 0" stroke="#19D3B0" strokeWidth="1.5" strokeLinecap="round" fill="none" filter="url(#ar-glow)" />
     : mood === "dizzy" ? <path d="M9 15.4q1-1.2 2 0t2 0 2 0" stroke="#19D3B0" strokeWidth="1.3" strokeLinecap="round" fill="none" filter="url(#ar-glow)" />
     : mood === "cheer" ? <path d="M8.6 14.4q3.4 3.6 6.8 0z" fill="#19D3B0" filter="url(#ar-glow)" />
     : mood === "oops" ? <path d="M9.2 16q2.8-2.4 5.6 0" stroke="#19D3B0" strokeWidth="1.4" strokeLinecap="round" fill="none" filter="url(#ar-glow)" />
