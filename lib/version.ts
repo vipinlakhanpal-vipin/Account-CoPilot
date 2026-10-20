@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.69";
+export const APP_VERSION = "5.70";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.70", date: "2026-10-20", notes: "Aria's games are now a bookshelf library.", changes: [
+      { what: "Click Aria and a bookshelf opens beside her: Ask Aria at the top, each game as a narrow coloured book (Jigsaw puzzle, Memory match, True or false, Word scramble). Pick a book and it rises, with its card below: what the game is, its time (or No timer), your best score and a Play button. The books are slim so many more fit; the shelf scrolls sideways when there are more than fit. It opens in its own layer, so it is no longer cut off by the left panel, and it remembers the last book you picked", where: "Left panel, Aria", why: "A proper game library that can grow" },
+  ] },
   { version: "5.69", date: "2026-10-20", notes: "Buying signals opens with a short explanation of what it does, how, and how the daily run uses it.", changes: [
       { what: "A short paragraph sits above the tiles on Buying signals: what it spots (tenders and RFPs, ERP, S2P and S2C intent, support and upgrade deals, awards, upsell and cross-sell, ECC to S/4HANA), how it works (public pages only, Hot / Warm / Watch, Fact / Likely / Unverified, a source link on every signal, no logins) and how the daily run uses it (every active Middle East region, High daily, Medium every 3 days, Low weekly, up to 10 companies a region, Scan now on demand)", where: "Buying signals", why: "New users can see what the page is and where its signals come from" },
   ] },

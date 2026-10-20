@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import AriaMiniGames, { type MiniGame } from "@/components/AriaMiniGames";
+import AriaLibrary, { type GameId } from "@/components/AriaLibrary";
 
 // Aria floats in the left panel and asks to be hit. A click (the "hit") shatters her into nine jigsaw pieces and she asks to be rebuilt in 60 seconds, with a different picture each time (five designs).
 // Drag each piece to its place on the board; a piece clicks into place when it is close. Best time is kept in this browser.
@@ -119,10 +120,12 @@ const slot = (r: number, c: number) => ({ x: BOARD_X + c * S - PAD, y: BOARD_Y +
 
 export default function AriaGame({ onChat }: { onChat: () => void }) {
   const [menu, setMenu] = useState(false);
+  const [anchor, setAnchor] = useState<DOMRect | null>(null);
+  const botRef = useRef<HTMLButtonElement>(null);
   const [mini, setMini] = useState<MiniGame | null>(null);
   const [mood, setMood] = useState<string | null>(null), lastMood = useRef(-1), quiet = useRef(true); // quiet: idle with nothing open, so she may speak
   const wrap = useRef<HTMLDivElement>(null);
-  useEffect(() => { if (!menu) return; const away = (e: MouseEvent) => { if (!wrap.current?.contains(e.target as Node)) setMenu(false); }; document.addEventListener("mousedown", away); return () => document.removeEventListener("mousedown", away); }, [menu]);
+  // outside clicks and Escape are handled by the library itself (it lives in its own layer, outside this element)
   const [phase, setPhase] = useState<"idle" | "punched" | "play" | "won" | "lost">("idle");
   quiet.current = phase === "idle" && !menu && !mini;
   // Every 40 to 70 seconds, if she is idle and the tab is in view, she flashes a message for 7 seconds.
@@ -204,25 +207,19 @@ export default function AriaGame({ onChat }: { onChat: () => void }) {
 
   return (
     <>
-      <div className="agame" ref={wrap}>
+      <div className={`agame${menu ? " menu-open" : ""}`} ref={wrap}>
         {phase === "idle" && !menu && !mini && (mood
           ? <span className="agame-bubble funny" role="status">{mood}</span>
           : <span className="agame-bubble" aria-hidden="true">Want to play? 🎮<br />Click me! 👆</span>)}
-        <button type="button" className={`agame-bot${phase === "punched" ? " punched" : ""}${mood && phase === "idle" ? " sad" : ""}`} onClick={() => setMenu((m) => !m)} aria-expanded={menu} aria-label="Aria: ask a question, or play a game">
+        <button type="button" className={`agame-bot${phase === "punched" ? " punched" : ""}${mood && phase === "idle" ? " sad" : ""}`} ref={botRef} onClick={() => { setAnchor(botRef.current?.getBoundingClientRect() || null); setMenu((m) => !m); }} aria-expanded={menu} aria-label="Aria: ask a question, or play a game">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="12" cy="2.9" r="1.35" fill="#FFE08A" /><path d="M12 4.2v2.3" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" />
             <rect x="4.6" y="6.4" width="14.8" height="11" rx="3.4" fill="#fff" /><rect x="2.3" y="9.6" width="1.9" height="4.6" rx="0.95" fill="#fff" /><rect x="19.8" y="9.6" width="1.9" height="4.6" rx="0.95" fill="#fff" />
             <circle cx="9.1" cy="11.4" r="1.7" fill="#5B4BC4" /><circle cx="14.9" cy="11.4" r="1.7" fill="#5B4BC4" /><path d="M9.4 14.9h5.2" stroke="#19D3B0" strokeWidth="1.6" strokeLinecap="round" /><rect x="8" y="18.4" width="8" height="2.6" rx="1.3" fill="#fff" />
           </svg>
         </button>
-        {menu && (
-          <div className="agame-menu" role="menu">
-            <button type="button" role="menuitem" className="agame-opt" onClick={() => { setMenu(false); onChat(); }}>Ask Aria</button>
-            <button type="button" role="menuitem" className="agame-opt" onClick={hit}>Jigsaw puzzle · 60 s</button>
-            <button type="button" role="menuitem" className="agame-opt" onClick={() => { setMenu(false); setMini("memory"); }}>Memory match · 60 s</button>
-            <button type="button" role="menuitem" className="agame-opt" onClick={() => { setMenu(false); setMini("quiz"); }}>True or false · 45 s</button>
-            <button type="button" role="menuitem" className="agame-opt" onClick={() => { setMenu(false); setMini("words"); }}>Word scramble · no timer</button>
-          </div>)}
+        {menu && anchor && <AriaLibrary anchor={anchor} onClose={() => setMenu(false)} onAsk={() => { setMenu(false); onChat(); }}
+          onPlay={(id: GameId) => { setMenu(false); if (id === "jigsaw") hit(); else setMini(id === "memory" ? "memory" : id === "quiz" ? "quiz" : "words"); }} />}
       </div>
       {open && typeof document !== "undefined" && createPortal(
         <div className="agame-back" role="dialog" aria-modal="true" aria-label="Rebuild Aria">
