@@ -2320,7 +2320,7 @@ header.top{background:var(--bg);padding-bottom:8px;box-shadow:0 10px 14px -12px 
 .agame-menu{left:-100px;width:200px}
 
 /* v5.61: now and then Aria flashes a funny, slightly sad message ("Talk to me, I'm bored") and wobbles a little */
-.agame-bubble{pointer-events:none}
+.agame-bubble{pointer-events:auto;cursor:pointer;border-width:2px}
 .agame-bubble.funny{left:-80px;top:-92px;width:160px;padding:7px 10px;font-weight:700;font-size:12px;line-height:1.35;border-color:#F5A623;background:color-mix(in srgb,#F5A623 22%,var(--surface));animation:agame-pop .45s ease-out,agame-pulse 1.6s ease-in-out .45s infinite}
 .agame-bubble.funny::after{left:76px;border-color:#F5A623;background:color-mix(in srgb,#F5A623 22%,var(--surface))}
 .agame-bot.sad{animation:agame-sad 1.4s ease-in-out infinite}
@@ -2681,3 +2681,24 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 .gr-newshelf input{padding:3px 10px;border-radius:8px;border:1px solid var(--line-2);background:var(--surface);color:var(--text);font:12.5px var(--body);width:140px}
 .gr-move{display:flex;flex-direction:column;gap:2px;font:600 10.5px var(--body);text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
 .gr-move select{font:600 12.5px var(--body);text-transform:none;letter-spacing:0;padding:4px 8px;border-radius:8px;border:1px solid var(--line-2);background:var(--surface);color:var(--text)}
+
+/* v5.88: Aria can leave her spot and travel the page (components/AriaTraveller.tsx); the panel shows where she went */
+.agame.gone .agame-bot,.agame.gone .agame-bubble{visibility:hidden}
+.agame-note{position:absolute;left:10px;right:10px;bottom:14px;margin:0;text-align:center;font-size:12px;line-height:1.4;color:rgba(255,255,255,.85);text-shadow:0 1px 2px rgba(0,0,0,.4)}
+.atrav{position:fixed;left:0;top:0;z-index:9999;pointer-events:none;will-change:transform;filter:drop-shadow(0 0 12px rgba(130,112,255,.85)) drop-shadow(0 8px 10px rgba(0,0,0,.35))}
+.atrav-body{width:100%;height:100%;pointer-events:auto;cursor:grab;will-change:transform}
+.atrav-body .aria-orb{animation:none;transition:clip-path .7s ease;clip-path:circle(50%)}
+.atrav-body .aria-orb::before,.atrav-body .aria-orb::after{display:none}
+.atrav-say{position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);white-space:nowrap;padding:5px 12px;border-radius:14px;border:2px solid #F5A623;background:linear-gradient(180deg,#FFF0A8,#FFD966);color:#3B2400;font:600 14px "Fredoka","Baloo 2","Comic Sans MS",var(--body);pointer-events:none}
+
+/* v5.88: the Setup wizard and Settings tabs twinkle: two little stars per tab that blink at their own pace */
+.settabs a{position:relative;overflow:visible}
+.settabs a::before,.settabs a::after{content:"";position:absolute;pointer-events:none;background:#F5B83D;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);opacity:0;animation:tab-twinkle 3.2s ease-in-out infinite}
+.settabs a::before{width:10px;height:10px;top:5px;right:9px}
+.settabs a::after{width:7px;height:7px;bottom:7px;left:11px;animation-duration:2.6s;animation-delay:1.1s}
+.settabs a.on::before,.settabs a.on::after{background:#FFF3B0}
+.settabs a:nth-child(2)::before{animation-delay:.5s}.settabs a:nth-child(3)::before{animation-delay:1.3s}.settabs a:nth-child(4)::before{animation-delay:.2s}
+.settabs a:nth-child(5)::before{animation-delay:1.8s}.settabs a:nth-child(6)::before{animation-delay:.9s}.settabs a:nth-child(7)::before{animation-delay:2.2s}
+.settabs a:nth-child(2n)::after{animation-delay:1.6s}.settabs a:nth-child(3n)::after{animation-delay:.4s}
+@keyframes tab-twinkle{0%,100%{opacity:0;transform:scale(.3) rotate(0)}12%{opacity:1;transform:scale(1) rotate(45deg)}28%{opacity:.15;transform:scale(.55) rotate(90deg)}40%{opacity:0;transform:scale(.3) rotate(120deg)}}
+@media (prefers-reduced-motion:reduce){.settabs a::before,.settabs a::after{animation:none;opacity:0}.atrav-body .aria-orb{transition:none}}

@@ -6,7 +6,7 @@ import path from "node:path";
 
 const OUT = "packages/aria-playroom";
 const FILES = [
-  "components/AriaFace.tsx", "components/AriaGame.tsx", "components/GameRoom.tsx", "components/AriaMiniGames.tsx",
+  "components/AriaFace.tsx", "components/AriaGame.tsx", "components/AriaTraveller.tsx", "components/GameRoom.tsx", "components/AriaMiniGames.tsx",
   "components/games/registry.tsx", "components/games/Jigsaw.tsx", "components/games/Cognitive.tsx", "components/games/Brain2.tsx",
   "app/nav/games/page.tsx",
 ];

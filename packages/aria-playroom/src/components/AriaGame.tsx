@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AriaFace } from "@/components/AriaFace";
+import AriaTraveller from "@/components/AriaTraveller";
 
 // Aria floats in the left panel. Clicking her opens the Game room page on the right (components/GameRoom.tsx). Now and then, while she sits idle, she flashes a funny message for a few seconds.
 const MOODS = [
@@ -12,7 +13,7 @@ const MOODS = [
 function Roamer() {
   const router = useRouter(), path = usePathname();
   const [mood, setMood] = useState<string | null>(null), lastMood = useRef(-1);
-  const [punched, setPunched] = useState(false);
+  const [punched, setPunched] = useState(false), [away, setAway] = useState(false);
   // Every 40 to 70 seconds, if the tab is in view and she is not being clicked, she flashes a message for 7 seconds.
   useEffect(() => {
     let t1: ReturnType<typeof setTimeout>, t2: ReturnType<typeof setTimeout>;
@@ -67,16 +68,20 @@ function Roamer() {
     el.addEventListener("mouseenter", over); el.addEventListener("mouseleave", out);
     return () => { cancelAnimationFrame(raf); el.removeEventListener("mouseenter", over); el.removeEventListener("mouseleave", out); };
   }, []);
+  const getHome = () => wrap.current?.querySelector<HTMLElement>(".agame-bot")?.getBoundingClientRect() || null;
   const go = () => { setMood(null); setPunched(true); setTimeout(() => { setPunched(false); if (!path.startsWith("/nav/games")) router.push("/nav/games"); }, 450); };
   return (
-    <div className="agame" ref={wrap}>
-      {!punched && (mood
-        ? <span className="agame-bubble funny" role="status">{mood}</span>
-        : <span className="agame-bubble" aria-hidden="true">Want to play? 🎮<br />Click me! 👆</span>)}
-        <button type="button" className={`agame-bot${punched ? " punched" : ""}${mood && !punched ? " sad" : ""}`} onClick={go} aria-label="Aria: open the Game room">
+    <>
+    <div className={`agame${away ? " gone" : ""}`} ref={wrap}>
+      {!punched && !away && (mood
+        ? <button type="button" className="agame-bubble funny" onClick={go} title="Open Aria's playroom">{mood}</button>
+        : <button type="button" className="agame-bubble" onClick={go} title="Open Aria's playroom">Want to play? 🎮<br />Press here 👆</button>)}
+        <button type="button" className={`agame-bot${punched ? " punched" : ""}${mood && !punched ? " sad" : ""}`} onClick={() => { setMood(null); setAway(true); }} aria-label="Aria: send her exploring around the page (double-click her to bring her home)" title="Click me and I will follow your mouse">
           <AriaFace mood={mood ? "oops" : "happy"} />
         </button>
     </div>
+    {away && <><p className="agame-note">Aria is out exploring. Double-click her, or press Esc, to call her home.</p><AriaTraveller getHome={getHome} onHome={() => setAway(false)} /></>}
+    </>
   );
 }
 

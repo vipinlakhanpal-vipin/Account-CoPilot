@@ -72,7 +72,7 @@
 @keyframes agm-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 @media (prefers-reduced-motion:reduce){.agm-slots.wrong .agm-slot{animation:none}}
 .agame-menu{left:-100px;width:200px}
-.agame-bubble{pointer-events:none}
+.agame-bubble{pointer-events:auto;cursor:pointer;border-width:2px}
 .agame-bubble.funny{left:-80px;top:-92px;width:160px;padding:7px 10px;font-weight:700;font-size:12px;line-height:1.35;border-color:#F5A623;background:color-mix(in srgb,#F5A623 22%,var(--surface));animation:agame-pop .45s ease-out,agame-pulse 1.6s ease-in-out .45s infinite}
 .agame-bubble.funny::after{left:76px;border-color:#F5A623;background:color-mix(in srgb,#F5A623 22%,var(--surface))}
 .agame-bot.sad{animation:agame-sad 1.4s ease-in-out infinite}
@@ -325,6 +325,11 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 .gr-newshelf input{padding:3px 10px;border-radius:8px;border:1px solid var(--line-2);background:var(--surface);color:var(--text);font:12.5px var(--body);width:140px}
 .gr-move{display:flex;flex-direction:column;gap:2px;font:600 10.5px var(--body);text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
 .gr-move select{font:600 12.5px var(--body);text-transform:none;letter-spacing:0;padding:4px 8px;border-radius:8px;border:1px solid var(--line-2);background:var(--surface);color:var(--text)}
+.agame.gone .agame-bot,.agame.gone .agame-bubble{visibility:hidden}
+.agame-note{position:absolute;left:10px;right:10px;bottom:14px;margin:0;text-align:center;font-size:12px;line-height:1.4;color:rgba(255,255,255,.85);text-shadow:0 1px 2px rgba(0,0,0,.4)}
+.atrav-body .aria-orb{animation:none;transition:clip-path .7s ease;clip-path:circle(50%)}
+.atrav-body .aria-orb::before,.atrav-body .aria-orb::after{display:none}
+@media (prefers-reduced-motion:reduce){.settabs a::before,.settabs a::after{animation:none;opacity:0}.atrav-body .aria-orb{transition:none}}
 
 /* tab colour tokens used by the games' tabs, chips and switches */
 :root{--tab-bg:color-mix(in srgb,#2ECC8F 24%,var(--surface));--tab-hover:color-mix(in srgb,#2ECC8F 42%,var(--surface));--tab-fg:var(--text);--tab-on:#0F6E56;--tab-on-fg:#fff;--tab-accent:#2EC4A6;--tab-line:#0F6E56}
