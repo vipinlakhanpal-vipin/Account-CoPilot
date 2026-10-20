@@ -1,14 +1,21 @@
 // Aria's face, shared by the roaming orb in the left panel and the host in her playroom. The mood changes her eyes and mouth: happy (default), cheer, oops, think, neutral.
-export type Mood = "happy" | "cheer" | "oops" | "think" | "neutral";
+export type Mood = "happy" | "cheer" | "oops" | "think" | "neutral" | "wink" | "dizzy";
+const look = { transform: "translate(calc(var(--ex,0) * 1px), calc(var(--ey,0) * 1px))" } as const; // her pupils follow the pointer (the playroom sets --ex and --ey)
 
 export function AriaFace({ mood = "happy" }: { mood?: Mood }) {
   const eyes = mood === "cheer"
     ? <><path d="M7.4 12.3q1.7-2.4 3.4 0" stroke="#2A1E80" strokeWidth="1.3" strokeLinecap="round" fill="none" /><path d="M13.2 12.3q1.7-2.4 3.4 0" stroke="#2A1E80" strokeWidth="1.3" strokeLinecap="round" fill="none" /></>
+    : mood === "dizzy"
+    ? <><path d="M7.6 10.2l3 3M10.6 10.2l-3 3M13.4 10.2l3 3M16.4 10.2l-3 3" stroke="#2A1E80" strokeWidth="1.2" strokeLinecap="round" /></>
     : <>
-        <circle cx="9.1" cy={mood === "think" ? 11 : 11.5} r="1.85" fill="url(#ar-eye)" /><circle cx="14.9" cy={mood === "think" ? 11 : 11.5} r="1.85" fill="url(#ar-eye)" />
-        <circle cx={mood === "think" ? 9.4 : 8.5} cy={mood === "think" ? 10.2 : 10.8} r=".55" fill="#fff" /><circle cx={mood === "think" ? 15.2 : 14.3} cy={mood === "think" ? 10.2 : 10.8} r=".55" fill="#fff" />
+        {mood === "wink"
+          ? <path d="M7.4 11.8q1.7-1.9 3.4 0" stroke="#2A1E80" strokeWidth="1.3" strokeLinecap="round" fill="none" />
+          : <g style={look}><circle cx="9.1" cy={mood === "think" ? 11 : 11.5} r="1.85" fill="url(#ar-eye)" /><circle cx={mood === "think" ? 9.4 : 8.5} cy={mood === "think" ? 10.2 : 10.8} r=".55" fill="#fff" /></g>}
+        <g style={look}><circle cx="14.9" cy={mood === "think" ? 11 : 11.5} r="1.85" fill="url(#ar-eye)" /><circle cx={mood === "think" ? 15.2 : 14.3} cy={mood === "think" ? 10.2 : 10.8} r=".55" fill="#fff" /></g>
       </>;
-  const mouth = mood === "cheer" ? <path d="M8.6 14.4q3.4 3.6 6.8 0z" fill="#19D3B0" filter="url(#ar-glow)" />
+  const mouth = mood === "wink" ? <path d="M8.8 14.3q3.2 3.2 6.4 0" stroke="#19D3B0" strokeWidth="1.5" strokeLinecap="round" fill="none" filter="url(#ar-glow)" />
+    : mood === "dizzy" ? <path d="M9 15.4q1-1.2 2 0t2 0 2 0" stroke="#19D3B0" strokeWidth="1.3" strokeLinecap="round" fill="none" filter="url(#ar-glow)" />
+    : mood === "cheer" ? <path d="M8.6 14.4q3.4 3.6 6.8 0z" fill="#19D3B0" filter="url(#ar-glow)" />
     : mood === "oops" ? <path d="M9.2 16q2.8-2.4 5.6 0" stroke="#19D3B0" strokeWidth="1.4" strokeLinecap="round" fill="none" filter="url(#ar-glow)" />
     : mood === "think" ? <circle cx="12" cy="15.3" r="1" stroke="#19D3B0" strokeWidth="1.2" fill="none" filter="url(#ar-glow)" />
     : mood === "neutral" ? <path d="M9.4 15h5.2" stroke="#19D3B0" strokeWidth="1.5" strokeLinecap="round" filter="url(#ar-glow)" />
@@ -36,6 +43,8 @@ export function AriaFace({ mood = "happy" }: { mood?: Mood }) {
 }
 
 /** The 3D orb at any size, used in the playroom (the roaming one in the left panel is the .agame-bot button). */
-export function AriaOrb({ mood = "happy", size = 96, anim = "" }: { mood?: Mood; size?: number; anim?: "" | "hop" | "shake" }) {
-  return <span className={`aria-orb${anim ? ` ${anim}` : ""}`} style={{ width: size, height: size }}><AriaFace mood={mood} /></span>;
+export function AriaOrb({ mood = "happy", size = 96, anim = "", onClick }: { mood?: Mood; size?: number; anim?: "" | "hop" | "shake" | "spin" | "peek"; onClick?: () => void }) {
+  const c = `aria-orb${anim ? ` ${anim}` : ""}${onClick ? " poke" : ""}`;
+  return onClick ? <button type="button" className={c} style={{ width: size, height: size }} onClick={onClick} aria-label="Poke Aria"><AriaFace mood={mood} /></button>
+    : <span className={c} style={{ width: size, height: size }}><AriaFace mood={mood} /></span>;
 }
