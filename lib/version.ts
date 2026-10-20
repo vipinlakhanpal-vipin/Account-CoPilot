@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.75";
+export const APP_VERSION = "5.76";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.76", date: "2026-10-20", notes: "Aria rolls around her area and bounces off its edges instead of leaving it.", changes: [
+      { what: "Aria now moves by physics instead of a fixed path: she rolls slowly around the free space in her area and bounces off the left and right edges (and the top and bottom), with a little squash when she hits, and never goes past them. Her speech bubble is kept inside the area too, sliding sideways as she nears an edge while its pointer still points at her. She pauses while the pointer is on her or the tab is hidden, and stays still for people who prefer reduced motion", where: "Left panel, Aria", why: "She slid out past the left and right edges and cut her bubble" },
+  ] },
   { version: "5.75", date: "2026-10-20", notes: "Aria is a glowing 3D orb, and her yellow bubble sits below her.", changes: [
       { what: "Aria's icon is now a glossy 3D orb lit from the top left: a bright highlight, a deep shadowed underside with a bounce of teal light, a soft glow that slowly breathes, and a lifelike robot face (glossy eyes, a glowing mouth and antenna). It lifts toward you and glows brighter on hover and presses in when clicked. The yellow speech bubble now sits below her, with its pointer up, and her roaming area leaves room for it", where: "Left panel, Aria", why: "A more real, touchable look, and the bubble no longer hides behind her" },
   ] },

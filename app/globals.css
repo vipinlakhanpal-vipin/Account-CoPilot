@@ -2476,3 +2476,14 @@ header.top{background:var(--bg);padding-bottom:8px;box-shadow:0 10px 14px -12px 
 .agame-bubble::after,.agame-bubble.funny::after{bottom:auto;top:-6px;transform:rotate(225deg)}
 .agame{top:36%}
 .navmid{min-height:240px}
+
+/* v5.76: Aria rolls inside her area and bounces off its edges (JS, components/AriaGame.tsx); the bubble is kept inside the area */
+.agame{left:0;top:0;animation:none;will-change:transform}
+.agame-bubble{left:var(--bx,-88px)}
+.agame-bubble.funny{left:var(--bx,-92px)}
+.agame-bubble::after,.agame-bubble.funny::after{left:var(--ax,calc(50% - 5px))}
+.agame-bot.bump-x{animation:agame-bump-x .28s ease-out}
+.agame-bot.bump-y{animation:agame-bump-y .28s ease-out}
+@keyframes agame-bump-x{0%{transform:scale(1)}35%{transform:scale(.86,1.1)}100%{transform:scale(1)}}
+@keyframes agame-bump-y{0%{transform:scale(1)}35%{transform:scale(1.1,.86)}100%{transform:scale(1)}}
+.navmid{min-height:260px}

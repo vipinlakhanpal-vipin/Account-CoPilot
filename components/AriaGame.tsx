@@ -28,9 +28,47 @@ export default function AriaGame() {
     loop(true);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
+  // Aria rolls around the free space of her area and bounces off its edges: she never goes past the left or right edge (or the top or bottom), and her speech bubble is kept inside too.
+  // She pauses while the pointer is on her, while the tab is hidden, and stays put for people who prefer reduced motion.
+  const wrap = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = wrap.current, area = el?.parentElement;
+    if (!el || !area) return;
+    const R = 36, PAD = 8, GAP = 54; // orb radius, margin, distance from her centre to the top of the bubble
+    const st = { x: area.clientWidth / 2, y: R + PAD + 6, vx: 26, vy: 18, hover: false, last: 0 };
+    const bot = el.querySelector<HTMLElement>(".agame-bot");
+    const bump = (cls: string) => { if (!bot) return; bot.classList.remove("bump-x", "bump-y"); void bot.offsetWidth; bot.classList.add(cls); setTimeout(() => bot.classList.remove(cls), 280); };
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let raf = 0;
+    const draw = () => {
+      const W = area.clientWidth, H = area.clientHeight;
+      const minX = R + PAD, maxX = Math.max(minX, W - R - PAD), minY = R + PAD, bubbleH = el.querySelector<HTMLElement>(".agame-bubble")?.offsetHeight || 66;
+      const maxY = Math.max(minY, H - GAP - bubbleH - PAD);
+      return { W, minX, maxX, minY, maxY };
+    };
+    const tick = (ts: number) => {
+      raf = requestAnimationFrame(tick);
+      const dt = Math.min(0.05, (ts - (st.last || ts)) / 1000); st.last = ts;
+      const b = draw();
+      if (!reduced && !st.hover && document.visibilityState === "visible") {
+        st.x += st.vx * dt; st.y += st.vy * dt;
+        if (st.x <= b.minX) { st.x = b.minX; st.vx = Math.abs(st.vx); bump("bump-x"); } else if (st.x >= b.maxX) { st.x = b.maxX; st.vx = -Math.abs(st.vx); bump("bump-x"); }
+        if (st.y <= b.minY) { st.y = b.minY; st.vy = Math.abs(st.vy); bump("bump-y"); } else if (st.y >= b.maxY) { st.y = b.maxY; st.vy = -Math.abs(st.vy); bump("bump-y"); }
+      } else { st.x = Math.min(b.maxX, Math.max(b.minX, st.x)); st.y = Math.min(b.maxY, Math.max(b.minY, st.y)); }
+      el.style.transform = `translate(${st.x}px,${st.y}px)`;
+      // keep the bubble fully inside the area, whatever the orb's place; its pointer still points at her
+      const bw = el.querySelector<HTMLElement>(".agame-bubble")?.offsetWidth || 176;
+      const left = Math.min(b.W - PAD - bw - st.x, Math.max(PAD - st.x, -bw / 2));
+      el.style.setProperty("--bx", `${left}px`); el.style.setProperty("--ax", `${-left - 5}px`);
+    };
+    raf = requestAnimationFrame(tick);
+    const over = () => { st.hover = true; }, out = () => { st.hover = false; };
+    el.addEventListener("mouseenter", over); el.addEventListener("mouseleave", out);
+    return () => { cancelAnimationFrame(raf); el.removeEventListener("mouseenter", over); el.removeEventListener("mouseleave", out); };
+  }, []);
   const go = () => { setMood(null); setPunched(true); setTimeout(() => { setPunched(false); if (!path.startsWith("/nav/games")) router.push("/nav/games"); }, 450); };
   return (
-    <div className="agame">
+    <div className="agame" ref={wrap}>
       {!punched && (mood
         ? <span className="agame-bubble funny" role="status">{mood}</span>
         : <span className="agame-bubble" aria-hidden="true">Want to play? 🎮<br />Click me! 👆</span>)}
