@@ -6,7 +6,6 @@ import AccountCopilotAria from "@/components/AriaChat";
 import AriaGame from "@/components/AriaGame";
 import { usePathname, useSearchParams } from "next/navigation";
 
-const STEPS = ["Region & size", "Add Data", "Domains", "Daily plan", "Data sources", "Review"];
 type Mk = { vendors: string[]; partners: { vendor: string; region: string; presence_pending?: boolean }[]; regions: string[] };
 const P = { fill: "none", stroke: "currentColor", strokeWidth: 1.7, strokeLinecap: "round", strokeLinejoin: "round" } as const;
 const ICON: Record<string, React.ReactNode> = {
@@ -46,14 +45,14 @@ export default function NavPanel({ isSuper, isOwner = false }: { isSuper: boolea
     load(); const t = setInterval(load, 300000); window.addEventListener("inactive-changed", load);
     return () => { clearInterval(t); window.removeEventListener("inactive-changed", load); };
   }, [isOwner]);
-  const vendor = params.get("vendor") || "SAP", step = Number(params.get("step")) || 0;
+  const vendor = params.get("vendor") || "SAP";
   // Drop-downs: Market intelligence, Setup wizard and Settings open and close with their arrow (remembered in this browser) and open by themselves when you go into them.
   const [open, setOpen] = useState<Record<string, boolean>>({});
   useEffect(() => { try { const r = JSON.parse(localStorage.getItem("nav-open") || "{}"); if (r && typeof r === "object") setOpen(r); } catch { /* optional */ } }, []);
   const flip = (k: string, v?: boolean) => setOpen((cur) => { const n = { ...cur, [k]: v ?? !cur[k] }; try { localStorage.setItem("nav-open", JSON.stringify(n)); } catch { /* optional */ } return n; });
   const onMarket = path.startsWith("/nav/market"), onWizard = path.startsWith("/nav/wizard"), onSettings = path.startsWith("/nav/settings");
   // Going into a section opens its list; after that the arrow can close it, even while you stay on that page.
-  useEffect(() => { if (onMarket) flip("market", true); if (onWizard) flip("wizard", true); }, [onMarket, onWizard]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (onMarket) flip("market", true); }, [onMarket]); // eslint-disable-line react-hooks/exhaustive-deps
   const count = (v: string) => (mk ? mk.partners.filter((p) => p.vendor === v && !p.presence_pending && mk.regions.includes(p.region)).length : null);
   const group = (key: string, href: string, icon: string, label: string, on: boolean, kids: React.ReactNode) => {
     const isOpen = open[key] ?? on; // an explicit open or close wins, even on that page
@@ -80,18 +79,17 @@ export default function NavPanel({ isSuper, isOwner = false }: { isSuper: boolea
             <Link key={v} href={`/nav/market?vendor=${encodeURIComponent(v)}`} className={onMarket && vendor === v ? "on" : ""}>{v}{count(v) !== null && <small>{count(v)}</small>}</Link>))}</div>)}
         {item("/nav/signals", "signals", "Buying signals", path.startsWith("/nav/signals"))}
       </nav>
-      <div className="navbot">
-        {group("wizard", "/nav/wizard", "wizard", "Setup wizard", onWizard,
-          <div className="navsub">{STEPS.map((s, i) => <Link key={s} href={`/nav/wizard?step=${i + 1}`} className={onWizard && step === i + 1 ? "on" : ""}>{i + 1} {s}</Link>)}</div>)}
-        {item("/nav/team", "team", "Team", path.startsWith("/nav/team"), inactive, "to review", "review")}
-        {item("/nav/settings/icp", "settings", "Settings", onSettings)}
-        <button type="button" className="navit navbtn" onClick={() => window.dispatchEvent(new CustomEvent("history-open"))} title="What changed in each update"><Ic n="history" />Version history</button>
-        {item("/nav/suggestions", "bulb", "Suggestions", path.startsWith("/nav/suggestions"))}
-        {!isSuper && <small className="navnote">Some settings are read-only for you.</small>}
-      </div>
       <div className="navmid">
         <AriaGame onChat={() => document.querySelector<HTMLButtonElement>(".nav-aria-mini")?.click()} />
         <div hidden><AccountCopilotAria buttonClassName="nav-aria-mini" /></div>
+      </div>
+      <div className="navbot">
+        {item("/nav/wizard", "wizard", "Setup wizard", onWizard)}
+        {item("/nav/team", "team", "Team", path.startsWith("/nav/team"), inactive, "to review", "review")}
+        <button type="button" className="navit navbtn" onClick={() => window.dispatchEvent(new CustomEvent("history-open"))} title="What changed in each update"><Ic n="history" />Version history</button>
+        {item("/nav/suggestions", "bulb", "Suggestions", path.startsWith("/nav/suggestions"))}
+        {item("/nav/settings/icp", "settings", "Settings", onSettings)}
+        {!isSuper && <small className="navnote">Some settings are read-only for you.</small>}
       </div>
       <div className="navprof-wrap"><ProfileMenu variant="panel" /></div>
     </aside>

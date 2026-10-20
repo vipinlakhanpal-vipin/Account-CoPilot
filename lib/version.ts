@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.49";
+export const APP_VERSION = "5.50";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.50", date: "2026-10-20", notes: "Setup wizard also becomes a single item with its steps as tabs; the lower items sit at the bottom again, with Settings last.", changes: [
+      { what: "Setup wizard has no drop-down any more: Introduction and the six steps are tabs above the page. The lower items (Setup wizard, Team, Version history, Suggestions, Settings) sit at the foot of the panel again, with Settings last, just above your profile. Aria fills the space between the lists and them", where: "Left panel, Setup wizard", why: "With no drop-downs in the lower group, nothing there can grow, so it can sit at the bottom without items jumping" },
+  ] },
   { version: "5.49", date: "2026-10-20", notes: "Settings is one item in the left panel; Define ICP, Engine and PIN and Learn me are tabs on the right.", changes: [
       { what: "Settings no longer has a drop-down in the left panel. Clicking it opens Settings with three tabs above the page (Define ICP, Engine and PIN, Learn me); Define ICP is the one showing first", where: "Left panel → Settings", why: "The Settings list took up room in the panel and was open before you clicked it" },
   ] },

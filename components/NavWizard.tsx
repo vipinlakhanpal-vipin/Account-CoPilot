@@ -30,7 +30,7 @@ function Intro({ canChange }: { canChange: boolean }) {
             </ul></div>
           <div><h3>How it works</h3>
             <ol>
-              <li>Pick a step in the left panel, or press <b>Start</b> below.</li>
+              <li>Pick a step in the tabs above, or press <b>Start</b> below.</li>
               <li>Answer in plain choices. Nothing is saved until the last step.</li>
               <li>On <b>Review</b>, press Save and apply. Every account&apos;s status is recalculated at once.</li>
               <li>At the next 6am Dubai run the agent finds and verifies companies by your rules, and posts what it did in <b>Daily run</b>.</li>
@@ -60,9 +60,19 @@ function Intro({ canChange }: { canChange: boolean }) {
 // The Setup wizard as a page in the right pane: its introduction first, then a step once one is chosen. Back and Next move the step in the address too, so the left panel highlights the same one.
 export default function NavWizard({ access, step }: { access: Access; step: number }) {
   const router = useRouter();
-  if (!step) return <Intro canChange={access.isSuper} />;
+  // The introduction and the six steps are tabs above the page, the same way Settings shows its pages.
+  const tabs = (
+    <div className="settabs-wrap">
+      <nav className="settabs" aria-label="Setup wizard">
+        <Link href="/nav/wizard" className={!step ? "on" : ""} aria-current={!step ? "page" : undefined}>Introduction</Link>
+        {STEPS.map((s) => <Link key={s.n} href={`/nav/wizard?step=${s.n}`} className={step === s.n ? "on" : ""} aria-current={step === s.n ? "step" : undefined}>{s.n} {s.title}</Link>)}
+      </nav>
+    </div>
+  );
+  if (!step) return <>{tabs}<Intro canChange={access.isSuper} /></>;
   return (
     <>
+      {tabs}
       <h1 className="nav-h">Setup wizard <small className="wiz-crumb">Step {step} of 6</small></h1>
       <HomeWorkspace access={access} layout="wizard" forceStep={step} onStepChange={(n) => { if (n !== step) router.replace(`/nav/wizard?step=${n}`, { scroll: false }); }} />
     </>
