@@ -1086,8 +1086,10 @@ function HubSpotBlock({ hs }: { hs: Record<string, any> }) {
   );
 }
 
+// Entries of the profile that the app and the engine keep for their own use. Only the user's workbook sheets belong in "Your profiling".
+const APP_PROFILE_KEYS = new Set(["HubSpot", "Merged companies", "Revenue check", "Status changed", "Claude discovery", "Enrichment", "User focus", "User-confirmed platform", "Original name", "Parent group", "Watch", "Pitch plan", "User upload"]);
 function Profile({ profile }: { profile: Record<string, Record<string, unknown>> }) {
-  const sheets = Object.entries(profile).filter(([k, v]) => k !== "HubSpot" && v && Object.keys(v).length);
+  const sheets = Object.entries(profile).filter(([k, v]) => !APP_PROFILE_KEYS.has(k) && v && typeof v === "object" && !Array.isArray(v) && Object.keys(v).length);
   if (!sheets.length) return null;
   return (
     <div className="block input-block">
