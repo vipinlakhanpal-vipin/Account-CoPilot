@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.35";
+export const APP_VERSION = "5.36";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.36", date: "2026-10-20", notes: "Inactive and Archived users are compact tables.", changes: [
+      { what: "Inactive users is one fine-print line per person (name, role, email, last active, days idle, suspended, Keep, Archive and delete). An arrow opens what would be removed and what stays. Archived users uses the same compact style", where: "components/InactiveUsers.tsx, app/globals.css", why: "Reported — the table was too big" },
+    ] },
   { version: "5.35", date: "2026-10-20", notes: "A real, larger carbon-fibre weave on the left panel.", changes: [
       { what: "The left panel's weave is now a carbon-fibre weave: square tiles of diagonal strands, the direction alternating tile by tile (about 32px a tile instead of 12px), with a soft sheen across the green to violet gradient. Labels have a light shadow so they stay readable on it", where: "app/globals.css", why: "Reported — the weave was too small and did not look like carbon fibre" },
     ] },

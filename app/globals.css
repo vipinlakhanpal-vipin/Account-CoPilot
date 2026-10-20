@@ -2137,3 +2137,16 @@ header.top{background:var(--bg);padding-bottom:8px;box-shadow:0 10px 14px -12px 
 .navpanel>*{position:relative;z-index:1}
 
 .navpanel .navit,.navpanel .navbtn,.navpanel .navsub a,.navpanel .navmid-label,.navpanel .navprof-t{text-shadow:0 1px 2px rgba(0,0,0,.4)}
+
+/* v5.36: Inactive and Archived users: one fine line per person, details on demand */
+.inactive-table{width:100%;font-size:12px}
+.inactive-table th{font-size:10px;padding:6px 8px}
+.inactive-table td{padding:5px 8px;font-size:12px;white-space:nowrap;vertical-align:middle}
+.inactive-table .role-tag{font-size:10px;padding:2px 8px}
+.inactive-table .btn.tiny{font-size:11px;padding:3px 9px}
+.inactive-table .mono{font-size:11.5px}
+.inactive-tog{all:unset;cursor:pointer;width:20px;text-align:center;color:var(--muted)}
+.inactive-tog:focus-visible{outline:2px solid var(--teal)}
+.inactive-more td{white-space:normal;background:var(--surface-2)}
+.inactive-more .inactive-lists{font-size:11.5px}
+.inactive-card h2{margin-bottom:2px}
