@@ -17,5 +17,5 @@
     "paths": { "@/*": ["./*"] }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", "scripts", "data", "output"]
+  "exclude": ["node_modules", "scripts", "data", "output", "packages/aria-playroom"]
 }

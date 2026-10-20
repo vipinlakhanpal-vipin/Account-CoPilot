@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.84";
+export const APP_VERSION = "5.85";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.85", date: "2026-10-20", notes: "Aria and her games now have a folder of their own, ready to lift into another app.", changes: [
+      { what: "packages/aria-playroom holds a copy of everything built for Aria: the roaming orb, her moods and bubbles, the playroom, the eleven games, medals, the shelf and her game chat, with all their styles, a README, an integration guide, notes on her character and on every game, and a manifest. A sync script keeps the folder current", where: "Project folder, packages/aria-playroom", why: "So Aria can be dropped into another app as she is" },
+  ] },
   { version: "5.84", date: "2026-10-20", notes: "Eleven games on the shelf, and you choose which ones stay.", changes: [
       { what: "The shelf now holds eleven games. Four new ones: Reaction speed (reaction time), Digit span (short-term memory), Odd one out (categorising and logic) and Process order (sequencing, with real procurement processes). A shelf toolbar shows how many games you have downloaded, filters the shelf (All games, On my shelf, Not downloaded) and has Restore starter set. Each game you have gets a Remove button next to Play, and Get game brings it back. Aria knows the new games, answers questions about them (including where a downloaded game lives) and gives medals for them", where: "Aria, the playroom", why: "A fuller library that you can tidy and refill" },
   ] },

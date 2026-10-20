@@ -173,6 +173,11 @@ Every Anthropic-API route (`/api/research`, `/api/discover`, `/api/pitch`, and `
 ## Free pitch plan (v4.81)
 - Account page → Pitch planner: **Draft pitch plan (free)** (`components/FreePitch.tsx`) queues job mode `pitch`; a scheduled session reads `pitch_facts` (`lib/pitchFacts.ts`, contacts as names and titles only), may search public news, writes the plan and saves it with `save_pitch` into `companies.profile["Pitch plan"]` (read back by `GET /api/pitch?slug=`). The paid **Draft now (instant)** button (`/api/pitch` POST, Opus, PIN) is kept for when the answer is needed at once. The free one adds public-news research and an opening message; it takes minutes and uses the routine's model (Sonnet).
 
+## Aria playroom package (v5.85)
+- **Folder:** `packages/aria-playroom/` holds everything built for Aria as a character and for her games (roaming 3D orb, moods, speech bubbles, the playroom page she hosts, eleven games, medals, the shelf with Get game / Remove, her game chat, all styles) as a copy-in package with `README.md`, `docs/INTEGRATION.md`, `docs/ARIA-CHARACTER.md`, `docs/GAMES.md` and `MANIFEST.json`. To reuse it in another app, point Claude Code at that folder and follow `docs/INTEGRATION.md`.
+- **Keep it current:** the app runs from its own files (`components/AriaGame.tsx`, `AriaFace.tsx`, `GameRoom.tsx`, `AriaMiniGames.tsx`, `components/games/*`, `app/nav/games`); after changing any of them run `npx -y -p node@22 node scripts/sync_aria_playroom.mjs` and commit. The package is excluded from `tsc` (`tsconfig.json`).
+- Aria is reached only through the roaming orb (no Game room tab). Everything is browser-only: shelf `aria-games-owned`, medals `aria-awards`, best scores `aria-*-best`; no API cost. The chat assistant itself stays in `packages/aria`.
+
 ## Guide & Research more (v1.14)
 - `/guide` documents every feature, the point system and the engine steps. Update it whenever a feature or rule changes (the spend table reads `SPEND_BENCHMARKS` from `lib/icp.ts`).
 - **Research more** (left panel) → `app/api/discover` → `discoverCompanies()` in `lib/research/engine.ts`. It is paid and user-triggered with a confirmation: it adds companies as list "Claude discovery" and, optionally, runs a Quick research per company. `app/api/research` now sets ICP status from the researched revenue (same rule as recompute).
