@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.83";
+export const APP_VERSION = "5.84";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.84", date: "2026-10-20", notes: "Eleven games on the shelf, and you choose which ones stay.", changes: [
+      { what: "The shelf now holds eleven games. Four new ones: Reaction speed (reaction time), Digit span (short-term memory), Odd one out (categorising and logic) and Process order (sequencing, with real procurement processes). A shelf toolbar shows how many games you have downloaded, filters the shelf (All games, On my shelf, Not downloaded) and has Restore starter set. Each game you have gets a Remove button next to Play, and Get game brings it back. Aria knows the new games, answers questions about them (including where a downloaded game lives) and gives medals for them", where: "Aria, the playroom", why: "A fuller library that you can tidy and refill" },
+  ] },
   { version: "5.83", date: "2026-10-20", notes: "Aria is naughty in the playroom.", changes: [
       { what: "In the playroom Aria floats and sways, and her eyes follow your pointer. If you leave her alone for a few seconds she gets up to mischief: teases you (Are you going to play, or just stare at me?), wiggles a random book on the shelf and tells you to try it, spins, or peeks out and back. Click her and she giggles, winks or says Boop; poke her five times fast and she gets dizzy. New expressions: wink and dizzy. It all stops for people who prefer reduced motion", where: "Aria, the playroom", why: "To keep people engaged and make her feel alive" },
   ] },

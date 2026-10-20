@@ -5,6 +5,7 @@ import { AriaOrb, type Mood } from "@/components/AriaFace";
 import Jigsaw from "@/components/games/Jigsaw";
 import { Quiz, Words } from "@/components/AriaMiniGames";
 import { PatternMemory, MathSprint, ColourClash, NumberSeries } from "@/components/games/Cognitive";
+import { ReactionTest, DigitSpan, OddOneOut, ProcessOrder } from "@/components/games/Brain2";
 
 // Aria's playroom: she is the host. She greets you, introduces each game, cheers when you get something right, groans when you don't, nudges you when you are stuck, and congratulates you at the end.
 // Her face and the little hop or shake follow what happens in the game (each game reports its events through onEvent).
@@ -35,6 +36,10 @@ const INTRO: Record<GameId, string> = {
   math: "Sums against the clock. Quick fingers, quick mind.",
   stroop: "Careful: the word and its colour will disagree. Trust your eyes, not your reading.",
   series: "Find what comes next. Every answer comes with the rule behind it.",
+  react: "Fast fingers? Wait for green, then hit it. No cheating.",
+  digits: "Hold the number in your head. How long a one can you carry?",
+  odd: "Four things, one imposter. Spot the one that doesn't belong.",
+  process: "Put the steps in the order they really happen.",
 };
 const MOOD: Record<GameEvent, Mood> = { start: "happy", good: "cheer", bad: "oops", hint: "think", hurry: "oops", win: "cheer", lose: "oops" };
 const spineH = (name: string) => Math.min(150, Math.max(104, 50 + name.length * 6.5));
@@ -57,6 +62,10 @@ function awardFor(id: GameId, d: WinData): Award {
   if (id === "math") { const sc = d.score ?? 0, medal: Medal = sc >= 15 ? "gold" : sc >= 11 ? "silver" : "bronze"; return { medal, title: MEDAL_NAME[medal], line: `${sc} right in 45 seconds.`, badge: sc >= 15 ? "Human calculator" : undefined }; }
   if (id === "stroop") { const sc = d.score ?? 0, medal: Medal = sc >= 20 ? "gold" : sc >= 15 ? "silver" : "bronze"; return { medal, title: MEDAL_NAME[medal], line: `${sc} right in 30 seconds.`, badge: sc >= 20 ? "Laser focus" : undefined }; }
   if (id === "series") { const sc = d.score ?? 0, medal: Medal = sc >= 8 ? "gold" : sc >= 6 ? "silver" : "bronze"; return { medal, title: MEDAL_NAME[medal], line: `${sc} of ${d.total ?? 8} right.`, badge: sc >= 8 ? "Pattern spotter" : undefined }; }
+  if (id === "react") { const ms = d.score ?? 500, medal: Medal = ms <= 260 ? "gold" : ms <= 340 ? "silver" : "bronze"; return { medal, title: MEDAL_NAME[medal], line: `Average ${ms} ms.`, badge: ms <= 260 ? "Lightning reflexes" : undefined }; }
+  if (id === "digits") { const sc = d.score ?? 0, medal: Medal = sc >= 8 ? "gold" : sc >= 7 ? "silver" : "bronze"; return { medal, title: MEDAL_NAME[medal], line: `You held ${sc} digits.`, badge: sc >= 8 ? "Elephant memory" : undefined }; }
+  if (id === "odd") { const sc = d.score ?? 0, medal: Medal = sc >= 8 ? "gold" : sc >= 7 ? "silver" : "bronze"; return { medal, title: MEDAL_NAME[medal], line: `${sc} of ${d.total ?? 8} right.`, badge: sc >= 8 ? "Sharp eye" : undefined }; }
+  if (id === "process") { const sc = d.score ?? 0, medal: Medal = sc >= 5 ? "gold" : sc >= 4 ? "silver" : "bronze"; return { medal, title: MEDAL_NAME[medal], line: `${sc} of ${d.total ?? 5} in perfect order.`, badge: sc >= 5 ? "Process pro" : undefined }; }
   const h = d.hints ?? 0, medal: Medal = h === 0 ? "gold" : h === 1 ? "silver" : "bronze";
   return { medal, title: MEDAL_NAME[medal], line: `Level ${d.level ?? 1} cleared${h ? ` with ${h} hint${h === 1 ? "" : "s"}` : " with no hints"}.`, badge: h === 0 ? "No hints" : undefined };
 }
@@ -73,7 +82,11 @@ const HOW: Record<GameId, string> = {
   pattern: "Press Play and watch the four pads light up in an order. Then press them in the same order. Each round adds one more. A mistake ends the game, and the longest chain you held is your score.",
   math: "Each question is a sum with four possible answers. Press the right one. You have 45 seconds and the sums get harder as you go.",
   stroop: "A colour name appears written in a different colour. Press the colour the letters are painted in, not the colour the word says. You have 30 seconds.",
-  series: "You see five numbers in a pattern. Pick the number that comes next. There are eight questions, no timer, and every answer shows the rule."
+  series: "You see five numbers in a pattern. Pick the number that comes next. There are eight questions, no timer, and every answer shows the rule.",
+  react: "Press nothing until the pad turns green, then click it as fast as you can. Clicking early costs the round. Five rounds, and your average time is your score.",
+  digits: "A number flashes for a moment, then hides. Type it back and press Check. Each round adds one digit. A mistake ends the game.",
+  odd: "You see four items. Press the one that does not belong with the other three. Eight questions, no timer, each answer explained.",
+  process: "You see the name of a process and its steps in a jumbled order. Tap the steps in the order they happen. Five processes, no timer.",
 };
 const TIPS: Record<GameId, string> = {
   jigsaw: "Start with the corners and the pieces with a flat edge. Keep the board in view, and don't drag a piece far: it snaps in when it's close.",
@@ -82,7 +95,11 @@ const TIPS: Record<GameId, string> = {
   pattern: "Say the colours quietly to yourself, or group them in twos and threes. Don't look away while it plays.",
   math: "Round to tens, then adjust. Skip nothing: a wrong answer costs only time, so keep moving.",
   stroop: "Look at the colour first and ignore what the word says. It gets easier after a few tries.",
-  series: "Look at the gaps between numbers first. If they are not equal, check whether the gaps themselves grow, or whether the numbers multiply."
+  series: "Look at the gaps between numbers first. If they are not equal, check whether the gaps themselves grow, or whether the numbers multiply.",
+  react: "Rest your finger on the button and watch the colour, not the words. Don't guess: an early click wastes the round.",
+  digits: "Chunk the number into pairs or threes, like a phone number, and say it quietly while it shows.",
+  odd: "Find what three of them have in common first. The odd one is whatever is left over.",
+  process: "Start with the very first and very last steps; the middle ones fall into place.",
 };
 const SCORING: Record<GameId, string> = {
   jigsaw: "Medals by time: gold up to 35 seconds, silver up to 48, bronze up to 60. Beat your own best and I add a New best badge.",
@@ -91,10 +108,14 @@ const SCORING: Record<GameId, string> = {
   pattern: "Win a medal by holding a chain of 4 or more: bronze for 4 or 5, silver for 6 or 7, gold for 8 or more.",
   math: "Medals by right answers: bronze for 7, silver for 11, gold for 15 or more.",
   stroop: "Medals by right answers: bronze for 10, silver for 15, gold for 20 or more.",
-  series: "Medals by score: bronze for 5, silver for 6 or 7, gold for 8 of 8."
+  series: "Medals by score: bronze for 5, silver for 6 or 7, gold for 8 of 8.",
+  react: "You win a medal with an average of 500 ms or better: bronze up to 500, silver up to 340, gold up to 260.",
+  digits: "You win a medal by holding 5 digits or more: bronze for 5 or 6, silver for 7, gold for 8 or more.",
+  odd: "Medals by score: bronze for 5 or 6, silver for 7, gold for 8 of 8.",
+  process: "A process counts as perfect when you tap every step right first time. Bronze for 3 perfect, silver for 4, gold for 5.",
 };
-const TIME: Record<GameId, string> = { jigsaw: "The jigsaw gives you 60 seconds.", quiz: "True or false gives you 45 seconds for all eight questions.", words: "Word scramble has no timer at all. Take as long as you like.", pattern: "Pattern memory has no timer. It ends when you make a mistake.", math: "Math sprint gives you 45 seconds.", stroop: "Colour clash gives you 30 seconds.", series: "Number series has no timer." };
-const NAMES: [RegExp, GameId][] = [[/jigsaw|puzzle|pieces/, "jigsaw"], [/true|false|quiz/, "quiz"], [/word|scramble|letters/, "words"], [/pattern|simon|pads/, "pattern"], [/math|sprint|sums|arithmetic/, "math"], [/colou?r|clash|stroop|ink/, "stroop"], [/series|sequence|next number/, "series"]];
+const TIME: Record<GameId, string> = { jigsaw: "The jigsaw gives you 60 seconds.", quiz: "True or false gives you 45 seconds for all eight questions.", words: "Word scramble has no timer at all. Take as long as you like.", pattern: "Pattern memory has no timer. It ends when you make a mistake.", math: "Math sprint gives you 45 seconds.", stroop: "Colour clash gives you 30 seconds.", series: "Number series has no timer.", react: "Reaction speed is five quick rounds with no clock.", digits: "Digit span has no timer.", odd: "Odd one out has no timer.", process: "Process order has no timer." };
+const NAMES: [RegExp, GameId][] = [[/jigsaw|puzzle|pieces/, "jigsaw"], [/true|false|quiz/, "quiz"], [/word|scramble|letters/, "words"], [/pattern|simon|pads/, "pattern"], [/math|sprint|sums|arithmetic/, "math"], [/colou?r|clash|stroop|ink/, "stroop"], [/series|sequence|next number/, "series"], [/react|reflex|speed test/, "react"], [/digit|span/, "digits"], [/odd|belong|imposter/, "odd"], [/process|order the steps/, "process"]];
 function reply(q: string, idx: number, bestOf: (i: number) => string): { text: string; full?: boolean } {
   const t = q.toLowerCase(), named = NAMES.find(([r]) => r.test(t)), ni = named ? GAMES.findIndex((g) => g.id === named[1]) : -1, i = ni >= 0 ? ni : idx, id = GAMES[i].id as GameId;
   const lead = ni >= 0 && ni !== idx ? `About ${GAMES[i].name}: ` : "";
@@ -102,7 +123,7 @@ function reply(q: string, idx: number, bestOf: (i: number) => string): { text: s
   if (/medal|award|gold|silver|bronze|score|point|trophy/.test(t)) return { text: lead + SCORING[id] };
   if (/best|record/.test(t)) return { text: `Your best in ${GAMES[i].name}: ${bestOf(i)}.` };
   if (/time|how long|second|clock|timer|minute/.test(t)) return { text: lead + TIME[id] };
-  if (/download|get game|install|own/.test(t)) return { text: "Books on the shelf with a download mark are not in your games yet. Select one and press Get game: it installs in a moment, and then you can play it." };
+  if (/download|get game|install|own/.test(t)) return { text: "Books with a download mark are not on your shelf yet. Select one and press Get game and it is added in a moment. Nothing is saved on your computer: the game is part of this app, and your shelf (which games you have) is remembered in this browser. You can remove a game from the shelf any time, and get it back later." };
   if (/skill|brain|train|cognitive|memory/.test(t)) return { text: "Each game trains something: " + GAMES.map((g) => `${g.name} (${g.skill.toLowerCase()})`).join(", ") + "." };
   if (/level/.test(t)) return { text: "Levels are in Word scramble: Level 1 has 3-letter words, Level 2 has 5, Level 3 has 7 and Level 4 has 10, five words each. Pick any level from the tabs." };
   if (/tip|hint|help|stuck|trick|advice/.test(t)) return { text: lead + TIPS[id] };
@@ -118,6 +139,10 @@ function View({ id, onClose, onEvent }: { id: GameId; onClose: () => void; onEve
   if (id === "math") return <MathSprint onClose={onClose} onEvent={onEvent} />;
   if (id === "stroop") return <ColourClash onClose={onClose} onEvent={onEvent} />;
   if (id === "series") return <NumberSeries onClose={onClose} onEvent={onEvent} />;
+  if (id === "react") return <ReactionTest onClose={onClose} onEvent={onEvent} />;
+  if (id === "digits") return <DigitSpan onClose={onClose} onEvent={onEvent} />;
+  if (id === "odd") return <OddOneOut onClose={onClose} onEvent={onEvent} />;
+  if (id === "process") return <ProcessOrder onClose={onClose} onEvent={onEvent} />;
   return <Words onClose={onClose} onEvent={onEvent} />;
 }
 
@@ -144,6 +169,7 @@ export default function GameRoom() {
   const [say, setSay] = useState(LINES.arrive[0]), [mood, setMood] = useState<Mood>("happy"), [anim, setAnim] = useState<"" | "hop" | "shake" | "spin" | "peek">(""), last = useRef(""), idleAt = useRef(Date.now());
   const [awards, setAwards] = useState<Stored[]>([]), [shown, setShown] = useState<Award | null>(null);
   const [owned, setOwned] = useState<GameId[]>(() => GAMES.filter((g) => g.starter).map((g) => g.id)), [getting, setGetting] = useState<GameId | null>(null);
+  const [filter, setFilter] = useState<"all" | "mine" | "new">("all");
   const [tip, setTip] = useState<{ i: number; left: number; bottom: number } | null>(null), wrapRef = useRef<HTMLDivElement>(null);
   const [msgs, setMsgs] = useState<{ who: "you" | "aria"; text: string }[]>([]), [q, setQ] = useState(""), [offerFull, setOfferFull] = useState(false), logRef = useRef<HTMLDivElement>(null);
   useEffect(() => { setAwards(loadAwards()); setOwned(loadOwned()); }, []);
@@ -205,6 +231,16 @@ export default function GameRoom() {
       speak(`${g.name} is on your shelf now. Want to play it?`, "cheer", "hop");
     }, 900);
   };
+  const removeGame = () => {
+    const next = owned.filter((x) => x !== g.id); setOwned(next); setPlaying(false);
+    try { localStorage.setItem(OWNED_KEY, JSON.stringify(next)); } catch { /* optional */ }
+    speak(`${g.name} is off your shelf. It stays in the library if you change your mind.`, "oops");
+  };
+  const restoreStarters = () => {
+    const next = GAMES.filter((x) => x.starter).map((x) => x.id); setOwned(next); setPlaying(false);
+    try { localStorage.setItem(OWNED_KEY, JSON.stringify(next)); } catch { /* optional */ }
+    speak("Back to the starter shelf: the jigsaw, True or false and Word scramble.", "happy");
+  };
   const askAria = () => document.querySelector<HTMLButtonElement>(".nav-aria-mini")?.click();
   const ask = (text: string) => {
     const t = text.trim(); if (!t) return;
@@ -242,10 +278,18 @@ export default function GameRoom() {
         </div>
       </form>
 
+      <div className="gr-shelfbar">
+        <span><b>My shelf</b> · {owned.length} of {GAMES.length} games downloaded</span>
+        <span className="gr-filters" role="group" aria-label="Show">
+          {([["all", "All games"], ["mine", "On my shelf"], ["new", "Not downloaded"]] as const).map(([k, l]) => <button type="button" key={k} aria-pressed={filter === k} onClick={() => setFilter(k)}>{l}</button>)}
+        </span>
+        <button type="button" className="btn tiny" onClick={restoreStarters} title="Keep only the three starter games">Restore starter set</button>
+      </div>
       <div className="gr-shelfwrap" ref={wrapRef} onMouseLeave={() => setTip(null)}>
         <div className="gr-shelf" role="tablist" aria-label="Aria's games" onScroll={() => setTip(null)}>
           {GAMES.map((x, i) => {
             const mine = owned.includes(x.id);
+            if ((filter === "mine" && !mine) || (filter === "new" && mine)) return null;
             return (
               <button type="button" key={x.id} role="tab" aria-selected={i === pick} className={`gr-spine${mine ? "" : " away"}${wiggle === i ? " wiggle" : ""}`} onClick={() => choose(i)}
                 onMouseEnter={(e) => showTip(i, e.currentTarget)} onFocus={(e) => showTip(i, e.currentTarget)} onBlur={() => setTip(null)}
@@ -272,7 +316,8 @@ export default function GameRoom() {
         </div>
         <span className="gr-row-best">🏆 {g.best()}</span>
         {has
-          ? <button type="button" className="btn primary gr-go" onClick={play}>{playing ? "Play again" : "Play with Aria"}</button>
+          ? <span className="gr-go-wrap"><button type="button" className="btn primary gr-go" onClick={play}>{playing ? "Play again" : "Play with Aria"}</button>
+              <button type="button" className="btn tiny gr-remove" onClick={removeGame} title="Take it off your shelf; you can download it again later">Remove</button></span>
           : <button type="button" className="btn primary gr-go" onClick={getGame} disabled={getting === g.id}>
               <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ marginRight: 6, verticalAlign: -2 }}><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 20h14" /></svg>{getting === g.id ? "Downloading…" : "Get game"}</button>}
       </div>

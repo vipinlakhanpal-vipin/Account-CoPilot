@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 
 // The games in Aria's Game room, each a book on the shelf. Add a row here and a new book appears (the shelf scrolls when there are many).
-export type GameId = "jigsaw" | "quiz" | "words" | "pattern" | "math" | "stroop" | "series";
+export type GameId = "jigsaw" | "quiz" | "words" | "pattern" | "math" | "stroop" | "series" | "react" | "digits" | "odd" | "process";
 /** What a game tells its host: it started, the player did something right or wrong, asked for a hint, is running out of time, won or lost. */
 /** Details a game passes with a win, so Aria can pick the medal. */
 export type WinData = { seconds?: number; newBest?: boolean; score?: number; total?: number; hints?: number; level?: number };
@@ -25,5 +25,13 @@ export const GAMES: Game[] = [
     icon: svg(<><circle cx="9" cy="10" r="5" /><circle cx="15" cy="14" r="5" /></>), best: () => { const b = num("aria-stroop-best"); return b ? `Best ${b} right` : "Not played yet"; } },
   { id: "series", name: "Number series", skill: "Logical reasoning", fill: "#D3D1C7", ink: "#2C2C2A", time: "No timer", timed: false, blurb: "Find the number that comes next in the pattern. Eight questions, each explained.",
     icon: svg(<><path d="M4 17l4-5 4 3 5-8" /><path d="M17 7h3v3" /></>), best: () => { const b = num("aria-series-best"); return b ? `Best ${b} of 8` : "Not played yet"; } },
+  { id: "react", name: "Reaction speed", skill: "Reaction time", fill: "#F7C1C1", ink: "#791F1F", time: "5 rounds", timed: false, blurb: "Wait for the pad to turn green, then click as fast as you can. Five rounds, averaged.",
+    icon: svg(<path d="M13 3L5 14h6l-1 7 8-11h-6z" />), best: () => { const b = num("aria-react-best"); return b ? `Best ${b} ms` : "Not played yet"; } },
+  { id: "digits", name: "Digit span", skill: "Short-term memory", fill: "#9FE1CB", ink: "#085041", time: "No timer", timed: false, blurb: "A number flashes and hides. Type it back. It grows by one digit each round.",
+    icon: svg(<path d="M5 8h4M7 6v6M13 8h6M15 14h4M5 17h6" />), best: () => { const b = num("aria-digits-best"); return b ? `Best ${b} digits` : "Not played yet"; } },
+  { id: "odd", name: "Odd one out", skill: "Categorising and logic", fill: "#E1DEFB", ink: "#3C3489", time: "No timer", timed: false, blurb: "Four items, one does not belong. Spot it. Eight questions, each explained.",
+    icon: svg(<><circle cx="7" cy="8" r="2.5" /><circle cx="17" cy="8" r="2.5" /><circle cx="7" cy="17" r="2.5" /><path d="M14.5 14.5l5 5m0-5l-5 5" /></>), best: () => { const b = num("aria-odd-best"); return b ? `Best ${b} of 8` : "Not played yet"; } },
+  { id: "process", name: "Process order", skill: "Sequencing and planning", fill: "#FAEEDA", ink: "#633806", time: "No timer", timed: false, blurb: "Tap the steps of a real procurement process in the order they happen.",
+    icon: svg(<><path d="M5 6h6M5 12h10M5 18h14" /><path d="M16 4l3 2-3 2" /></>), best: () => { const b = num("aria-process-best"); return b ? `Best ${b} of 5 perfect` : "Not played yet"; } },
 ];
 

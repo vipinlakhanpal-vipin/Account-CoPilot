@@ -2625,3 +2625,27 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 .gr-spine.wiggle{animation:gr-wiggle .45s ease-in-out 4}
 @keyframes gr-wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-5deg)}75%{transform:rotate(5deg)}}
 @media (prefers-reduced-motion:reduce){.gr-bob,.aria-orb.spin,.aria-orb.peek,.gr-spine.wiggle{animation:none}}
+
+/* v5.84: more games on the shelf, a shelf toolbar (filter, restore starters), Remove, and the styles of the four new games */
+.gr-shelfbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px;font-size:12.5px;color:var(--muted)}
+.gr-shelfbar b{color:var(--text-strong)}
+.gr-shelfbar .btn{margin-left:auto}
+.gr-filters{display:inline-flex;gap:4px}
+.gr-filters button{font:600 12px var(--body);padding:3px 11px;border-radius:999px;border:1px solid var(--line-2);background:var(--tab-bg);color:var(--tab-fg);cursor:pointer}
+.gr-filters button[aria-pressed="true"]{background:var(--tab-on);color:var(--tab-on-fg);border-color:transparent}
+.gr-shelfwrap{margin-top:6px}
+.gr-go-wrap{display:inline-flex;align-items:center;gap:8px;flex:none}
+.gr-remove{opacity:.85}
+.b2-react{display:flex;flex-direction:column;align-items:center;gap:12px;padding:8px 0}
+.b2-pad{all:unset;box-sizing:border-box;width:min(420px,100%);height:150px;border-radius:18px;display:grid;place-items:center;font:800 24px var(--display);color:#fff;cursor:pointer;background:#6B7280;transition:background .05s}
+.b2-pad.go{background:#16A34A}
+.b2-pad.early{background:#D92D20}
+.b2-pad.shown{background:#378ADD}
+.b2-pad:focus-visible{outline:3px solid var(--teal);outline-offset:3px}
+.b2-digits{letter-spacing:.3em;font-size:44px}
+.b2-input{width:200px;padding:10px 12px;border-radius:10px;border:1px solid var(--line-2);background:var(--surface-2,var(--surface));color:var(--text-strong);font:700 22px var(--mono);letter-spacing:.2em;text-align:center}
+.b2-word{font:700 16px var(--body)}
+.b2-done{list-style:none;margin:0;padding:0;display:grid;gap:6px;width:min(460px,100%)}
+.b2-done li{padding:8px 12px;border-radius:10px;border:1px dashed var(--line-2);color:var(--muted);font-size:13.5px}
+.b2-done li.on{border-style:solid;border-color:#0B9E6F;background:color-mix(in srgb,#2ECC8F 22%,var(--surface));color:var(--text-strong);font-weight:600}
+.b2-step{font:600 14px var(--body)}
