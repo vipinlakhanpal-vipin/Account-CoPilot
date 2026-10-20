@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.99";
+export const APP_VERSION = "6.00";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.00", date: "2026-10-20", notes: "The Find a company title matches the other page titles.", changes: [
+      { what: "The Find a company title is now 22 px in the same face as the titles of Daily run, Market intelligence, Buying signals and the Setup wizard (it was 30 px)", where: "Find and search", why: "Page titles look the same across the app" },
+  ] },
   { version: "5.99", date: "2026-10-20", notes: "Ask Aria about your data has its own button; the Dashboard is home; Aria's tips fold away.", changes: [
       { what: "A teal Ask Aria about your data button sits under Aria and opens the chat assistant that answers questions about the accounts, contacts and signals in the app (the orb itself only sends her roaming, and Play games with Aria opens the playroom). The tips and the Quiet mode switches are folded behind a Tips and settings arrow, closed by default and remembered. The labels now say what they do: Quiet mode (just me) is your own choice in this browser; Quiet for everyone (default for other users) is the Super Admin's default for people who have not chosen, and each person's own switch still wins. The Dashboard is now Home: the old Home address goes to it, the logo and the app name in the top bar open it, and Done playing returns to it", where: "Left panel, Aria; top bar", why: "Aria's data chat was unreachable after she became a games tool, and the Dashboard is the place to start" },
   ] },

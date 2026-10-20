@@ -2772,3 +2772,6 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 /* v5.99: the logo and the app name go home (the Dashboard) */
 .brand-home,.appname-link{display:inline-flex;color:inherit;text-decoration:none}
 .brand-home:focus-visible,.appname-link:focus-visible{outline:2px solid #fff;outline-offset:3px;border-radius:8px}
+
+/* v6.00: the Find a company title is the same size and face as the other page titles (Daily run, Market intelligence, Buying signals, Setup wizard) */
+.find-head h1{margin:0 0 10px;font:700 22px var(--display);letter-spacing:0}
