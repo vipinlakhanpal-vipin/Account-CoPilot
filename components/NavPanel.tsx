@@ -80,10 +80,6 @@ export default function NavPanel({ isSuper, isOwner = false }: { isSuper: boolea
             <Link key={v} href={`/nav/market?vendor=${encodeURIComponent(v)}`} className={onMarket && vendor === v ? "on" : ""}>{v}{count(v) !== null && <small>{count(v)}</small>}</Link>))}</div>)}
         {item("/nav/signals", "signals", "Buying signals", path.startsWith("/nav/signals"))}
       </nav>
-      <div className="navmid">
-        <AriaGame onChat={() => document.querySelector<HTMLButtonElement>(".nav-aria-mini")?.click()} />
-        <div hidden><AccountCopilotAria buttonClassName="nav-aria-mini" /></div>
-      </div>
       <div className="navbot">
         {group("wizard", "/nav/wizard", "wizard", "Setup wizard", onWizard,
           <div className="navsub">{STEPS.map((s, i) => <Link key={s} href={`/nav/wizard?step=${i + 1}`} className={onWizard && step === i + 1 ? "on" : ""}>{i + 1} {s}</Link>)}</div>)}
@@ -97,8 +93,12 @@ export default function NavPanel({ isSuper, isOwner = false }: { isSuper: boolea
         <button type="button" className="navit navbtn" onClick={() => window.dispatchEvent(new CustomEvent("history-open"))} title="What changed in each update"><Ic n="history" />Version history</button>
         {item("/nav/suggestions", "bulb", "Suggestions", path.startsWith("/nav/suggestions"))}
         {!isSuper && <small className="navnote">Some settings are read-only for you.</small>}
-        <div className="navprof-wrap"><ProfileMenu variant="panel" /></div>
       </div>
+      <div className="navmid">
+        <AriaGame onChat={() => document.querySelector<HTMLButtonElement>(".nav-aria-mini")?.click()} />
+        <div hidden><AccountCopilotAria buttonClassName="nav-aria-mini" /></div>
+      </div>
+      <div className="navprof-wrap"><ProfileMenu variant="panel" /></div>
     </aside>
   );
 }

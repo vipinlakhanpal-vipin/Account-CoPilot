@@ -2201,3 +2201,8 @@ header.top{background:var(--bg);padding-bottom:8px;box-shadow:0 10px 14px -12px 
 .wiz-what{display:block;margin-top:4px;font-size:12px;line-height:1.5;color:var(--muted)}
 .wiz-n{flex:none;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--teal);color:#fff;font:700 13px var(--body)}
 @media (max-width:1100px){.wiz-cols{grid-template-columns:1fr}}
+
+/* v5.47: nothing in the panel is anchored to the bottom except your profile, so opening a drop-down only pushes the items below it down; the item you clicked stays put. Aria floats in the free space under the lists. */
+.navbot{margin-top:8px}
+.navmid{min-height:170px}
+.navprof-wrap{margin-top:0}

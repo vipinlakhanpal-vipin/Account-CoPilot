@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.46";
+export const APP_VERSION = "5.47";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.47", date: "2026-10-20", notes: "Left-panel items stay put when a drop-down opens.", changes: [
+      { what: "Setup wizard, Team, Settings, Version history and Suggestions no longer sit at the bottom of the panel, so opening a drop-down below no longer pushes the item you clicked upwards. All items now run from the top; opening a list only moves what is below it. Aria floats in the free space under them and your profile stays at the foot", where: "components/NavPanel.tsx, app/globals.css", why: "Reported — items with sub-menus jumped up and down" },
+    ] },
   { version: "5.46", date: "2026-10-20", notes: "Setup wizard opens on an introduction, not on step 1.", changes: [
       { what: "Clicking Setup wizard shows what the wizard is, what it does, how it works and what to know (cost, who can save), with the six steps described as cards, and a Start button. Step 1 only opens when you pick a step in the left panel or press Start", where: "components/NavWizard.tsx, components/NavPanel.tsx, app/nav/wizard/page.tsx", why: "Requested — the Region step opened by default and was confusing" },
     ] },
