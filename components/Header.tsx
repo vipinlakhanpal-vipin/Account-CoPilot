@@ -282,7 +282,7 @@ export default function Header({ meta }: { meta: string }) {
                 <span>Master Book</span></>}
             </button>
             <ThemeToggle />
-            <ProfileMenu />
+            {!path.startsWith("/nav") && <ProfileMenu />}
           </div>
         </div>
         {(() => { const g = GROUPS.find((x) => x.items.some(([, l]) => l === current));

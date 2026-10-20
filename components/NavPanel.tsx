@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import ProfileMenu from "@/components/ProfileMenu";
 import { usePathname, useSearchParams } from "next/navigation";
 
 const STEPS = ["Region & size", "Add Data", "Domains", "Daily plan", "Data sources", "Review"];
@@ -67,6 +68,7 @@ export default function NavPanel({ isSuper }: { isSuper: boolean }) {
           </div>)}
         {item("/nav/suggestions", "bulb", "Suggestions", path.startsWith("/nav/suggestions"))}
         {!isSuper && <small className="navnote">Some settings are read-only for you.</small>}
+        <div className="navprof-wrap"><ProfileMenu variant="panel" /></div>
       </div>
     </aside>
   );

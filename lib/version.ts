@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.21";
+export const APP_VERSION = "5.22";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.22", date: "2026-10-20", notes: "Your profile sits at the foot of the left panel, in a 3D blue circle.", changes: [
+      { what: "On Home your profile moves to the bottom of the left panel: your initials in a blue 3D circle and \"Logged in as\" with your first name (no email). A click opens the same profile menu (name, email, password, invite, log out) beside it. Pages without the panel (Dashboard, Accounts, Data) keep the profile circle in the top bar", where: "components/NavPanel.tsx, components/ProfileMenu.tsx, components/Header.tsx, app/globals.css", why: "Requested" },
+    ] },
   { version: "5.21", date: "2026-10-20", notes: "Team is its own item above Settings; drop-down items open and close with an arrow.", changes: [
       { what: "Team is a separate item in the left panel, above Settings. Settings keeps Define ICP, Engine and PIN, and Learn me", where: "components/NavPanel.tsx, app/nav/team", why: "Requested" },
       { what: "Market intelligence, Setup wizard and Settings are drop-downs: the label opens the page, the arrow beside it opens or closes the list (remembered in your browser), and the list opens by itself when you go into that section", where: "components/NavPanel.tsx, app/globals.css", why: "Requested" },

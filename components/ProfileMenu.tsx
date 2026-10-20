@@ -6,7 +6,7 @@ import SecretInput from "@/components/SecretInput";
 
 type Me = { email: string; name: string; joined_from: string; joined_at: string; last_sign_in: string };
 
-export default function ProfileMenu() {
+export default function ProfileMenu({ variant = "bar" }: { variant?: "bar" | "panel" }) {
   const [me, setMe] = useState<Me | null>(null);
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -16,6 +16,7 @@ export default function ProfileMenu() {
   const [pwMsg, setPwMsg] = useState("");
   const [pwBusy, setPwBusy] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ left: number; bottom: number } | null>(null);
   useEffect(() => { fetch("/api/me").then((r) => (r.ok ? r.json() : null)).then((j) => { if (j) { setMe(j); setName(j.name); } }).catch(() => {}); }, []);
   useEffect(() => {
     const close = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
@@ -37,11 +38,18 @@ export default function ProfileMenu() {
     setPwMsg(error ? error.message : "Password changed.");
     if (!error) { setPw1(""); setPw2(""); }
   }
+  const first = (me?.name || "").trim().split(/\s+/)[0] || (me?.email || "").split("@")[0] || "you";
+  const toggle = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (variant === "panel" && !open) { const r = e.currentTarget.getBoundingClientRect(); setPos({ left: r.right + 10, bottom: Math.max(8, window.innerHeight - r.bottom) }); }
+    setOpen(!open);
+  };
   return (
-    <div className="profile" ref={ref}>
-      <button type="button" className="avatar" aria-label="Your profile" aria-expanded={open} onClick={() => setOpen(!open)}>{initials}</button>
+    <div className={`profile${variant === "panel" ? " profile-panel" : ""}`} ref={ref}>
+      {variant === "panel"
+        ? <button type="button" className="navprof" aria-label="Your profile" aria-expanded={open} onClick={toggle}><span className="avatar blue3d">{initials}</span><span className="navprof-t">Logged in as <b>{first}</b></span></button>
+        : <button type="button" className="avatar" aria-label="Your profile" aria-expanded={open} onClick={() => setOpen(!open)}>{initials}</button>}
       {open && (
-        <div className="profile-menu" role="dialog" aria-label="Profile">
+        <div className={`profile-menu${variant === "panel" ? " pm-fixed" : ""}`} style={variant === "panel" && pos ? { left: pos.left, bottom: pos.bottom, top: "auto", right: "auto" } : undefined} role="dialog" aria-label="Profile">
           <div className="pm-head"><span className="avatar lg">{initials}</span><div><b>{me?.name || "Add your name"}</b><div className="note">{me?.email}</div></div></div>
           <label htmlFor="pm-name">Name</label>
           <div className="pm-row"><input id="pm-name" type="text" className="input-frame" value={name} onChange={(e) => { setName(e.target.value); setSaved(""); }} placeholder="Your full name" />
