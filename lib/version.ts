@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.02";
+export const APP_VERSION = "6.03";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.03", date: "2026-10-20", notes: "Ask Aria about your data fits on one line.", changes: [
+      { what: "The Ask Aria about your data and Play games with Aria buttons are now one line each in the standard font (12 px), so the longer label no longer wraps and makes the panel taller", where: "Left panel, under Aria", why: "The label wrapped onto two lines" },
+  ] },
   { version: "6.02", date: "2026-10-20", notes: "Say in brackets that a company uses Coupa or SAP Ariba, and it is filed under that customer segment.", changes: [
       { what: "In Find New Company you can put a platform in brackets after a company name, for example Almarai (Coupa), Savola (Ariba user), Aldrees (Jaggaer): the names are still separated by commas or lines. The brackets are removed from the name before searching, a yellow Coupa user (or SAP Ariba user, Other S2P user) tag shows on the name, and with Add free the company is added as a Confirmed Current Coupa, SAP Ariba or other-platform customer (so it shows in that Dashboard segment), recorded as stated by you. Research now ignores the tags", where: "Find and search, Find New Company", why: "You know your customers; the app should file them straight into the right segment" },
   ] },

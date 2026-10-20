@@ -2786,3 +2786,6 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 .find-tagnote{margin:0 0 8px;font-size:12.5px;line-height:1.5;color:var(--muted)}
 .find-tagnote b{color:var(--text-strong)}
 .find-plat{margin:0 4px 0 6px;padding:0 8px;border-radius:999px;font:700 10.5px var(--body);background:#FFE08A;color:#3B2400}
+
+/* v6.03: the two Aria buttons sit on one line each, in the standard font, so they never make the panel taller */
+.agame-legend .agame-ask,.agame-legend .agame-play{white-space:nowrap;font:700 12px var(--body);padding:8px 8px;overflow:hidden;letter-spacing:0}
