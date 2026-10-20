@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.26";
+export const APP_VERSION = "5.27";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.27", date: "2026-10-20", notes: "On Home the bell leaves the top bar; its red badge moves to Daily run.", changes: [
+      { what: "On Home the bell icon leaves the top bar, because Daily run in the left panel is the same page. Its red badge for new runs now sits on the Daily run item", where: "components/NavPanel.tsx, components/Header.tsx", why: "Requested — whatever sits in the left panel leaves the top bar" },
+    ] },
   { version: "5.26", date: "2026-10-20", notes: "Aria floats in the middle of the left panel; the suggestions bulb leaves the top bar on Home.", changes: [
       { what: "On Home, Aria is a larger floating icon in the middle of the left panel, between the top and bottom groups, with an Ask Aria label. The Aria icon and the Suggestions bulb leave the top bar on Home (Suggestions is in the panel). Pages without the panel keep both in the top bar", where: "components/NavPanel.tsx, components/Header.tsx, components/AriaChat.tsx, app/globals.css", why: "Requested" },
     ] },

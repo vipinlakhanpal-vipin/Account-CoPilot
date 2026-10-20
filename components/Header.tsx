@@ -252,7 +252,7 @@ export default function Header({ meta }: { meta: string }) {
                     <span className="tip-pill" role="tooltip"><span className="tip-dot" aria-hidden="true" />Version history - what changed in each update</span>
                   </button>
                   <OnlineNow />
-                  <EngineBell />
+                  {!path.startsWith("/nav") && <EngineBell />}
                   {!path.startsWith("/nav") && <SuggestionsButton />}
                   {!path.startsWith("/nav") && <AriaChat />}
                 </span>

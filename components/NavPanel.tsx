@@ -26,6 +26,16 @@ export default function NavPanel({ isSuper }: { isSuper: boolean }) {
   const path = usePathname(), params = useSearchParams();
   const [mk, setMk] = useState<Mk | null>(null);
   useEffect(() => { fetch("/api/market", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((j) => j && setMk(j)).catch(() => {}); }, []);
+  // The bell's red badge moves here: runs posted since you last opened Daily run.
+  const [unread, setUnread] = useState(0);
+  useEffect(() => {
+    const load = () => fetch("/api/engine?only=log", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((j) => {
+      if (!j) return; let seen = ""; try { seen = localStorage.getItem("engine-seen") || ""; } catch { /* optional */ }
+      setUnread((j.entries || []).filter((e: { at: string }) => e.at > seen).length);
+    }).catch(() => {});
+    load(); const t = setInterval(load, 60000);
+    return () => clearInterval(t);
+  }, [path]);
   const vendor = params.get("vendor") || "SAP", step = Number(params.get("step")) || 1;
   // Drop-downs: Market intelligence, Setup wizard and Settings open and close with their arrow (remembered in this browser) and open by themselves when you go into them.
   const [open, setOpen] = useState<Record<string, boolean>>({});
@@ -47,13 +57,13 @@ export default function NavPanel({ isSuper }: { isSuper: boolean }) {
       {isOpen && kids}
     </>);
   };
-  const item = (href: string, icon: string, label: string, on: boolean) => <Link href={href} className={`navit${on ? " on" : ""}`} aria-current={on ? "page" : undefined}><Ic n={icon} />{label}</Link>;
+  const item = (href: string, icon: string, label: string, on: boolean, badge = 0) => <Link href={href} className={`navit${on ? " on" : ""}`} aria-current={on ? "page" : undefined}><Ic n={icon} />{label}{badge > 0 && <span className="navbadge" aria-label={`${badge} new`}>{badge > 99 ? "99+" : badge}</span>}</Link>;
   return (
     <aside className="navpanel" aria-label="New Layout">
       <nav>
         {item("/nav/find", "find", "Find and search", path.startsWith("/nav/find"))}
         {item("/nav/about", "about", "About CoPilot", path.startsWith("/nav/about"))}
-        {item("/nav/daily-run", "bell", "Daily run", path.startsWith("/nav/daily-run"))}
+        {item("/nav/daily-run", "bell", "Daily run", path.startsWith("/nav/daily-run"), path.startsWith("/nav/daily-run") ? 0 : unread)}
         {group("market", "/nav/market", "market", "Market intelligence", onMarket,
           <div className="navsub">{(mk?.vendors || ["SAP", "Coupa", "Oracle", "Microsoft"]).map((v) => (
             <Link key={v} href={`/nav/market?vendor=${encodeURIComponent(v)}`} className={onMarket && vendor === v ? "on" : ""}>{v}{count(v) !== null && <small>{count(v)}</small>}</Link>))}</div>)}
