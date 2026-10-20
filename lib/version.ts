@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.34";
+export const APP_VERSION = "5.35";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.35", date: "2026-10-20", notes: "A real, larger carbon-fibre weave on the left panel.", changes: [
+      { what: "The left panel's weave is now a carbon-fibre weave: square tiles of diagonal strands, the direction alternating tile by tile (about 32px a tile instead of 12px), with a soft sheen across the green to violet gradient. Labels have a light shadow so they stay readable on it", where: "app/globals.css", why: "Reported — the weave was too small and did not look like carbon fibre" },
+    ] },
   { version: "5.34", date: "2026-10-20", notes: "The top bar no longer overlaps the page when you scroll.", changes: [
       { what: "The top bar now sits on a solid strip of the page colour with a soft edge, so the page content scrolling underneath is hidden behind it instead of showing around and through it. It applies to every page", where: "app/globals.css", why: "Reported — the nav bar and the page data crossed over when scrolling" },
     ] },
