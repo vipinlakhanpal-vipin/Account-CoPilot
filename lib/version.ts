@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.68";
+export const APP_VERSION = "5.69";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.69", date: "2026-10-20", notes: "Buying signals opens with a short explanation of what it does, how, and how the daily run uses it.", changes: [
+      { what: "A short paragraph sits above the tiles on Buying signals: what it spots (tenders and RFPs, ERP, S2P and S2C intent, support and upgrade deals, awards, upsell and cross-sell, ECC to S/4HANA), how it works (public pages only, Hot / Warm / Watch, Fact / Likely / Unverified, a source link on every signal, no logins) and how the daily run uses it (every active Middle East region, High daily, Medium every 3 days, Low weekly, up to 10 companies a region, Scan now on demand)", where: "Buying signals", why: "New users can see what the page is and where its signals come from" },
+  ] },
   { version: "5.68", date: "2026-10-20", notes: "Every row of tabs looks the same, and shrinks its type to fit instead of running out of the tab.", changes: [
       { what: "One tab design across the app: soft green when idle, deep teal with white text when open, a teal line under the row, in light and dark mode. It now covers Settings, Setup wizard, Market intelligence vendors, the Daily run views, All accounts / Filtered results, Mission Control views, the Company / Contact switch in Filters, the report format switch, and the two Find a company tiles. If the labels do not fit a row, the type and the space around each tab shrink together (down to 10 px) until they do, so no text runs out of a tab", where: "All tab rows", why: "The tabs were a mix of looks, and long titles could spill out of their tab" },
   ] },

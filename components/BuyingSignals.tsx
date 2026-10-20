@@ -88,6 +88,10 @@ export default function BuyingSignals({ embedded = false }: { embedded?: boolean
         <p>Companies that look ready to buy: open tenders and RFPs, ERP and S2P intent, and SAP ECC owners who will need an S/4HANA partner. Every signal carries its source.</p>
       </section>}
 
+      <section className="sig-about" aria-label="About buying signals">
+        <p><b>What it does.</b> Spots companies that look ready to buy: open tenders and RFPs, ERP, source-to-pay and sourcing-to-contract intent, support and upgrade deals, contract awards, upsell and cross-sell openings at accounts you already track, and SAP ECC owners who will need an S/4HANA partner. <b>How.</b> It reads public pages only (tender portals and notices, company sites, annual reports, press, job posts), never logs in or registers. Each signal is rated Hot, Warm or Watch, labelled Fact, Likely or Unverified, and keeps its source link; Hot is reserved for documented facts, and tender documents behind a login are marked as such. <b>In the daily run.</b> After the main work each morning, the engine sweeps every active Middle East region (UAE, KSA, Qatar, Kuwait, Oman, Bahrain, Egypt): High-priority regions every day, Medium every 3 days, Low weekly, then scans up to 10 companies per region. Scan now queues the same job on demand, and new Hot and Warm signals raise the alert badge in the top bar.</p>
+      </section>
+
       <div className="sig-lanes" role="group" aria-label="Signal type">
         {([["all", "All signals"], ...LANES.map((l) => [l, LANE_LABEL[l]])] as [string, string][]).map(([k, label]) => (
           <button type="button" key={k} className={`sig-lane ${({ all: "c1", rfp: "c4", erp: "c2", ecc: "c3" } as Record<string, string>)[k]}`} aria-pressed={lane === k} onClick={() => setLane(k as "all" | SignalLane)}><b>{count(k as "all" | SignalLane)}</b><span>{label}</span></button>))}
