@@ -59,7 +59,7 @@ export default function NavPanel({ isSuper, isOwner = false }: { isSuper: boolea
     const isOpen = open[key] ?? on; // an explicit open or close wins, even on that page
     return (<>
       <div className={`navrow${on ? " on" : ""}`}>
-        <Link href={href} className={`navit${on ? " on" : ""}`} aria-current={on ? "page" : undefined} onClick={() => flip(key, true)}><Ic n={icon} />{label}</Link>
+        <Link href={href} className={`navit${on ? " on" : ""}`} aria-current={on ? "page" : undefined} onClick={(e) => { if (on) { e.preventDefault(); flip(key, !isOpen); } else flip(key, true); }}><Ic n={icon} />{label}</Link>
         <button type="button" className="navchev" aria-expanded={isOpen} aria-label={`${isOpen ? "Close" : "Open"} ${label}`} onClick={() => flip(key, !isOpen)}>
           <svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true" style={{ transform: isOpen ? "none" : "rotate(-90deg)", transition: "transform .15s" }}><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
         </button>

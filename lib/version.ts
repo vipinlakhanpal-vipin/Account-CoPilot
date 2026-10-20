@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.41";
+export const APP_VERSION = "5.42";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.42", date: "2026-10-20", notes: "Clicking a drop-down's name opens and closes it.", changes: [
+      { what: "Clicking the name of Market intelligence, Setup wizard or Settings opens its list, and clicking it again while you are on that page closes it (the arrow still works too). From another page, a click opens the page and its list", where: "components/NavPanel.tsx", why: "Requested — it only closed from the arrow" },
+    ] },
   { version: "5.41", date: "2026-10-20", notes: "The Team table shows each person's status: Active, Suspended or Kept.", changes: [
       { what: "The Team table has a Status column: Active, Suspended (with the date) or Kept (with the date you pressed Keep, for the 15 days after it)", where: "components/TeamSettings.tsx, app/api/team/route.ts", why: "Asked — after Keep there was nowhere to see the status" },
     ] },
