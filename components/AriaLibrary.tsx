@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useLayoutEffect, useRef, useState, type ReactElement } from "react";
+import { useEffect, useRef, useState, type ReactElement } from "react";
 import { createPortal } from "react-dom";
 
 // Aria's game library: a bookshelf. Each game is a narrow coloured spine (add a row to GAMES and a new book appears; the shelf scrolls when there are many);
@@ -21,29 +21,40 @@ export const GAMES: Game[] = [
 ];
 
 const POP_W = 340;
-export default function AriaLibrary({ anchor, onClose, onAsk, onPlay }: { anchor: DOMRect; onClose: () => void; onAsk: () => void; onPlay: (g: GameId) => void }) {
+export default function AriaLibrary({ track, onHold, onClose, onAsk, onPlay }: { track: () => DOMRect | null; onHold: (on: boolean) => void; onClose: () => void; onAsk: () => void; onPlay: (g: GameId) => void }) {
   const [pick, setPick] = useState(0);
-  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
   const box = useRef<HTMLDivElement>(null);
   useEffect(() => { try { const i = GAMES.findIndex((g) => g.id === localStorage.getItem("aria-game-pick")); if (i >= 0) setPick(i); } catch { /* optional */ } }, []);
-  useLayoutEffect(() => {
-    const h = box.current?.offsetHeight || 380;
-    const left = Math.max(8, Math.min(window.innerWidth - POP_W - 8, anchor.left + anchor.width / 2 - POP_W / 2));
-    let top = anchor.bottom + 10; if (top + h > window.innerHeight - 8) top = Math.max(8, anchor.top - h - 10);
-    setPos({ left, top });
-  }, [anchor, pick]);
+  // The shelf follows Aria: every frame it is placed under her (above, when there is no room below) and kept fully inside the window, so no edge ever cuts it.
+  // It never touches the left panel's layout (own layer), and moving the pointer onto it pauses her roaming so Play is easy to hit.
+  useEffect(() => {
+    let raf = 0;
+    const place = () => {
+      const el = box.current, r = track();
+      if (el && r) {
+        const w = Math.min(POP_W, window.innerWidth - 16), h = el.offsetHeight;
+        const left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left + r.width / 2 - w / 2));
+        let top = r.bottom + 10; if (top + h > window.innerHeight - 8) top = Math.max(8, r.top - h - 10);
+        el.style.left = `${left}px`; el.style.top = `${top}px`; el.style.width = `${w}px`; el.style.visibility = "visible";
+      }
+      raf = requestAnimationFrame(place);
+    };
+    place();
+    return () => cancelAnimationFrame(raf);
+  }, [track]);
   useEffect(() => {
     const away = (e: MouseEvent) => { if (!box.current?.contains(e.target as Node) && !(e.target as HTMLElement).closest?.(".agame-bot")) onClose(); };
     const key = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("mousedown", away); document.addEventListener("keydown", key);
     return () => { document.removeEventListener("mousedown", away); document.removeEventListener("keydown", key); };
   }, [onClose]);
+  useEffect(() => () => onHold(false), [onHold]);
   const choose = (i: number) => { setPick(i); try { localStorage.setItem("aria-game-pick", GAMES[i].id); } catch { /* optional */ } };
   const g = GAMES[pick];
   // spine height follows the name's length, so a longer title gets a taller book
   const h = (name: string) => Math.min(172, Math.max(112, 56 + name.length * 7));
   return createPortal(
-    <div className="alib" ref={box} role="dialog" aria-label="Aria's game library" style={{ left: pos?.left ?? -9999, top: pos?.top ?? 0, width: POP_W, visibility: pos ? "visible" : "hidden" }}>
+    <div className="alib" ref={box} role="dialog" aria-label="Aria's game library" style={{ left: -9999, top: 0, width: POP_W, visibility: "hidden" }} onMouseEnter={() => onHold(true)} onMouseLeave={() => onHold(false)}>
       <div className="alib-head"><b>Aria&apos;s library</b><span>{GAMES.length} games · pick a book</span></div>
       <button type="button" className="alib-ask" onClick={onAsk}>
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.7 7L4 20l1.1-4.3A8 8 0 1 1 21 12z" /></svg>

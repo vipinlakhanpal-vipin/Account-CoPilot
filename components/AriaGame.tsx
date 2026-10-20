@@ -120,8 +120,9 @@ const slot = (r: number, c: number) => ({ x: BOARD_X + c * S - PAD, y: BOARD_Y +
 
 export default function AriaGame({ onChat }: { onChat: () => void }) {
   const [menu, setMenu] = useState(false);
-  const [anchor, setAnchor] = useState<DOMRect | null>(null);
+  const [hold, setHold] = useState(false);
   const botRef = useRef<HTMLButtonElement>(null);
+  const track = useCallback(() => botRef.current?.getBoundingClientRect() || null, []);
   const [mini, setMini] = useState<MiniGame | null>(null);
   const [mood, setMood] = useState<string | null>(null), lastMood = useRef(-1), quiet = useRef(true); // quiet: idle with nothing open, so she may speak
   const wrap = useRef<HTMLDivElement>(null);
@@ -207,18 +208,18 @@ export default function AriaGame({ onChat }: { onChat: () => void }) {
 
   return (
     <>
-      <div className={`agame${menu ? " menu-open" : ""}`} ref={wrap}>
+      <div className={`agame${menu && hold ? " hold" : ""}`} ref={wrap}>
         {phase === "idle" && !menu && !mini && (mood
           ? <span className="agame-bubble funny" role="status">{mood}</span>
           : <span className="agame-bubble" aria-hidden="true">Want to play? 🎮<br />Click me! 👆</span>)}
-        <button type="button" className={`agame-bot${phase === "punched" ? " punched" : ""}${mood && phase === "idle" ? " sad" : ""}`} ref={botRef} onClick={() => { setAnchor(botRef.current?.getBoundingClientRect() || null); setMenu((m) => !m); }} aria-expanded={menu} aria-label="Aria: ask a question, or play a game">
+        <button type="button" className={`agame-bot${phase === "punched" ? " punched" : ""}${mood && phase === "idle" ? " sad" : ""}`} ref={botRef} onClick={() => setMenu((m) => !m)} aria-expanded={menu} aria-label="Aria: ask a question, or play a game">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="12" cy="2.9" r="1.35" fill="#FFE08A" /><path d="M12 4.2v2.3" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" />
             <rect x="4.6" y="6.4" width="14.8" height="11" rx="3.4" fill="#fff" /><rect x="2.3" y="9.6" width="1.9" height="4.6" rx="0.95" fill="#fff" /><rect x="19.8" y="9.6" width="1.9" height="4.6" rx="0.95" fill="#fff" />
             <circle cx="9.1" cy="11.4" r="1.7" fill="#5B4BC4" /><circle cx="14.9" cy="11.4" r="1.7" fill="#5B4BC4" /><path d="M9.4 14.9h5.2" stroke="#19D3B0" strokeWidth="1.6" strokeLinecap="round" /><rect x="8" y="18.4" width="8" height="2.6" rx="1.3" fill="#fff" />
           </svg>
         </button>
-        {menu && anchor && <AriaLibrary anchor={anchor} onClose={() => setMenu(false)} onAsk={() => { setMenu(false); onChat(); }}
+        {menu && <AriaLibrary track={track} onHold={setHold} onClose={() => setMenu(false)} onAsk={() => { setMenu(false); onChat(); }}
           onPlay={(id: GameId) => { setMenu(false); if (id === "jigsaw") hit(); else setMini(id === "memory" ? "memory" : id === "quiz" ? "quiz" : "words"); }} />}
       </div>
       {open && typeof document !== "undefined" && createPortal(
