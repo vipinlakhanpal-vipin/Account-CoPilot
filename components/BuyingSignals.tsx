@@ -144,7 +144,7 @@ export default function BuyingSignals({ embedded = false }: { embedded?: boolean
                 </p>
                 {s.why && <p className="sig-why"><b>Why it matters:</b> {s.why}</p>}
                 <div className="sig-acts">
-                  {s.doc_url ? <a className="btn btn-dl tiny" href={s.doc_url} target="_blank" rel="noopener noreferrer">Download tender documents</a>
+                  {s.doc_url ? <a className="btn btn-dl keep tiny" href={s.doc_url} target="_blank" rel="noopener noreferrer">Download tender documents</a>
                     : s.needs_login ? <span className="sig-login" title="The documents sit behind a registration or login, which Account CoPilot does not bypass. Open the notice and register yourself.">Documents need registration</span> : null}
                   <a className="btn tiny" href={s.source_url} target="_blank" rel="noopener noreferrer">Open source</a>
                   {s.slug && (() => { const cj = contactJob(s.slug); return cj && (cj.status === "queued" || cj.status === "running") ? <ScanGauge compact label="Searching contacts" requestedAt={cj.requested_at} startedAt={cj.started_at} expectedSecs={expectedSecs(cj)} /> : <FindContactsButton slug={s.slug} region={s.region} company={s.company_name} quiet onQueued={load} />; })()}

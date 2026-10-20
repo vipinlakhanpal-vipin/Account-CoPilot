@@ -6,20 +6,21 @@ import { ask, notify } from "@/components/Confirm";
 
 type DraftEmail = { subject: string; body: string };
 
-type Role = "super_admin" | "standard";
+type Role = "super_admin" | "admin" | "standard";
 type U = { id: string; email: string; name: string; invited_by: string; joined_from: string; created_at: string; last_sign_in: string | null; role: Role; regions: string[] };
-const ROLE: Record<Role, string> = { super_admin: "Super Admin", standard: "Standard User" };
+const ROLE: Record<Role, string> = { super_admin: "Super Admin", admin: "Admin", standard: "Standard User" };
 const ROLE_HELP: Record<Role, string> = {
-  super_admin: "Sees every region with a consolidated view, manages the team, the engine and every region's ICP.",
+  super_admin: "The owner. Sees every region, manages the team, the engine and every ICP, and is the only one who can download (Master Book, PDF and Excel).",
+  admin: "Everything a Super Admin can do except download: no Master Book, PDF or Excel. Sees all data on screen. Manages Standard Users only.",
   standard: "Sees only their region(s)' accounts, contacts and Master Book, and controls only those regions' ICP. One person can be given several regions.",
 };
 
-function AccessPicker({ role, regions, onChange }: { role: Role; regions: string[]; onChange: (role: Role, regions: string[]) => void }) {
+function AccessPicker({ role, regions, onChange, isOwner }: { role: Role; regions: string[]; onChange: (role: Role, regions: string[]) => void; isOwner: boolean }) {
   return (
     <div className="team-access">
       <label className="f-role">Role
         <select className="input-frame" value={role} onChange={(e) => onChange(e.target.value as Role, regions)}>
-          <option value="standard">Standard User</option><option value="super_admin">Super Admin</option>
+          <option value="standard">Standard User</option>{isOwner && <option value="admin">Admin</option>}{isOwner && <option value="super_admin">Super Admin</option>}
         </select></label>
       {role === "standard" ? (
         // Several regions can be ticked: one colleague may cover more than one market. (Only Super Admins can open this page.)
@@ -39,7 +40,7 @@ function AccessPicker({ role, regions, onChange }: { role: Role; regions: string
   );
 }
 
-export default function TeamSettings() {
+export default function TeamSettings({ isOwner = false }: { isOwner?: boolean }) {
   const [users, setUsers] = useState<U[]>([]);
   // % used: of the places and features a person can use, the share they opened in the last 30 days (see lib/activity.ts USAGE_AREAS).
   const [usage, setUsage] = useState<Record<string, { pct: number; used: string[]; missing: string[]; total: number }>>({});
@@ -113,7 +114,7 @@ export default function TeamSettings() {
     const x = edit[u.id]; if (!x) return;
     const r = await fetch("/api/team", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: u.id, ...x }) });
     const j = await r.json();
-    setMsg(r.ok ? `Access updated for ${u.email}: ${x.role === "super_admin" ? "Super Admin (all regions)" : `Standard User for ${x.regions.join(", ")}`}.` : j.error || "Could not update.");
+    setMsg(r.ok ? `Access updated for ${u.email}: ${x.role === "super_admin" ? "Super Admin (all regions)" : x.role === "admin" ? "Admin (all regions, no downloads)" : `Standard User for ${x.regions.join(", ")}`}.` : j.error || "Could not update.");
     if (r.ok) { setEdit((m) => { const n = { ...m }; delete n[u.id]; return n; }); load(); }
   }
   if (denied) return (
@@ -123,6 +124,7 @@ export default function TeamSettings() {
       <h2 className="with-count">Team <span className="count">{users.length} {users.length === 1 ? "user" : "users"}</span></h2>
       <div className="team-roles">
         <div><b>Super Admin</b><span>{ROLE_HELP.super_admin}</span></div>
+        <div><b>Admin</b><span>{ROLE_HELP.admin}</span></div>
         <div><b>Standard User</b><span>{ROLE_HELP.standard} The whole app — dashboard, accounts, pipeline, research, the daily engine and exports — works only on that region, by that region&apos;s ICP.</span></div>
       </div>
       {!ready && <p className="team-warn">Roles and regions are saved, but they take effect only after the one-time region-access database update has been run in Supabase (see the release notes). Until then everyone sees every region.</p>}
@@ -132,7 +134,7 @@ export default function TeamSettings() {
           <input id="inv-email" type="email" required className="input-frame" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="colleague@scp-worldwide.com" /></div>
         <div className="f-name" style={{ display: "flex", flexDirection: "column", gap: 6 }}><label htmlFor="inv-name">Name</label>
           <input id="inv-name" type="text" className="input-frame" value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" /></div>
-        <AccessPicker role={role} regions={regions} onChange={(r, g) => { setRole(r); setRegions(g); }} />
+        <AccessPicker isOwner={isOwner} role={role} regions={regions} onChange={(r, g) => { setRole(r); setRegions(g); }} />
         <div className="f-how" style={{ display: "flex", flexDirection: "column", gap: 6 }}><label htmlFor="inv-mode">How</label>
           <select id="inv-mode" className="input-frame" value={mode} onChange={(e) => setMode(e.target.value as "password" | "email")}>
             <option value="password">Temporary password</option><option value="email">Email invitation</option></select></div>
@@ -169,13 +171,13 @@ export default function TeamSettings() {
           return (
             <tr key={u.id} className={deleting === u.id ? "team-deleting" : undefined} aria-busy={deleting === u.id}><td className="num mono">{i + 1}</td><td><b>{u.name || "—"}</b></td><td className="mono">{u.email}</td>
               <td><span className={`role-tag ${u.role}`}>{ROLE[u.role]}</span></td>
-              <td>{u.role === "super_admin" ? "All regions" : u.regions.join(", ") || "Not set"}</td>
-              <td>{x ? <div className="team-edit"><AccessPicker role={x.role} regions={x.regions} onChange={(r, g) => setEdit((m) => ({ ...m, [u.id]: { role: r, regions: g } }))} />
+              <td>{u.role !== "standard" ? "All regions" : u.regions.join(", ") || "Not set"}</td>
+              <td>{x ? <div className="team-edit"><AccessPicker isOwner={isOwner} role={x.role} regions={x.regions} onChange={(r, g) => setEdit((m) => ({ ...m, [u.id]: { role: r, regions: g } }))} />
                   <div className="team-edit-actions">
                     <button type="button" className="btn tiny primary" onClick={() => saveAccess(u)}>Save</button>
                     <button type="button" className="btn tiny" onClick={() => setEdit((m) => { const n = { ...m }; delete n[u.id]; return n; })}>Cancel</button>
                   </div></div>
-                : <button type="button" className="btn-change" disabled={!!deleting} onClick={() => setEdit((m) => ({ ...m, [u.id]: { role: u.role, regions: u.regions } }))}>Change</button>}</td>
+                : (isOwner || u.role === "standard") ? <button type="button" className="btn-change" disabled={!!deleting} onClick={() => setEdit((m) => ({ ...m, [u.id]: { role: u.role, regions: u.regions } }))}>Change</button> : <span className="muted">Super Admin only</span>}</td>
               <td className="muted">{u.invited_by || "—"}</td><td className="mono team-dt">{fmtDateTime(u.created_at)}</td>
               <td className="mono team-dt">{u.last_sign_in ? fmtDateTime(u.last_sign_in) : "Not yet"}</td>
               <td>{(() => { const g = usage[u.email]; return g ? (

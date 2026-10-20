@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.16";
+export const APP_VERSION = "5.17";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,11 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.17", date: "2026-10-20", notes: "A new Admin role: everything except downloads. Only the Super Admin downloads.", changes: [
+      { what: "Three roles: Super Admin (the owner: everything, including downloads and the Master Book), Admin (everything except downloads; sees data on screen only) and Standard User (own regions, as before)", where: "lib/access.ts, components/TeamSettings.tsx, app/api/team/route.ts, supabase/migrations/0010_admin_role.sql", why: "Requested" },
+      { what: "For an Admin every download button is hidden (Master Book, PDF and Excel reports, Find company exports, Aria's Excel and PDF, the Market intelligence CSV), and the server refuses those downloads as well. Aria tells them downloads are not available for their role", where: "app/api/export, app/api/report/*, lib/aria/*, app/layout.tsx, app/globals.css", why: "Requested" },
+      { what: "An Admin manages Standard Users only: they cannot add, change, reset or delete an Admin or a Super Admin", where: "app/api/team/route.ts", why: "Requested" },
+    ] },
   { version: "5.16", date: "2026-10-20", notes: "New Layout (an experiment, option 3): a left panel with the chosen page on the right.", changes: [
       { what: "A new tab, New Layout. Its left panel holds Market intelligence (with its vendors and their partner counts), Buying signals, About CoPilot, Setup wizard (with its six steps) and, pinned at the bottom, Settings (Define ICP, Engine and PIN, Team). The chosen page opens in the large area on the right. The current tabs and windows are unchanged", where: "app/nav/*, components/NavPanel.tsx, components/NavTool.tsx, components/NavWizard.tsx, components/Header.tsx", why: "Requested — a left panel instead of windows and separate tabs" },
       { what: "Market intelligence and Buying signals in the right pane have a Pop out button that opens the same page as the floating window (drag, resize, minimise); the pane then shows a note and a Bring it back button, so one live copy runs", where: "components/NavTool.tsx", why: "Requested — keep the floating window as an option" },

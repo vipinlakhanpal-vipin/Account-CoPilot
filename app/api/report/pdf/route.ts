@@ -30,6 +30,7 @@ export async function POST(req: Request) {
   const { statuses = [...REPORT_STATUSES], region, limit, companyId, companyIds, title, rank } = parsed.data;
   const ids = companyId ? [companyId] : companyIds;
   const access = await getAccess(user);
+  if (!access.canDownload) return NextResponse.json({ error: "Downloads are not available for your role. You can see the data in the app." }, { status: 403 });
   if (region !== "All" && !canSeeRegion(access, region)) return NextResponse.json({ error: "You don't have access to that region." }, { status: 403 });
 
   const db = supabaseAdmin();

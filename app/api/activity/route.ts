@@ -46,7 +46,7 @@ export async function GET(req: Request) {
     const out: Record<string, { pct: number; used: string[]; missing: string[]; total: number }> = {};
     for (const a of acc || []) {
       const mine = new Set((rows || []).filter((r) => r.email === a.email).map((r) => areaOf(r.kind, r.path)).filter(Boolean));
-      const areas = USAGE_AREAS.filter((x) => a.role === "super_admin" || !x.adminOnly).map((x) => x.label);
+      const areas = USAGE_AREAS.filter((x) => a.role !== "standard" || !x.adminOnly).map((x) => x.label);
       const used = areas.filter((x) => mine.has(x)), missing = areas.filter((x) => !mine.has(x));
       out[a.email] = { pct: Math.round((used.length / areas.length) * 100), used, missing, total: areas.length };
     }

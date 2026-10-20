@@ -9,20 +9,27 @@ export const dynamic = "force-dynamic";
 // Team (Super Admin only): list people with their role and region(s), invite someone with a role and region, change a person's access.
 //   Super Admin   — every region (consolidated view), team, engine, all ICPs.
 //   Standard User — only the assigned region(s): its data and its ICP.
-type Role = "super_admin" | "standard";
+type Role = "super_admin" | "admin" | "standard";
 const clean = (role: unknown, regions: unknown): { role: Role; regions: string[] } | null => {
-  const r: Role = role === "super_admin" ? "super_admin" : "standard";
+  const r: Role = role === "super_admin" ? "super_admin" : role === "admin" ? "admin" : "standard";
   const regs = Array.isArray(regions) ? [...new Set(regions.map(String).filter((x) => ALL_REGIONS.includes(x)))] : [];
   if (r === "standard" && !regs.length) return null;
-  return { role: r, regions: r === "super_admin" ? [] : regs };
+  return { role: r, regions: r === "standard" ? regs : [] };
 };
 
 async function superOnly() {
   const me = await requireUser();
   if (!me) return { error: NextResponse.json({ error: "Sign in required" }, { status: 401 }) };
   const access = await getAccess(me);
-  if (!access.isSuper) return { error: NextResponse.json({ error: "Only a Super Admin can manage the team." }, { status: 403 }) };
+  if (!access.isSuper) return { error: NextResponse.json({ error: "Only a Super Admin or an Admin can manage the team." }, { status: 403 }) };
   return { me, access };
+}
+
+// An Admin manages Standard Users only: they cannot create, change, reset or delete an Admin or a Super Admin. Only the Super Admin does.
+const OWNER_ONLY = NextResponse.json({ error: "Only the Super Admin can add or change an Admin or a Super Admin." }, { status: 403 });
+async function targetIsStandard(db: ReturnType<typeof supabaseAdmin>, id: string) {
+  const { data } = await db.from("user_access").select("role").eq("user_id", id).maybeSingle();
+  return !data || data.role === "standard";
 }
 
 // Supabase's own invitation email is unconfigured (no SMTP/Resend set up yet), so "Email invitation" doesn't
@@ -67,6 +74,7 @@ export async function POST(req: Request) {
     const { id } = body;
     if (typeof id !== "string") return NextResponse.json({ error: "Bad request." }, { status: 400 });
     const db = supabaseAdmin();
+    if (!g.access.isOwner && !(await targetIsStandard(db, id))) return OWNER_ONLY;
     const temp = randomBytes(9).toString("base64url");
     const { data, error } = await db.auth.admin.updateUserById(id, { password: temp });
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
@@ -80,6 +88,7 @@ export async function POST(req: Request) {
   if (!emailAllowed(email)) return NextResponse.json({ error: "That email domain is not allowed. Add it to ALLOWED_EMAIL_DOMAINS in Vercel first." }, { status: 400 });
   const acc = clean(role, regions);
   if (!acc) return NextResponse.json({ error: "Choose the region this Standard User will work on." }, { status: 400 });
+  if (!g.access.isOwner && acc.role !== "standard") return OWNER_ONLY;
   const db = supabaseAdmin(), admin = db.auth.admin;
   const cleanName = typeof name === "string" ? name.trim() : "";
   const meta = { full_name: cleanName, invited_by: g.me.email };
@@ -88,7 +97,7 @@ export async function POST(req: Request) {
   if (error) return NextResponse.json({ error: error.message.includes("already") ? "That person already has an account. Use Reset password on their row instead." : error.message }, { status: 400 });
   const userId = data.user.id;
   const { error: e3 } = await db.from("user_access").upsert({ user_id: userId, email: email.toLowerCase(), ...acc, updated_at: new Date().toISOString(), updated_by: g.me.email });
-  const what = acc.role === "super_admin" ? "Super Admin (all regions)" : `Standard User for ${acc.regions.join(", ")}`;
+  const what = acc.role === "super_admin" ? "Super Admin (all regions)" : acc.role === "admin" ? "Admin (all regions, no downloads)" : `Standard User for ${acc.regions.join(", ")}`;
   const warn = e3 ? " Note: roles are not active yet — run the region-access database update first (see Setup → Team)." : "";
   // "Email invitation" doesn't send anything yet (no SMTP/Resend configured) — it hands back a ready-to-paste
   // email instead of Supabase's own invite mail, which is otherwise unreachable from here.
@@ -108,6 +117,7 @@ export async function DELETE(req: Request) {
   if (typeof id !== "string") return NextResponse.json({ error: "Bad request." }, { status: 400 });
   if (id === g.me.id) return NextResponse.json({ error: "You can't delete your own account here." }, { status: 400 });
   const db = supabaseAdmin();
+  if (!g.access.isOwner && !(await targetIsStandard(db, id))) return OWNER_ONLY;
   const { data: targetAcc, error: raErr } = await db.from("user_access").select("role").eq("user_id", id).maybeSingle();
   if (!raErr && targetAcc?.role === "super_admin") {
     const { count } = await db.from("user_access").select("user_id", { count: "exact", head: true }).eq("role", "super_admin");
@@ -129,7 +139,8 @@ export async function PATCH(req: Request) {
   const acc = clean(role, regions);
   if (!acc) return NextResponse.json({ error: "A Standard User needs at least one region." }, { status: 400 });
   const db = supabaseAdmin();
-  if (id === g.me.id && acc.role !== "super_admin") {
+  if (!g.access.isOwner && (acc.role !== "standard" || !(await targetIsStandard(db, id)))) return OWNER_ONLY;
+  if (id === g.me.id && acc.role !== "super_admin" && g.access.isOwner) {
     const { count } = await db.from("user_access").select("user_id", { count: "exact", head: true }).eq("role", "super_admin");
     if ((count || 0) <= 1) return NextResponse.json({ error: "You are the only Super Admin. Make someone else Super Admin first." }, { status: 400 });
   }

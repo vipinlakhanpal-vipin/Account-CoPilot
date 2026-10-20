@@ -11,7 +11,9 @@ export async function GET() {
   const user = await requireUser();
   if (!user) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
   const sb = await supabaseServer();
-  const data = scopeData(await loadAll(sb), await getAccess(user)); // Standard users export only their region
+  const access = await getAccess(user);
+  if (!access.canDownload) return NextResponse.json({ error: "Downloads are not available for your role. You can see the data in the app." }, { status: 403 });
+  const data = scopeData(await loadAll(sb), access); // Standard users export only their region
   const { data: defRow } = await sb.from("settings").select("value").eq("key", "icp_definition").maybeSingle();
   const buf = await buildWorkbook(data, defRow?.value);
   const date = new Date().toISOString().slice(0, 10);

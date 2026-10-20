@@ -157,6 +157,8 @@ export async function tryFree(question: string, ctx: AriaContext): Promise<FreeR
   const wantsReport = /\breport\b/.test(t); // "report" alone: ask whether they want a PDF or an Excel
   const anchored = !!(f.region || f.icp_status || f.platform || f.erp_contains || f.min_revenue_usd_m !== undefined || f.max_revenue_usd_m !== undefined);
 
+  if (!ctx.canDownload && (wantsExcel || wantsPdf || (wantsReport && anchored))) return { text: "Downloads (Excel, PDF and the Master Book) are not available for your role. The data is on screen in the app, and I can list it here in the chat.", actions: [], choices: [] };
+
   // ---- A named company: its PDF straight away (one company is already a precise request) ----
   if ((wantsPdf || wantsReport) && !wantsExcel && company.hits.length === 1) {
     const out = await runTool("create_pdf", { company_names: [s(company.hits[0].company_name)] }, ctx);

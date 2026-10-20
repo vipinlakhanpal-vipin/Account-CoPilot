@@ -21,12 +21,12 @@ export type AccountFilter = {
   name_contains?: string; exclude_platform?: string[]; exclude_erp?: string[]; min_revenue_usd_m?: number; max_revenue_usd_m?: number; has_contacts?: boolean; exclude_coupa_customers?: boolean;
 };
 
-export type AriaContext = { data: AllData; def: unknown; criteria: unknown; people: Person[]; peopleByCo: Map<string, Person[]>; engineLog: Row[] };
-export function makeContext(data: AllData, def: unknown, criteria: unknown, engineLog: Row[] = []): AriaContext {
+export type AriaContext = { data: AllData; def: unknown; criteria: unknown; people: Person[]; peopleByCo: Map<string, Person[]>; engineLog: Row[]; canDownload: boolean };
+export function makeContext(data: AllData, def: unknown, criteria: unknown, engineLog: Row[] = [], canDownload = true): AriaContext {
   const people = buildPeople(data.contacts);
   const peopleByCo = new Map<string, Person[]>();
   for (const p of people) (peopleByCo.get(p.company_id as string) || peopleByCo.set(p.company_id as string, []).get(p.company_id as string)!).push(p);
-  return { data, def, criteria, people, peopleByCo, engineLog };
+  return { data, def, criteria, people, peopleByCo, engineLog, canDownload };
 }
 
 /** "KSA", "Saudi Arabia" or "saudi" → the region key, or "" when it isn't one we cover. */

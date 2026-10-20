@@ -1013,7 +1013,7 @@ td.logo-cell{width:40px;padding-top:0;padding-bottom:0;text-align:center}
 .team-edit{display:flex;flex-direction:row;align-items:flex-end;gap:10px;flex-wrap:wrap;padding:6px 0}
 .team-edit-actions{display:flex;gap:8px}
 .role-tag{font:700 11.5px var(--body);padding:3px 10px;border-radius:999px;white-space:nowrap}
-.role-tag.super_admin{background:#5B4BC4;color:#FFFFFF}.role-tag.standard{background:#0B7A66;color:#FFFFFF}
+.role-tag.super_admin{background:#5B4BC4;color:#FFFFFF}.role-tag.admin{background:#1B64A8;color:#FFFFFF}.role-tag.standard{background:#0B7A66;color:#FFFFFF}
 .btn-change{font:700 11.5px var(--body);padding:3px 10px;border-radius:999px;white-space:nowrap;border:0;background:#1B64A8;color:#FFFFFF;cursor:pointer}
 .btn-change:hover{background:#14507F}
 /* Define ICP: save bar pinned to the bottom of the screen while there are unsaved changes */
@@ -1986,3 +1986,6 @@ table td.wrap,table th.wrap{margin:0;padding:7px 8px}
 .nav-market .sig-lanes{display:none}
 .hw-solo{padding:18px 22px}
 @media (max-width:900px){.navapp{grid-template-columns:minmax(0,1fr)}.navpanel{position:static;min-height:0;max-height:none}}
+
+/* v5.17: an Admin has no downloads: every download button is hidden (the server refuses the downloads too). Buttons that are not data (the upload template, a tender notice's own documents) carry .keep. */
+body[data-nodl] .btn-dl:not(.keep),body[data-nodl] .aria-dl,body[data-nodl] .aria-actions{display:none !important}

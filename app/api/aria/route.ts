@@ -35,7 +35,7 @@ export async function POST(req: Request) {
       access.isSuper ? db.from("settings").select("value").eq("key", "engine_log").maybeSingle().then((r) => (r.data?.value as { entries?: Record<string, unknown>[] } | undefined)?.entries || []) : Promise.resolve([]),
     ]);
     const regions = access.isSuper ? ALL_REGIONS : access.regions;
-    const ctx = makeContext(data, def, crit, log);
+    const ctx = makeContext(data, def, crit, log, access.canDownload);
     const msgs = parsed.data.messages;
     let typed = msgs[msgs.length - 1].content;
     // Buttons from the understanding guard: §ai: = hand it to the AI (paid), §plain: = run the reduced question

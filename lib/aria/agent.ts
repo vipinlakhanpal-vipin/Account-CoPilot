@@ -88,6 +88,7 @@ export async function runTool(name: string, input: Record<string, unknown>, ctx:
   if (name === "get_icp_rules") return { result: icpRules(ctx, input.region as string | undefined) };
   if (name === "get_engine_activity") return { result: engineActivity(ctx, input as Parameters<typeof engineActivity>[1]) };
 
+  if ((name === "create_excel" || name === "create_pdf") && !ctx.canDownload) return { result: { error: "Downloads (Excel, PDF and the Master Book) are not available for your role. The data is on screen in the app." } };
   if (name === "create_excel") {
     const region = regionKey(input.region);
     if (!region) return { result: { error: "A region is required. Ask the user which region (for example UAE, KSA, Qatar, Kuwait, UK, USA)." } };

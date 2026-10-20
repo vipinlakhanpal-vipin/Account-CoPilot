@@ -8,6 +8,7 @@ import ContactsJobTracker from "@/components/ContactsJobTracker";
 import ActivityTracker from "@/components/ActivityTracker";
 import TableNeat from "@/components/TableNeat";
 import { supabaseServer } from "@/lib/supabase/server";
+import { getAccess } from "@/lib/access";
 
 export const metadata: Metadata = { title: "Account CoPilot", description: "AI Autonomous Agent for Account Intelligence" };
 
@@ -22,6 +23,11 @@ async function headerMeta() {
   } catch { return ""; }
 }
 
+/** An Admin cannot download: the download buttons are hidden for them (the server refuses the requests as well). */
+async function noDownload() {
+  try { const sb = await supabaseServer(); const { data } = await sb.auth.getUser(); if (!data.user) return false; const a = await getAccess(data.user); return a.isSuper && !a.canDownload; } catch { return false; }
+}
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
@@ -31,7 +37,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" />
       </head>
-      <body><Suspense fallback={null}><Header meta={await headerMeta()} /></Suspense>{children}<ConfirmHost /><ContactsJobTracker /><Suspense fallback={null}><ActivityTracker /></Suspense><TableNeat /><footer className="site-footer">Designed and developed by <b>Vipin</b></footer></body>
+      <body data-nodl={(await noDownload()) ? "1" : undefined}><Suspense fallback={null}><Header meta={await headerMeta()} /></Suspense>{children}<ConfirmHost /><ContactsJobTracker /><Suspense fallback={null}><ActivityTracker /></Suspense><TableNeat /><footer className="site-footer">Designed and developed by <b>Vipin</b></footer></body>
     </html>
   );
 }
