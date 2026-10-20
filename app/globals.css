@@ -2752,3 +2752,8 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 .agame-toggles input:checked{background:#2EC4A6;box-shadow:0 0 0 3px rgba(46,196,166,.35),0 2px 6px rgba(0,0,0,.35)}
 .agame-toggles input:checked::after{content:"";position:absolute;left:5px;top:1px;width:5px;height:10px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(45deg)}
 .agame-toggles input:focus-visible{outline:2px solid #fff;outline-offset:3px}
+
+/* v5.98: a clear button opens Aria's playroom (a click on her now sends her exploring) */
+.agame-legend .agame-play{all:unset;box-sizing:border-box;display:block;cursor:pointer;margin:2px 0 9px;padding:7px 14px;border-radius:999px;background:linear-gradient(180deg,#FFF0A8,#FFD966);border:2px solid #F5A623;color:#3B2400;font:700 13px "Fredoka","Baloo 2",var(--body);text-shadow:none;text-align:center;box-shadow:0 3px 8px rgba(0,0,0,.3);text-decoration:none}
+.agame-legend .agame-play:hover{filter:brightness(1.06);transform:translateY(-1px)}
+.agame-legend .agame-play:focus-visible{outline:2px solid #fff;outline-offset:3px}

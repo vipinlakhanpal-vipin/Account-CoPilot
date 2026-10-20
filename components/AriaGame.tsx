@@ -112,8 +112,9 @@ function Roamer() {
     </div>
     {!away && <div className="agame-legend">
       {quiet
-        ? <p>Quiet mode is on: Aria stays calm and does not interrupt. <button type="button" onClick={go}>Open the playroom</button></p>
-        : <p>Click Aria: she follows your mouse. Double-click: she goes home. Press her bubble: games.</p>}
+        ? <p>Quiet mode is on: Aria stays calm and does not interrupt. Press the button below to play.</p>
+        : <p>Click Aria: she follows your mouse. Double-click: she goes home.</p>}
+      <button type="button" className="agame-play" onClick={go}>🎮 Play games with Aria</button>
       <span className="agame-toggles">
         <label><input type="checkbox" checked={quiet} onChange={(e) => setQuiet(e.target.checked)} /> Quiet mode</label>
         {def.canSet && <label title="The default for everyone who has not chosen for themselves"><input type="checkbox" checked={def.quietDefault} onChange={(e) => setEveryone(e.target.checked)} /> Quiet for everyone</label>}
