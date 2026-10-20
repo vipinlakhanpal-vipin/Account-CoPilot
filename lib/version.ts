@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.23";
+export const APP_VERSION = "5.24";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.24", date: "2026-10-20", notes: "The drop-down arrows now close a list even on its own page; a lighter carbon texture.", changes: [
+      { what: "The arrow beside Setup wizard, Settings and Market intelligence opens and closes its list even while you are on that page (before, a list stayed open on its own page). Going into a section still opens its list", where: "components/NavPanel.tsx", why: "Reported — the Setup wizard drop-down would not close" },
+      { what: "The left panel's carbon weave and green are lighter", where: "app/globals.css", why: "Requested — try the lighter version first" },
+    ] },
   { version: "5.23", date: "2026-10-20", notes: "The left panel is light green with a carbon-fibre texture.", changes: [
       { what: "The Home left panel has a light green background with a carbon-fibre weave, so it stands apart from the page beside it. The selected item, hover and dividers match, in light and dark mode", where: "app/globals.css", why: "Requested" },
     ] },

@@ -31,9 +31,11 @@ export default function NavPanel({ isSuper }: { isSuper: boolean }) {
   useEffect(() => { try { const r = JSON.parse(localStorage.getItem("nav-open") || "{}"); if (r && typeof r === "object") setOpen(r); } catch { /* optional */ } }, []);
   const flip = (k: string, v?: boolean) => setOpen((cur) => { const n = { ...cur, [k]: v ?? !cur[k] }; try { localStorage.setItem("nav-open", JSON.stringify(n)); } catch { /* optional */ } return n; });
   const onMarket = path.startsWith("/nav/market"), onWizard = path.startsWith("/nav/wizard"), onSettings = path.startsWith("/nav/settings");
+  // Going into a section opens its list; after that the arrow can close it, even while you stay on that page.
+  useEffect(() => { if (onMarket) flip("market", true); if (onWizard) flip("wizard", true); if (onSettings) flip("settings", true); }, [onMarket, onWizard, onSettings]); // eslint-disable-line react-hooks/exhaustive-deps
   const count = (v: string) => (mk ? mk.partners.filter((p) => p.vendor === v && !p.presence_pending && mk.regions.includes(p.region)).length : null);
   const group = (key: string, href: string, icon: string, label: string, on: boolean, kids: React.ReactNode) => {
-    const isOpen = on || !!open[key];
+    const isOpen = open[key] ?? on; // an explicit open or close wins, even on that page
     return (<>
       <div className={`navrow${on ? " on" : ""}`}>
         <Link href={href} className={`navit${on ? " on" : ""}`} aria-current={on ? "page" : undefined} onClick={() => flip(key, true)}><Ic n={icon} />{label}</Link>
