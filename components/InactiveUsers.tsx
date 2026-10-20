@@ -8,7 +8,7 @@ type Idle = { id: string; email: string; name: string; role: string; regions: st
 type Arch = { id: string; email: string; name: string; role: string; regions: string[]; last_active: string | null; archived_at: string; archived_by: string; reactivated_at: string | null };
 const ROLE: Record<string, string> = { super_admin: "Super Admin", admin: "Admin", standard: "Standard User" };
 
-// Team (Super Admin only): people with no activity for 15 days are suspended and listed here. Keep restarts their 15 days; Archive and delete saves a snapshot first; Archived users can be downloaded or reactivated.
+// Team (Super Admin only): people with no activity for 15 days are suspended and listed here. Keep restarts their 15 days; Archive user saves a snapshot first; Archived users can be downloaded or reactivated.
 export default function InactiveUsers() {
   const [data, setData] = useState<{ days: number; idle: Idle[]; archives: Arch[] } | null>(null);
   const [busy, setBusy] = useState("");
@@ -25,7 +25,7 @@ export default function InactiveUsers() {
     if (r.ok) { notify(j.message || "Done.", "ok"); if (j.tempPassword) setReply(j); await load(); window.dispatchEvent(new CustomEvent("inactive-changed")); } else notify(j.error || "Could not do that.", "error");
   }
   async function archiveDelete(u: Idle) {
-    const yes = await ask({ title: `Archive and delete ${u.name || u.email}?`, tone: "danger", confirm: "Archive, then delete",
+    const yes = await ask({ title: `Archive ${u.name || u.email}?`, tone: "danger", confirm: "Archive user",
       body: `${u.email} has had no activity for ${u.days_idle} days. A snapshot is saved first, so they can be reactivated later.`,
       points: [...u.removes.map((x) => `Removes: ${x.what}${x.n !== null ? ` (${x.n})` : ""}`), ...u.stays.map((x) => `Stays: ${x.what}${x.n !== null ? ` (${x.n})` : ""}`),
         "The archive keeps their profile, role, regions, activity log, saved filters, suggestions and jobs. Only you can download it or reactivate them."] });
@@ -62,7 +62,7 @@ export default function InactiveUsers() {
                     <td className="mono">{u.suspended_at ? d(u.suspended_at) : "—"}</td>
                     <td className="inactive-acts">
                       <button type="button" className="btn tiny" disabled={busy === u.id} onClick={() => post({ action: "keep", id: u.id })} title="Let them sign in again and restart their 15 days">Keep</button>
-                      <button type="button" className="btn tiny danger" disabled={busy === u.id} onClick={() => archiveDelete(u)}>Archive and delete…</button></td>
+                      <button type="button" className="btn tiny danger" disabled={busy === u.id} onClick={() => archiveDelete(u)} title="Saves a snapshot, then removes their sign-in. You can reactivate them from Archived users.">Archive user</button></td>
                   </tr>
                   {isOpen && (
                     <tr className="inactive-more"><td></td><td colSpan={7}>
