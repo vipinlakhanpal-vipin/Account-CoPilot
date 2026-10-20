@@ -7,6 +7,7 @@ import ConfirmHost from "@/components/Confirm";
 import ContactsJobTracker from "@/components/ContactsJobTracker";
 import ActivityTracker from "@/components/ActivityTracker";
 import TableNeat from "@/components/TableNeat";
+import AppShell from "@/components/AppShell";
 import { supabaseServer } from "@/lib/supabase/server";
 import { getAccess } from "@/lib/access";
 
@@ -23,12 +24,13 @@ async function headerMeta() {
   } catch { return ""; }
 }
 
-/** An Admin cannot download: the download buttons are hidden for them (the server refuses the requests as well). */
-async function noDownload() {
-  try { const sb = await supabaseServer(); const { data } = await sb.auth.getUser(); if (!data.user) return false; const a = await getAccess(data.user); return a.isSuper && !a.canDownload; } catch { return false; }
+/** Who is signed in (null on the sign-in pages). An Admin cannot download: the download buttons are hidden for them (the server refuses the requests as well). */
+async function who() {
+  try { const sb = await supabaseServer(); const { data } = await sb.auth.getUser(); if (!data.user) return null; return await getAccess(data.user); } catch { return null; }
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const access = await who();
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -37,7 +39,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" />
       </head>
-      <body data-nodl={(await noDownload()) ? "1" : undefined}><Suspense fallback={null}><Header meta={await headerMeta()} /></Suspense>{children}<ConfirmHost /><ContactsJobTracker /><Suspense fallback={null}><ActivityTracker /></Suspense><TableNeat /><footer className="site-footer">Designed and developed by <b>Vipin</b></footer></body>
+      <body data-nodl={access && access.isSuper && !access.canDownload ? "1" : undefined}><Suspense fallback={null}><Header meta={await headerMeta()} /></Suspense><AppShell isSuper={!!access?.isSuper}>{children}</AppShell><ConfirmHost /><ContactsJobTracker /><Suspense fallback={null}><ActivityTracker /></Suspense><TableNeat /><footer className="site-footer">Designed and developed by <b>Vipin</b></footer></body>
     </html>
   );
 }

@@ -98,8 +98,8 @@ export default function DiscoveryPanel({ criteria: applied, onApply, onSave, sav
 
   if (collapsed) return (
     <aside className="dp dp-collapsed" aria-label="Account Discovery Criteria">
-      <button type="button" className="dp-toggle" onClick={onToggle} title="Open Account Discovery Criteria" aria-expanded="false">
-        <span aria-hidden="true">☰</span><span className="dp-vert">Discovery criteria{n ? ` · ${n}` : ""}</span>
+      <button type="button" className="dp-toggle" onClick={onToggle} title="Open Filters: Account Discovery Criteria" aria-expanded="false">
+        <span aria-hidden="true">⚙</span><span className="dp-vert">Filters{n ? ` · ${n}` : ""}</span>
       </button>
     </aside>
   );

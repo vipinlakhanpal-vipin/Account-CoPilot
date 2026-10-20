@@ -2055,3 +2055,11 @@ body[data-nodl] .btn-dl:not(.keep),body[data-nodl] .aria-dl,body[data-nodl] .ari
 .navbtn:hover{background:color-mix(in srgb,var(--surface) 55%,transparent)}
 .navbtn:focus-visible{outline:2px solid var(--teal);outline-offset:-2px}
 .navver{margin-left:auto;color:var(--muted);font:500 10.5px var(--mono)}
+
+/* v5.29: the left panel is on every page, so Account Discovery Criteria becomes a Filters drawer (closed by default) instead of a second left column */
+.app-shell,.app-shell.dp-closed{display:block}
+.dp{position:fixed;right:16px;top:150px;bottom:16px;width:340px;max-height:none;margin:0;z-index:45;box-shadow:0 18px 44px rgba(0,0,0,.30)}
+.dp.dp-collapsed{top:172px;bottom:auto;width:auto;padding:0;z-index:30;border-radius:999px;box-shadow:0 6px 16px rgba(0,0,0,.2)}
+.dp-collapsed .dp-toggle{flex-direction:row;gap:8px;padding:8px 16px}
+.dp-collapsed .dp-vert{writing-mode:horizontal-tb;transform:none}
+@media (max-width:1100px){.dp{width:min(340px,calc(100vw - 32px))}}

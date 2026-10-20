@@ -429,7 +429,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
   const inPipe = (a: Row, sc?: Scores) => !!sc && sc.m.total >= pipe.min_match && (!pipe.exclude_not_icp || a.icp_status !== "Not ICP") && !/coupa/i.test(str(a.existing_s2p_product));
   const [savedMeta, setSavedMeta] = useState<{ by?: string; at?: string } | null>(null);
   const [teamCriteria, setTeamCriteria] = useState<Criteria | null>(null);
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true); // the Filters drawer starts closed
   // Reports tab: the table's own search/dropdowns/custom filter live inside FilterTable, so this mirrors its
   // live state (reported up via onState) for "Save this report" to use, and seeds it back in (via `initial` +
   // bumping reportKey to force a remount) when a saved report is opened.
@@ -439,7 +439,6 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
   const [savedReportItems, setSavedReportItems] = useState<SavedReport[]>([]);
   useEffect(() => { fetch("/api/reports").then((r) => (r.ok ? r.json() : null)).then((j) => j && setSavedReportItems(j.items || [])).catch(() => {}); }, []);
   useEffect(() => {
-    try { setCollapsed(localStorage.getItem("dp-collapsed") === "1"); } catch {}
     supabaseBrowser().from("settings").select("value").eq("key", "icp_definition").maybeSingle().then(({ data: row }) => setIcpDef(row?.value || null));
     supabaseBrowser().from("settings").select("value").eq("key", "icp_criteria").maybeSingle()
       .then(({ data: row }) => { if (row?.value) { setCriteria(withDefaults(row.value as Criteria)); setTeamCriteria(withDefaults(row.value as Criteria)); setSavedMeta((row.value as { _meta?: { by?: string; at?: string } })._meta || null); } });
