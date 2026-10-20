@@ -58,21 +58,26 @@ function Roamer() {
     const el = wrap.current, area = el?.parentElement;
     if (!el || !area) return;
     const R = 36, PAD = 8, GAP = 54; // orb radius, margin, distance from her centre to the top of the bubble
-    const st = { x: area.clientWidth / 2, y: R + PAD + 6, vx: 26, vy: 18, hover: false, last: 0 };
+    const st = { x: area.clientWidth / 2, y: R + PAD + 6, vx: 26, vy: 18, hover: false, last: 0, placed: false };
     const bot = el.querySelector<HTMLElement>(".agame-bot");
     const bump = (cls: string) => { if (!bot) return; bot.classList.remove("bump-x", "bump-y"); void bot.offsetWidth; bot.classList.add(cls); setTimeout(() => bot.classList.remove(cls), 280); };
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let raf = 0;
+    // She lives in the middle of the free space (between the menu above and her buttons below) and roams only a little around it, bouncing off the edges of that small box.
     const draw = () => {
-      const W = area.clientWidth, H = area.clientHeight;
-      const minX = R + PAD, maxX = Math.max(minX, W - R - PAD), minY = R + PAD, bubbleH = el.querySelector<HTMLElement>(".agame-bubble")?.offsetHeight || 66;
-      const maxY = Math.max(minY, H - GAP - bubbleH - PAD - ((area.querySelector<HTMLElement>(".agame-legend")?.offsetHeight || 46) + 6)); // room for the legend at the foot, however tall it is
-      return { W, minX, maxX, minY, maxY };
+      const W = area.clientWidth, H = area.clientHeight, bubbleH = el.querySelector<HTMLElement>(".agame-bubble")?.offsetHeight || 66;
+      const free = H - ((area.querySelector<HTMLElement>(".agame-legend")?.offsetHeight || 46) + 6); // height above the legend
+      const block = R + GAP + bubbleH;                                                              // her orb, the gap and her bubble under it
+      const cx = W / 2, cy = Math.max(R + PAD, (free - block) / 2 + R);
+      const minX = Math.max(R + PAD, cx - 62), maxX = Math.min(Math.max(R + PAD, W - R - PAD), cx + 62);
+      const minY = Math.max(R + PAD, cy - 30), maxY = Math.max(minY, cy + 30);
+      return { W, minX, maxX: Math.max(minX, maxX), minY, maxY, cx, cy };
     };
     const tick = (ts: number) => {
       raf = requestAnimationFrame(tick);
       const dt = Math.min(0.05, (ts - (st.last || ts)) / 1000); st.last = ts;
       const b = draw();
+      if (!st.placed) { st.x = b.cx; st.y = b.cy; st.placed = true; } // first frame: start in the middle
       if (!reduced && !st.hover && !quietRef.current && document.visibilityState === "visible") {
         st.x += st.vx * dt; st.y += st.vy * dt;
         if (st.x <= b.minX) { st.x = b.minX; st.vx = Math.abs(st.vx); bump("bump-x"); } else if (st.x >= b.maxX) { st.x = b.maxX; st.vx = -Math.abs(st.vx); bump("bump-x"); }

@@ -375,6 +375,7 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 .agame-legend .agame-more:hover{color:#fff}
 .agame-legend .agame-more:focus-visible{outline:2px solid #fff;outline-offset:2px}
 .agame-more-body{margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.25)}
+.agame-legend .agame-ask,.agame-legend .agame-play{white-space:nowrap;font:700 12px var(--body);padding:8px 8px;overflow:hidden;letter-spacing:0}
 
 /* tab colour tokens used by the games' tabs, chips and switches */
 :root{--tab-bg:color-mix(in srgb,#2ECC8F 24%,var(--surface));--tab-hover:color-mix(in srgb,#2ECC8F 42%,var(--surface));--tab-fg:var(--text);--tab-on:#0F6E56;--tab-on-fg:#fff;--tab-accent:#2EC4A6;--tab-line:#0F6E56}

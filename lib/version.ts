@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.04";
+export const APP_VERSION = "6.05";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.05", date: "2026-10-20", notes: "Aria sits in the middle of the free space.", changes: [
+      { what: "Aria now starts in the middle of the free space of the left panel (between the menu above and her buttons below, with her speech bubble under her) instead of at the top, and roams only a little around that middle, bouncing off the edges of a small box. In Quiet mode she stays in the middle", where: "Left panel, Aria", why: "She looks better in the centre" },
+  ] },
   { version: "6.04", date: "2026-10-20", notes: "In Find New Company, brackets after a name say what you are looking for: any product, solution or service.", changes: [
       { what: "The brackets after a company name are no longer about Coupa or Ariba. They hold whatever you are looking for at that company, any product, solution or service, for example Almarai (S/4HANA support), Savola (procurement platform), Aldrees (managed services). The tag shows on the name, the scheduled session researches exactly that for the company, and your words are kept in the account notes. Nothing is filed as a customer of any vendor automatically; the evidence the research finds fills the ERP and S2P fields as usual", where: "Find and search, Find New Company", why: "The tool is not specific to one vendor" },
   ] },
