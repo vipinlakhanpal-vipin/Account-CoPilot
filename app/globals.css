@@ -2263,10 +2263,6 @@ header.top{background:var(--bg);padding-bottom:8px;box-shadow:0 10px 14px -12px 
 .settabs a:hover{background:color-mix(in srgb,#2ECC8F 42%,var(--surface));color:var(--text-strong)}
 .settabs a.on{background:#0F6E56;color:#fff;border-bottom:0;box-shadow:inset 0 3px 0 #2EC4A6}
 .settabs a:focus-visible{outline:2px solid var(--teal);outline-offset:-2px}
-:root[data-theme="light"] .settabs a{background:#DDF1EB;color:#0B3D35}
-:root[data-theme="light"] .settabs a:hover{background:#BFE7DA}
-:root[data-theme="light"] .settabs a.on{background:#0B7A66;color:#fff}
-@media (prefers-color-scheme: light){:root:not([data-theme="dark"]) .settabs a{background:#DDF1EB;color:#0B3D35}:root:not([data-theme="dark"]) .settabs a:hover{background:#BFE7DA}:root:not([data-theme="dark"]) .settabs a.on{background:#0B7A66;color:#fff}}
 
 /* v5.57: Market intelligence vendors are filled tabs, the same family as Settings and the Setup wizard */
 .mkt-tabs{display:flex;gap:5px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;align-items:flex-end;border-bottom:3px solid #0F6E56;padding:0 2px;margin:4px 0 0}
@@ -2288,10 +2284,6 @@ header.top{background:var(--bg);padding-bottom:8px;box-shadow:0 10px 14px -12px 
 .mkt-addv input{padding:6px 10px;border-radius:8px;border:1px solid var(--line-2);background:var(--surface);color:var(--text);font:13px var(--body);width:190px}
 .mkt-scanline{display:flex;align-items:center;gap:12px;margin:0 0 10px;max-width:520px}
 .mkt-scanline em{font:500 11.5px var(--body);font-style:normal;color:var(--muted);white-space:nowrap}
-:root[data-theme="light"] .mkt-tab{background:#DDF1EB;color:#0B3D35}
-:root[data-theme="light"] .mkt-tab:hover{background:#BFE7DA}
-:root[data-theme="light"] .mkt-tab[aria-selected="true"]{background:#0B7A66;color:#fff}
-@media (prefers-color-scheme: light){:root:not([data-theme="dark"]) .mkt-tab{background:#DDF1EB;color:#0B3D35}:root:not([data-theme="dark"]) .mkt-tab:hover{background:#BFE7DA}:root:not([data-theme="dark"]) .mkt-tab[aria-selected="true"]{background:#0B7A66;color:#fff}}
 @media (prefers-reduced-motion:reduce){.mkt-tab.scanning{animation:none}}
 
 /* v5.58: a vibrant app name that reads on the navy bar, and the logo as a 3D sphere like the profile circle */
@@ -2378,3 +2370,36 @@ header.top{background:var(--bg);padding-bottom:8px;box-shadow:0 10px 14px -12px 
 .mkt-cs-row em{font-style:normal;font-size:11px;color:var(--muted);white-space:nowrap}
 .mkt-cs-foot{font-size:11px;color:var(--muted);border-top:1px solid var(--line);padding-top:5px}
 @media (max-width:900px){.mkt-hero{flex-direction:column}.mkt-cs{flex-basis:auto;width:100%}}
+
+
+/* TABS (v5.68): one look for every row of tabs: soft green when idle, deep teal with white text when open, a teal line under the row. The type and the space around each tab shrink together
+   when the labels would not fit (components/TabFit.tsx sets --tabfs and --tabpx), so text never runs out of a tab. */
+:root{--tab-bg:color-mix(in srgb,#2ECC8F 24%,var(--surface));--tab-hover:color-mix(in srgb,#2ECC8F 42%,var(--surface));--tab-fg:var(--text);--tab-on:#0F6E56;--tab-on-fg:#fff;--tab-accent:#2EC4A6;--tab-line:#0F6E56}
+:root[data-theme="light"]{--tab-bg:#DDF1EB;--tab-hover:#BFE7DA;--tab-fg:#0B3D35;--tab-on:#0B7A66;--tab-line:#0B7A66}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--tab-bg:#DDF1EB;--tab-hover:#BFE7DA;--tab-fg:#0B3D35;--tab-on:#0B7A66;--tab-line:#0B7A66}}
+
+.settabs,.mkt-tabs{border-bottom-color:var(--tab-line)}
+.settabs a,.mkt-tab{font-size:var(--tabfs,14px);padding-left:var(--tabpx,20px);padding-right:var(--tabpx,20px);background:var(--tab-bg);color:var(--tab-fg)}
+.settabs a:hover,.mkt-tab:hover{background:var(--tab-hover);color:var(--tab-fg)}
+.settabs a.on,.mkt-tab[aria-selected="true"]{background:var(--tab-on);color:var(--tab-on-fg);box-shadow:inset 0 3px 0 var(--tab-accent)}
+.mkt-tab{padding-left:var(--tabpx,18px);padding-right:var(--tabpx,18px)}
+.mkt-tabwrap:has(.mkt-x) .mkt-tab{padding-right:calc(var(--tabpx,18px) + 8px)}
+.mkt-plus{background:transparent}
+.mkt-count{font-size:calc(var(--tabfs,14px)*.8)}
+.mkt-tab.scanning:not([aria-selected="true"]){animation-name:mkt-tabpulse}
+.settabs,.mkt-tabs{overflow-x:auto}
+
+/* the small two- and three-way switches (All accounts / Filtered, Daily run views, Mission Control views, report format, Company / Contact) become the same tabs */
+.seg-toggle{max-width:100%;overflow:hidden;background:none;border:0;border-bottom:3px solid var(--tab-line);border-radius:0;padding:0 2px;gap:5px}
+.seg-toggle button{flex:none;white-space:nowrap;font:700 var(--tabfs,13px) var(--body);padding:8px var(--tabpx,16px) 7px;border-radius:10px 10px 0 0;background:var(--tab-bg);color:var(--tab-fg);margin-bottom:0}
+.seg-toggle button:hover{background:var(--tab-hover)}
+.seg-toggle button[aria-pressed="true"]{background:var(--tab-on);color:var(--tab-on-fg);box-shadow:inset 0 3px 0 var(--tab-accent)}
+.dp-tabs{background:none;border:0;border-bottom:3px solid var(--tab-line);border-radius:0;padding:0;gap:5px;overflow:hidden}
+.dp-tabs button{white-space:nowrap;font:700 var(--tabfs,12.5px) var(--body);padding:7px var(--tabpx,10px) 6px;border-radius:10px 10px 0 0;background:var(--tab-bg);color:var(--tab-fg)}
+.dp-tabs button:hover{background:var(--tab-hover)}
+.dp-tabs button[aria-selected="true"]{background:var(--tab-on);color:var(--tab-on-fg);box-shadow:inset 0 3px 0 var(--tab-accent)}
+/* Find a company: the two big mode tiles use the same colours */
+.find-modes button{background:var(--tab-bg);border-color:transparent;color:var(--tab-fg)}
+.find-modes button small{color:inherit;opacity:.8}
+.find-modes button:hover{background:var(--tab-hover);border-color:transparent}
+.find-modes button[aria-selected="true"]{background:var(--tab-on);border-color:var(--tab-on);color:var(--tab-on-fg);box-shadow:inset 0 3px 0 var(--tab-accent),0 4px 14px rgba(11,122,102,.3)}

@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.67";
+export const APP_VERSION = "5.68";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.68", date: "2026-10-20", notes: "Every row of tabs looks the same, and shrinks its type to fit instead of running out of the tab.", changes: [
+      { what: "One tab design across the app: soft green when idle, deep teal with white text when open, a teal line under the row, in light and dark mode. It now covers Settings, Setup wizard, Market intelligence vendors, the Daily run views, All accounts / Filtered results, Mission Control views, the Company / Contact switch in Filters, the report format switch, and the two Find a company tiles. If the labels do not fit a row, the type and the space around each tab shrink together (down to 10 px) until they do, so no text runs out of a tab", where: "All tab rows", why: "The tabs were a mix of looks, and long titles could spill out of their tab" },
+  ] },
   { version: "5.67", date: "2026-10-20", notes: "The daily run now sweeps every active Middle East region for tenders and buying signals.", changes: [
       { what: "The daily engine's Buying signals step is no longer limited to UAE and KSA. It covers every Active Middle East region (UAE, KSA, Qatar, Kuwait, Oman, Bahrain, Egypt): High regions every run, Medium every 3 days, Low weekly. It looks for ERP, S2P and S2C tenders and RFPs, support and upgrade deals (SAP, Oracle and others), contract awards (who is exposed to a renewal), and upsell or cross-sell triggers at accounts already in the app. ENGINE.md has a new Middle East sweep playbook: what counts, the tender portals and news sites per country, typical queries, and the rule never to save a closed tender", where: "Daily run, Buying signals", why: "Nothing is missed on any day, and every region is covered, not two" },
   ] },
