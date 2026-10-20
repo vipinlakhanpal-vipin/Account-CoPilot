@@ -239,17 +239,16 @@ export default function Header({ meta }: { meta: string }) {
             <div className="brand-text">
               <div className="brand-row">
                 <span className="appname">Account CoPilot</span>
-                <span className="version">
-                  <button type="button" className="refresh" onClick={() => window.location.reload()}
-                    title={latest ? `Version v${latest} is available. Click to load it.` : "Reload the latest data"}>
-                    <Spin />v{APP_VERSION}{latest && <span className="dot" aria-label={`New version v${latest} available`} />}
-                  </button>
-                  
-                  <OnlineNow />
-                </span>
               </div>
               <span className="brand-sub">{TAGLINE}</span>
             </div>
+            <span className="version">
+              <button type="button" className="refresh" onClick={() => window.location.reload()}
+                title={latest ? `Version v${latest} is available. Click to load it.` : "Reload the latest data"}>
+                <Spin />v{APP_VERSION}{latest && <span className="dot" aria-label={`New version v${latest} available`} />}
+              </button>
+              <OnlineNow />
+            </span>
           </div>
           <nav className="tabs" aria-label="Sections">
             {GROUPS.map((g) => (g.win ? (

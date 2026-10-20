@@ -2224,3 +2224,7 @@ header.top{background:var(--bg);padding-bottom:8px;box-shadow:0 10px 14px -12px 
 @media (prefers-color-scheme: light){:root:not([data-theme="dark"]) .navbar.has-sub nav.tabs .tab[aria-selected="true"]{background:#DDF1EB;color:#0A5C4C;box-shadow:inset 0 3px 0 #0B7A66}}
 .navbar.has-sub .tab .tip-pill{text-shadow:none}
 .wiz-brief{margin:2px 0 0;max-width:860px;font-size:13.5px;line-height:1.5;color:var(--muted)}
+
+/* v5.53: the version button and Online now are stacked (Online now below), to the right of the name and tagline */
+.brand .version{flex-direction:column;align-items:flex-start;gap:5px}
+.brand .version .online-chip{padding:3px 10px}
