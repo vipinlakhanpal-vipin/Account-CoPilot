@@ -276,6 +276,12 @@ export default function GameRoom() {
   const count = (m: Medal) => awards.filter((a) => a.m === m).length;
   return (
     <div className="gr">
+      <div className="gr-brain" role="note">
+        <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 4a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 1.5 5A3 3 0 0 0 9 20a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3zM15 4a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-1.5 5A3 3 0 0 1 15 20a3 3 0 0 1-3-3" /></svg>
+        <div><b>Brain gym: warm up your mind</b>
+          <span>These games are designed to exercise your cognitive skills: memory, attention, reasoning, speed and language. A few minutes between tasks keeps your thinking sharp and agile.</span></div>
+        <span className="gr-brain-chips" aria-hidden="true"><i>Memory</i><i>Attention</i><i>Reasoning</i><i>Speed</i><i>Language</i></span>
+      </div>
       <div className="gr-host" ref={hostRef}>
         <span className="gr-bob"><AriaOrb mood={mood} size={104} anim={anim} onClick={poke} /></span>
         <div className="gr-say" role="status" aria-live="polite"><b>Aria</b><p>{say}</p></div>

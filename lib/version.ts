@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.92";
+export const APP_VERSION = "5.93";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.93", date: "2026-10-20", notes: "The playroom says what its games are for.", changes: [
+      { what: "The playroom opens with a bold banner: Brain gym: warm up your mind. These games are designed to exercise your cognitive skills: memory, attention, reasoning, speed and language. A few minutes between tasks keeps your thinking sharp and agile. The wording says the games are designed to exercise those skills, not that they are proven to raise intelligence", where: "Aria, the playroom", why: "People know why the games are there" },
+  ] },
   { version: "5.92", date: "2026-10-20", notes: "The region table in Setup wizard step 1 uses the same text size as its description.", changes: [
       { what: "The values in the region table (the names, the revenue and employee boxes, both drop-downs and the status) are now 13 px, the same size as the description above them; they were larger because the boxes took the browser's default size", where: "Setup wizard, step 1", why: "The table text looked bigger than the text around it" },
   ] },

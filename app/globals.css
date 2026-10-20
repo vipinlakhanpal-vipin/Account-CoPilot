@@ -2723,3 +2723,14 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 .hw-region-grid .hw-region-name,.hw-region-grid .hw-region-activated{font-size:13px}
 .hw-region-grid input[type="number"],.hw-region-grid input[type="text"],.hw-region-grid select{font-family:var(--body);font-size:13px;font-weight:500;line-height:1.3;padding:6px 10px}
 .hw-region-headrow{font-size:10.5px}
+
+/* v5.93: the playroom opens with a banner that says what the games are for */
+.gr-brain{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:2px 0 10px;padding:12px 16px;border-radius:14px;color:#fff;background-color:#0F6E56;
+  background-image:linear-gradient(100deg,#0F6E56 0%,#2A7A8F 50%,#5B4BC4 100%);box-shadow:0 6px 18px rgba(30,60,120,.25)}
+.gr-brain>svg{flex:none;filter:drop-shadow(0 0 8px rgba(255,255,255,.6));animation:agame-breathe 3.4s ease-in-out infinite}
+.gr-brain div{flex:1 1 320px;min-width:0}
+.gr-brain b{display:block;font:700 17px var(--display);letter-spacing:.01em}
+.gr-brain div span{display:block;margin-top:2px;font-size:13px;line-height:1.5;color:rgba(255,255,255,.92)}
+.gr-brain-chips{display:flex;gap:6px;flex-wrap:wrap}
+.gr-brain-chips i{font:700 11.5px var(--body);font-style:normal;padding:3px 11px;border-radius:999px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.4)}
+@media (prefers-reduced-motion:reduce){.gr-brain>svg{animation:none}}
