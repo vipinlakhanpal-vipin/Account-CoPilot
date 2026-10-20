@@ -19,7 +19,7 @@ const entityTitle = (t?: string) => t === "Branch" ? "Local branch or subsidiary
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "");
 
 // Bell in the top bar: notifications from the scheduled engine runs (6am daily). Unread = newer than the last time you opened it.
-export default function EngineBell() {
+export default function EngineBell({ inline = false }: { inline?: boolean }) {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [myRegions, setMyRegions] = useState<{ key: string; name: string; status: string; priority?: string; market?: boolean; plan_new?: number; plan_verify?: number }[]>([]);
   const [seen, setSeen] = useState("");
@@ -66,15 +66,10 @@ export default function EngineBell() {
     setOpen((o) => !o);
     if (!open && entries[0]) { try { localStorage.setItem("engine-seen", entries[0].at); } catch {} setTimeout(() => setSeen(entries[0].at), 1500); }
   };
-  return (
-    <div className="bell" ref={ref}>
-      <button type="button" className="bell-btn notif-btn" onClick={toggle} aria-label={`Engine notifications${unread ? `, ${unread} new` : ""}`}>
-        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.2a4 4 0 0 0-4 4v2.3L2.8 11h10.4L12 8.5V6.2a4 4 0 0 0-4-4ZM6.5 13a1.5 1.5 0 0 0 3 0" fill="none" stroke="var(--teal)" strokeWidth="1.4" strokeLinejoin="round" /></svg>
-        {unread > 0 && <span className="bell-dot">{unread}</span>}
-        <span className="tip-pill" role="tooltip"><span className="tip-dot" aria-hidden="true" />Engine notifications - what the daily run did</span>
-      </button>
-      {open && (
-        <div className="bell-pop" role="dialog" aria-label="Engine notifications">
+  // On the Daily run page the bell is a page, so what it shows counts as read.
+  useEffect(() => { if (inline && entries[0]) { try { localStorage.setItem("engine-seen", entries[0].at); } catch {} } }, [inline, entries]);
+  const body = (
+    <>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
             <span className="bell-title-row"><b>Scheduled runs</b>
               {regionList.length > 0 && <label className="bell-region-select"><span className="sr-only">Select region</span>
@@ -83,7 +78,7 @@ export default function EngineBell() {
                   {regionList.map((r) => <option key={r} value={r}>{nameOf(r)}</option>)}
                 </select></label>}
             </span>
-            <button type="button" className="btn tiny btn-close" onClick={() => setOpen(false)}>Close</button>
+            {!inline && <button type="button" className="btn tiny btn-close" onClick={() => setOpen(false)}>Close</button>}
           </div>
           {regionList.length > 0 && <div className="bell-region-name">{selected === "All" ? "All regions" : nameOf(selected)}</div>}
           {(() => {
@@ -123,7 +118,7 @@ export default function EngineBell() {
             const when = day === new Date().toDateString() ? "Today" : new Date(mine[0].at).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
             return <p className="bell-oneline"><b>{when}:</b> {newN} new {newN === 1 ? "company" : "companies"} · {verN} verified {chip}</p>;
           })()}
-          <p className="bell-resize-hint">Drag the bottom-right corner to expand ↘</p>
+          {!inline && <p className="bell-resize-hint">Drag the bottom-right corner to expand ↘</p>}
           {entries.length === 0 && selected === "All" ? <p className="note">No runs yet. The engine runs every day at <DailyRunLocalTime /> and posts a summary here.</p>
             : selected !== "All" && !blocks.some((b) => b.region === selected) ? (() => {
               const st = myRegions.find((m) => m.key === selected)?.status;
@@ -216,10 +211,23 @@ export default function EngineBell() {
                 );
               });
             })()}
-          <div className="bell-foot">
+          {!inline && <div className="bell-foot">
             <Link href="/?tab=reports&view=activity" className="btn tiny primary" onClick={() => setOpen(false)}>Full report: Engine activity →</Link>
             <Link href="/settings#engine" className="btn tiny" onClick={() => setOpen(false)}>Open engine settings</Link>
-          </div>
+          </div>}
+    </>
+  );
+  if (inline) return <div className="bell-inline">{body}</div>;
+  return (
+    <div className="bell" ref={ref}>
+      <button type="button" className="bell-btn notif-btn" onClick={toggle} aria-label={`Engine notifications${unread ? `, ${unread} new` : ""}`}>
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.2a4 4 0 0 0-4 4v2.3L2.8 11h10.4L12 8.5V6.2a4 4 0 0 0-4-4ZM6.5 13a1.5 1.5 0 0 0 3 0" fill="none" stroke="var(--teal)" strokeWidth="1.4" strokeLinejoin="round" /></svg>
+        {unread > 0 && <span className="bell-dot">{unread}</span>}
+        <span className="tip-pill" role="tooltip"><span className="tip-dot" aria-hidden="true" />Engine notifications - what the daily run did</span>
+      </button>
+      {open && (
+        <div className="bell-pop" role="dialog" aria-label="Engine notifications">
+          {body}
         </div>)}
     </div>
   );

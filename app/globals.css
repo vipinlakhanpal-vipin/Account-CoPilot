@@ -2033,3 +2033,9 @@ body[data-nodl] .btn-dl:not(.keep),body[data-nodl] .aria-dl,body[data-nodl] .ari
 .navpanel .navrow.on .navit{background:none}
 .navpanel .navit:hover,.navpanel .navchev:hover,.navpanel .navprof:hover{background:color-mix(in srgb,var(--surface) 55%,transparent)}
 .navpanel .navbot,.navpanel .navprof-wrap{border-top-color:color-mix(in srgb,#0B7A66 28%,var(--line))}
+
+/* v5.25: the bell's content as a page (Home -> Daily run) */
+.bell-inline{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 18px}
+.bell-inline .bell-table{width:100%}
+.bell-inline .bell-table td{max-width:none;white-space:normal;overflow:visible;text-overflow:clip}
+.bell-inline .bell-title-row{gap:12px}

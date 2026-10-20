@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.24";
+export const APP_VERSION = "5.25";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.25", date: "2026-10-20", notes: "Daily run shows the bell's summary table.", changes: [
+      { what: "Home → Daily run opens on Bell summary: the same content as the bell (region picker, Today's plan, each run's company table with New, Verified, Entity, Status and Revenue), now as a page. Engine activity and Run history are one click away", where: "components/NavDailyRun.tsx, components/EngineBell.tsx", why: "Reported — Daily run did not show the bell's table" },
+    ] },
   { version: "5.24", date: "2026-10-20", notes: "The drop-down arrows now close a list even on its own page; a lighter carbon texture.", changes: [
       { what: "The arrow beside Setup wizard, Settings and Market intelligence opens and closes its list even while you are on that page (before, a list stayed open on its own page). Going into a section still opens its list", where: "components/NavPanel.tsx", why: "Reported — the Setup wizard drop-down would not close" },
       { what: "The left panel's carbon weave and green are lighter", where: "app/globals.css", why: "Requested — try the lighter version first" },
