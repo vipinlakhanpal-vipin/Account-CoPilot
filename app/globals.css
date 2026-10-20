@@ -2454,3 +2454,25 @@ header.top{background:var(--bg);padding-bottom:8px;box-shadow:0 10px 14px -12px 
 .agm-scroll{overflow-x:auto;padding-bottom:4px}
 .gr-play .agm-scroll .agame-stage{margin:0 auto}
 @media (max-width:1000px){.gr-body{grid-template-columns:minmax(0,1fr)}}
+/* v5.74: Aria as a real 3D glass-like orb: lit from the top left, a bounce of teal light underneath, a soft glow that breathes, and it lifts toward you on hover */
+.agame-bot{left:-36px;top:-36px;width:72px;height:72px;overflow:visible;
+  background:
+    radial-gradient(circle at 50% 118%,rgba(25,211,176,.55) 0%,rgba(25,211,176,0) 46%),
+    radial-gradient(circle at 30% 22%,#DCD5FF 0%,#9A88FF 20%,#5B4BC4 52%,#33279A 80%,#1A1260 100%);
+  box-shadow:
+    inset 0 -10px 16px rgba(8,4,64,.6),inset 0 7px 9px rgba(255,255,255,.38),inset 0 0 0 1px rgba(255,255,255,.2),
+    0 0 16px 3px rgba(130,112,255,.55),0 0 40px 10px rgba(91,75,196,.35),0 16px 20px -8px rgba(0,0,0,.6);
+  animation:agame-breathe 3.4s ease-in-out infinite;transition:transform .18s ease-out}
+.agame-bot::before{content:"";position:absolute;left:14%;top:6%;width:46%;height:30%;border-radius:50%;background:radial-gradient(ellipse at 40% 35%,rgba(255,255,255,.85),rgba(255,255,255,0) 72%);transform:rotate(-24deg);pointer-events:none}
+.agame-bot::after{content:"";position:absolute;inset:-5px;border-radius:50%;border:1px solid rgba(190,175,255,.35);pointer-events:none}
+.agame-bot svg{width:78%;height:78%;filter:drop-shadow(0 2px 2px rgba(10,5,70,.45));position:relative;z-index:1}
+.agame-bot:hover{filter:brightness(1.08) saturate(1.1);transform:translateY(-2px) scale(1.06);box-shadow:inset 0 -10px 16px rgba(8,4,64,.6),inset 0 7px 9px rgba(255,255,255,.45),inset 0 0 0 1px rgba(255,255,255,.28),0 0 22px 6px rgba(150,132,255,.75),0 0 54px 16px rgba(91,75,196,.45),0 20px 22px -8px rgba(0,0,0,.6)}
+.agame-bot:active{transform:scale(.96)}
+@keyframes agame-breathe{0%,100%{box-shadow:inset 0 -10px 16px rgba(8,4,64,.6),inset 0 7px 9px rgba(255,255,255,.38),inset 0 0 0 1px rgba(255,255,255,.2),0 0 14px 2px rgba(130,112,255,.45),0 0 34px 8px rgba(91,75,196,.28),0 16px 20px -8px rgba(0,0,0,.6)}50%{box-shadow:inset 0 -10px 16px rgba(8,4,64,.6),inset 0 7px 9px rgba(255,255,255,.42),inset 0 0 0 1px rgba(255,255,255,.24),0 0 22px 5px rgba(150,132,255,.7),0 0 50px 14px rgba(91,75,196,.42),0 16px 20px -8px rgba(0,0,0,.6)}}
+@media (prefers-reduced-motion:reduce){.agame-bot{animation:none}}
+
+/* v5.75: the yellow bubble sits below the icon (its pointer points up), and the roaming area leaves room for it */
+.agame-bubble,.agame-bubble.funny{top:54px;bottom:auto;transform-origin:50% 0}
+.agame-bubble::after,.agame-bubble.funny::after{bottom:auto;top:-6px;transform:rotate(225deg)}
+.agame{top:36%}
+.navmid{min-height:240px}

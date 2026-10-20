@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.74";
+export const APP_VERSION = "5.75";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.75", date: "2026-10-20", notes: "Aria is a glowing 3D orb, and her yellow bubble sits below her.", changes: [
+      { what: "Aria's icon is now a glossy 3D orb lit from the top left: a bright highlight, a deep shadowed underside with a bounce of teal light, a soft glow that slowly breathes, and a lifelike robot face (glossy eyes, a glowing mouth and antenna). It lifts toward you and glows brighter on hover and presses in when clicked. The yellow speech bubble now sits below her, with its pointer up, and her roaming area leaves room for it", where: "Left panel, Aria", why: "A more real, touchable look, and the bubble no longer hides behind her" },
+  ] },
   { version: "5.74", date: "2026-10-20", notes: "Aria's games move to a Game room page on the right.", changes: [
       { what: "Clicking Aria now opens a Game room page in the right-hand area, and there is a Game room item in the left panel. The page has a bookshelf of slim game books (Jigsaw puzzle, Memory match, True or false, Word scramble; the shelf scrolls when more are added), the picked game's card with its best score, and a play area right in the page, so no game opens as a pop-up any more and nothing is cut off by the panel. Ask Aria a question is a button on the page", where: "Left panel, Aria and Game room", why: "The pop-up library was cut off at the edge of the panel; the page has room for the games" },
   ] },
