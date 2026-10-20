@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.86";
+export const APP_VERSION = "5.87";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.87", date: "2026-10-20", notes: "The games live on named shelves that sit side by side, and you make your own.", changes: [
+      { what: "The books now stand on shelves: Shelf 1 and Shelf 2 to begin with, side by side in one row (the row scrolls sideways if you add many). + New shelf makes another; click a shelf's name to rename it; the x on its header deletes it (its games move to the first shelf); and each game has a Move to shelf menu in its row to put it on the shelf you like. The filters (All games, On my shelf, Not downloaded) apply across all shelves. Kept in this browser", where: "Aria, the playroom shelf", why: "So many games can live in the room, organised your way" },
+  ] },
   { version: "5.86", date: "2026-10-20", notes: "Each book you have not downloaded carries its own download button, and descriptions show in a strip under the shelf.", changes: [
       { what: "The floating description window is gone: it moved around and got in the way of downloading. Hover or focus a book and its description appears in a fixed strip right under the shelf instead. A book you have not downloaded now has a round download button inside the bar itself: press it and the game is added to your shelf (a spinner shows while it installs). The Get game button in the game row still works too", where: "Aria, the playroom shelf", why: "The hover window made it hard to press download" },
   ] },

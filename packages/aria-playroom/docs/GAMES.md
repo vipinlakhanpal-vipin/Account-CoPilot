@@ -27,7 +27,7 @@ Every game is a React component with props `{ onClose, onEvent }`. It shows itse
 | Odd one out | categorising and logic | 8 questions, four items, find the one that does not belong, explained | 8 gold, 7 silver, 5-6 bronze | `aria-odd-best` |
 | Process order | sequencing and planning | tap the steps of a procurement process in order, 5 processes | 5 gold, 4 silver, 3 bronze | `aria-process-best` |
 
-Other keys: `aria-games-owned` (which games are on the shelf; the three starters are Jigsaw, True or false and Word scramble), `aria-awards` (medal history), `aria-game-pick` (last selected book).
+Other keys: `aria-shelves` (the named shelves and which game sits on which; two to start, you add, rename, delete and move games), `aria-games-owned` (which games are on the shelf; the three starters are Jigsaw, True or false and Word scramble), `aria-awards` (medal history), `aria-game-pick` (last selected book).
 
 ## Add a game (checklist)
 

@@ -2664,3 +2664,20 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 .gr-preview{margin:6px 2px 0;min-height:38px;font-size:12.5px;line-height:1.5;color:var(--muted)}
 .gr-preview b{color:var(--text-strong)}
 .gr-preview em{font-style:normal;color:#0B7A66;font-weight:600}
+
+/* v5.87: shelves side by side in one row; create, rename, delete and move games between them */
+.gr-shelves{display:flex;gap:12px;align-items:flex-end;overflow-x:auto;padding-bottom:2px}
+.gr-shelfbox{flex:none;display:flex;flex-direction:column;min-width:150px}
+.gr-shelfbox .gr-shelf{margin-top:0;border-radius:0 0 12px 12px;overflow:visible;flex:1;min-height:168px;padding-right:14px}
+.gr-shelfhead{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:12px 12px 0 0;background:var(--tab-on);color:var(--tab-on-fg)}
+.gr-shelfname{all:unset;cursor:text;font:700 13px var(--body);padding:1px 4px;border-radius:6px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gr-shelfname:hover{background:rgba(255,255,255,.18)}
+.gr-shelfname-in{flex:1;min-width:0;font:700 13px var(--body);padding:1px 6px;border-radius:6px;border:0;background:#fff;color:#0A3D35}
+.gr-shelfcount{font:700 11px var(--mono);padding:0 7px;border-radius:999px;background:rgba(255,255,255,.22)}
+.gr-shelfx{all:unset;cursor:pointer;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:14px;line-height:1;opacity:.8}
+.gr-shelfx:hover{background:rgba(0,0,0,.25);opacity:1}
+.gr-shelf-empty{align-self:center;max-width:130px;font-size:12px;line-height:1.4;color:var(--muted);padding:0 4px}
+.gr-newshelf{display:inline-flex;gap:6px;align-items:center}
+.gr-newshelf input{padding:3px 10px;border-radius:8px;border:1px solid var(--line-2);background:var(--surface);color:var(--text);font:12.5px var(--body);width:140px}
+.gr-move{display:flex;flex-direction:column;gap:2px;font:600 10.5px var(--body);text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.gr-move select{font:600 12.5px var(--body);text-transform:none;letter-spacing:0;padding:4px 8px;border-radius:8px;border:1px solid var(--line-2);background:var(--surface);color:var(--text)}
