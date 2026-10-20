@@ -2185,22 +2185,6 @@ header.top{background:var(--bg);padding-bottom:8px;box-shadow:0 10px 14px -12px 
 
 /* v5.46 Setup wizard introduction */
 .wiz-crumb{font:500 13px var(--body);color:var(--muted);margin-left:8px}
-.wiz-intro{padding:20px 24px}
-.wiz-lead{margin:0 0 14px;font-size:15px;line-height:1.55;max-width:900px}
-.wiz-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
-.wiz-cols h3{margin:0 0 6px;font:700 14px var(--body);color:var(--text-strong)}
-.wiz-cols ul,.wiz-cols ol{margin:0;padding-left:18px;font-size:13px;line-height:1.55;color:var(--text)}
-.wiz-cols li{margin:0 0 5px}
-.wiz-start{display:inline-block;margin-top:16px}
-.wiz-h2{margin:18px 0 8px;font:700 17px var(--display);color:var(--text-strong)}
-.wiz-steps{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
-.wiz-step{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);text-decoration:none;color:var(--text)}
-.wiz-step:hover{border-color:var(--teal);box-shadow:0 6px 16px rgba(20,34,60,.10)}
-.wiz-step b{font:700 13.5px var(--body);color:var(--text-strong)}
-.wiz-step em{font:600 10px var(--body);font-style:normal;margin-left:8px;padding:1px 8px;border-radius:999px;background:var(--bg-accent,rgba(15,110,86,.14));color:var(--teal);text-transform:uppercase;letter-spacing:.05em}
-.wiz-what{display:block;margin-top:4px;font-size:12px;line-height:1.5;color:var(--muted)}
-.wiz-n{flex:none;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--teal);color:#fff;font:700 13px var(--body)}
-@media (max-width:1100px){.wiz-cols{grid-template-columns:1fr}}
 
 /* v5.47: nothing in the panel is anchored to the bottom except your profile, so opening a drop-down only pushes the items below it down; the item you clicked stays put. Aria floats in the free space under the lists. */
 .navbot{margin-top:8px}
@@ -2239,3 +2223,4 @@ header.top{background:var(--bg);padding-bottom:8px;box-shadow:0 10px 14px -12px 
 :root[data-theme="light"] .navbar.has-sub nav.tabs .tab[aria-selected="true"]{background:#DDF1EB;color:#0A5C4C;box-shadow:inset 0 3px 0 #0B7A66}
 @media (prefers-color-scheme: light){:root:not([data-theme="dark"]) .navbar.has-sub nav.tabs .tab[aria-selected="true"]{background:#DDF1EB;color:#0A5C4C;box-shadow:inset 0 3px 0 #0B7A66}}
 .navbar.has-sub .tab .tip-pill{text-shadow:none}
+.wiz-brief{margin:2px 0 0;max-width:860px;font-size:13.5px;line-height:1.5;color:var(--muted)}

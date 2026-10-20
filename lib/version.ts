@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.51";
+export const APP_VERSION = "5.52";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.52", date: "2026-10-20", notes: "Setup wizard: a short description on top, the six steps as tabs below it.", changes: [
+      { what: "The long introduction page is gone. Setup wizard shows the title, a two-sentence description, then the six steps as tabs (Region and size, Add data, Domains, Daily plan, Data sources, Review) with the step's own page underneath; step 1 is open first", where: "Left panel → Setup wizard", why: "Shorter to read, and the tabs are the way in" },
+  ] },
   { version: "5.51", date: "2026-10-20", notes: "The top bar wears the same navy pattern as the left panel.", changes: [
       { what: "The whole top bar, with the logo, the Account CoPilot name, the tabs, the version badge, Online now, the Master Book button and the theme switch, now has the navy diagonal-line pattern of the left panel, in light and dark mode. The open tab keeps the colour of the bar of sub-tabs under it", where: "Top bar", why: "The top bar and the left panel now look like one frame around the page" },
   ] },
