@@ -24,7 +24,7 @@ const ICON: Record<string, React.ReactNode> = {
 const Ic = ({ n }: { n: string }) => <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" {...P}>{ICON[n]}</svg>;
 
 // The New Layout's left panel: Market intelligence (with its vendors), Buying signals, About CoPilot, Setup wizard (with its steps) and, pinned at the bottom, Settings.
-export default function NavPanel({ isSuper }: { isSuper: boolean }) {
+export default function NavPanel({ isSuper, isOwner = false }: { isSuper: boolean; isOwner?: boolean }) {
   const path = usePathname(), params = useSearchParams();
   const [mk, setMk] = useState<Mk | null>(null);
   useEffect(() => { fetch("/api/market", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((j) => j && setMk(j)).catch(() => {}); }, []);
@@ -38,6 +38,14 @@ export default function NavPanel({ isSuper }: { isSuper: boolean }) {
     load(); const t = setInterval(load, 60000);
     return () => clearInterval(t);
   }, [path]);
+  // Super Admin: the Team item shows how many people are inactive and suspended.
+  const [inactive, setInactive] = useState(0);
+  useEffect(() => {
+    if (!isOwner) return;
+    const load = () => fetch("/api/inactive?count=1", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((j) => j && setInactive(j.n || 0)).catch(() => {});
+    load(); const t = setInterval(load, 300000); window.addEventListener("inactive-changed", load);
+    return () => { clearInterval(t); window.removeEventListener("inactive-changed", load); };
+  }, [isOwner]);
   const vendor = params.get("vendor") || "SAP", step = Number(params.get("step")) || 1;
   // Drop-downs: Market intelligence, Setup wizard and Settings open and close with their arrow (remembered in this browser) and open by themselves when you go into them.
   const [open, setOpen] = useState<Record<string, boolean>>({});
@@ -78,7 +86,7 @@ export default function NavPanel({ isSuper }: { isSuper: boolean }) {
       <div className="navbot">
         {group("wizard", "/nav/wizard", "wizard", "Setup wizard", onWizard,
           <div className="navsub">{STEPS.map((s, i) => <Link key={s} href={`/nav/wizard?step=${i + 1}`} className={onWizard && step === i + 1 ? "on" : ""}>{i + 1} {s}</Link>)}</div>)}
-        {item("/nav/team", "team", "Team", path.startsWith("/nav/team"))}
+        {item("/nav/team", "team", "Team", path.startsWith("/nav/team"), inactive)}
         {group("settings", "/nav/settings/icp", "settings", "Settings", onSettings,
           <div className="navsub">
             <Link href="/nav/settings/icp" className={path.endsWith("/icp") ? "on" : ""}>Define ICP</Link>

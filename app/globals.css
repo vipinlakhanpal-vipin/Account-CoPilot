@@ -2119,3 +2119,15 @@ body[data-nodl] .btn-dl:not(.keep),body[data-nodl] .aria-dl,body[data-nodl] .ari
 /* v5.32: every label in the left panel is bold, top to bottom (items, sub-items, Ask Aria) */
 .navpanel .navit,.navpanel .navbtn,.navpanel .navsub a,.navpanel .navmid-label{font-weight:700}
 .navpanel .navsub small{font-weight:600}
+
+/* v5.33 inactive users */
+.inactive-row{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,2fr) auto;gap:14px;align-items:start;padding:12px 0;border-top:1px solid var(--line)}
+.inactive-lists{display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12.5px}
+.inactive-lists small{font:700 10.5px var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.inactive-lists ul{margin:3px 0 0;padding-left:16px}
+.inactive-acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+@media (max-width:900px){.inactive-row{grid-template-columns:1fr}.inactive-acts{justify-content:flex-start}}
+
+/* v5.33: the left panel starts level with the page beside it: it sticks just under the top bar, whatever the bar's height */
+.navpanel{top:calc(var(--hdr,114px) + 16px);min-height:calc(100vh - var(--hdr,114px) - 40px);max-height:calc(100vh - var(--hdr,114px) - 32px)}
+@media (max-width:900px){.navpanel{top:auto;min-height:0;max-height:none}}

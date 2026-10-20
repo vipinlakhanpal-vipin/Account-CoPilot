@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.32";
+export const APP_VERSION = "5.33";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,11 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.33", date: "2026-10-20", notes: "Users with no activity for 15 days are suspended and reviewed; archive, download and reactivate. The left panel starts level with the page.", changes: [
+      { what: "The left panel starts level with the page beside it (it was pushed down about 36px by its sticky offset); it now sticks just under the top bar whatever the bar's height", where: "components/AppShell.tsx, app/globals.css", why: "Reported" },
+      { what: "A user (Admin or Standard, never the Super Admin) with no activity for 15 days is suspended: they cannot sign in and nothing is deleted. Team shows an Inactive users card with, per person, what would be removed and what stays, and three choices: Keep (their 15 days restart), or Archive and delete after a confirm that lists exactly what goes. The Team item in the left panel shows a red count", where: "lib/inactivity.ts, app/api/inactive/route.ts, components/InactiveUsers.tsx, components/NavPanel.tsx", why: "Requested" },
+      { what: "Archiving saves a snapshot first (profile, role, regions, activity log, saved filters, suggestions, jobs). Archived users can be downloaded as a file or reactivated (their sign-in, role, regions and saved filters come back, with a temporary password to send them). Archives are kept 12 months, then yours to delete", where: "supabase/migrations/0011_user_archive.sql", why: "Requested" },
+    ] },
   { version: "5.32", date: "2026-10-20", notes: "Left panel labels are all bold.", changes: [
       { what: "Every label in the left panel is bold: the items, their sub-items and Ask Aria, top to bottom", where: "app/globals.css", why: "Requested" },
     ] },
