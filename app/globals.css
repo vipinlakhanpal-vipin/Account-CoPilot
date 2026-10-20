@@ -2131,3 +2131,6 @@ body[data-nodl] .btn-dl:not(.keep),body[data-nodl] .aria-dl,body[data-nodl] .ari
 /* v5.33: the left panel starts level with the page beside it: it sticks just under the top bar, whatever the bar's height */
 .navpanel{top:calc(var(--hdr,114px) + 16px);min-height:calc(100vh - var(--hdr,114px) - 40px);max-height:calc(100vh - var(--hdr,114px) - 32px)}
 @media (max-width:900px){.navpanel{top:auto;min-height:0;max-height:none}}
+
+/* v5.34: the top bar sits on a solid strip of the page colour, so scrolled content never shows around or behind it */
+header.top{background:var(--bg);padding-bottom:8px;box-shadow:0 10px 14px -12px rgba(20,34,60,.38)}
