@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.19";
+export const APP_VERSION = "5.20";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.20", date: "2026-10-20", notes: "The Setup wizard wand has twinkling stars.", changes: [
+      { what: "The Setup wizard icon in the left panel is a wand with stars around it that twinkle (still when your computer is set to reduce motion)", where: "components/NavPanel.tsx, app/globals.css", why: "Requested" },
+    ] },
   { version: "5.19", date: "2026-10-20", notes: "The left-panel layout is now Home; New Home and New Layout are gone.", changes: [
       { what: "Home is now the left-panel layout: Find and search, About CoPilot, Daily run, Market intelligence, Buying signals, and at the bottom Setup wizard, Settings (Define ICP, Engine and PIN, Team, Learn me) and Suggestions. The top bar keeps Home, Dashboard, Accounts and Data. The separate icons for Find company, Buying signals, Market intelligence, Home and Setup are removed from the top bar, and the old Home page opens About CoPilot", where: "components/Header.tsx, app/nav/*, app/home/page.tsx", why: "Requested — make the new layout final" },
       { what: "The New Home experiment (regions board) and the New Layout tab are removed. About CoPilot shows the Companies tracked and Active regions numbers again", where: "app/home2, components/NewHome.tsx, app/nav/about/page.tsx", why: "Requested" },

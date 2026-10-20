@@ -1989,3 +1989,9 @@ table td.wrap,table th.wrap{margin:0;padding:7px 8px}
 
 /* v5.17: an Admin has no downloads: every download button is hidden (the server refuses the downloads too). Buttons that are not data (the upload template, a tender notice's own documents) carry .keep. */
 body[data-nodl] .btn-dl:not(.keep),body[data-nodl] .aria-dl,body[data-nodl] .aria-actions{display:none !important}
+
+/* the Setup wizard wand twinkles: stars around it, each on its own beat */
+.navit svg .spark{transform-box:fill-box;transform-origin:center;animation:nav-twinkle 2.6s ease-in-out infinite}
+.navit svg .spark.s2{animation-delay:.7s}.navit svg .spark.s3{animation-delay:1.3s}.navit svg .spark.s4{animation-delay:1.9s}
+@keyframes nav-twinkle{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.65)}}
+@media (prefers-reduced-motion:reduce){.navit svg .spark{animation:none}}
