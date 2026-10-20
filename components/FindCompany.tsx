@@ -350,22 +350,30 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
           {!info ? <p className="note">Loading your regions…</p> : info.regions.length === 0 ? (
             <p className="note">{allRegions.length ? "None of your regions is Active yet. A Super Admin can make one Active in Setup → Define ICP." : "No region is assigned to you yet. Ask a Super Admin to add one in Setup → Team."}</p>
           ) : (<>
+            <div className="find-next" role="note">
+              <b>What happens when you search</b>
+              <ol>
+                <li><b>It runs by itself.</b> A scheduled Claude session searches public sources, free and with no paid credit. It usually takes a few minutes and you can leave this page.</li>
+                <li><b>The results appear in the table at the bottom of this page</b> (&quot;Your searches in {regionInfo?.name || "your region"}&quot;): each company with why it fits your ICP. Press <b>Add</b> to put it in your accounts, <b>Ignore</b> to skip it, or <b>Add all</b>. Companies you name yourself are added straight away.</li>
+                <li><b>After that,</b> the daily 6am run checks the revenue and researches the ERP, the S2P platform, the S2P signal and the people, so the account fills in on its own.</li>
+              </ol>
+            </div>
             <div className="find-auto">
               <h3>Let the engine find companies for {regionInfo?.name || "the region"} <span className="find-free-tag">free · $0</span></h3>
-              <p>No names needed. It searches public sources for companies that fit this region's ICP and adds them to your accounts.</p>
+              <p>No names needed. Pick how many (5, 8, 10, 30 or Max) and it searches public sources for companies that fit this region's ICP.</p>
               <div className="find-auto-row">
                 <div className="find-count" role="group" aria-label="How many companies">
-                  {[["5", "5"], ["10", "10"], ["30", "30"], ["max", "Max"]].map(([v, l]) => <button type="button" key={v} className={suggestN === v ? "on" : ""} aria-pressed={suggestN === v} onClick={() => setSuggestN(v)}>{l}</button>)}
+                  {[["5", "5"], ["8", "8"], ["10", "10"], ["30", "30"], ["max", "Max"]].map(([v, l]) => <button type="button" key={v} className={suggestN === v ? "on" : ""} aria-pressed={suggestN === v} onClick={() => setSuggestN(v)}>{l}</button>)}
                 </div>
                 <button type="button" className="btn add-free" disabled={working || !region} onClick={suggest}>{working ? <span className="btn-spin">Working…</span> : `Find ${suggestN === "max" ? "as many as possible" : `${suggestN} companies`} · $0`}</button>
               </div>
               <small>{suggestN === "max" ? "Max means as many as one session can do, about 50, so it can take longer." : "Usually a few minutes."} A scheduled Claude session does the work; no paid API credit is used.</small>
             </div>
-            <p className="find-or">or add specific companies by name</p>
+            <p className="find-or">or add specific companies by name: <b>separate them with commas, or put one per line</b> (up to 30)</p>
 
             <div className="find-box big">
               <textarea rows={Math.min(Math.max(list.length, 2), 6)} value={names} onChange={(e) => { setNames(e.target.value); setDupes(null); setPausedHint(""); }} autoFocus
-                placeholder={"Company names, one per line"} aria-label="Company names" />
+                placeholder={"Company names, separated by commas or one per line. For example: Almarai, Savola, Aldrees, Jarir"} aria-label="Company names" />
             </div>
             {pausedHint && <p className="find-msg err" role="status">{pausedHint}</p>}
             {list.length > 0 && (
