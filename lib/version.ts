@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.30";
+export const APP_VERSION = "5.31";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.31", date: "2026-10-20", notes: "Left panel items line up; Version history no longer shows the number.", changes: [
+      { what: "Every item in the left panel (icon, then label) starts from the same left edge. Version history is aligned like the rest and no longer shows the version number; the number is in the window it opens", where: "app/globals.css, components/NavPanel.tsx", why: "Requested — keep the tabs neat and clean" },
+    ] },
   { version: "5.30", date: "2026-10-20", notes: "Aria roams and plays a rebuild-me puzzle; the left panel is a green to violet carbon weave; the tabs sit on a green bar.", changes: [
       { what: "Aria floats around the free space in the middle of the left panel, with no hover text, and asks to be hit. A click shatters her into nine jigsaw pieces; drag them onto the board to rebuild her within 30 seconds (a countdown bar, pieces placed, best time kept in your browser). Chat with Aria is the small Ask Aria button below her", where: "components/AriaGame.tsx, components/NavPanel.tsx, app/globals.css", why: "Requested" },
       { what: "The left panel uses the app's green to blue to violet gradient with a fine carbon-fibre twill weave over it, with light text", where: "app/globals.css", why: "Requested — the earlier texture did not look right" },

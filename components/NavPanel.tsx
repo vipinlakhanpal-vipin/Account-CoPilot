@@ -4,7 +4,6 @@ import Link from "next/link";
 import ProfileMenu from "@/components/ProfileMenu";
 import AccountCopilotAria from "@/components/AriaChat";
 import AriaGame from "@/components/AriaGame";
-import { APP_VERSION } from "@/lib/version";
 import { usePathname, useSearchParams } from "next/navigation";
 
 const STEPS = ["Region & size", "Add Data", "Domains", "Daily plan", "Data sources", "Review"];
@@ -86,7 +85,7 @@ export default function NavPanel({ isSuper }: { isSuper: boolean }) {
             <Link href="/nav/settings/engine" className={path.endsWith("/engine") ? "on" : ""}>Engine and PIN</Link>
             <Link href="/nav/settings/guide" className={path.endsWith("/guide") ? "on" : ""}>Learn me</Link>
           </div>)}
-        <button type="button" className="navit navbtn" onClick={() => window.dispatchEvent(new CustomEvent("history-open"))} title="What changed in each update"><Ic n="history" />Version history<small className="navver">v{APP_VERSION}</small></button>
+        <button type="button" className="navit navbtn" onClick={() => window.dispatchEvent(new CustomEvent("history-open"))} title="What changed in each update"><Ic n="history" />Version history</button>
         {item("/nav/suggestions", "bulb", "Suggestions", path.startsWith("/nav/suggestions"))}
         {!isSuper && <small className="navnote">Some settings are read-only for you.</small>}
         <div className="navprof-wrap"><ProfileMenu variant="panel" /></div>
