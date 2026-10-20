@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { GameEvent } from "@/components/games/registry";
-type Ev = (e: GameEvent, detail?: string) => void;
+import type { GameEvent, WinData } from "@/components/games/registry";
+type Ev = (e: GameEvent, detail?: string, data?: WinData) => void;
 
 // Two quick games Aria offers besides the jigsaw: True or false, and Word scramble (no time limit). Both are about the work the app is for (source-to-pay and the way CoPilot labels evidence), all in the browser, nothing stored but a best score.
 
@@ -40,7 +40,7 @@ export function Quiz({ onClose, onEvent }: { onClose: () => void; onEvent?: Ev }
   const [i, setI] = useState(0), [score, setScore] = useState(0), [pick, setPick] = useState<boolean | null>(null);
   const [phase, setPhase] = useState<"play" | "won" | "lost">("play"), [best, setBest] = useState<number | null>(getBest("aria-quiz-best"));
   useEffect(() => { onEvent?.("start"); }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  const finish = (s: number, p: "won" | "lost") => { onEvent?.(p === "won" ? "win" : "lose", `${s} of ${QN}`); setPhase(p); setBest((b) => { const n = b === null || s > b ? s : b; setBestKey("aria-quiz-best", n); return n; }); };
+  const finish = (s: number, p: "won" | "lost") => { onEvent?.(p === "won" ? "win" : "lose", `${s} of ${QN}`, { score: s, total: QN }); setPhase(p); setBest((b) => { const n = b === null || s > b ? s : b; setBestKey("aria-quiz-best", n); return n; }); };
   const scoreRef = useRef(0); scoreRef.current = score;
   const left = useCountdown(45, phase === "play", () => finish(scoreRef.current, "lost"));
   const q = qs[i];
@@ -122,7 +122,7 @@ export function Words({ onClose, onEvent }: { onClose: () => void; onEvent?: Ev 
     np = [...np, k]; setPick(np); setHints((h) => h + 1); setUsedHint(true); setState("play"); onEvent?.("hint"); check(np);
   };
   const next = () => {
-    if (i + 1 >= set.length) { setState("end"); onEvent?.("win", `${L.name}: ${score} of ${set.length} without a hint`); try { const d = Number(localStorage.getItem("aria-words-level")) || 0; if (lv + 1 > d) localStorage.setItem("aria-words-level", String(lv + 1)); } catch { /* optional */ } return; }
+    if (i + 1 >= set.length) { setState("end"); onEvent?.("win", `${L.name} done`, { score, total: set.length, hints, level: lv + 1 }); try { const d = Number(localStorage.getItem("aria-words-level")) || 0; if (lv + 1 > d) localStorage.setItem("aria-words-level", String(lv + 1)); } catch { /* optional */ } return; }
     setI(i + 1); load(set[i + 1].w);
   };
   const keys = useRef({ add, drop, pick, tiles, state }); keys.current = { add, drop, pick, tiles, state };

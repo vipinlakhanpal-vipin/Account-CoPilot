@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { GameEvent } from "@/components/games/registry";
+import type { GameEvent, WinData } from "@/components/games/registry";
 
 // The jigsaw: Aria's face (or one of four other pictures) shatters into nine pieces; drag each to its place on the board before the 60 seconds run out. Best time is kept in this browser.
 const N = 3, S = 66, PAD = Math.round(S * 0.32), LIMIT = 60, DESIGNS = 5;
@@ -109,7 +109,7 @@ function PieceSvg({ r, c, v }: { r: number; c: number; v: number }) {
 
 const slot = (r: number, c: number) => ({ x: BOARD_X + c * S - PAD, y: BOARD_Y + r * S - PAD });
 
-export default function Jigsaw({ onClose, onEvent }: { onClose: () => void; onEvent?: (e: GameEvent, detail?: string) => void }) {
+export default function Jigsaw({ onClose, onEvent }: { onClose: () => void; onEvent?: (e: GameEvent, detail?: string, data?: WinData) => void }) {
   const [phase, setPhase] = useState<"play" | "won" | "lost">("play");
   const [pieces, setPieces] = useState<Piece[]>([]);
   const [left, setLeft] = useState(LIMIT);
@@ -145,7 +145,9 @@ export default function Jigsaw({ onClose, onEvent }: { onClose: () => void; onEv
   useEffect(() => {
     if (phase === "play" && pieces.length && pieces.every((p) => p.locked)) {
       const s = Math.round(((Date.now() - t0.current) / 1000) * 10) / 10;
-      setTook(s); setPhase("won"); onEvent?.("win", `${s} s`);
+      setTook(s); setPhase("won");
+      let prev = 0; try { prev = Number(localStorage.getItem("aria-puzzle-best")) || 0; } catch { /* optional */ }
+      onEvent?.("win", `${s} s`, { seconds: s, newBest: !prev || s < prev });
       setBest((b) => { const nb = b === null || s < b ? s : b; try { localStorage.setItem("aria-puzzle-best", String(nb)); } catch { /* optional */ } return nb; });
     }
   }, [pieces, phase]);

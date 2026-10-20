@@ -2510,3 +2510,40 @@ header.top{background:var(--bg);padding-bottom:8px;box-shadow:0 10px 14px -12px 
 .agame-away b{font:700 14px var(--body)}
 .agame-away span{font-size:12px;opacity:.85}
 @media (prefers-reduced-motion:reduce){.aria-orb,.aria-orb.hop,.aria-orb.shake{animation:none}}
+
+/* v5.79: Aria's chat bar stays open in the playroom, and she presents medals when you win */
+.gr-awards{margin-left:auto;display:flex;align-items:center;gap:12px;padding:8px 14px;border-radius:12px;border:1px solid var(--line-2);background:var(--surface)}
+.gr-awards-h{font:700 11px var(--body);text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.gr-medal-count{display:inline-flex;align-items:center;gap:6px;font:700 14px var(--mono);color:var(--text-strong)}
+.medal{display:inline-block;width:20px;height:20px;border-radius:50%;border:2px solid rgba(0,0,0,.2);box-shadow:inset 0 -3px 4px rgba(0,0,0,.2),inset 0 2px 3px rgba(255,255,255,.6)}
+.medal.gold{background:radial-gradient(circle at 35% 30%,#FFF2B0,#F5C242 55%,#C8922A)}
+.medal.silver{background:radial-gradient(circle at 35% 30%,#FFFFFF,#C9CED6 55%,#8D95A3)}
+.medal.bronze{background:radial-gradient(circle at 35% 30%,#F6D2AE,#D08A4E 55%,#8F5528)}
+.medal.ribbon{background:radial-gradient(circle at 35% 30%,#D9E8FF,#7FA9E6 55%,#4C74B8)}
+.medal.big{width:84px;height:84px;border-width:4px;box-shadow:inset 0 -8px 10px rgba(0,0,0,.22),inset 0 6px 8px rgba(255,255,255,.6),0 8px 20px rgba(0,0,0,.3);animation:gr-medal-pop .6s cubic-bezier(.2,1.4,.4,1)}
+@keyframes gr-medal-pop{0%{transform:scale(.2) rotate(-40deg);opacity:0}100%{transform:scale(1) rotate(0);opacity:1}}
+.gr-chat{margin-top:12px;padding:10px 12px;border:1px solid var(--line-2);border-radius:12px;background:var(--surface)}
+.gr-chat-log{max-height:150px;overflow-y:auto;margin-bottom:8px;display:flex;flex-direction:column;gap:6px;padding-right:4px}
+.gr-chat-log p{margin:0;font-size:13px;line-height:1.5;color:var(--text)}
+.gr-chat-log p b{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-right:6px}
+.gr-chat-log p.aria{color:var(--text-strong)}
+.gr-chat-row{display:flex;gap:8px}
+.gr-chat-row input{flex:1;min-width:0;padding:8px 12px;border-radius:10px;border:1px solid var(--line-2);background:var(--surface-2,var(--surface));color:var(--text);font:13.5px var(--body)}
+.gr-chat-row input:focus{outline:2px solid var(--teal);outline-offset:1px}
+.gr-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.gr-chips button{font:600 12px var(--body);padding:4px 10px;border-radius:999px;border:1px solid var(--line-2);background:var(--tab-bg);color:var(--tab-fg);cursor:pointer}
+.gr-chips button:hover{background:var(--tab-hover)}
+.gr-chips button.full{background:var(--tab-on);color:var(--tab-on-fg);border-color:transparent}
+.gr-play{position:relative}
+.gr-award{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;background:color-mix(in srgb,var(--surface) 94%,transparent);border-radius:12px;overflow:hidden;padding:16px}
+.gr-award-from{margin:0;font:700 12px var(--body);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.gr-award-t{font:700 24px var(--display);color:var(--text-strong)}
+.gr-award-l{font-size:14px;color:var(--text)}
+.gr-award-badge{font:700 12px var(--body);padding:3px 12px;border-radius:999px;background:#FFE08A;color:#3B2400}
+.gr-confetti{position:absolute;inset:0;pointer-events:none}
+.gr-confetti i{position:absolute;top:-12px;width:8px;height:14px;border-radius:2px;animation:gr-fall 2.6s linear infinite}
+@keyframes gr-fall{0%{transform:translateY(0) rotate(0)}100%{transform:translateY(420px) rotate(540deg)}}
+@media (prefers-reduced-motion:reduce){.medal.big,.gr-confetti i{animation:none}}
+/* v5.79: the game's title was clipped at its left edge (the inline card had no padding and hid its overflow) */
+.agm-inline{padding:4px 12px 8px;overflow:visible}
+.agm-inline .agame-head b{padding-left:2px}

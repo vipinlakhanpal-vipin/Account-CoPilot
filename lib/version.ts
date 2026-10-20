@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.78";
+export const APP_VERSION = "5.79";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.79", date: "2026-10-20", notes: "Aria's chat bar stays open in the playroom, and she presents medals when you win.", changes: [
+      { what: "In the playroom Aria's chat bar is always open under her: ask how a game works, for tips, how long you have, how medals are won, or your best score, or tap a quick question. She answers from what she knows about the games, so it is free; for anything else she offers to open her full chat. Naming a game in your question (for example how does the jigsaw work) switches the shelf to it. When you win, Aria presents a medal on a card with confetti: Jigsaw by time (gold up to 35 s, silver up to 48 s, bronze up to 60 s), True or false by score (gold 8 of 8, silver 6 or 7, bronze 4 or 5, ribbon below), Word scramble by hints (gold with none, silver with one, bronze with more), plus badges such as New best time. Your medal counts show beside her and are kept in this browser. Also fixed: the first letter of a game's title was cut off at its left edge", where: "Aria, the playroom", why: "You can ask Aria about the game while you play, and wins are celebrated" },
+  ] },
   { version: "5.78", date: "2026-10-20", notes: "Memory match is removed.", changes: [
       { what: "Memory match is taken out of Aria's playroom, because it was confusing. The shelf now has Jigsaw puzzle, True or false and Word scramble", where: "Aria, the playroom", why: "It was not clear how to play it" },
   ] },

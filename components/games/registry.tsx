@@ -3,6 +3,8 @@ import type { ReactElement } from "react";
 // The games in Aria's Game room, each a book on the shelf. Add a row here and a new book appears (the shelf scrolls when there are many).
 export type GameId = "jigsaw" | "quiz" | "words";
 /** What a game tells its host: it started, the player did something right or wrong, asked for a hint, is running out of time, won or lost. */
+/** Details a game passes with a win, so Aria can pick the medal. */
+export type WinData = { seconds?: number; newBest?: boolean; score?: number; total?: number; hints?: number; level?: number };
 export type GameEvent = "start" | "good" | "bad" | "hint" | "hurry" | "win" | "lose";
 export type Game = { id: GameId; name: string; icon: ReactElement; fill: string; ink: string; time: string; timed: boolean; blurb: string; best: () => string };
 
