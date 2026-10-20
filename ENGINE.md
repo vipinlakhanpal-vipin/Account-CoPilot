@@ -102,6 +102,16 @@ typed in) — see "Multi-name discover jobs" under step 2.
 - **market** — market intelligence (Market intelligence window): the job has `vendor` (SAP, Coupa, Oracle, Microsoft or `all`) and `region`. The work is the **Market intelligence** procedure below.
 - **signals** — buying signals (Buying signals tab). A job with `slug` = scan that one company; a job without `slug` = a region sweep (`region`, `count` companies). The work is the **Buying signals** procedure below.
 
+## Enrichment: ERP, S2P platform, S2P signal and people (since v5.97)
+Why: Priority accounts, the Pipeline and the account pages only come alive for a company once it has an ERP, an existing S2P platform, an S2P signal level and people. A company that was only revenue-verified shows nothing, so a new region looks empty (South Africa did: 50 verified accounts, no signal, no ERP, no contacts). So **research these four things whenever you verify**, not only revenue.
+For every company you verify (the new ones first), and then for `node scripts/engine_client.mjs enrich_queue <region> <N>` (N = half of `verify_per_day`, rounded up, at least 3; it lists Verified and Likely accounts never enriched, largest first), use public web search only:
+- **ERP**: the company's website, annual report, careers and job posts (SAP, S/4HANA, Oracle, Dynamics, Infor ...), implementation-partner case studies, vendor customer pages. `erp` is the system's name; `erp_status` FACT (a document names it), LIKELY (job posts or partner pages), UNVERIFIED, UNKNOWN.
+- **Existing S2P / procurement platform**: Coupa, SAP Ariba, Other S2P (Jaggaer, Ivalua, GEP, Zycus ...), or No Evidence (searched, nothing found). Look at supplier-portal and supplier-onboarding pages, job posts, vendor customer lists, press. A confirmed Coupa customer is not a prospect: record it, and say so in `existing_s2p_detail`.
+- **S2P signal level** (`s2p_signal_level`): VERY STRONG SIGNAL = an announced procurement, S2P or ERP programme with a scope or date, or a live tender or RFP, from a document; STRONG SIGNAL = an executive statement or press about procurement transformation, plus hiring; MODERATE SIGNAL = hiring or indirect evidence; WEAK SIGNAL = generic; NO SIGNAL = searched and nothing found. Put what you found in `s2p_strong_signals`, in your own words. Never invent.
+Write `data/verification/enrich.json` as `[{"slug","erp","erp_status","erp_evidence","existing_s2p_product","s2p_platform_status","existing_s2p_detail","s2p_signal_level","s2p_strong_signals","known_implementation_partner","source_url"}]` and run `node scripts/engine_client.mjs enrich data/verification/enrich.json`. Every strong claim needs a `source_url` (the server caps it otherwise). A company you searched with nothing found still goes in (UNKNOWN, No Evidence, NO SIGNAL) so it is not repeated. The server fills only empty fields and skips reference and user rows.
+**People**: for up to 5 Verified companies per run that have no people (High regions first), search the public web for named procurement, finance and IT leaders (title exactly as published) and save them with `add_contacts` (as in the contacts job: it needs a LinkedIn profile URL or a published named email on the company's domain; never guess an address).
+Include in each region's summary line how many companies were enriched and how many strong signals were found.
+
 ## Buying signals (job `signals`, and the daily step in section 4)
 Goal: find companies that are *seriously looking* for an ERP, a source-to-pay (S2P) solution or procurement consulting, public tenders and RFPs for those, and SAP ECC owners who will need an S/4HANA partner.
 Free: public web search only (no API key, no logins, no CAPTCHAs). Regions: every **Active Middle East region** (UAE, KSA, Qatar, Kuwait, Oman, Bahrain, Egypt), in the order `icp` lists them (since v5.67; it was UAE and KSA only). Skip a region outside the Middle East.
@@ -187,8 +197,8 @@ Do not commit or push anything and do not change app code.
 
 | Priority | Work | When |
 |---|---|---|
-| **High** | queued jobs; verifying the companies you just added; "Needs check" and "Unknown" accounts; the watch list | every run, first |
-| **Medium** | finding new companies; verifying "Likely" accounts; Market intelligence partners and customers for SAP and Coupa (regions with `market` on); buying signals (a tender sweep in every Active Middle East region: High regions daily, Medium every 3 days, Low weekly) | every run, after High |
+| **High** | queued jobs; verifying and enriching (ERP, S2P platform, S2P signal) the companies you just added; "Needs check" and "Unknown" accounts; the watch list | every run, first |
+| **Medium** | the enrichment queue (`enrich_queue`) and people for up to 5 Verified companies; finding new companies; verifying "Likely" accounts; Market intelligence partners and customers for SAP and Coupa (regions with `market` on); buying signals (a tender sweep in every Active Middle East region: High regions daily, Medium every 3 days, Low weekly) | every run, after High |
 | **Low** | the 180-day re-checks; the other vendors' partner scans (Oracle, Microsoft, Boomi, MuleSoft, Ivalua, GEP, Jaggaer, added vendors); contacts for accounts with no people; deep dives into one partner | only with spare time, a slice per run |
 
 For **each region in `active`** of `icp_rules.json` (default: UAE, find 5, verify 25), in that order:
@@ -208,6 +218,7 @@ For **each region in `active`** of `icp_rules.json` (default: UAE, find 5, verif
    **If the queue returns fewer than needed and the discovery cap above means you can't make up the difference, verify however many you actually
    have and say so plainly in this region's own summary** (e.g. "queue nearly empty — found 10 new (the 2x cap), verified 13 total; short of the
    25 target until more days of discovery build up the queue"). Never invent companies or exceed the cap to hit the verify number.
+   **Enrich as you verify** (see "Enrichment" above): for the same companies research ERP, existing S2P platform and S2P signal level, save with `engine_client.mjs enrich`, then work `enrich_queue <region> N` for older accounts that have never been enriched.
 3. **Watch list**: `node scripts/engine_client.mjs watch` writes the requested companies that are due for a weekly re-check (any region, until an official
    figure is found) to `data/verification/revenue_queue.json`; verify each and submit.
 4. Notify (step 3b) separately for EACH active region worked this run — one `log` call per region, each covering only that region's own companies and rows

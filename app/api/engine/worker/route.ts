@@ -33,6 +33,11 @@ async function authorised(db: Db, req: Request) {
 const get = async <T,>(db: Db, key: string, fb: T): Promise<T> => ((await db.from("settings").select("value").eq("key", key).maybeSingle()).data?.value as T) ?? fb;
 const put = (db: Db, key: string, value: unknown) => db.from("settings").upsert({ key, value, updated_at: new Date().toISOString() });
 
+// Enrichment: the research that makes an account show up in Priority accounts and the Pipeline (ERP, existing S2P platform, S2P signal level). Only empty fields are filled; reference and user rows are never touched.
+const Enrich = z.object({ slug: z.string().trim().min(2).max(120), erp: z.string().trim().max(120).optional().default(""), erp_status: z.enum(["FACT", "LIKELY", "UNVERIFIED", "UNKNOWN"]).optional().default("UNKNOWN"), erp_evidence: z.string().trim().max(500).optional().default(""),
+  existing_s2p_product: z.enum(["Coupa", "SAP Ariba", "Other S2P", "No Evidence", "Unknown"]).optional().default("Unknown"), s2p_platform_status: z.string().trim().max(60).optional().default(""), existing_s2p_detail: z.string().trim().max(400).optional().default(""),
+  s2p_signal_level: z.enum(["VERY STRONG SIGNAL", "STRONG SIGNAL", "MODERATE SIGNAL", "WEAK SIGNAL", "NO SIGNAL", "CONFLICTING SIGNAL"]).optional().default("NO SIGNAL"), s2p_strong_signals: z.string().trim().max(600).optional().default(""),
+  known_implementation_partner: z.string().trim().max(160).optional().default(""), source_url: z.string().url().max(600).or(z.literal("")).optional().default("") });
 const Result = z.object({ slug: z.string(), company_name: z.string(), checked_at: z.string(), listing_status: z.string(), exchange: z.string().optional().default(""),
   ticker: z.string().optional().default(""), parent_company: z.string().optional().default(""), net_revenue_usd_m: z.number().nullable(), fiscal_year: z.string().optional().default(""),
   revenue_type: z.string(), revenue_local: z.string().optional().default(""), source_name: z.string().optional().default(""), source_url: z.string().optional().default(""),
@@ -75,6 +80,8 @@ const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("add_companies"), companies: z.array(NewCo).max(50) }),
   z.object({ action: z.literal("hold_companies"), companies: z.array(NewCo).max(50) }),
   z.object({ action: z.literal("add_contacts"), slug: z.string().min(2).max(120), contacts: z.array(NewContact).max(25) }),
+  z.object({ action: z.literal("enrich_queue"), region: z.string().default("UAE"), limit: z.number().int().min(1).max(30).default(10) }),
+  z.object({ action: z.literal("enrich"), companies: z.array(Enrich).max(40) }),
   z.object({ action: z.literal("signal_targets"), region: z.string().default("UAE"), limit: z.number().int().min(1).max(30).default(10) }),
   z.object({ action: z.literal("add_signals"), scanned: z.array(z.string().max(120)).max(40).optional().default([]), sweep_region: z.string().max(40).optional().default(""), signals: z.array(NewSignal).max(40) }),
   z.object({ action: z.literal("market_targets"), limit: z.number().int().min(1).max(12).default(4), vendor: z.string().max(30).optional().default(""), region: z.string().max(40).optional().default("") }),
@@ -169,6 +176,33 @@ export async function POST(req: Request) {
       .filter((c) => { const at = c.profile?.["Revenue check"]?.at; return !at || Date.now() - new Date(at).getTime() > 7 * 864e5; })
       .map((c) => ({ slug: c.slug, company_name: c.company_name, website: c.company_website || c.domain || "", industry: c.industry || "", country: c.country, current_status: c.icp_status, recheck: true }));
     return NextResponse.json({ queue: due });
+  }
+  if (b.action === "enrich_queue") {
+    // Verified or Likely accounts of a region that were never enriched, Verified first and the largest first. Reference and user rows and existing Coupa customers are left out.
+    const { data } = await db.from("companies").select("slug,company_name,company_website,domain,industry,country,icp_status,verified_revenue_usd_m,existing_s2p_product,research_channel,profile").in("icp_status", ["ICP — Verified", "ICP — Likely"]);
+    const due = (data || []).filter((c) => regionOf(c.country) === b.region && !["Reference", "User"].includes(String(c.research_channel || "")) && !/coupa/i.test(String(c.existing_s2p_product || "")) && !c.profile?.Enrichment);
+    due.sort((x, y) => (x.icp_status === y.icp_status ? 0 : x.icp_status === "ICP — Verified" ? -1 : 1) || Number(y.verified_revenue_usd_m || 0) - Number(x.verified_revenue_usd_m || 0));
+    return NextResponse.json({ remaining: due.length, companies: due.slice(0, b.limit).map((c) => ({ slug: c.slug, name: c.company_name, domain: c.domain || "", website: c.company_website || "", industry: c.industry || "", country: c.country, icp_status: c.icp_status })) });
+  }
+  if (b.action === "enrich") {
+    const out: string[] = [], today = now.slice(0, 10), isDefault = (v: unknown, ...d: string[]) => !v || d.includes(String(v));
+    for (const r of b.companies) {
+      const { data: c } = await db.from("companies").select("id,company_name,research_channel,erp,existing_s2p_product,s2p_signal_level,existing_s2p_detail,known_implementation_partner,profile").eq("slug", r.slug).maybeSingle();
+      if (!c) { out.push(`${r.slug}: not found`); continue; }
+      if (["Reference", "User"].includes(String(c.research_channel || ""))) { out.push(`${c.company_name}: skipped (reference record)`); continue; }
+      const src = r.source_url ? ` Source: ${r.source_url}` : "", noSource = !r.source_url; // strong claims need a source: without one they are capped
+      const level = noSource && /STRONG/.test(r.s2p_signal_level) ? "MODERATE SIGNAL" : r.s2p_signal_level, erpStatus = noSource && r.erp_status === "FACT" ? "LIKELY" : r.erp_status;
+      const patch: Record<string, unknown> = { last_researched: today }, done: string[] = [];
+      if (isDefault(c.erp) && r.erp) { Object.assign(patch, { erp: r.erp, erp_status: erpStatus, erp_evidence: (r.erp_evidence + src).trim() }); done.push(`ERP ${r.erp}`); }
+      if (isDefault(c.existing_s2p_product, "Unknown") && r.existing_s2p_product !== "Unknown") { Object.assign(patch, { existing_s2p_product: r.existing_s2p_product, s2p_platform_status: r.s2p_platform_status || (r.existing_s2p_product === "No Evidence" ? "No Evidence" : "Unknown") }); if (r.existing_s2p_detail && isDefault(c.existing_s2p_detail)) patch.existing_s2p_detail = (r.existing_s2p_detail + src).trim(); done.push(`S2P ${r.existing_s2p_product}`); }
+      if (isDefault(c.s2p_signal_level, "NO SIGNAL") && level !== "NO SIGNAL") { Object.assign(patch, { s2p_signal_level: level, s2p_strong_signals: (r.s2p_strong_signals + src).trim() }); done.push(level.toLowerCase()); }
+      if (r.known_implementation_partner && isDefault(c.known_implementation_partner)) patch.known_implementation_partner = r.known_implementation_partner;
+      patch.profile = { ...(c.profile || {}), Enrichment: { at: now, source_url: r.source_url || null, found: done } };
+      await db.from("companies").update(patch).eq("id", c.id);
+      out.push(`${c.company_name}: ${done.length ? done.join(", ") : "searched, nothing found"}`);
+    }
+    invalidateAllData();
+    return NextResponse.json({ applied: out });
   }
   if (b.action === "add_contacts") {
     // People found on the public web by a free session. New rows only (channel "Claude"); a Claude-owned row may get empty fields filled; reference rows are never touched.

@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.96";
+export const APP_VERSION = "5.97";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.97", date: "2026-10-20", notes: "The daily run now enriches accounts: ERP, S2P platform, S2P signal and people, not only revenue.", changes: [
+      { what: "Priority accounts and the Pipeline only show an account that has an S2P signal, an ERP and people, but the daily run only checked revenue, so new regions such as South Africa (50 verified accounts, no signal, no ERP, no contacts) looked empty. The engine now researches ERP, the existing S2P platform and the S2P signal level for every company it verifies, works through the accounts that were never enriched (largest first), and finds public named people for up to five Verified companies a run. It fills only empty fields, never touches reference or user rows, and a strong claim without a source is capped. New engine commands: enrich_queue and enrich", where: "Daily run", why: "A region shows its priority accounts as soon as its accounts are researched, not only revenue-checked" },
+  ] },
   { version: "5.96", date: "2026-10-20", notes: "Travelling Aria comments on the tab you rest the pointer on, using your first name.", changes: [
       { what: "While Aria is following your mouse, when the pointer rests on a tab, sub-tab or menu item she says something funny about it using your first name: on Review, What do you want to review, Vipin? Everything looks fine to me!; on Add data, Feeding me data, Vipin? Yum, I'm hungry!; on Team, Checking on the team, Vipin? Who's been naughty? and so on for every tab and menu item (a polite fallback for any other name)", where: "Aria, travelling", why: "She reacts to where you are, which makes her feel alive" },
   ] },

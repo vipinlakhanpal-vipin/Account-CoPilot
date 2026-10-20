@@ -14,6 +14,8 @@
 //                                                                                                sends data/verification/run_details.json if present: [{"name","status","revenue"}]
 //                                                                                                (one row per company checked this run), for the bell's table
 //   node scripts/engine_client.mjs add_contacts <slug> <file.json>      → saves people found on the public web for ONE company (a "contacts" job; format: see ENGINE.md "Find contacts")
+//   node scripts/engine_client.mjs enrich_queue <REGION> [N]           → writes data/verification/enrich_queue.json: the N Verified/Likely accounts never enriched (ERP, S2P platform, S2P signal)
+//   node scripts/engine_client.mjs enrich <file.json>                  → saves enrichment: [{slug, erp, erp_status, erp_evidence, existing_s2p_product, s2p_platform_status, existing_s2p_detail, s2p_signal_level, s2p_strong_signals, known_implementation_partner, source_url}]
 //   node scripts/engine_client.mjs signal_targets <REGION> [N]        → writes data/verification/signal_targets.json: the N companies (default 10) due a buying-signals scan
 //   node scripts/engine_client.mjs add_signals <file.json>             → saves buying signals: {"scanned":[slugs],"sweep_region":"UAE","signals":[...]} (format: see ENGINE.md "Buying signals")
 //   node scripts/engine_client.mjs market_targets [N] [VENDOR] [REGION]  → writes data/verification/market_targets.json (the vendor x region pairs due a partner scan, oldest first) and customers_due.json (pairs with partners whose customers are due: searched by default, SAP and Coupa first)
@@ -70,6 +72,15 @@ else if (cmd === "queue") {
   added.forEach((x) => console.log(`added ${x}`)); updated.forEach((x) => console.log(`filled empty details for ${x}`));
   skipped.forEach((x) => console.log(`SKIPPED ${x.name}: ${x.why}`)); dropped.forEach((x) => console.log(`DROPPED ${x}`));
   console.log(`${added.length} added, ${updated.length} updated, ${skipped.length} skipped`);
+} else if (cmd === "enrich_queue") {
+  const j = await call({ action: "enrich_queue", region: a || "UAE", limit: Number(b) || 10 });
+  fs.mkdirSync("data/verification", { recursive: true });
+  fs.writeFileSync("data/verification/enrich_queue.json", JSON.stringify(j.companies, null, 1));
+  console.log(`${j.companies.length} companies to enrich (${j.remaining} waiting in ${a || "UAE"}) → data/verification/enrich_queue.json`);
+} else if (cmd === "enrich") {
+  const list = JSON.parse(fs.readFileSync(a || "data/verification/enrich.json", "utf8"));
+  const { applied } = await call({ action: "enrich", companies: list });
+  applied.forEach((x) => console.log(x));
 } else if (cmd === "signal_targets") {
   const j = await call({ action: "signal_targets", region: a || "UAE", limit: Number(b) || 10 });
   fs.mkdirSync("data/verification", { recursive: true });

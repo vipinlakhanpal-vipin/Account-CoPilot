@@ -113,6 +113,10 @@ This writes `profile["HubSpot"]` = {in_hubspot, hubspot_id, hubspot_name, record
 - `contacts.business_unit` (migration `0009_contact_business_unit.sql`, applied 2026-10-19): the property or business unit a contact belongs to under the account; empty = the account itself (group level). Claude-owned, never set on workbook rows. Example: Kerzner International (Atlantis Dubai) with the Atlantis The Palm team (10 people, Seamless 2026-10-19). Atlantis names are aliases in `profile["Merged companies"]`, so there is one record per entity.
 - Shown as a tree on the account page, a Property / unit column on the Stakeholders tab, and a column in the Excel contact list, Master Book and PDF. Seamless emails under 90% go only to `email_candidate`.
 
+## Enrichment (v5.97)
+- **Why:** Dashboard Priority accounts = accounts with a STRONG or VERY STRONG S2P signal that are not Coupa customers (`lib/dashboardTiles.ts`); every discovered account starts as `NO SIGNAL`, ERP empty, no people. Revenue verification alone never changes that, so a new region (South Africa, 2026-10-20: 50 verified, 0 signals, 0 ERP, 0 contacts) showed no priority accounts.
+- **Engine:** worker actions `enrich_queue` and `enrich` (`engine_client.mjs enrich_queue <REGION> <N>` and `enrich <file>`); the daily run enriches the companies it verifies plus a slice of the queue, and finds people for up to 5 Verified companies. Procedure: `ENGINE.md` "Enrichment". Only empty fields are filled; Reference and User rows are skipped; strong claims need a `source_url`; `profile["Enrichment"]` marks a company as done.
+
 ## Duplicates & the Guide intro (v1.41–1.42)
 - **Discovery duplicate check:** `sameCompany()` in `app/api/engine/worker/route.ts` compares every discovered company with existing names, domains and merged aliases (spelling variants, acronyms, domain roots, group vs subsidiary). The routine runs `engine_client.mjs names` before searching.
 - **Merging (standing user approval, 2026-09-28):** the same entity must be one record. Run `node scripts/merge_companies.mjs <keep_slug> <drop_slug> "note"`, then `recompute_icp.mjs`.
