@@ -2362,3 +2362,19 @@ header.top{background:var(--bg);padding-bottom:8px;box-shadow:0 10px 14px -12px 
 .hw-region-grid .hw-region-activated{font-size:12px;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hw-region-grid .hw-region-activated.s-active{color:var(--ok-text,#0B7A66)}
 .hw-region-grid .hw-region-activated.s-paused{color:var(--warn-text,#8A5300)}
+
+/* v5.66: Market intelligence: a small "Customer search" box in the empty space beside the title (engine activity on partners' customers, all vendors) */
+.mkt-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:24px}
+.mkt-hero-text{flex:1 1 auto;min-width:0}
+.mkt-cs{flex:0 0 340px;max-width:100%;display:flex;flex-direction:column;gap:5px;padding:10px 12px;border-radius:12px;background:var(--surface);border:1px solid var(--line-2);font-size:12px}
+.mkt-cs-h{font:700 13px var(--body);color:var(--text-strong)}
+.mkt-cs-h small{font:600 10px var(--body);text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-left:6px}
+.mkt-cs-now{display:flex;gap:7px;align-items:flex-start;padding:5px 8px;border-radius:8px;background:color-mix(in srgb,#F5A623 22%,var(--surface));color:var(--text);line-height:1.35}
+.mkt-cs-now .fcj-dot{margin-top:4px;width:8px;height:8px;flex:none}
+.mkt-cs-more{font-size:11px;color:var(--muted);padding-left:8px}
+.mkt-cs-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:baseline;padding:3px 2px;border-top:1px solid var(--line)}
+.mkt-cs-name{font-weight:700;color:var(--text-strong);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mkt-cs-n{font:700 11.5px var(--mono);color:#0B7A66;white-space:nowrap}
+.mkt-cs-row em{font-style:normal;font-size:11px;color:var(--muted);white-space:nowrap}
+.mkt-cs-foot{font-size:11px;color:var(--muted);border-top:1px solid var(--line);padding-top:5px}
+@media (max-width:900px){.mkt-hero{flex-direction:column}.mkt-cs{flex-basis:auto;width:100%}}

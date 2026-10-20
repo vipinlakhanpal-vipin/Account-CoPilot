@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.65";
+export const APP_VERSION = "5.66";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.66", date: "2026-10-20", notes: "Market intelligence shows which partners the engine is searching for customers, and how many each has.", changes: [
+      { what: "A small Customer search box sits beside the Market intelligence title, for all vendors and partners. It shows the customer searches running or waiting (partner name, vendor, region), the four partners searched most recently with how many customers each has and how long ago, and a total line: customers found and partners searched out of all partners", where: "Market intelligence, top right", why: "To see what the engine is doing on customers without opening each partner" },
+  ] },
   { version: "5.65", date: "2026-10-20", notes: "Setup wizard step 1 reads as a table: column names once at the top, Status as the last column on every row.", changes: [
       { what: "The region rows in Setup wizard step 1 no longer repeat Region, Min net rev, Min employees, Stock listing, Which entities count and Status above each row. One header row names the columns, and each region is one line of values. Status is the last column for every region: Activated by (name and time), Paused or Not started yet", where: "Setup wizard, step 1 Region and size", why: "Less clutter, and the rows line up so regions are easy to compare" },
   ] },

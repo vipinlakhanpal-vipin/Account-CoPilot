@@ -80,6 +80,11 @@ export default function MarketIntel({ embedded = false, initialVendor }: { embed
   const countP = (v: Vendor) => shownPartners(v).length;
   const allPending = (data?.jobs || []).filter((j) => j.status === "queued" || j.status === "running");
   const pending = allPending.filter((j) => j.mode === "market" && !j.customer && !j.partner && !j.contacts_only); // vendor scans: shown on the vendor tile
+  // The "Customer search" box: every vendor and partner, not just the open tab. Customer searches in progress, the partners searched most recently, and how many customers each one has.
+  const custCount = useMemo(() => { const m = new Map<string, number>(); for (const c of data?.customers || []) m.set(c.partner_id, (m.get(c.partner_id) || 0) + 1); return m; }, [data]);
+  const custJobs = allPending.filter((j) => j.mode === "market" && !j.customer && !j.contacts_only && (j.partner || j.phase === "customers"));
+  const recentP = useMemo(() => [...(data?.partners || [])].filter((p) => p.customers_scanned_at).sort((a, b) => (b.customers_scanned_at || "").localeCompare(a.customers_scanned_at || "")).slice(0, 4), [data]);
+  const searchedN = (data?.partners || []).filter((p) => p.customers_scanned_at && !p.presence_pending).length, partnersN = (data?.partners || []).filter((p) => !p.presence_pending).length;
   const scanningRegions = (v: string) => [...new Set(pending.filter((j) => j.vendor === v || j.vendor === "all" || !j.vendor).map((j) => j.region))];
   const jobOfVendor = (v: string) => { const js = pending.filter((j) => j.vendor === v || j.vendor === "all" || !j.vendor); return js.find((j) => j.status === "running") || js[0]; };
   // Every running or waiting job (vendor, partner, customer, contacts) belongs to a vendor, so its tile can flash
@@ -255,7 +260,18 @@ export default function MarketIntel({ embedded = false, initialVendor }: { embed
 
   return (
     <div className="mkt">
-      <section className="hero mkt-hero"><h1>Market intelligence</h1><p>Who implements SAP, Coupa, Oracle, Microsoft, Boomi, MuleSoft, Ivalua, GEP, Jaggaer and any vendor you add, in your regions, and the customers they publish. Every row links to its source.</p></section>
+      <section className="hero mkt-hero">
+        <div className="mkt-hero-text"><h1>Market intelligence</h1><p>Who implements SAP, Coupa, Oracle, Microsoft, Boomi, MuleSoft, Ivalua, GEP, Jaggaer and any vendor you add, in your regions, and the customers they publish. Every row links to its source.</p></div>
+        <aside className="mkt-cs" aria-label="Customer search by the engine" aria-live="polite">
+          <b className="mkt-cs-h">Customer search <small>all partners</small></b>
+          {custJobs.length > 0 && custJobs.slice(0, 2).map((j, n) => (
+            <div key={n} className="mkt-cs-now"><i className="fcj-dot" aria-hidden="true" /><span><b>{j.partner || `Batch of up to 8 partners`}</b> · {j.vendor && j.vendor !== "all" ? `${j.vendor} · ` : ""}{j.region} · {j.status === "running" ? "searching now" : "waiting for a session"}</span></div>))}
+          {custJobs.length > 2 && <div className="mkt-cs-more">+ {custJobs.length - 2} more waiting</div>}
+          {recentP.length === 0 ? <p className="note">No partner has had its customers searched yet.</p> : recentP.map((p) => (
+            <div key={p.id} className="mkt-cs-row"><span className="mkt-cs-name" title={`${p.name} · ${p.vendor} · ${p.region}`}>{p.name}</span><span className="mkt-cs-n">{custCount.get(p.id) || 0} customer{(custCount.get(p.id) || 0) === 1 ? "" : "s"}</span><em>{ago(p.customers_scanned_at)}</em></div>))}
+          <div className="mkt-cs-foot">{(data?.customers || []).length} customers found · {searchedN} of {partnersN} partners searched</div>
+        </aside>
+      </section>
       {allPending.length > 0 && (
         <div className="mkt-stopbar" role="status"><span className="fcj-dot" aria-hidden="true" /><span>{allPending.length} scan{allPending.length === 1 ? "" : "s"} running or waiting</span>
           <button type="button" className="btn tiny danger" disabled={busy === "stop"} onClick={stopScans}>■ Stop scanning</button></div>)}
