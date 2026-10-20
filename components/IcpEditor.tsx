@@ -199,7 +199,7 @@ export default function IcpEditor({ initial, counts, isSuper, allowed, roleLabel
 
       <p className="icp-step"><b>Step 1</b> · Choose a region</p>
       <nav className="icp-regions" aria-label="Regions">
-        {visible.map(({ key, name }) => {
+        {[...visible].sort((a, b) => Number(saved.regions[b.key]?.status === "active") - Number(saved.regions[a.key]?.status === "active")).map(({ key, name }) => {
           const st = def.regions[key].status;
           return (
             <button type="button" key={key} className={`icp-region r-${st}${region === key ? " on" : ""}`} onClick={() => setRegion(key)} title={name} aria-pressed={region === key}>

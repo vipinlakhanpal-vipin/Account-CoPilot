@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.47";
+export const APP_VERSION = "5.48";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.48", date: "2026-10-20", notes: "Define ICP lists the active regions first, then the paused ones.", changes: [
+      { what: "Region tiles in Step 1 show every active region together first, and the paused or next-phase ones after them", where: "Setup → Define ICP", why: "Active regions are the ones you work in; paused ones were mixed in between" },
+  ] },
   { version: "5.47", date: "2026-10-20", notes: "Left-panel items stay put when a drop-down opens.", changes: [
       { what: "Setup wizard, Team, Settings, Version history and Suggestions no longer sit at the bottom of the panel, so opening a drop-down below no longer pushes the item you clicked upwards. All items now run from the top; opening a list only moves what is below it. Aria floats in the free space under them and your profile stays at the foot", where: "components/NavPanel.tsx, app/globals.css", why: "Reported — items with sub-menus jumped up and down" },
     ] },
