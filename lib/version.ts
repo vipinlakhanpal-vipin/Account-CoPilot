@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.57";
+export const APP_VERSION = "5.58";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.58", date: "2026-10-20", notes: "A vibrant Account CoPilot name on the top bar, and the logo as a 3D sphere.", changes: [
+      { what: "The Account CoPilot name was nearly invisible on the navy bar. It is now larger and bold in a white-to-mint-to-sky-to-gold gradient with a soft glow, in light and dark mode. The logo is a glossy 3D teal-to-blue sphere with a highlight and shadow, like your profile circle, and a little bigger", where: "Top bar, also the sign-in page logo", why: "The old dark-text gradient was meant for a light bar and disappeared on the navy pattern" },
+  ] },
   { version: "5.57", date: "2026-10-20", notes: "Market intelligence vendors are filled tabs; the left panel has no drop-downs left.", changes: [
       { what: "The vendors (SAP, Coupa, Oracle, Microsoft, Boomi, MuleSoft, Ivalua, GEP, Jaggaer and any you add) are now a row of filled tabs above the page, each with its partner count; the open one is deep teal, the rest soft green. A tab pulses amber while that vendor is being scanned, and the open vendor shows its scan progress under the title. Super Admins still add a vendor with the dashed + Add vendor tab and remove an added one with its x. The Market intelligence drop-down in the left panel is gone: it is one item like the others", where: "Left panel → Market intelligence", why: "It matches Settings and the Setup wizard, and the vendor list lived in two places" },
   ] },

@@ -2293,3 +2293,10 @@ header.top{background:var(--bg);padding-bottom:8px;box-shadow:0 10px 14px -12px 
 :root[data-theme="light"] .mkt-tab[aria-selected="true"]{background:#0B7A66;color:#fff}
 @media (prefers-color-scheme: light){:root:not([data-theme="dark"]) .mkt-tab{background:#DDF1EB;color:#0B3D35}:root:not([data-theme="dark"]) .mkt-tab:hover{background:#BFE7DA}:root:not([data-theme="dark"]) .mkt-tab[aria-selected="true"]{background:#0B7A66;color:#fff}}
 @media (prefers-reduced-motion:reduce){.mkt-tab.scanning{animation:none}}
+
+/* v5.58: a vibrant app name that reads on the navy bar, and the logo as a 3D sphere like the profile circle */
+.navbar.has-sub .brand .logo{width:46px;height:46px;filter:drop-shadow(0 5px 7px rgba(0,10,50,.55)) drop-shadow(0 0 10px rgba(46,196,166,.35))}
+.navbar.has-sub .appname{font-weight:800;font-size:25px;letter-spacing:.015em;
+  background:linear-gradient(90deg,#FFFFFF 0%,#8BF5D6 32%,#5CC8FF 66%,#FFD27A 100%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 2px 5px rgba(0,10,50,.6)) drop-shadow(0 0 12px rgba(92,200,255,.35))}
+.navbar.has-sub .brand-sub{color:rgba(255,255,255,.9);font-weight:500}
