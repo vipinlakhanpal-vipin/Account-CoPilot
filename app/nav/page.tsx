@@ -1,2 +1,2 @@
 import { redirect } from "next/navigation";
-export default function NavIndex() { redirect("/nav/market"); }
+export default function NavIndex() { redirect("/nav/about"); }

@@ -29,7 +29,7 @@ const GROUPS: { label: string; items: [string, string][]; hideLanding?: boolean;
   { label: "Market intelligence", items: [["/market", "Market intelligence"]], icon: true, tip: "Market intelligence - SAP, Coupa, Oracle and Microsoft partners and their customers", glyph: "network", win: "market" },
   { label: "Home", items: [["/home", "Home"]], icon: true, tip: "Home - where to start", glyph: "home" },
   { label: "New Home", items: [["/home2", "New Home"]], glyph: "home" },
-  { label: "New Layout", items: [["/nav/market", "New Layout"]], glyph: "dashboard" },
+  { label: "New Layout", items: [["/nav/about", "New Layout"]], glyph: "dashboard" },
   { label: "Dashboard", items: [["/", "Dashboard"], ["/?tab=reports", "Mission Control"]], hideLanding: true, glyph: "dashboard" },
   { label: "Accounts", items: [["/?tab=accounts", "Accounts"], ["/?tab=pipeline", "Pipeline"], ["/?tab=stakeholders", "Stakeholders"], ["/?tab=signals", "S2P Signals"], ["/?tab=erp", "ERP & Apps"]], glyph: "accounts" },
   { label: "Data", items: [["/?tab=sources", "Sources"], ["/?tab=conflicts", "Conflicts"], ["/research", "Research Queue"]], glyph: "data" },

@@ -11,7 +11,7 @@ const STATUS_CLASS: Record<Suggestion["status"], string> = { received: "sg-recei
 
 // Header button: raise a suggestion (what to improve, and where), tracked through Received -> Pending -> In
 // progress -> Completed. Anyone can submit and see the list; only a Super Admin can move the status along.
-export default function SuggestionsButton() {
+export default function SuggestionsButton({ inline = false }: { inline?: boolean }) {
   const [items, setItems] = useState<Suggestion[]>([]);
   const [isSuper, setIsSuper] = useState(false);
   const [open, setOpen] = useState(false);
@@ -49,6 +49,29 @@ export default function SuggestionsButton() {
     if (res.ok) setItems(j.items);
   }
 
+  const content = (
+    <>
+          <div className="suggest-form">
+            <div className="suggest-form-row">
+              <label>Where<select value={where} onChange={(e) => setWhere(e.target.value)}>{WHERE.map((w) => <option key={w}>{w}</option>)}</select></label>
+              <label>Category<select value={category} onChange={(e) => setCategory(e.target.value)}>{CATEGORY.map((c) => <option key={c}>{c}</option>)}</select></label>
+            </div>
+            <textarea rows={3} placeholder="What needs to be improved, and why?" value={description} onChange={(e) => setDescription(e.target.value)} />
+            <button type="button" className="btn primary tiny" disabled={busy} onClick={submit}>{busy ? "Submitting…" : "Submit"}</button>
+            {msg && <p className={`now-msg ${msg.ok ? "ok" : "err"}`} style={{ marginTop: 6 }}>{msg.text}</p>}
+          </div>
+
+          {items.length === 0 ? <p className="note">No suggestions yet — be the first.</p> : (
+            <div className="tablewrap suggest-tablewrap">
+              <table className="suggest-table">
+                <thead><tr><th>Sl#</th><th>Suggestion Request</th><th>User</th><th>Date &amp; Time</th><th>Action</th></tr></thead>
+                <tbody>{items.slice(0, 30).map((it, i) => <SuggestionRow key={it.id} n={i + 1} item={it} isSuper={isSuper} onUpdate={updateStatus} />)}</tbody>
+              </table>
+            </div>
+          )}
+    </>
+  );
+  if (inline) return <div className="panel suggest-inline"><h2 style={{ margin: "0 0 4px" }}>Suggestions</h2><p className="note">Tell us what to improve, and where. Each request is tracked from Received to Completed.</p>{content}</div>;
   return (
     <div className="bell" ref={ref}>
       <button type="button" className="bell-btn suggest-btn" onClick={() => setOpen((o) => !o)} aria-label="Suggest an improvement">
@@ -70,24 +93,7 @@ export default function SuggestionsButton() {
           </div>
           <p className="bell-resize-hint">Drag the bottom-right corner to expand ↘</p>
 
-          <div className="suggest-form">
-            <div className="suggest-form-row">
-              <label>Where<select value={where} onChange={(e) => setWhere(e.target.value)}>{WHERE.map((w) => <option key={w}>{w}</option>)}</select></label>
-              <label>Category<select value={category} onChange={(e) => setCategory(e.target.value)}>{CATEGORY.map((c) => <option key={c}>{c}</option>)}</select></label>
-            </div>
-            <textarea rows={3} placeholder="What needs to be improved, and why?" value={description} onChange={(e) => setDescription(e.target.value)} />
-            <button type="button" className="btn primary tiny" disabled={busy} onClick={submit}>{busy ? "Submitting…" : "Submit"}</button>
-            {msg && <p className={`now-msg ${msg.ok ? "ok" : "err"}`} style={{ marginTop: 6 }}>{msg.text}</p>}
-          </div>
-
-          {items.length === 0 ? <p className="note">No suggestions yet — be the first.</p> : (
-            <div className="tablewrap suggest-tablewrap">
-              <table className="suggest-table">
-                <thead><tr><th>Sl#</th><th>Suggestion Request</th><th>User</th><th>Date &amp; Time</th><th>Action</th></tr></thead>
-                <tbody>{items.slice(0, 30).map((it, i) => <SuggestionRow key={it.id} n={i + 1} item={it} isSuper={isSuper} onUpdate={updateStatus} />)}</tbody>
-              </table>
-            </div>
-          )}
+          {content}
         </div>)}
     </div>
   );
