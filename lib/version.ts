@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.38";
+export const APP_VERSION = "5.39";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.39", date: "2026-10-20", notes: "The Setup wizard wand waves.", changes: [
+      { what: "The wand on Setup wizard waves back and forth from its handle like a magic wand, with its stars twinkling around it; it speeds up when you point at it, and stays still if your computer is set to reduce motion", where: "components/NavPanel.tsx, app/globals.css", why: "Requested" },
+    ] },
   { version: "5.38", date: "2026-10-20", notes: "Bell summary is renamed Daily Run Summary.", changes: [
       { what: "On the Daily run page the first view is named Daily Run Summary (it was called Bell summary)", where: "components/NavDailyRun.tsx", why: "Requested" },
     ] },
