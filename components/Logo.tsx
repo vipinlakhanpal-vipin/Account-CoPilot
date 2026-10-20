@@ -18,10 +18,12 @@ export default function Logo({ size = 34 }: { size?: number }) {
       <circle cx="20" cy="20" r="19" fill="url(#acp-shade)" />
       <circle cx="20" cy="20" r="18.4" fill="none" stroke="rgba(255,255,255,.4)" strokeWidth="1" />
       <ellipse cx="14.5" cy="9.5" rx="9" ry="4.8" fill="#fff" opacity=".38" transform="rotate(-24 14.5 9.5)" />
-      <path d="M20 9.5 L29.5 31.5 L20 26 L10.5 31.5 Z" fill="rgba(3,20,90,.38)" transform="translate(0 1.1)" />
-      <path d="M20 9.5 L29.5 31.5 L20 26 L10.5 31.5 Z" fill="#FFFFFF" />
-      <path d="M20 9.5 L20 26 L10.5 31.5 Z" fill="#DDF7F0" />
-      <circle cx="29" cy="12" r="3" fill="#FFE08A" stroke="#0D2A70" strokeWidth="1.1" />
+      <g className="acp-arrow">
+        <path d="M20 9.5 L29.5 31.5 L20 26 L10.5 31.5 Z" fill="rgba(3,20,90,.38)" transform="translate(0 1.1)" />
+        <path d="M20 9.5 L29.5 31.5 L20 26 L10.5 31.5 Z" fill="#FFFFFF" />
+        <path d="M20 9.5 L20 26 L10.5 31.5 Z" fill="#DDF7F0" />
+      </g>
+      <g className="acp-orbit"><circle cx="29" cy="12" r="3" fill="#FFE08A" stroke="#0D2A70" strokeWidth="1.1" /></g>
     </svg>
   );
 }

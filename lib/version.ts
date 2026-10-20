@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.58";
+export const APP_VERSION = "5.59";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.59", date: "2026-10-20", notes: "The logo animates: the arrow goes up and back, the dot runs around it, then it rests for 10 seconds.", changes: [
+      { what: "In the logo, the arrow takes a round trip (up, then back down) while the gold dot runs once around it. Then it stays still for 10 seconds and plays again. Nothing moves for people who have turned on reduced motion in their system", where: "Top bar and sign-in page logo", why: "A small touch of life, without a constant distraction" },
+  ] },
   { version: "5.58", date: "2026-10-20", notes: "A vibrant Account CoPilot name on the top bar, and the logo as a 3D sphere.", changes: [
       { what: "The Account CoPilot name was nearly invisible on the navy bar. It is now larger and bold in a white-to-mint-to-sky-to-gold gradient with a soft glow, in light and dark mode. The logo is a glossy 3D teal-to-blue sphere with a highlight and shadow, like your profile circle, and a little bigger", where: "Top bar, also the sign-in page logo", why: "The old dark-text gradient was meant for a light bar and disappeared on the navy pattern" },
   ] },

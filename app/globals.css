@@ -2300,3 +2300,10 @@ header.top{background:var(--bg);padding-bottom:8px;box-shadow:0 10px 14px -12px 
   background:linear-gradient(90deg,#FFFFFF 0%,#8BF5D6 32%,#5CC8FF 66%,#FFD27A 100%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;
   filter:drop-shadow(0 2px 5px rgba(0,10,50,.6)) drop-shadow(0 0 12px rgba(92,200,255,.35))}
 .navbar.has-sub .brand-sub{color:rgba(255,255,255,.9);font-weight:500}
+
+/* v5.59: the logo plays for about 4 seconds (the arrow goes up and comes back, the dot runs once around it), then rests for 10 seconds, and again */
+.logo .acp-arrow{animation:acp-arrow 14s ease-in-out infinite}
+.logo .acp-orbit{transform-box:view-box;transform-origin:50% 50%;animation:acp-orbit 14s ease-in-out infinite}
+@keyframes acp-arrow{0%{transform:translateY(0)}10%{transform:translateY(-4.5px)}20%,100%{transform:translateY(0)}}
+@keyframes acp-orbit{0%{transform:rotate(0)}28%,100%{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.logo .acp-arrow,.logo .acp-orbit{animation:none}}
