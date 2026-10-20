@@ -1,0 +1,9 @@
+
+/* v5.72: the speech bubble sits above Aria's orb with a clear gap (anchored by its bottom edge, so a taller message grows upward), and is no longer clipped by the panel */
+.agame-bubble,.agame-bubble.funny{top:auto;bottom:48px;white-space:normal}
+.agame-bubble{left:-88px;width:176px}
+.agame-bubble.funny{left:-92px;width:184px}
+.agame-bubble::after,.agame-bubble.funny::after{left:calc(50% - 5px)}
+.agame-bubble br+*{white-space:nowrap}
+.navmid{overflow:visible;z-index:3;min-height:200px}
+.agame{top:56%}

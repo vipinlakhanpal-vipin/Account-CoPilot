@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.71";
+export const APP_VERSION = "5.72";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.72", date: "2026-10-20", notes: "Aria's speech bubble sits above her icon, not behind it.", changes: [
+      { what: "The yellow bubble (Want to play? Click me!, and her funny messages) is anchored just above Aria's icon with a clear gap, so a longer message grows upward instead of sliding behind her. It is wider so the emoji stays on its line, and the panel no longer clips it at the top", where: "Left panel, Aria", why: "The bubble's lower part was hidden behind the icon" },
+  ] },
   { version: "5.71", date: "2026-10-20", notes: "The game library moves along with Aria and is always fully visible.", changes: [
       { what: "The game library now follows Aria's icon while she roams: it is placed under her every frame (above her when there is no room below) and kept fully inside the window, so no edge cuts or hides any of it. Moving the pointer onto the library pauses her so Play is easy to press; moving away lets her roam on", where: "Left panel, Aria", why: "The earlier menu was clipped by the panel's edge and stayed behind when she moved" },
   ] },
