@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.37";
+export const APP_VERSION = "5.38";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.38", date: "2026-10-20", notes: "Bell summary is renamed Daily Run Summary.", changes: [
+      { what: "On the Daily run page the first view is named Daily Run Summary (it was called Bell summary)", where: "components/NavDailyRun.tsx", why: "Requested" },
+    ] },
   { version: "5.37", date: "2026-10-20", notes: "One Aria in the left panel.", changes: [
       { what: "Aria appeared twice in the left panel (the roaming one and the small Ask Aria button). There is one now: click her and a small menu offers Ask Aria (the chat) or Hit me (the 30-second puzzle)", where: "components/AriaGame.tsx, components/NavPanel.tsx", why: "Reported" },
     ] },
