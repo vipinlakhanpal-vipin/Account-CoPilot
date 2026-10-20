@@ -2547,3 +2547,8 @@ header.top{background:var(--bg);padding-bottom:8px;box-shadow:0 10px 14px -12px 
 /* v5.79: the game's title was clipped at its left edge (the inline card had no padding and hid its overflow) */
 .agm-inline{padding:4px 12px 8px;overflow:visible}
 .agm-inline .agame-head b{padding-left:2px}
+
+/* v5.80: True or false says Correct or Incorrect after every answer */
+.agm-why.ok b{color:#0B7A66}
+.agm-why.no b{color:#D92D20}
+.agm-why b{font-size:15px}

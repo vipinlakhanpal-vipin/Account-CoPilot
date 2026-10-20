@@ -60,7 +60,7 @@ export function Quiz({ onClose, onEvent }: { onClose: () => void; onEvent?: Ev }
           <div className="agm-tf">
             {[true, false].map((v) => <button type="button" key={String(v)} className={`btn agm-tfb${pick !== null ? (v === q.a ? " right" : pick === v ? " wrong" : "") : ""}`} onClick={() => answer(v)} disabled={pick !== null}>{v ? "True" : "False"}</button>)}
           </div>
-          <p className="agm-why" aria-live="polite">{pick === null ? "" : `${pick === q.a ? "Right. " : "Not quite. "}${q.why}`}</p>
+          <p className={`agm-why${pick === null ? "" : pick === q.a ? " ok" : " no"}`} aria-live="polite">{pick === null ? "" : <><b>{pick === q.a ? "Correct!" : `Incorrect. The answer is ${q.a ? "True" : "False"}.`}</b> {q.why}</>}</p>
         </div>
       ) : (
         <div className="agm-end static"><button type="button" className="btn primary" onClick={again}>{phase === "won" ? "Play again" : "Try again"}</button></div>
