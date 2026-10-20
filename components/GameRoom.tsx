@@ -278,9 +278,11 @@ export default function GameRoom() {
     <div className="gr">
       <div className="gr-brain" role="note">
         <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 4a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 1.5 5A3 3 0 0 0 9 20a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3zM15 4a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-1.5 5A3 3 0 0 1 15 20a3 3 0 0 1-3-3" /></svg>
-        <div><b>Brain gym: warm up your mind</b>
-          <span>These games are designed to exercise your cognitive skills: memory, attention, reasoning, speed and language. A few minutes between tasks keeps your thinking sharp and agile.</span></div>
+        <div><b>Brain gym: short breaks that exercise how you work</b>
+          <span>Procurement and sales run on memory, attention and sharp reasoning: holding figures in your head, spotting what does not fit, following a process in the right order. Each game here exercises one of those skills. A few minutes of focused play is a real mental break between tasks, and practising a skill makes you quicker at it. They are warm-ups, not a cure-all.</span></div>
         <span className="gr-brain-chips" aria-hidden="true"><i>Memory</i><i>Attention</i><i>Reasoning</i><i>Speed</i><i>Language</i></span>
+        <details className="gr-brain-more"><summary>How each game helps your work</summary>
+          <ul>{GAMES.map((x) => <li key={x.id}><b>{x.name}</b> trains {x.skill.toLowerCase()}: {x.helps}</li>)}</ul></details>
       </div>
       <div className="gr-host" ref={hostRef}>
         <span className="gr-bob"><AriaOrb mood={mood} size={104} anim={anim} onClick={poke} /></span>

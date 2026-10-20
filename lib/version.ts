@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.93";
+export const APP_VERSION = "5.94";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.94", date: "2026-10-20", notes: "The playroom banner explains why the games are there and how each one helps.", changes: [
+      { what: "The banner now reads Brain gym: short breaks that exercise how you work, and explains why: procurement and sales run on memory, attention and sharp reasoning; each game exercises one of those skills; a few minutes of focused play is a real mental break and practice makes you quicker; they are warm-ups, not a cure-all. A How each game helps your work link opens a list tying every game to a real work skill (for example Digit span: remembering figures and reference numbers without writing them down; Odd one out: spotting an outlier in a supplier list or a doubtful figure)", where: "Aria, the playroom", why: "The games have a stated purpose that makes sense to a business user, without over-claiming" },
+  ] },
   { version: "5.93", date: "2026-10-20", notes: "The playroom says what its games are for.", changes: [
       { what: "The playroom opens with a bold banner: Brain gym: warm up your mind. These games are designed to exercise your cognitive skills: memory, attention, reasoning, speed and language. A few minutes between tasks keeps your thinking sharp and agile. The wording says the games are designed to exercise those skills, not that they are proven to raise intelligence", where: "Aria, the playroom", why: "People know why the games are there" },
   ] },

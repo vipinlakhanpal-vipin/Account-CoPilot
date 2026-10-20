@@ -2734,3 +2734,9 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 .gr-brain-chips{display:flex;gap:6px;flex-wrap:wrap}
 .gr-brain-chips i{font:700 11.5px var(--body);font-style:normal;padding:3px 11px;border-radius:999px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.4)}
 @media (prefers-reduced-motion:reduce){.gr-brain>svg{animation:none}}
+
+/* v5.94: the banner explains why the games are there and how each one helps */
+.gr-brain-more{flex:1 1 100%;margin-top:2px}
+.gr-brain-more summary{cursor:pointer;font:700 13px var(--body);text-decoration:underline;text-underline-offset:3px;width:max-content}
+.gr-brain-more ul{margin:8px 0 0;padding:10px 14px 10px 28px;border-radius:10px;background:rgba(0,0,0,.22);display:grid;gap:5px;font-size:12.5px;line-height:1.45;color:rgba(255,255,255,.95)}
+.gr-brain-more li b{color:#fff}
