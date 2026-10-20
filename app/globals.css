@@ -2552,3 +2552,8 @@ header.top{background:var(--bg);padding-bottom:8px;box-shadow:0 10px 14px -12px 
 .agm-why.ok b{color:#0B7A66}
 .agm-why.no b{color:#D92D20}
 .agm-why b{font-size:15px}
+/* v5.81: the answer feedback is a filled banner: green for Correct, red for Incorrect */
+.agm-why.ok,.agm-why.no{padding:9px 14px;border-radius:10px;color:#fff;font-size:13.5px;line-height:1.45}
+.agm-why.ok{background:#0B7A66;border:1px solid #0A5C4C}
+.agm-why.no{background:#C8372D;border:1px solid #9E2820}
+.agm-why.ok b,.agm-why.no b{color:#fff;font-size:15px}

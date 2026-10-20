@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.80";
+export const APP_VERSION = "5.81";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.81", date: "2026-10-20", notes: "True or false feedback is a green or red banner.", changes: [
+      { what: "The Correct! or Incorrect message in True or false is now a filled banner with white text: green for correct, red for incorrect, with the explanation inside it", where: "Aria, True or false", why: "The colour tells you at a glance" },
+  ] },
   { version: "5.80", date: "2026-10-20", notes: "True or false says Correct or Incorrect after every answer.", changes: [
       { what: "After each answer in True or false the game now says Correct! in green, or Incorrect. The answer is True (or False). in red, followed by the explanation", where: "Aria, True or false", why: "A clear yes or no on every answer" },
   ] },
