@@ -2021,7 +2021,11 @@ body[data-nodl] .btn-dl:not(.keep),body[data-nodl] .aria-dl,body[data-nodl] .ari
 .navpanel{
   color:#fff;
   background-color:#1E73B8;
-  background-image:linear-gradient(135deg,rgba(255,255,255,.16) 0%,transparent 40%,rgba(0,0,0,.20) 100%),linear-gradient(160deg,#0E8A72 0%,#1B76B3 50%,#5B4BC4 100%);
+  background-color:#0B1A34;
+  background-image:
+    repeating-linear-gradient(45deg,rgba(255,255,255,.075) 0 1px,transparent 1px 7px),
+    repeating-linear-gradient(45deg,rgba(0,0,0,.20) 3px 4px,transparent 4px 7px),
+    linear-gradient(165deg,#0A1630 0%,#0C2540 45%,#15535B 100%);
   background-size:100% 100%;
   isolation:isolate;
   border-color:rgba(255,255,255,.28);
@@ -2162,3 +2166,6 @@ header.top{background:var(--bg);padding-bottom:8px;box-shadow:0 10px 14px -12px 
 .navit:hover svg .spark{animation-duration:.9s}
 @keyframes wand-wave{0%,100%{transform:rotate(-12deg)}45%{transform:rotate(14deg)}60%{transform:rotate(8deg)}}
 @media (prefers-reduced-motion:reduce){.navit svg .wand-wave{animation:none}}
+
+/* v5.40: the panel uses the fine diagonal-line pattern on deep navy fading to teal (the weave is switched off) */
+.navpanel::before,.navpanel::after{display:none}
