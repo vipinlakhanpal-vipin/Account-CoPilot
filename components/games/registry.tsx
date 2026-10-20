@@ -2,6 +2,8 @@ import type { ReactElement } from "react";
 
 // The games in Aria's Game room, each a book on the shelf. Add a row here and a new book appears (the shelf scrolls when there are many).
 export type GameId = "jigsaw" | "memory" | "quiz" | "words";
+/** What a game tells its host: it started, the player did something right or wrong, asked for a hint, is running out of time, won or lost. */
+export type GameEvent = "start" | "good" | "bad" | "hint" | "hurry" | "win" | "lose";
 export type Game = { id: GameId; name: string; icon: ReactElement; fill: string; ink: string; time: string; timed: boolean; blurb: string; best: () => string };
 
 const num = (k: string) => { try { return Number(localStorage.getItem(k)) || 0; } catch { return 0; } };

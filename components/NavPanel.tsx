@@ -54,7 +54,6 @@ export default function NavPanel({ isSuper, isOwner = false }: { isSuper: boolea
         {item("/nav/daily-run", "bell", "Daily run", path.startsWith("/nav/daily-run"), path.startsWith("/nav/daily-run") ? 0 : unread)}
         {item("/nav/market", "market", "Market intelligence", onMarket)}
         {item("/nav/signals", "signals", "Buying signals", path.startsWith("/nav/signals"))}
-        {item("/nav/games", "games", "Game room", path.startsWith("/nav/games"))}
       </nav>
       <div className="navmid">
         <AriaGame />

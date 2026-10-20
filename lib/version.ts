@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.76";
+export const APP_VERSION = "5.77";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.77", date: "2026-10-20", notes: "Aria hosts her own playroom, and reacts to every move.", changes: [
+      { what: "The Game room tab is gone from the left panel. Games now start only with Aria: click her (she asks Want to play?) and she takes you to her playroom, where a big 3D Aria is the host. She greets you, introduces each game, and reacts to what you do: her face changes (smile, cheering eyes, oops, thinking), she hops when you get something right and shakes when you don't, says encouraging lines, warns you when time is nearly up, nudges you if you go quiet, and congratulates you with your result. The roaming Aria in the panel steps aside while you play and shows a Done playing button", where: "Aria, the playroom", why: "The games should feel like playing with Aria, not like a games section of an app" },
+  ] },
   { version: "5.76", date: "2026-10-20", notes: "Aria rolls around her area and bounces off its edges instead of leaving it.", changes: [
       { what: "Aria now moves by physics instead of a fixed path: she rolls slowly around the free space in her area and bounces off the left and right edges (and the top and bottom), with a little squash when she hits, and never goes past them. Her speech bubble is kept inside the area too, sliding sideways as she nears an edge while its pointer still points at her. She pauses while the pointer is on her or the tab is hidden, and stays still for people who prefer reduced motion", where: "Left panel, Aria", why: "She slid out past the left and right edges and cut her bubble" },
   ] },

@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { GameEvent } from "@/components/games/registry";
+type Ev = (e: GameEvent, detail?: string) => void;
 
 // Three quick games Aria offers besides the jigsaw (Words has no time limit). Both are about the work the app is for (source-to-pay and the way CoPilot labels evidence), all in the browser, nothing stored but a best score.
 
@@ -37,20 +39,22 @@ function useCountdown(total: number, running: boolean, onEnd: () => void) {
 }
 
 type Card = { id: number; pair: number; text: string; term: boolean };
-export function Memory({ onClose }: { onClose: () => void }) {
+export function Memory({ onClose, onEvent }: { onClose: () => void; onEvent?: Ev }) {
   const deal = () => shuffle(PAIRS.flatMap(([a, b], i) => [{ id: i * 2, pair: i, text: a, term: true }, { id: i * 2 + 1, pair: i, text: b, term: false }] as Card[]));
   const [cards, setCards] = useState<Card[]>(deal);
   const [up, setUp] = useState<number[]>([]), [done, setDone] = useState<number[]>([]), [moves, setMoves] = useState(0);
   const [phase, setPhase] = useState<"play" | "won" | "lost">("play"), [best, setBest] = useState<number | null>(getBest("aria-memory-best"));
-  const left = useCountdown(60, phase === "play", () => setPhase("lost"));
-  const again = () => { setCards(deal()); setUp([]); setDone([]); setMoves(0); setPhase("play"); };
+  const left = useCountdown(60, phase === "play", () => { setPhase("lost"); onEvent?.("lose"); });
+  useEffect(() => { onEvent?.("start"); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const again = () => { onEvent?.("start"); setCards(deal()); setUp([]); setDone([]); setMoves(0); setPhase("play"); };
   const flip = (c: Card) => {
     if (phase !== "play" || up.length >= 2 || up.includes(c.id) || done.includes(c.pair)) return;
     const nu = [...up, c.id]; setUp(nu);
     if (nu.length === 2) {
       setMoves((m) => m + 1);
       const [a, b] = nu.map((id) => cards.find((x) => x.id === id)!);
-      if (a.pair === b.pair) setTimeout(() => { setDone((d) => { const nd = [...d, a.pair]; if (nd.length === PAIRS.length) { setPhase("won"); const m = moves + 1; setBest((bb) => { const n = bb === null || m < bb ? m : bb; setBestKey("aria-memory-best", n); return n; }); } return nd; }); setUp([]); }, 350);
+      if (a.pair === b.pair) onEvent?.("good"); else onEvent?.("bad");
+      if (a.pair === b.pair) setTimeout(() => { setDone((d) => { const nd = [...d, a.pair]; if (nd.length === PAIRS.length) { setPhase("won"); onEvent?.("win", `${moves + 1} moves`); const m = moves + 1; setBest((bb) => { const n = bb === null || m < bb ? m : bb; setBestKey("aria-memory-best", n); return n; }); } return nd; }); setUp([]); }, 350);
       else setTimeout(() => setUp([]), 800);
     }
   };
@@ -70,20 +74,21 @@ export function Memory({ onClose }: { onClose: () => void }) {
 }
 
 const QN = 8;
-export function Quiz({ onClose }: { onClose: () => void }) {
+export function Quiz({ onClose, onEvent }: { onClose: () => void; onEvent?: Ev }) {
   const [qs, setQs] = useState(() => shuffle(FACTS).slice(0, QN));
   const [i, setI] = useState(0), [score, setScore] = useState(0), [pick, setPick] = useState<boolean | null>(null);
   const [phase, setPhase] = useState<"play" | "won" | "lost">("play"), [best, setBest] = useState<number | null>(getBest("aria-quiz-best"));
-  const finish = (s: number, p: "won" | "lost") => { setPhase(p); setBest((b) => { const n = b === null || s > b ? s : b; setBestKey("aria-quiz-best", n); return n; }); };
+  useEffect(() => { onEvent?.("start"); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const finish = (s: number, p: "won" | "lost") => { onEvent?.(p === "won" ? "win" : "lose", `${s} of ${QN}`); setPhase(p); setBest((b) => { const n = b === null || s > b ? s : b; setBestKey("aria-quiz-best", n); return n; }); };
   const scoreRef = useRef(0); scoreRef.current = score;
   const left = useCountdown(45, phase === "play", () => finish(scoreRef.current, "lost"));
   const q = qs[i];
   const answer = (v: boolean) => {
     if (pick !== null || phase !== "play") return;
-    setPick(v); const s = score + (v === q.a ? 1 : 0); setScore(s);
+    setPick(v); const s = score + (v === q.a ? 1 : 0); setScore(s); onEvent?.(v === q.a ? "good" : "bad");
     setTimeout(() => { if (i + 1 >= QN) finish(s, "won"); else { setI(i + 1); setPick(null); } }, 1500);
   };
-  const again = () => { setQs(shuffle(FACTS).slice(0, QN)); setI(0); setScore(0); setPick(null); setPhase("play"); };
+  const again = () => { onEvent?.("start"); setQs(shuffle(FACTS).slice(0, QN)); setI(0); setScore(0); setPick(null); setPhase("play"); };
   return (
     <Shell title={phase === "play" ? "True or false?" : phase === "won" ? "Round finished" : "Time's up"}
       sub={phase === "play" ? `Question ${i + 1} of ${QN}. 45 seconds in all.` : `${score} of ${QN} right${best !== null ? ` · best ${best}` : ""}`}
@@ -132,18 +137,19 @@ const LEVELS: { name: string; len: number; pool: { w: string; clue: string }[] }
 const WN = 5;
 const scramble = (w: string) => { let a = shuffle(w.split("")); for (let t = 0; t < 8 && a.join("") === w; t++) a = shuffle(w.split("")); return a; };
 const draw = (lv: number) => shuffle(LEVELS[lv].pool).slice(0, WN);
-export function Words({ onClose }: { onClose: () => void }) {
+export function Words({ onClose, onEvent }: { onClose: () => void; onEvent?: Ev }) {
   const [lv, setLv] = useState(0);
   const [set, setSet] = useState(() => draw(0));
   const [i, setI] = useState(0), [score, setScore] = useState(0), [hints, setHints] = useState(0), [usedHint, setUsedHint] = useState(false);
   const [tiles, setTiles] = useState<string[]>(() => scramble(set[0].w)), [pick, setPick] = useState<number[]>([]);
   const [state, setState] = useState<"play" | "right" | "wrong" | "end">("play");
   const cur = set[i], typed = pick.map((k) => tiles[k]).join("");
+  useEffect(() => { onEvent?.("start"); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const begin = (level: number) => { const f = draw(level); setLv(level); setSet(f); setI(0); setScore(0); setHints(0); setTiles(scramble(f[0].w)); setPick([]); setState("play"); setUsedHint(false); };
   const load = (w: string) => { setTiles(scramble(w)); setPick([]); setState("play"); setUsedHint(false); };
   const check = (np: number[]) => {
     if (np.length !== cur.w.length) return;
-    if (np.map((k) => tiles[k]).join("") === cur.w) { setState("right"); setScore((x) => x + (usedHint ? 0 : 1)); } else setState("wrong");
+    if (np.map((k) => tiles[k]).join("") === cur.w) { setState("right"); setScore((x) => x + (usedHint ? 0 : 1)); onEvent?.("good"); } else { setState("wrong"); onEvent?.("bad"); }
   };
   const add = (k: number) => { if (state === "right" || state === "end" || pick.includes(k)) return; const np = [...pick, k]; setPick(np); setState("play"); check(np); };
   const drop = (n: number) => { if (state === "right" || state === "end") return; setPick((p) => p.filter((_, j) => j !== n)); setState("play"); };
@@ -152,10 +158,10 @@ export function Words({ onClose }: { onClose: () => void }) {
     let np = pick; if (typed !== cur.w.slice(0, typed.length)) np = []; // wrong so far: start the word again
     const want = cur.w[np.length], k = tiles.findIndex((t, j) => t === want && !np.includes(j));
     if (k < 0) return;
-    np = [...np, k]; setPick(np); setHints((h) => h + 1); setUsedHint(true); setState("play"); check(np);
+    np = [...np, k]; setPick(np); setHints((h) => h + 1); setUsedHint(true); setState("play"); onEvent?.("hint"); check(np);
   };
   const next = () => {
-    if (i + 1 >= set.length) { setState("end"); try { const d = Number(localStorage.getItem("aria-words-level")) || 0; if (lv + 1 > d) localStorage.setItem("aria-words-level", String(lv + 1)); } catch { /* optional */ } return; }
+    if (i + 1 >= set.length) { setState("end"); onEvent?.("win", `${L.name}: ${score} of ${set.length} without a hint`); try { const d = Number(localStorage.getItem("aria-words-level")) || 0; if (lv + 1 > d) localStorage.setItem("aria-words-level", String(lv + 1)); } catch { /* optional */ } return; }
     setI(i + 1); load(set[i + 1].w);
   };
   const keys = useRef({ add, drop, pick, tiles, state }); keys.current = { add, drop, pick, tiles, state };

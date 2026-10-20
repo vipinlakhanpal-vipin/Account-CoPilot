@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { GameEvent } from "@/components/games/registry";
 
 // The jigsaw: Aria's face (or one of four other pictures) shatters into nine pieces; drag each to its place on the board before the 60 seconds run out. Best time is kept in this browser.
 const N = 3, S = 66, PAD = Math.round(S * 0.32), LIMIT = 60, DESIGNS = 5;
@@ -108,7 +109,7 @@ function PieceSvg({ r, c, v }: { r: number; c: number; v: number }) {
 
 const slot = (r: number, c: number) => ({ x: BOARD_X + c * S - PAD, y: BOARD_Y + r * S - PAD });
 
-export default function Jigsaw({ onClose }: { onClose: () => void }) {
+export default function Jigsaw({ onClose, onEvent }: { onClose: () => void; onEvent?: (e: GameEvent, detail?: string) => void }) {
   const [phase, setPhase] = useState<"play" | "won" | "lost">("play");
   const [pieces, setPieces] = useState<Piece[]>([]);
   const [left, setLeft] = useState(LIMIT);
@@ -118,13 +119,14 @@ export default function Jigsaw({ onClose }: { onClose: () => void }) {
   const t0 = useRef(0), zTop = useRef(10), drag = useRef<{ id: number; dx: number; dy: number } | null>(null), stage = useRef<HTMLDivElement>(null);
   useEffect(() => { try { const b = Number(localStorage.getItem("aria-puzzle-best")); if (b) setBest(b); } catch { /* optional */ } }, []);
 
+  const hurried = useRef(false);
   const start = useCallback(() => {
     // a different picture from the last game
     let d = Math.floor(Math.random() * DESIGNS); if (d === lastDesign.current) d = (d + 1) % DESIGNS;
     lastDesign.current = d; setDesign(d);
     const solved: Piece[] = [];
     for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) solved.push({ id: r * N + c, r, c, ...slot(r, c), locked: false, z: 1 });
-    setPieces(solved); setLeft(LIMIT); setTook(0); setPhase("play"); t0.current = Date.now();
+    setPieces(solved); setLeft(LIMIT); setTook(0); setPhase("play"); t0.current = Date.now(); hurried.current = false; onEvent?.("start");
     // the shatter: from the solved picture, every piece flies to a random spot on the right
     setTimeout(() => setPieces(solved.map((p, i) => ({ ...p, x: 300 + Math.random() * 190 - (i % 2) * 10, y: 70 + Math.random() * 260, z: 2 + i }))), 60);
   }, []);
@@ -135,14 +137,15 @@ export default function Jigsaw({ onClose }: { onClose: () => void }) {
     const t = setInterval(() => {
       const s = (Date.now() - t0.current) / 1000;
       setLeft(Math.max(0, LIMIT - s));
-      if (s >= LIMIT) setPhase("lost");
+      if (LIMIT - s < 10 && !hurried.current) { hurried.current = true; onEvent?.("hurry"); }
+      if (s >= LIMIT) { setPhase("lost"); onEvent?.("lose"); }
     }, 100);
     return () => clearInterval(t);
   }, [phase]);
   useEffect(() => {
     if (phase === "play" && pieces.length && pieces.every((p) => p.locked)) {
       const s = Math.round(((Date.now() - t0.current) / 1000) * 10) / 10;
-      setTook(s); setPhase("won");
+      setTook(s); setPhase("won"); onEvent?.("win", `${s} s`);
       setBest((b) => { const nb = b === null || s < b ? s : b; try { localStorage.setItem("aria-puzzle-best", String(nb)); } catch { /* optional */ } return nb; });
     }
   }, [pieces, phase]);
@@ -163,6 +166,7 @@ export default function Jigsaw({ onClose }: { onClose: () => void }) {
   };
   const up = () => {
     const d = drag.current; drag.current = null; if (!d) return;
+    const mine = pieces.find((p) => p.id === d.id); if (mine) { const t = slot(mine.r, mine.c); if (Math.hypot(mine.x - t.x, mine.y - t.y) < 18) onEvent?.("good"); }
     setPieces((all) => all.map((p) => { if (p.id !== d.id) return p; const s = slot(p.r, p.c); return Math.hypot(p.x - s.x, p.y - s.y) < 18 ? { ...p, ...s, locked: true, z: 1 } : p; }));
   };
   const placed = pieces.filter((p) => p.locked).length;

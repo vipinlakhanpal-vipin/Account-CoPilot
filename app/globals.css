@@ -2487,3 +2487,26 @@ header.top{background:var(--bg);padding-bottom:8px;box-shadow:0 10px 14px -12px 
 @keyframes agame-bump-x{0%{transform:scale(1)}35%{transform:scale(.86,1.1)}100%{transform:scale(1)}}
 @keyframes agame-bump-y{0%{transform:scale(1)}35%{transform:scale(1.1,.86)}100%{transform:scale(1)}}
 .navmid{min-height:260px}
+
+/* v5.77: Aria hosts her playroom: a big 3D Aria whose face and little hop or shake follow the game, and a speech bubble with what she says */
+.aria-orb{position:relative;display:inline-grid;place-items:center;flex:none;border-radius:50%;
+  background:radial-gradient(circle at 50% 118%,rgba(25,211,176,.55) 0%,rgba(25,211,176,0) 46%),radial-gradient(circle at 30% 22%,#DCD5FF 0%,#9A88FF 20%,#5B4BC4 52%,#33279A 80%,#1A1260 100%);
+  box-shadow:inset 0 -12px 18px rgba(8,4,64,.6),inset 0 8px 10px rgba(255,255,255,.38),inset 0 0 0 1px rgba(255,255,255,.2),0 0 18px 4px rgba(130,112,255,.55),0 0 46px 12px rgba(91,75,196,.35),0 18px 22px -9px rgba(0,0,0,.45);
+  animation:agame-breathe 3.4s ease-in-out infinite}
+.aria-orb::before{content:"";position:absolute;left:14%;top:6%;width:46%;height:30%;border-radius:50%;background:radial-gradient(ellipse at 40% 35%,rgba(255,255,255,.85),rgba(255,255,255,0) 72%);transform:rotate(-24deg);pointer-events:none}
+.aria-orb::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:1px solid rgba(190,175,255,.35);pointer-events:none}
+.aria-orb svg{width:78%;height:78%;filter:drop-shadow(0 2px 2px rgba(10,5,70,.45));position:relative;z-index:1}
+.aria-orb.hop{animation:gr-hop .55s ease-out}
+.aria-orb.shake{animation:gr-shake .5s ease-out}
+@keyframes gr-hop{0%{transform:translateY(0) scale(1)}30%{transform:translateY(-16px) scale(1.05,.96)}60%{transform:translateY(0) scale(.96,1.05)}100%{transform:translateY(0) scale(1)}}
+@keyframes gr-shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px) rotate(-4deg)}40%{transform:translateX(7px) rotate(4deg)}60%{transform:translateX(-5px)}80%{transform:translateX(4px)}}
+.gr-host{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:6px 4px 4px}
+.gr-say{position:relative;flex:1 1 280px;max-width:640px;padding:10px 16px;border-radius:16px;border:2px solid #F5A623;background:linear-gradient(180deg,#FFF0A8,#FFD966);color:#3B2400;font-family:"Fredoka","Baloo 2","Comic Sans MS",var(--body)}
+.gr-say b{font-size:12px;letter-spacing:.04em;text-transform:uppercase;opacity:.7}
+.gr-say p{margin:2px 0 0;font-size:17px;font-weight:600;line-height:1.35}
+.gr-say::before{content:"";position:absolute;left:-8px;top:50%;width:14px;height:14px;margin-top:-7px;background:#FFE680;border-left:2px solid #F5A623;border-bottom:2px solid #F5A623;transform:rotate(45deg)}
+.gr-askbtn{margin-left:auto}
+.agame-away{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:14px 12px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.4)}
+.agame-away b{font:700 14px var(--body)}
+.agame-away span{font-size:12px;opacity:.85}
+@media (prefers-reduced-motion:reduce){.aria-orb,.aria-orb.hop,.aria-orb.shake{animation:none}}
