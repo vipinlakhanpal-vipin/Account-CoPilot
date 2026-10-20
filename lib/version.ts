@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "5.53";
+export const APP_VERSION = "5.54";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "5.54", date: "2026-10-20", notes: "The Online now window opens in the right place.", changes: [
+      { what: "The window that opens when you click Online now opens to the right of its button instead of to the left, so it is fully on screen. It scrolls if the list is long and fills the width on a phone", where: "Top bar, Online now", why: "After the button moved next to the name, a window opening to the left would have been cut off" },
+  ] },
   { version: "5.53", date: "2026-10-20", notes: "Online now sits below the version button.", changes: [
       { what: "The version button and the Online now chip are stacked, with Online now below the version, to the right of the Account CoPilot name and tagline", where: "Top bar", why: "Keeps the name on its own line and the bar no taller" },
   ] },

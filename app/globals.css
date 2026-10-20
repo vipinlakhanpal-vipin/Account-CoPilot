@@ -2228,3 +2228,7 @@ header.top{background:var(--bg);padding-bottom:8px;box-shadow:0 10px 14px -12px 
 /* v5.53: the version button and Online now are stacked (Online now below), to the right of the name and tagline */
 .brand .version{flex-direction:column;align-items:flex-start;gap:5px}
 .brand .version .online-chip{padding:3px 10px}
+
+/* v5.54: the Online now window opens to the right of its button (it used to open to the left, which now falls off the screen), and fills the width on a phone */
+.online-pop{left:0;right:auto;max-height:70vh;overflow:auto}
+@media (max-width:640px){.online-pop{position:fixed;left:12px;right:12px;top:72px;width:auto}}
