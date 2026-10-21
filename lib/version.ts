@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.22";
+export const APP_VERSION = "6.23";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.23", date: "2026-10-21", notes: "Every table can be filtered by date: Data added or Data enriched.", changes: [
+      { what: "Every list table now has a Date filter next to the other filters: choose Data added (when the row first entered the app) or Data enriched (when it was last researched, verified or filled in), then pick a from and to day, or use Today, 7 days or 30 days. Rows with no date for that choice drop out while it is on. The filter is not saved inside saved reports", where: "Accounts, Pipeline, Stakeholders, Signals, ERP, Sources, Reports and every dashboard drill-down", why: "You wanted to see what dates data was added and enriched" },
+  ] },
   { version: "6.22", date: "2026-10-21", notes: "Dashboard chart: where the data came from, by source type and by how accounts entered the app.", changes: [
       { what: "New Dashboard panel \"Where the data came from\". Left: every source record grouped by type (stock exchanges and regulators, annual and results reports, company websites, press releases, news and business press, blogs, LinkedIn public snippets, job postings, Seamless.ai, aggregators and estimates, your confirmations), plus which exchanges were cited (ADX, DFM, Saudi Exchange, JSE, SEC and others). Right: accounts by how they entered the app, and a table of the Excel files uploaded in the Setup wizard with how many rows were new and how many were already in the app. Click a bar to list its accounts", where: "Dashboard", why: "You wanted to see where the data came from, source by source" },
   ] },

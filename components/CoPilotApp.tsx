@@ -1,5 +1,6 @@
 "use client";
 import SourceChart from "@/components/SourceChart";
+import { addedAt, enrichedAt, dayKey } from "@/lib/dates";
 import { ask, paidFetch, notify } from "@/components/Confirm";
 import { rulesFor, regionOf } from "@/lib/icpDefinition.mjs";
 import { personaFit } from "@/lib/icp";
@@ -303,6 +304,12 @@ function FilterTable({ title, note, rows, cols: colsIn, filters, search, onRow, 
   const [q, setQ] = useState(initial?.q || "");
   const [fv, setFv] = useState<string[]>(initial?.fv || filters.map(() => ""));
   const [showAll, setShowAll] = useState(false);
+  // Date filter: pick which date to look at (when the row was added, or when it was last enriched) and a from / to day.
+  const [dMode, setDMode] = useState<"" | "added" | "enriched">("");
+  const [dFrom, setDFrom] = useState(""), [dTo, setDTo] = useState("");
+  const hasDates = useMemo(() => rows.some((r) => addedAt(r) || enrichedAt(r)), [rows]);
+  const dateOk = (r: Row) => { if (!dMode || (!dFrom && !dTo)) return true; const d = dayKey(dMode === "added" ? addedAt(r) : enrichedAt(r)); return !!d && (!dFrom || d >= dFrom) && (!dTo || d <= dTo); };
+  const lastDays = (n: number) => { const t = new Date(), f = new Date(); f.setDate(t.getDate() - n); setDFrom(dayKey(f.toISOString())); setDTo(dayKey(t.toISOString())); setShowAll(false); };
   const wrapRef = useRef<HTMLDivElement>(null);
   const scrollH = (dx: number) => wrapRef.current?.scrollBy({ left: dx, behavior: "smooth" });
   // A second horizontal scrollbar on top of the table, so a long table never needs a scroll down to the bottom just to go right. The two stay in step.
@@ -324,7 +331,7 @@ function FilterTable({ title, note, rows, cols: colsIn, filters, search, onRow, 
   const options = useMemo(() => filters.map((f) => [...new Set(rows.map(f.get).filter(Boolean))].sort()), [rows, filters]);
   const visibleFields = useMemo(() => cols.map((c) => c.field).filter((f): f is string => !!f), [cols]);
   const cf = useCustomFilters(rows, title, initial?.cf, visibleFields);
-  const out = rows.filter((r) => (!q || search(r).toLowerCase().includes(q.toLowerCase())) && filters.every((f, i) => !fv[i] || f.get(r) === fv[i]) && cf.test(r));
+  const out = rows.filter((r) => (!q || search(r).toLowerCase().includes(q.toLowerCase())) && filters.every((f, i) => !fv[i] || f.get(r) === fv[i]) && cf.test(r) && dateOk(r));
   useEffect(() => { onState?.({ q, fv, cf: cf.list, count: out.length });
     /* eslint-disable-next-line react-hooks/exhaustive-deps */
   }, [q, fv, cf.list, out.length]);
@@ -373,6 +380,23 @@ function FilterTable({ title, note, rows, cols: colsIn, filters, search, onRow, 
         ))}
 
         <CustomFilterBar rows={rows} cf={cf} />
+        {hasDates && (
+          <span className="flt-wrap flt-date">
+            <select aria-label="Date filter" value={dMode} className={`flt f6${dMode ? " on" : ""}`} title="Data added = when the row first entered the app. Data enriched = when it was last researched, verified or filled in."
+              onChange={(e) => { const v = e.target.value as "" | "added" | "enriched"; setDMode(v); if (!v) { setDFrom(""); setDTo(""); } }}>
+              <option value="">Date: any</option>
+              <option value="added">Data added</option>
+              <option value="enriched">Data enriched</option>
+            </select>
+            {dMode && <>
+              <label className="flt-date-l">from <input type="date" className={`flt${dFrom ? " on" : ""}`} value={dFrom} max={dTo || undefined} onChange={(e) => { setDFrom(e.target.value); setShowAll(false); }} /></label>
+              <label className="flt-date-l">to <input type="date" className={`flt${dTo ? " on" : ""}`} value={dTo} min={dFrom || undefined} onChange={(e) => { setDTo(e.target.value); setShowAll(false); }} /></label>
+              <button type="button" className="btn tiny" onClick={() => lastDays(0)}>Today</button>
+              <button type="button" className="btn tiny" onClick={() => lastDays(7)}>7 days</button>
+              <button type="button" className="btn tiny" onClick={() => lastDays(30)}>30 days</button>
+              {(dFrom || dTo) && <button type="button" className="btn tiny" onClick={() => { setDFrom(""); setDTo(""); }}>Clear dates</button>}
+            </>}
+          </span>)}
       </div>
       <p className="filter-count">{showAll ? <>Showing all {rows.length.toLocaleString()} rows — {out.length.toLocaleString()} match the filters below</> : <>{out.length.toLocaleString()} of {rows.length.toLocaleString()} rows</>}
           {rows.some((r) => r.company_id) && <> · {new Set(displayed.map((r) => r.company_id)).size} {new Set(displayed.map((r) => r.company_id)).size === 1 ? "company" : "companies"}</>}</p>

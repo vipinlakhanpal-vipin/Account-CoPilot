@@ -2850,3 +2850,9 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 .hw-region-file{display:block;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hw-region-file a{color:var(--teal);text-decoration:none}
 .hw-region-file a:hover{text-decoration:underline}
+
+/* Date filter in every FilterTable: Data added / Data enriched, from, to */
+.flt-date{flex-wrap:wrap;gap:6px}
+.flt-date-l{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--muted,#8896A8)}
+.flt-date-l input[type="date"]{min-width:0;padding:4px 6px;border-radius:8px;border:1px solid var(--line,#2a3446);background:transparent;color:inherit;font:inherit}
+.flt-date-l input[type="date"].on{border-color:var(--accent,#3AA0FF)}
