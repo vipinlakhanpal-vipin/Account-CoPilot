@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.60";
+export const APP_VERSION = "6.61";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.61", date: "2026-10-21", notes: "Playroom: a light red Close Aria button beside Aria's yellow speech strip.", changes: [
+      { what: "A light red Close Aria button sits next to Aria's yellow strip in the playroom, the same height, and takes you back to your work", where: "Playroom (Play games with Aria)", why: "A clear way out of the playroom" },
+  ] },
   { version: "6.60", date: "2026-10-21", notes: "Aria's two buttons now show only after one click on her.", changes: [
       { what: "Ask Aria and Play games are hidden until you click Aria once; they close when you click elsewhere, press Esc or pick one. Double-click Aria to send her exploring (double-click again or Esc to call her home)", where: "Left panel, Aria", why: "Keeps the left panel clean" },
   ] },

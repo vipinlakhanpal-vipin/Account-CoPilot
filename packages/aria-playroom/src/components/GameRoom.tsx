@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { GAMES, type GameEvent, type GameId, type WinData, TAGS } from "@/components/games/registry";
 import { AriaOrb, type Mood } from "@/components/AriaFace";
 import Jigsaw from "@/components/games/Jigsaw";
@@ -179,6 +180,7 @@ const OWNED_KEY = "aria-games-owned";
 const loadOwned = (): GameId[] => { try { const v = JSON.parse(localStorage.getItem(OWNED_KEY) || "null"); if (Array.isArray(v)) return v; } catch { /* optional */ } return GAMES.filter((g) => g.starter).map((g) => g.id); };
 
 export default function GameRoom() {
+  const router = useRouter();
   const [pick, setPick] = useState(0), [run, setRun] = useState(0), [playing, setPlaying] = useState(false), [, tick] = useState(0);
   const [say, setSay] = useState(LINES.arrive[0]), [mood, setMood] = useState<Mood>("happy"), [anim, setAnim] = useState<"" | "hop" | "shake" | "spin" | "peek">(""), last = useRef(""), idleAt = useRef(Date.now());
   const [awards, setAwards] = useState<Stored[]>([]), [shown, setShown] = useState<Award | null>(null);
@@ -293,7 +295,8 @@ export default function GameRoom() {
       </div>
       <div className="gr-host" ref={hostRef}>
         <span className="gr-bob"><AriaOrb mood={mood} size={104} anim={anim} onClick={poke} /></span>
-        <div className="gr-say" role="status" aria-live="polite"><b>Aria</b><p>{say}</p></div>
+        <div className="gr-saywrap"><div className="gr-say" role="status" aria-live="polite"><b>Aria</b><p>{say}</p></div>
+        <button type="button" className="gr-close" onClick={() => (window.history.length > 1 ? router.back() : router.push("/"))} title="Leave the playroom and go back to your work">Close Aria</button></div>
         <div className="gr-awards" title="Medals Aria has given you (kept in this browser)" aria-label="Your medals">
           <span className="gr-awards-h">Your medals</span>
           {(["gold", "silver", "bronze"] as Medal[]).map((m) => <span key={m} className="gr-medal-count"><i className={`medal ${m}`} aria-hidden="true" />{count(m)}</span>)}

@@ -2958,3 +2958,10 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 /* v6.59: Team table, Inactive days */
 .idle-red{color:#D92D3A;font-weight:700}
 .idle-amber{color:#C97A00;font-weight:700}
+
+/* v6.61: Close Aria, beside Aria's yellow speech strip in the playroom: same height, light red */
+.gr-saywrap{display:flex;align-items:stretch;gap:12px;flex:1 1 280px;max-width:860px}
+.gr-saywrap .gr-say{flex:1 1 auto;max-width:none}
+.gr-close{flex:0 0 auto;align-self:stretch;min-width:170px;padding:10px 16px;border-radius:16px;border:2px solid #E8837F;background:linear-gradient(180deg,#FFE3E1,#FFC9C6);color:#7A1F1B;cursor:pointer;font:700 17px/1.35 "Fredoka","Baloo 2","Comic Sans MS",var(--body)}
+.gr-close:hover{background:linear-gradient(180deg,#FFD3D0,#FFB5B1)}
+.gr-close:focus-visible{outline:3px solid #D92D3A;outline-offset:2px}
