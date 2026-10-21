@@ -92,7 +92,6 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
   const [saving, setSaving] = useState(false);
   const [def, setDef] = useState<Definition | null>(null);
   const visibleRegions = useMemo(() => REGIONS.filter((r) => access.isSuper || access.regions.includes(r.key)), [access]);
-  const [regions, setRegions] = useState<string[]>([]);
   const [hasListBy, setHasListBy] = useState<Record<string, "yes" | "no">>({});
   const [uploadBusy, setUploadBusy] = useState(false);
   const [uploadMsg, setUploadMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -112,7 +111,9 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
 
   // From step 2 on the wizard works on ONE country, chosen above the tabs: its upload, its targeting domains, its daily plan and its on/off switch.
   // Each country keeps its own draft (starting from what is saved for it), so switching country never mixes them up.
-  const focus = focusProp && visibleRegions.some((r) => r.key === focusProp) ? focusProp : (regions[0] || visibleRegions[0]?.key || "");
+  const overview = focusProp === "ALL"; // "All countries (overview)": a read-only look at every region, nothing is set or saved there
+  const focus = focusProp && focusProp !== "ALL" && visibleRegions.some((r) => r.key === focusProp) ? focusProp : (visibleRegions[0]?.key || "");
+  const regions = overview ? visibleRegions.map((r) => r.key) : (focus ? [focus] : []); // the country being set up (or every region in the overview)
   const focusName = REGIONS.find((r) => r.key === focus)?.name || focus;
   const defDomains = (k: string) => { const r = def?.regions[k]; return r ? OPTIONS.domains.filter((x) => r.personas.departments.includes(x.department)).map((x) => x.key) : []; };
   const defDraft = (k: string): Draft => { const r = def?.regions[k]; return { discoverPerDay: r?.engine.discover_per_day || 5, verifyPerDay: r?.engine.verify_per_day || 25 }; };
@@ -123,7 +124,6 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
   const setDraft = (u: Draft | ((c: Draft) => Draft)) => setDraftBy((cur) => ({ ...cur, [focus]: typeof u === "function" ? u(cur[focus] ?? defDraft(focus)) : u }));
   const setActivateNow = (v: boolean) => setActivateBy((cur) => ({ ...cur, [focus]: v }));
   const setHasList = (v: "yes" | "no") => setHasListBy((cur) => ({ ...cur, [focus]: v }));
-  const focusTicked = regions.includes(focus);
   // This country's uploaded lists (what it already has waiting or processed), loaded when the country changes and after each upload.
   type Upload = { id: string; filename: string; region: string; uploaded_by: string; uploaded_at: string; rows: number; status: "waiting" | "done" | "error"; summary?: string };
   const [uploads, setUploads] = useState<Upload[]>([]);
@@ -141,11 +141,7 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
         setDef(d);
         // Pre-tick every region already Active in Define ICP (however it got activated — Wizard or Define ICP
         // itself, same saved data either way), not just the first one, so "already active" reads as already ticked.
-        const alreadyActive = visibleRegions.map((r) => r.key).filter((k) => d.regions[k]?.status === "active");
-        const first = alreadyActive[0] || visibleRegions[0]?.key;
-        if (first) {
-          setRegions(alreadyActive.length ? alreadyActive : [first]);
-        }
+
         const s = await srcRes.json().catch(() => null);
         if (!cancelled && s && Array.isArray(s.checked)) setSources({ checked: s.checked, custom: Array.isArray(s.custom) ? s.custom : [] });
       } catch { if (!cancelled) notify("Could not load Define ICP settings.", "error"); }
@@ -159,7 +155,6 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
     setSources(next);
     fetch("/api/wizard-sources", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(next) }).catch(() => {});
   };
-  const toggleRegion = (key: string) => setRegions((cur) => (cur.includes(key) ? cur.filter((k) => k !== key) : [...cur, key]));
   const toggleDomain = (key: string) => setDomains((cur) => (cur.includes(key) ? cur.filter((k) => k !== key) : [...cur, key]));
   const toggleSource = (name: string) => saveSources({ ...sources, checked: sources.checked.includes(name) ? sources.checked.filter((x) => x !== name) : [...sources.checked, name] });
   const addSource = () => {
@@ -189,7 +184,8 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
   async function save() {
     if (!def) return;
     if (!access.isSuper) { notify("Consult Super Admin if any change is required.", "error"); return; }
-    if (!regions.length) { notify("Pick at least one region in step 1.", "error"); flip("hw-wizard", setWizardOpen, true); setStep(1); return; }
+    if (overview) { notify("Pick a country above first: the overview is read-only.", "error"); return; }
+    if (!regions.length) { notify("Pick a country above first.", "error"); return; }
     const named: { key: string; s: SizeDraft }[] = regions.map((key) => ({ key, s: sizeFor(key) }));
     const badSize = named.find(({ s }) => !(s.revenue > 0) || !(s.employees >= 0));
     if (badSize) { notify(`${REGIONS.find((r) => r.key === badSize.key)?.name || badSize.key}: enter a valid revenue and employee count.`, "error"); return; }
@@ -312,18 +308,16 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
             {step === 1 && (
               <div>
                 <div className="hw-tint hw-tint--region">
-                  <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--teal)")}><Ico name="pin" /></span><h3>Which regions, and what counts as a fit?</h3></div>
-                  <p className="hw-lead hw-lead-wide">Tick every region you want this wizard to configure, and set its own size rule right in the same row — Europe or the
-                    USA can carry a higher bar than the Gulf, for instance. From step 2 on, the wizard works on <b>one country at a time</b>: pick it in the
-                    <b> Country</b> bar above the tabs and its list upload, targeting and daily plan are kept for that country only. Regions marked
-                    <b> not started yet</b> haven&apos;t been set up at all — ticking one starts it: it moves to Active or Paused (your choice in step 4)
-                    once you save.</p>
+                  <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--teal)")}><Ico name="pin" /></span><h3>{overview ? "All countries at a glance" : `What counts as a fit in ${focusName}?`}</h3></div>
+                  <p className="hw-lead hw-lead-wide">{overview
+                    ? <>A read-only look at every country: its size rule and whether the daily run is on. Nothing can be changed here. Pick a country in the <b>Country</b> bar above to set it up.</>
+                    : <>Set the size rule for <b>{focusName}</b>: the smallest company that counts as a fit. Everything on the next steps (your list, targeting, daily plan) is also for {focusName} only. Switch country in the bar above to set up another. A country marked <b>not started yet</b> starts when you save, as Active or Paused (your choice in step 4).</>}</p>
                 </div>
-                <div className="hw-region-list">
+                <fieldset disabled={overview} className="hw-fieldset"><div className="hw-region-list">
                   <div className="hw-region-grid hw-region-headrow" aria-hidden="true">
                     <span>Region</span><span>Min net rev</span><span>Min employees</span><span>Stock listing</span><span>Which entities count</span><span>Status</span>
                   </div>
-                  {visibleRegions.map((r) => {
+                  {visibleRegions.filter((r) => regions.includes(r.key)).map((r) => {
                     const st = def.regions[r.key]?.status;
                     const checked = regions.includes(r.key);
                     const s = sizeFor(r.key);
@@ -333,10 +327,7 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
                       : st === "paused" ? "Paused" : "Not started yet";
                     return (
                       <div key={r.key} className={`hw-region-row hw-region-grid ${checked ? "on" : ""}`}>
-                        <label className="hw-region-name">
-                          <input type="checkbox" checked={checked} onChange={() => toggleRegion(r.key)} />
-                          {r.name}
-                        </label>
+                        <span className="hw-region-name">{r.name}</span>
                         <label aria-label={`${r.name}: min net rev`}><MoneyField value={s.revenue} onChange={(v) => setSize(r.key, { revenue: v })} /></label>
                         <label aria-label={`${r.name}: min employees`}><input type="number" min={0} value={s.employees} onChange={(e) => setSize(r.key, { employees: Number(e.target.value) || 0 })} /></label>
                         <label aria-label={`${r.name}: stock listing`}><select value={s.listing} onChange={(e) => setSize(r.key, { listing: e.target.value as Rules["listing"] })}>
@@ -347,20 +338,14 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
                       </div>
                     );
                   })}
-                </div>
-                <p className="hw-lead hw-lead-wide" style={{ marginTop: 12 }}>
-                  {regions.length
-                    ? <><b>Selected: {regionNames.join(", ")}.</b> Pick one of them in the Country bar above the tabs to set its list, targeting and daily plan.
-                      {startingRegions.length > 0 && <> <b>{startingRegions.join(", ")}</b> {startingRegions.length === 1 ? "isn't" : "aren't"} started yet
-                        — saving this wizard starts {startingRegions.length === 1 ? "it" : "them"}.</>}</>
-                    : "Pick at least one region to continue."}
-                </p>
+                </div></fieldset>
+                {!overview && startingRegions.length > 0 && <p className="hw-lead hw-lead-wide" style={{ marginTop: 12 }}><b>{focusName}</b> isn&apos;t started yet — saving this wizard starts it.</p>}
                 {!visibleRegions.length && <p className="note">No region is assigned to your account yet — ask a Super Admin to add one in Setup → Team.</p>}
               </div>
             )}
 
-            {(step === 3 || step === 4) && focus && !focusTicked && <p className="note" role="status"><b>{focusName} is not ticked in step 1.</b> Tick it there, or its targeting and daily plan are not saved. A list upload (step 2) works either way.</p>}
-            {step === 2 && (
+            {overview && step >= 2 && step <= 4 && <div className="hw-about-card hw-yesno-no selected"><h4>Pick a country first</h4><p>This step is set up one country at a time. Choose a country in the Country bar above the tabs; the overview is read-only.</p></div>}
+            {!overview && step === 2 && (
               <div>
                 <div className="hw-tint hw-tint--region">
                   <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--teal)")}><Ico name="folder" /></span><h3>Do you already have a validated list for {focusName}?</h3></div>
@@ -419,7 +404,7 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
               </div>
             )}
 
-            {step === 3 && (
+            {!overview && step === 3 && (
               <div>
                 <div className="hw-tint hw-tint--people">
                   <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--gold)")}><Ico name="crosshair" /></span><h3>Which domains do you want to target in {focusName}?</h3></div>
@@ -443,7 +428,7 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
               </div>
             )}
 
-            {step === 4 && (
+            {!overview && step === 4 && (
               <div>
                 <div className="hw-tint hw-tint--data">
                   <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--sky)")}><Ico name="calendar" /></span><h3>Daily plan for {focusName}</h3></div>
@@ -551,7 +536,7 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
                       <td>{pl.domains.length ? pl.domains.map((d) => OPTIONS.domains.find((x) => x.key === d)?.label).join(", ") : "no change"}</td>
                       <td>find {pl.draft.discoverPerDay}, verify {pl.draft.verifyPerDay} per day</td>
                       <td>{pl.activate ? "On" : st === "next" ? "Will start Paused" : "Paused"}</td></tr>); })}</tbody></table></div>
-                <button type="button" className="btn primary" disabled={saving || !regions.length} onClick={save} style={{ marginTop: 16 }}>{saving ? "Saving…" : "Save & apply"}</button>
+                {overview ? <p className="note" style={{ marginTop: 16 }}>Pick a country above to review and save it. The overview is read-only.</p> : <button type="button" className="btn primary" disabled={saving || !regions.length} onClick={save} style={{ marginTop: 16 }}>{saving ? "Saving…" : "Save & apply"}</button>}
               </div>
             )}
 

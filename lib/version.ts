@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.11";
+export const APP_VERSION = "6.12";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.12", date: "2026-10-21", notes: "The Setup wizard shows one country at a time, with a read-only All countries overview.", changes: [
+      { what: "The Country drop-down above the wizard tabs is now the only way to pick a country, and only that country is on screen: step 1 shows just its size rule and status (no more tick boxes or the full region list), and Review, Save and the daily-run switch are for it alone. A new All countries (overview) entry shows every country read-only, with its size rule and status; steps 2 to 4 ask you to pick a country, and nothing can be saved from the overview", where: "Setup wizard", why: "Seeing every region while setting up one made it unclear which country a change applied to" },
+  ] },
   { version: "6.11", date: "2026-10-21", notes: "The Setup wizard works one country at a time: its upload, targeting and daily plan belong to the country you pick.", changes: [
       { what: "A Country bar sits above the wizard tabs. From step 2 (Add data) on, the upload, the targeting domains, the daily plan and the daily-run switch are kept per country: pick Saudi Arabia and everything you upload or set there is for Saudi Arabia only, pick another country and it has its own. Step 2 lists the files already uploaded for that country with their status; to change a list, upload the corrected file. Step 1 still shows every region with its size rule, and Review is now a table with one row per country", where: "Setup wizard", why: "Data upload was generic and the later steps applied to every ticked region at once" },
       { what: "An uploaded list stays in its country: rows with no country are filed under the country chosen for the upload, and a row that names a different country is left out and reported, never filed under another region (before, a blank country defaulted to UAE). The scheduled session passes the upload id when it imports", where: "Setup wizard, scheduled session (after you push)", why: "A list for one region must reflect under that region only" },
