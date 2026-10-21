@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.55";
+export const APP_VERSION = "6.56";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.56", date: "2026-10-21", notes: "Region review: accounts whose head office is in another country carry a red flag, can be moved to their head office's region from the account or from the Accounts table, and are counted on the Dashboard.", changes: [
+      { what: "A red flag (⚑ HO <country>) marks an account filed in one country whose group head office is in another. The account brief opens with a red box: Move to the head office's region, Keep where it is, or move somewhere else. The Accounts table and every account list have a Region drop-down to move an account by hand to any region, or to any other country, which then shows under Other regions", where: "Accounts tab, account brief, Dashboard lists", why: "The ICP follows the head office, so an account filed in the wrong country must be decided by someone" },
+      { what: "Dashboard, Data Sources: a red Region review panel counts the flags still to review, the accounts moved and those kept, and lists them on click. The Accounts table has an Owner column and the brief shows the account owner", where: "Dashboard → Data Sources, Accounts tab", why: "So it is clear where each flagged account went and who owns the decision" },
+  ] },
   { version: "6.55", date: "2026-10-21", notes: "Six more hourly alarms: kalimba, glass ping, three-note chime, church bell, twinkle and soft gong.", changes: [
       { what: "The alarm list in Aria Setup now has 13 sounds: the earlier seven plus Kalimba, Glass ping, Three-note chime, Church bell, Twinkle and Soft gong. Picking one plays it", where: "Aria Setup, Alarm", why: "More choice for the hourly reminder" },
   ] },

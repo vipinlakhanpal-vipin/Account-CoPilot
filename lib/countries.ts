@@ -6,7 +6,7 @@ export const COUNTRIES = [
   { code: "UK", name: "United Kingdom", flag: "🇬🇧" }, { code: "Germany", name: "Germany", flag: "🇩🇪" }, { code: "Morocco", name: "Morocco", flag: "🇲🇦" },
   { code: "Kenya", name: "Kenya", flag: "🇰🇪" }, { code: "SouthAfrica", name: "South Africa", flag: "🇿🇦" },
   { code: "India", name: "India", flag: "🇮🇳" }, { code: "Switzerland", name: "Switzerland", flag: "🇨🇭" },
-  { code: "Unknown", name: "Unknown", flag: "❓" }, // a country matching no defined region — surfaced here, never silently folded into UAE
+  { code: "Unknown", name: "Other regions", flag: "❓" }, // a country matching no defined region (for example Japan or Sweden) — surfaced here, never silently folded into UAE; each account shows its own country
 ] as const;
 export const ALL = "All";
 export const DEFAULT_COUNTRY = "UAE";

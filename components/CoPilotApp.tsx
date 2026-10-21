@@ -1,5 +1,6 @@
 "use client";
 import SourceChart from "@/components/SourceChart";
+import { RegionFlag, RegionPicker, RegionReviewBox } from "@/components/RegionReview";
 import { erpText } from "@/lib/techApps";
 import { REV_BANDS, bandOf, type RevBand } from "@/lib/revBands";
 import { explainScore, type ScoreName } from "@/lib/scoreExplain";
@@ -603,7 +604,9 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
       filters={[{ label: "ICP status", get: (a) => a.icp_status }, { label: "Source", get: (a) => simpleOrigin(a), tip: "source" },
         { label: "Signal", get: (a) => a.s2p_signal_level }, { label: "S2P Platform", get: (a) => a.existing_s2p_product }, { label: "Industry", get: (a) => a.industry },
         { label: "Exchange", get: (a) => a.exchange, tip: "exchange" }, { label: "Entity", get: (a) => a.entity_type || "Unknown", tip: "entityType" }, { label: "Country", get: (a) => a.country }]}
-      cols={[{ h: "", cls: "logo-cell", cell: (a) => <CompanyLogo a={a} /> }, { h: "Company", field: "company_name", cell: (a) => <b><Sn n={a.company_name} /></b> },
+      cols={[{ h: "", cls: "logo-cell", cell: (a) => <CompanyLogo a={a} /> }, { h: "Company", field: "company_name", cell: (a) => <><b><Sn n={a.company_name} /></b> <RegionFlag a={a} /></> },
+        { h: "Region", field: "country", cell: (a) => <RegionPicker a={a} label={regionLabel(a.country)} /> },
+        { h: "Owner", field: "account_owner", cell: (a) => a.account_owner || <span className="muted">—</span> },
         { h: "Entity", field: "entity_type", tip: "entityType", cell: (a) => (a.entity_type && a.entity_type !== "Unknown") ? a.entity_type : <span className="muted">—</span> },
         { h: "Exchange", field: "exchange", tip: "exchange", cell: (a) => a.exchange ? <span className="mono">{a.exchange} {a.ticker}</span> : <span className="muted">—</span> },
         { h: "Industry", field: "industry", cell: (a) => a.industry },
@@ -983,8 +986,10 @@ function Brief({ a, data, people, onClose, onContact, scores, criteria, isSuper 
         </div>
         <div className="brief-body">
           {refresh && <p className="note">{refresh}</p>}
+          <RegionReviewBox a={a} />
           <div className="facts">
             <Fact l="Website"><Ext href={a.company_website}>{a.domain || a.company_website}</Ext></Fact>
+            <Fact l="Account owner">{a.account_owner}</Fact>
             <Fact l="Revenue">{bestRevenue(a).v ? <>{usd(bestRevenue(a).v)} <span className="muted">{[bestRevenue(a).src, a.revenue_local, a.revenue_fy].filter(Boolean).join(" · ")}</span></> : ""}</Fact>
             <Fact l="Stock listing">{a.listing_status || (a.exchange ? `Listed (${a.exchange})` : "")}</Fact>
             <Fact l="Employees">{a.employee_range}</Fact>
@@ -1138,7 +1143,7 @@ function HubSpotBlock({ hs }: { hs: Record<string, any> }) {
 }
 
 // Entries of the profile that the app and the engine keep for their own use. Only the user's workbook sheets belong in "Your profiling".
-const APP_PROFILE_KEYS = new Set(["HubSpot", "Merged companies", "Revenue check", "Status changed", "Claude discovery", "Enrichment", "User focus", "User-confirmed platform", "Original name", "Parent group", "Watch", "Pitch plan", "User upload"]);
+const APP_PROFILE_KEYS = new Set(["HubSpot", "Merged companies", "Revenue check", "Status changed", "Claude discovery", "Enrichment", "User focus", "User-confirmed platform", "Original name", "Parent group", "Watch", "Pitch plan", "User upload", "Region review"]);
 function Profile({ profile }: { profile: Record<string, Record<string, unknown>> }) {
   const sheets = Object.entries(profile).filter(([k, v]) => !APP_PROFILE_KEYS.has(k) && v && typeof v === "object" && !Array.isArray(v) && Object.keys(v).length);
   if (!sheets.length) return null;
@@ -1173,7 +1178,7 @@ function DrillDown({ d, byCo, coById, onClose, onAccount, onContact }: { d: { ti
     table = <FilterTable unit="companies" title={d.title} rows={[...d.rows].sort((a, b) => icpRank(a.icp_status) - icpRank(b.icp_status) || (bestRevenue(b).v || 0) - (bestRevenue(a).v || 0))}
       search={(a) => [a.company_name, a.industry, a.erp, a.existing_s2p_product].join(" ")}
       filters={[{ label: "Region", get: (a) => regionLabel(a.country) }, { label: "ICP status", get: (a) => a.icp_status }, { label: "Signal", get: (a) => a.s2p_signal_level }, { label: "Industry", get: (a) => a.industry }, { label: "Platform", get: (a) => a.existing_s2p_product }]}
-      cols={[{ h: "", cls: "logo-cell", cell: (a) => <CompanyLogo a={a} /> }, { h: "Company", cell: (a) => <b><Sn n={a.company_name} /></b> }, { h: "Region", cell: (a) => regionLabel(a.country) }, { h: "Revenue", cell: (a) => <span className="mono">{usd(bestRevenue(a).v)}</span> },
+      cols={[{ h: "", cls: "logo-cell", cell: (a) => <CompanyLogo a={a} /> }, { h: "Company", cell: (a) => <><b><Sn n={a.company_name} /></b> <RegionFlag a={a} /></> }, { h: "Region", cell: (a) => <RegionPicker a={a} label={regionLabel(a.country)} /> }, { h: "Revenue", cell: (a) => <span className="mono">{usd(bestRevenue(a).v)}</span> },
         { h: "ICP status", cell: (a) => <IcpTag s={a.icp_status} why={a.icp_fit_reason} /> }, { h: "Updated", cell: (a) => <Dates a={a} /> }, { h: "Signal", cell: (a) => <Pill icon s={a.s2p_signal_level} /> },
         { h: "S2P", cell: (a) => a.existing_s2p_product }, { h: "ERP", cell: (a) => a.erp }, { h: "Contacts", cell: (a) => <span className="mono">{(byCo[a.id] || []).length}</span> }]}
       onRow={(a) => onAccount(a.id)} />;

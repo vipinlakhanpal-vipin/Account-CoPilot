@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import type { CSSProperties } from "react";
 import type { Row } from "@/lib/data";
 import { fmtDateTime } from "@/lib/dates";
+import { regionReview } from "@/lib/regionReview";
 import { EVIDENCE_KINDS, evidenceKind, exchangeOf, originOf, type EvidenceKind } from "@/lib/sources";
 
 // Dashboard: where the data came from. Left, the evidence behind the facts (one bucket per source record: stock exchanges,
@@ -64,6 +65,11 @@ export default function SourceChart({ accounts, sources, uploads, country, onDri
     return groups.map(([name, color, f]) => { const rows = accounts.filter((a) => !seen.has(a.id) && f(a)); rows.forEach((a) => seen.add(a.id)); return { name, n: rows.length, color, rows }; });
   }, [accounts]);
 
+  // Red flag: accounts whose head office is in another country than the one they are filed under (Region review).
+  const review = useMemo(() => {
+    const open = accounts.filter((a) => regionReview(a)?.status === "open"), moved = accounts.filter((a) => regionReview(a)?.status === "moved"), kept = accounts.filter((a) => regionReview(a)?.status === "kept");
+    return [{ name: "Head office elsewhere: to review", n: open.length, color: "#E5484D", rows: open }, { name: "Moved to their head office's region", n: moved.length, color: "#F5A623", rows: moved }, { name: "Reviewed and kept where they were", n: kept.length, color: "#8896A8", rows: kept }];
+  }, [accounts]);
   const ups = uploads.filter((u) => country === "All" || u.region === country);
   // How far each file has got: waiting to be read, then read in, then its companies rated (a real share, from the accounts that came in with this file).
   const progressOf = (u: Row): { pct: number; label: string; tone: "green" | "grey" | "red"; busy: boolean } => {
@@ -95,6 +101,13 @@ export default function SourceChart({ accounts, sources, uploads, country, onDri
           <Rows items={origin} max={maxOr} onPick={(t, r) => onDrill(t, r)} />
           <p className="note" style={{ marginTop: 8 }}>Each account is counted once, under the way it first came in.</p>
         </div>
+        {review.some((r) => r.n > 0) && (
+          <div className="panel rflag-panel">
+            <h2 className="with-count">⚑ Region review <span className="count rflag-count">{review[0].n} to review</span></h2>
+            <Rows items={review} max={Math.max(1, ...review.map((r) => r.n))} onPick={(t, r) => onDrill(`Region review: ${t}`, r)} />
+            <p className="note" style={{ marginTop: 8 }}>The ICP follows the head office. These accounts were filed in one country but their group head office is in another. Open an account to move it or keep it, or change its region in any account table. A country that is not a region yet shows under Other regions.</p>
+          </div>
+        )}
         {ev.exchanges.length > 0 && (
           <div className="panel">
             <h2>Stock exchanges and regulators cited</h2>

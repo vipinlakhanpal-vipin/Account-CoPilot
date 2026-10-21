@@ -2936,3 +2936,16 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 
 /* v6.54: the progress gauge has its own class: it shared .gauge with the older job gauge, whose column layout squashed the bar to nothing */
 .tablewrap td .pgauge{width:210px;max-width:none}
+
+/* v6.56: Region review. Red flag on an account whose head office is in another country, the region picker and the red box in the account brief. */
+.rflag{display:inline-block;margin-left:6px;padding:2px 8px;border-radius:999px;font:700 10.5px var(--body);letter-spacing:.04em;white-space:nowrap;color:#fff;background:#D92D3A;border:1px solid #A81F2B;vertical-align:middle}
+.rflag-count{background:#D92D3A !important;color:#fff !important}
+.rflag-panel{border:2px solid #D92D3A}
+.rflag-panel h2{color:#D92D3A}
+.rpick select{font:inherit;font-size:12px;max-width:150px;padding:2px 4px;border:1px solid var(--line, #c8d0dc);border-radius:6px;background:transparent;color:inherit;cursor:pointer}
+.rpick.flagged select{border-color:#D92D3A;box-shadow:0 0 0 1px #D92D3A}
+.rbox{margin:0 0 14px;padding:12px 14px;border:2px solid #D92D3A;border-radius:10px;background:color-mix(in srgb, #D92D3A 10%, transparent)}
+.rbox b:first-child{color:#D92D3A;font-size:14px}
+.rbox p{margin:6px 0 10px}
+.rbox-act{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.rbox.done{border-width:1px;border-color:#8896A8;background:transparent;font-size:12.5px}
