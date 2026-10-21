@@ -122,6 +122,7 @@ export default function HourlyBreak() {
               <button type="button" className="btn" disabled={!prefs.voiceOn || !ladies.length} onClick={() => speak(SPOKEN, chosen)}>Hear it</button>
               <button type="button" className="btn" onClick={stopSpeaking}>Stop</button>
             </div></div>
+          <button type="button" className="btn primary" onClick={() => { stopSpeaking(); setSettings(false); setTimeout(() => open(new Date().getHours()), 200); }}>Test it now</button>
           <p className="hb-note">Voices come from your device. For the softest, most natural voice on a Mac, add a Premium voice in System Settings, Accessibility, Spoken Content, System voice, Manage voices. Microsoft Edge has natural voices built in. Your choices are kept in this browser.</p>
         </div>
       )}

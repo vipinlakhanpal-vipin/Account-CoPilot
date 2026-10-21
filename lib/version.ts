@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.51";
+export const APP_VERSION = "6.52";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.52", date: "2026-10-21", notes: "Hourly break settings has a Test it now button, so you can see and hear the reminder at once.", changes: [
+      { what: "A Test it now button in the Hourly break settings shows the clock, Aria, the alarm and the voice immediately, using your current choices", where: "Aria, Tips and settings, Hourly break: alarm and voice", why: "You should not have to wait for the next full hour to try your choices" },
+  ] },
   { version: "6.51", date: "2026-10-21", notes: "Hourly break: choose your alarm and a softer lady's voice, or switch the voice and the sound off.", changes: [
       { what: "New Hourly break settings: pick the alarm from seven sounds (cuckoo clock, soft bell, wind chime, ding-dong, marimba, gentle harp, singing bowl) or No sound, with a Play button, and pick a lady's voice from the ones on your device, with Hear it and Stop. The voice now speaks more slowly and softly, and the app picks the softest lady's voice it finds when you have not chosen one", where: "Aria, Tips and settings, Hourly break: alarm and voice (also Settings on the reminder card)", why: "The first voice sounded robotic and there was no way to change or stop it" },
       { what: "The reminder card has Stop voice while she is speaking, quick Alarm sound and Voice switches, and a Settings link. A switch to turn the whole hourly reminder off is in the settings. Your choices are kept in your browser", where: "Hourly break reminder card", why: "You can stop the voice or the sound at any time" },
