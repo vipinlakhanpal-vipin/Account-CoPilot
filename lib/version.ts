@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.37";
+export const APP_VERSION = "6.38";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.38", date: "2026-10-21", notes: "Every tile list now shows which region each account belongs to.", changes: [
+      { what: "Every list that opens from a Dashboard or Accounts tile (accounts, contacts, signals, conflicts and people) now has a Region column and a Region filter, using the region name such as Saudi Arabia or South Africa", where: "Dashboard and Accounts tiles, the list that opens when you click one", why: "You wanted to see at a glance which region each account belongs to" },
+  ] },
   { version: "6.37", date: "2026-10-21", notes: "Net revenue tiles are one size smaller.", changes: [
       { what: "The band name is now 15px (was 17px) and the \"N accounts\" line 8.5px (was 9.5px), so the Net revenue tiles sit lighter above the number tiles", where: "Dashboard, Net revenue tiles", why: "You asked for the tiles one size smaller" },
   ] },

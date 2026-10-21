@@ -5,7 +5,7 @@ import { REV_BANDS, bandOf, type RevBand } from "@/lib/revBands";
 import { explainScore, type ScoreName } from "@/lib/scoreExplain";
 import { addedAt, enrichedAt, dayKey } from "@/lib/dates";
 import { ask, paidFetch, notify } from "@/components/Confirm";
-import { rulesFor, regionOf } from "@/lib/icpDefinition.mjs";
+import { rulesFor, regionOf, REGIONS } from "@/lib/icpDefinition.mjs";
 import { personaFit } from "@/lib/icp";
 import CostNote from "@/components/CostNote";
 import CompanyLogo from "@/components/CompanyLogo";
@@ -1159,39 +1159,44 @@ function Profile({ profile }: { profile: Record<string, Record<string, unknown>>
 
 type Kind = "accounts" | "contacts" | "signals" | "conflicts" | "history";
 
+/** Readable region name for a company's country value ("Saudi Arabia", "South Africa"); a country that matches no region shows as given. */
+const regionLabel = (country: unknown): string => { const k = regionOf(country); return k === "Unknown" ? (str(country) || "—") : (REGIONS.find((r) => r.key === k)?.name || k); };
+
 function DrillDown({ d, byCo, coById, onClose, onAccount, onContact }: { d: { title: string; kind: Kind; rows: Row[] }; byCo: Record<string, Row[]>; coById: Record<string, Row>;
   onClose: () => void; onAccount: (id: string) => void; onContact: (id: string) => void }) {
   let table: React.ReactNode;
+  const regionOfCo = (id: unknown) => regionLabel(coById[str(id)]?.country);
+  const regionCell = (id: unknown) => regionOfCo(id);
   if (d.kind === "accounts") {
     table = <FilterTable unit="companies" title={d.title} rows={[...d.rows].sort((a, b) => icpRank(a.icp_status) - icpRank(b.icp_status) || (bestRevenue(b).v || 0) - (bestRevenue(a).v || 0))}
       search={(a) => [a.company_name, a.industry, a.erp, a.existing_s2p_product].join(" ")}
-      filters={[{ label: "ICP status", get: (a) => a.icp_status }, { label: "Signal", get: (a) => a.s2p_signal_level }, { label: "Industry", get: (a) => a.industry }, { label: "Platform", get: (a) => a.existing_s2p_product }]}
-      cols={[{ h: "", cls: "logo-cell", cell: (a) => <CompanyLogo a={a} /> }, { h: "Company", cell: (a) => <b><Sn n={a.company_name} /></b> }, { h: "Revenue", cell: (a) => <span className="mono">{usd(bestRevenue(a).v)}</span> },
+      filters={[{ label: "Region", get: (a) => regionLabel(a.country) }, { label: "ICP status", get: (a) => a.icp_status }, { label: "Signal", get: (a) => a.s2p_signal_level }, { label: "Industry", get: (a) => a.industry }, { label: "Platform", get: (a) => a.existing_s2p_product }]}
+      cols={[{ h: "", cls: "logo-cell", cell: (a) => <CompanyLogo a={a} /> }, { h: "Company", cell: (a) => <b><Sn n={a.company_name} /></b> }, { h: "Region", cell: (a) => regionLabel(a.country) }, { h: "Revenue", cell: (a) => <span className="mono">{usd(bestRevenue(a).v)}</span> },
         { h: "ICP status", cell: (a) => <IcpTag s={a.icp_status} why={a.icp_fit_reason} /> }, { h: "Updated", cell: (a) => <Dates a={a} /> }, { h: "Signal", cell: (a) => <Pill icon s={a.s2p_signal_level} /> },
         { h: "S2P", cell: (a) => a.existing_s2p_product }, { h: "ERP", cell: (a) => a.erp }, { h: "Contacts", cell: (a) => <span className="mono">{(byCo[a.id] || []).length}</span> }]}
       onRow={(a) => onAccount(a.id)} />;
   } else if (d.kind === "contacts") {
     const s2p = (p: Row) => coById[p.company_id]?.existing_s2p_product || "";
     table = <FilterTable unit="contacts" title={d.title} rows={d.rows} search={(p) => [p.company, p.full_name, p.title_verbatim, p.email].join(" ")}
-      filters={[{ label: "Tier", get: (p) => p.contact_tier }, { label: "Role family", get: (p) => famKey(p.role_family) }, { label: "Channel", get: (p) => p.channel_state }, { label: "S2P Platform", get: (p) => s2p(p) }]}
-      cols={[{ h: "Name", cell: (p) => <><b>{p.full_name}</b><NewTag p={p} /></> }, { h: "Company", cell: (p) => <Sn n={p.company} /> }, { h: "Title", cell: (p) => p.title_verbatim, wrap: true },
+      filters={[{ label: "Region", get: (p) => regionCell(p.company_id) }, { label: "Tier", get: (p) => p.contact_tier }, { label: "Role family", get: (p) => famKey(p.role_family) }, { label: "Channel", get: (p) => p.channel_state }, { label: "S2P Platform", get: (p) => s2p(p) }]}
+      cols={[{ h: "Name", cell: (p) => <><b>{p.full_name}</b><NewTag p={p} /></> }, { h: "Company", cell: (p) => <Sn n={p.company} /> }, { h: "Region", cell: (p) => regionCell(p.company_id) }, { h: "Title", cell: (p) => p.title_verbatim, wrap: true },
         { h: "Email", cell: (p) => <span className="mono">{p.email}</span> }, { h: "Channel", cell: (p) => p.channel_state },
         { h: "S2P Platform", cell: (p) => s2p(p) || <span className="muted">—</span> }]}
       onRow={(p) => onContact(p.id)} />;
   } else if (d.kind === "signals") {
     table = <FilterTable unit="signals" title={d.title} rows={[...d.rows].sort((a, b) => sigRank(a.level) - sigRank(b.level))} search={(s) => [s.company, s.signal, s.evidence].join(" ")}
-      filters={[{ label: "Level", get: (s) => s.level }, { label: "Platform", get: (s) => s.platform }]}
-      cols={[{ h: "Company", cell: (s) => <b><Sn n={s.company} /></b> }, { h: "Level", cell: (s) => <Pill s={s.level} /> }, { h: "Signal", cell: (s) => s.signal, wrap: true }, { h: "Date", cell: (s) => s.date }]}
+      filters={[{ label: "Region", get: (s) => regionCell(s.company_id) }, { label: "Level", get: (s) => s.level }, { label: "Platform", get: (s) => s.platform }]}
+      cols={[{ h: "Company", cell: (s) => <b><Sn n={s.company} /></b> }, { h: "Region", cell: (s) => regionCell(s.company_id) }, { h: "Level", cell: (s) => <Pill s={s.level} /> }, { h: "Signal", cell: (s) => s.signal, wrap: true }, { h: "Date", cell: (s) => s.date }]}
       onRow={(s) => onAccount(s.company_id)} />;
   } else if (d.kind === "conflicts") {
     table = <FilterTable unit="conflicts" title={d.title} rows={d.rows} search={(c) => [c.company, c.entity, c.field, c.value_a, c.value_b].join(" ")}
-      filters={[{ label: "Field", get: (c) => c.field }]}
-      cols={[{ h: "Company", cell: (c) => <Sn n={c.company} /> }, { h: "Entity", cell: (c) => c.entity }, { h: "Field", cell: (c) => c.field },
+      filters={[{ label: "Region", get: (c) => regionCell(c.company_id) }, { label: "Field", get: (c) => c.field }]}
+      cols={[{ h: "Company", cell: (c) => <Sn n={c.company} /> }, { h: "Region", cell: (c) => regionCell(c.company_id) }, { h: "Entity", cell: (c) => c.entity }, { h: "Field", cell: (c) => c.field },
         { h: "Value A", cell: (c) => c.value_a, wrap: true }, { h: "Value B", cell: (c) => c.value_b, wrap: true }]}
       onRow={(c) => onAccount(c.company_id)} />;
   } else {
-    table = <FilterTable unit="records" title={d.title} rows={d.rows} search={(h) => [h.full_name, h.company, h.title].join(" ")} filters={[]}
-      cols={[{ h: "Person", cell: (h) => <b>{h.full_name}</b> }, { h: "Now at", cell: (h) => h.company }, { h: "Title", cell: (h) => h.title, wrap: true },
+    table = <FilterTable unit="records" title={d.title} rows={d.rows} search={(h) => [h.full_name, h.company, h.title].join(" ")} filters={[{ label: "Region", get: (h) => regionCell(h.company_id) }]}
+      cols={[{ h: "Person", cell: (h) => <b>{h.full_name}</b> }, { h: "Now at", cell: (h) => h.company }, { h: "Region", cell: (h) => regionCell(h.company_id) }, { h: "Title", cell: (h) => h.title, wrap: true },
         { h: "Determination", cell: (h) => h.determination }, { h: "Source", cell: (h) => h.source }]}
       onRow={(h) => h.company_id && onAccount(h.company_id)} />;
   }
