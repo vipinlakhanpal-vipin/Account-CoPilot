@@ -216,10 +216,10 @@ function pointsExplained(w: Writer) {
 /** The three scores as lists of points on the left, and on the right a framed plain-language note on how each percentage came about. */
 function scoresWithFrame(w: Writer, items: [ScoreName, Score][]) {
   const leftW = CW * 0.6, frameX = M + CW * 0.63, frameW = CW * 0.37, pad = 8;
-  type L = { t: string; size: number; font: PDFFont; color: ReturnType<typeof rgb>; x: number; gap?: number };
+  type L = { t: string; size: number; font: PDFFont; color: ReturnType<typeof rgb>; x: number; gap?: number; hl?: boolean };
   const left: L[] = [], right: L[] = [];
   const addL = (t: string, size: number, font: PDFFont, color: ReturnType<typeof rgb>, indent: number, gap = 0) => w.wrap(t, font, size, leftW - indent).forEach((ln, i, a) => left.push({ t: ln, size, font, color, x: M + indent, gap: i === a.length - 1 ? gap : 0 }));
-  const addR = (t: string, size: number, font: PDFFont, color: ReturnType<typeof rgb>, gap = 0) => w.wrap(t, font, size, frameW - 2 * pad).forEach((ln, i, a) => right.push({ t: ln, size, font, color, x: frameX + pad, gap: i === a.length - 1 ? gap : 0 }));
+  const addR = (t: string, size: number, font: PDFFont, color: ReturnType<typeof rgb>, gap = 0, hl = false) => w.wrap(t, font, size, frameW - 2 * pad).forEach((ln, i, a) => right.push({ t: ln, size, font, color, x: frameX + pad, gap: i === a.length - 1 ? gap : 0, hl }));
   for (const [label, sc] of items) {
     addL(`${label}: ${sc.total}%`, 9.5, w.bold, INK, 0, 0);
     sc.parts.forEach((x, i) => addL(`${i + 1}. ${x.label}: ${x.score} of ${x.max} pts - ${x.why}`, 8.5, w.font, MUTED, 10, 0));
@@ -227,13 +227,14 @@ function scoresWithFrame(w: Writer, items: [ScoreName, Score][]) {
     left.push({ t: "", size: 8.5, font: w.font, color: INK, x: M, gap: 0 });
   }
   addR("HOW TO READ THESE SCORES", 7.5, w.bold, TEAL, 2);
-  addR("The simple rule: score = points the company got, divided by the points it could get, times 100. Every score ends up between 0 and 100. Example: 35 out of 70 is half, so 50%.", 7.5, w.font, INK, 5);
+  addR("The simple rule: score = points the company got, divided by the points it could get, times 100. Every score ends up between 0 and 100.", 7.5, w.font, INK, 3);
+  addR("Example: 35 out of 70 is half, so 50%.", 7.5, w.font, INK, 5); // an example always starts on its own line
   for (const [label, sc] of items) {
     const e = explainScore(label, sc);
     addR(`${e.name}: ${e.pct}%`, 8, w.bold, INK, 1);
     addR(e.question, 7.5, w.font, INK, 1);
     addR(e.formula, 7.5, w.bold, TEAL, 1);
-    if (e.count) addR(e.count, 7.5, w.font, INK, 1);
+    if (e.count) addR(e.count, 7.5, w.bold, rgb(0.39, 0.22, 0.02), 1, true); // amber highlight: how many numbered lines scored
     if (e.extremes) addR(e.extremes, 7.5, w.font, INK, 1);
     addR(e.reading, 7, w.font, MUTED, 5);
   }
@@ -246,7 +247,7 @@ function scoresWithFrame(w: Writer, items: [ScoreName, Score][]) {
   let y = top;
   for (const l of left) { y -= l.size * 1.35; if (l.t) w.page.drawText(l.t, { x: l.x, y, size: l.size, font: l.font, color: l.color }); y -= l.gap || 0; }
   let ry = top - pad;
-  for (const l of right) { ry -= l.size * 1.35; w.page.drawText(l.t, { x: l.x, y: ry + 2, size: l.size, font: l.font, color: l.color }); ry -= l.gap || 0; }
+  for (const l of right) { ry -= l.size * 1.35; if (l.hl && l.t) w.page.drawRectangle({ x: l.x - 2, y: ry - 1.5, width: l.font.widthOfTextAtSize(l.t, l.size) + 4, height: l.size * 1.3, color: rgb(0.98, 0.93, 0.85) }); w.page.drawText(l.t, { x: l.x, y: ry + 2, size: l.size, font: l.font, color: l.color }); ry -= l.gap || 0; }
   w.y = Math.min(y, top - frameH) - 4;
 }
 

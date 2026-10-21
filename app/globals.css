@@ -2865,6 +2865,7 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 /* Plain-language "how this score came about" inside each score card on the account page */
 .score-how{margin:6px 0 8px;padding:8px 10px;border:1px solid color-mix(in srgb,var(--teal,#2EC4A6) 40%,transparent);border-radius:8px;background:color-mix(in srgb,var(--teal,#2EC4A6) 8%,transparent);font-size:10.5px;line-height:1.4}
 .score-how p{margin:0 0 3px}.score-how p:last-child{margin-bottom:0}
+.score-how p.score-count{background:#FAEEDA;color:#633806;border-radius:3px;padding:1px 4px;font-weight:600}
 
 /* Dashboard net revenue tiles: they sit above the other tiles and act as a filter */
 .rev-bands{margin-bottom:14px;padding:8px 10px 10px;border:1px solid var(--border,color-mix(in srgb,var(--text) 18%,transparent));border-radius:10px}

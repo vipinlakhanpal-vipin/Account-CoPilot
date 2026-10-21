@@ -1009,7 +1009,7 @@ function Brief({ a, data, people, onClose, onContact, scores, criteria, isSuper 
             <div className="score-cards">
               {([["ICP Match", scores.m], ["Opportunity", scores.o], ["Coupa Fit", scores.f]] as [string, Score][]).map(([l, sc]) => (
                 <div key={l} className="score-card"><small>{l}<InfoTip k={l === "ICP Match" ? "icpMatch" : l === "Opportunity" ? "opportunity" : "coupaFit"} /></small><b className={sc.total >= 70 ? "hi" : sc.total >= 45 ? "mid" : "lo"}>{sc.total}%</b>
-                  {(() => { const e = explainScore(l as ScoreName, sc); return <div className="score-how"><p>{e.question}</p><p><b>{e.formula}</b></p>{e.count && <p>{e.count}</p>}{e.extremes && <p>{e.extremes}</p>}<p className="muted">{e.reading}</p></div>; })()}
+                  {(() => { const e = explainScore(l as ScoreName, sc); return <div className="score-how"><p>{e.question}</p><p><b>{e.formula}</b></p>{e.count && <p className="score-count">{e.count}</p>}{e.extremes && <p>{e.extremes}</p>}<p className="muted">{e.reading}</p></div>; })()}
                   <ul>{sc.parts.map((x, i) => <li key={x.label}><span>{i + 1}. {x.label}</span><span className="mono" title="points earned of the points available">{x.score} of {x.max} pts</span><em>{x.why}</em></li>)}</ul>
                   <p className="score-total">{explainScore(l as ScoreName, sc).total}</p></div>))}
             </div>
