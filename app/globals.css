@@ -2954,3 +2954,7 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 .aset .as-title{display:none}
 .aset .as-lab,.aset .as-note{color:var(--muted, #5a6678)}
 .aset .as-pick select{max-width:340px;border:1px solid var(--line, #c8d0dc)}
+
+/* v6.59: Team table, Inactive days */
+.idle-red{color:#D92D3A;font-weight:700}
+.idle-amber{color:#C97A00;font-weight:700}

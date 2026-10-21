@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
 import { getAccess } from "@/lib/access";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { scanUsers } from "@/lib/inactivity";
 import { ACTIVITY_KINDS, USAGE_AREAS, areaOf, pageLabel, isPlayPath } from "@/lib/activity";
 
 // POST: any signed-in user records an action or a heartbeat. GET (Super Admin only): ?view=active = who is online now; otherwise the activity feed and a per-person summary.
@@ -53,7 +54,10 @@ export async function GET(req: Request) {
       const used = areas.filter((x) => mine.has(x)), missing = areas.filter((x) => !mine.has(x));
       out[a.email] = { pct: Math.round((used.length / areas.length) * 100), used, missing, total: areas.length };
     }
-    return NextResponse.json({ ready: true, days: 30, usage: out });
+    // Days since each person (not the Super Admin) last did anything, and whether the 15-day rule has suspended them (read only here; Inactive users does the suspending).
+    const idle: Record<string, { days: number; suspended: boolean }> = {};
+    for (const u of await scanUsers(db)) idle[u.email] = { days: u.days_idle, suspended: !!u.suspended_at };
+    return NextResponse.json({ ready: true, days: 30, usage: out, idle });
   }
   const days = Math.min(Math.max(Number(sp.get("days")) || 7, 1), 90), who = sp.get("user") || "";
   const since = new Date(Date.now() - days * 864e5).toISOString();

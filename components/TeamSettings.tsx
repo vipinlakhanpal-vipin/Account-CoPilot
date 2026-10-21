@@ -44,7 +44,8 @@ export default function TeamSettings({ isOwner = false }: { isOwner?: boolean })
   const [users, setUsers] = useState<U[]>([]);
   // % used: of the places and features a person can use, the share they opened in the last 30 days (see lib/activity.ts USAGE_AREAS).
   const [usage, setUsage] = useState<Record<string, { pct: number; used: string[]; missing: string[]; total: number }>>({});
-  useEffect(() => { fetch("/api/activity?view=usage", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((j) => { if (j?.ready) setUsage(j.usage || {}); }).catch(() => {}); }, []);
+  const [idle, setIdle] = useState<Record<string, { days: number; suspended: boolean }>>({});
+  useEffect(() => { fetch("/api/activity?view=usage", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((j) => { if (j?.ready) { setUsage(j.usage || {}); setIdle(j.idle || {}); } }).catch(() => {}); }, []);
   const [ready, setReady] = useState(true);
   const [denied, setDenied] = useState(false);
   const [email, setEmail] = useState("");
@@ -165,7 +166,7 @@ export default function TeamSettings({ isOwner = false }: { isOwner?: boolean })
         </div>
       )}
       <div className="tablewrap" style={{ marginTop: 12 }}><table>
-        <thead><tr><th className="num">#</th><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Region(s)</th><th>Change access</th><th>Invited by</th><th>Joined</th><th>Last sign-in</th><th title="Share of the places and features this person opened in the last 30 days. Hover a value to see what they have and have not used.">% used</th><th>Reset password</th><th>Delete</th></tr></thead>
+        <thead><tr><th className="num">#</th><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Region(s)</th><th>Change access</th><th>Invited by</th><th>Joined</th><th>Last sign-in</th><th title="Days since this person last did anything in the app. After 15 days they are suspended (they cannot sign in, nothing is deleted) and wait under Inactive users for you to Keep or Archive them.">Inactive days</th><th title="Share of the places and features this person opened in the last 30 days. Hover a value to see what they have and have not used.">% used</th><th>Reset password</th><th>Delete</th></tr></thead>
         <tbody>{users.map((u, i) => {
           const x = edit[u.id];
           return (
@@ -183,6 +184,9 @@ export default function TeamSettings({ isOwner = false }: { isOwner?: boolean })
                 : (isOwner || u.role === "standard") ? <button type="button" className="btn-change" disabled={!!deleting} onClick={() => setEdit((m) => ({ ...m, [u.id]: { role: u.role, regions: u.regions } }))}>Change</button> : <span className="muted">Super Admin only</span>}</td>
               <td className="muted">{u.invited_by || "—"}</td><td className="mono team-dt">{fmtDateTime(u.created_at)}</td>
               <td className="mono team-dt">{u.last_sign_in ? fmtDateTime(u.last_sign_in) : "Not yet"}</td>
+              <td>{(() => { const d = idle[u.email]; return d ? (
+                <span className={d.suspended || d.days >= 15 ? "idle-red" : d.days >= 10 ? "idle-amber" : ""} title={d.suspended ? "Suspended: 15 days without activity. Decide under Inactive users: Keep or Archive." : `${d.days} day${d.days === 1 ? "" : "s"} since last activity. Suspended at 15.`}>
+                  <b>{d.days}</b>{d.suspended ? " · suspended" : ""}</span>) : <span className="muted">—</span>; })()}</td>
               <td>{(() => { const g = usage[u.email]; return g ? (
                 <div className="used-cell" title={`Used ${g.used.length} of ${g.total} places and features in the last 30 days.\n\nUsed: ${g.used.join(", ") || "none yet"}\n\nNot yet used: ${g.missing.join(", ") || "nothing"}`}>
                   <b>{g.pct}%</b><span className="used-bar" aria-hidden="true"><i style={{ width: `${g.pct}%` }} /></span></div>) : <span className="muted">—</span>; })()}</td>
