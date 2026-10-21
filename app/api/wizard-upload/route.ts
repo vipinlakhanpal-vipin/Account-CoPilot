@@ -16,11 +16,21 @@ async function getItems(db: ReturnType<typeof supabaseAdmin>): Promise<UploadIte
   return (data?.value as { items?: UploadItem[] } | null)?.items || [];
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   const user = await requireUser();
   if (!user) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
   const access = await getAccess(user);
   const db = supabaseAdmin();
+  // ?download=<id>: the original file, through a one-minute link. Only the Super Admin (downloads) or the person who uploaded it, and only for their regions.
+  const dl = new URL(req.url).searchParams.get("download");
+  if (dl) {
+    const item = (await getItems(db)).find((x) => x.id === dl);
+    if (!item || !canSeeRegion(access, item.region)) return NextResponse.json({ error: "File not found." }, { status: 404 });
+    if (!access.canDownload && item.uploaded_by !== (user.email || "")) return NextResponse.json({ error: "Only the Super Admin or the person who uploaded this file can download it." }, { status: 403 });
+    const { data, error } = await db.storage.from("uploads").createSignedUrl(item.path, 60, { download: item.filename });
+    if (error || !data?.signedUrl) return NextResponse.json({ error: "Could not open the stored file." }, { status: 500 });
+    return NextResponse.redirect(data.signedUrl);
+  }
   const items = (await getItems(db)).filter((x) => canSeeRegion(access, x.region));
   return NextResponse.json({ items });
 }

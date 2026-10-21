@@ -2843,3 +2843,8 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 
 /* v6.18: the wizard drop zone highlights while a file is dragged over it */
 .hw-dropzone.drag{border-style:solid;border-color:var(--teal);background:color-mix(in srgb,var(--teal) 14%,var(--accent-soft))}
+
+/* v6.19: uploaded files listed under the country status in wizard step 1 */
+.hw-region-file{display:block;margin-top:3px;font-size:11.5px;font-weight:600}
+.hw-region-file a{color:var(--teal);text-decoration:none}
+.hw-region-file a:hover{text-decoration:underline}

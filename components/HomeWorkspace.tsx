@@ -130,6 +130,8 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
   const [uploads, setUploads] = useState<Upload[]>([]);
   const loadUploads = () => fetch("/api/wizard-upload", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((j) => j && setUploads(j.items || [])).catch(() => {});
   useEffect(() => { loadUploads(); }, [focus]); // eslint-disable-line react-hooks/exhaustive-deps
+  const canGetFile = (u: Upload) => access.canDownload || u.uploaded_by === access.email;
+  const fileLink = (u: Upload) => canGetFile(u) ? <a href={`/api/wizard-upload?download=${u.id}`} title="Download the original file">📎 {u.filename}</a> : <>{u.filename}</>;
 
   useEffect(() => {
     let cancelled = false;
@@ -335,7 +337,8 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
                           {OPTIONS.listing.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
                         <label aria-label={`${r.name}: which entities count`}><select value={s.entity} onChange={(e) => setSize(r.key, { entity: e.target.value as Rules["entity_level"] })}>
                           {OPTIONS.entity.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
-                        <span className={`hw-region-activated s-${st || "next"}`}>{statusText}</span>
+                        <span className={`hw-region-activated s-${st || "next"}`}>{statusText}
+                          {uploads.filter((u) => u.region === r.key).map((u) => <small key={u.id} className="hw-region-file">{fileLink(u)}</small>)}</span>
                       </div>
                     );
                   })}
@@ -397,7 +400,7 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
                       <p className="hw-lead hw-lead-wide"><b>Lists uploaded for {focusName}</b>{mine.length ? ` (${mine.length})` : ""}.{hasList === "yes" ? " To change a list, upload the corrected file; the new one is added and anything already in the app is left alone." : " Already in the app; choose \u201cYes, I have one\u201d above to add another."}</p>
                       {mine.length
                         ? <div className="tablewrap"><table><thead><tr><th>File</th><th>Rows</th><th>Uploaded</th><th>Status</th></tr></thead>
-                          <tbody>{mine.map((u) => <tr key={u.id}><td className="wrap">{u.filename}<div className="muted">{u.uploaded_by}</div></td><td className="muted">{u.rows}</td><td className="muted">{fmtDateTime(u.uploaded_at)}</td>
+                          <tbody>{mine.map((u) => <tr key={u.id}><td className="wrap">{fileLink(u)}<div className="muted">{u.uploaded_by}</div></td><td className="muted">{u.rows}</td><td className="muted">{fmtDateTime(u.uploaded_at)}</td>
                             <td>{u.status === "waiting" ? <span className="status-plain st-l">Waiting to be read</span> : u.status === "done" ? <span className="status-plain st-v">Added{u.summary ? ` — ${u.summary}` : ""}</span> : <span className="status-plain st-u">Error{u.summary ? ` — ${u.summary}` : ""}</span>}</td></tr>)}</tbody></table></div>
                         : <p className="note">Nothing uploaded for {focusName} yet.</p>}
                     </div>);
