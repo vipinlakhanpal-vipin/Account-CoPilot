@@ -1,6 +1,7 @@
 // Local equivalent of the worker's enrich_queue and enrich (uses the database key; run it only from a local session).
 //   npx -y -p node@22 node scripts/enrich_local.mjs queue <REGION> [N]    → prints and saves data/verification/enrich_queue.json
-//   npx -y -p node@22 node scripts/enrich_local.mjs apply <file.json>     → saves enrichment, same rules as app/api/engine/worker/route.ts
+//   npx -y -p node@22 node scripts/enrich_local.mjs apply <file.json> [--include-user]  → saves enrichment, same rules as app/api/engine/worker/route.ts
+//     (--include-user also fills the EMPTY fields of rows the user uploaded; Reference rows are always skipped)
 import fs from "node:fs";
 import { createClient } from "@supabase/supabase-js";
 import { regionOf } from "../lib/icpDefinition.mjs";
@@ -19,7 +20,7 @@ if (cmd === "queue") {
   for (const r of list) {
     const { data: c } = await db.from("companies").select("id,company_name,research_channel,erp,existing_s2p_product,s2p_signal_level,existing_s2p_detail,known_implementation_partner,profile").eq("slug", r.slug).maybeSingle();
     if (!c) { console.log(`${r.slug}: not found`); continue; }
-    if (["Reference", "User"].includes(String(c.research_channel || ""))) { console.log(`${c.company_name}: skipped (reference record)`); continue; }
+    if (["Reference", ...(process.argv.includes("--include-user") ? [] : ["User"])].includes(String(c.research_channel || ""))) { console.log(`${c.company_name}: skipped (reference record)`); continue; }
     const src = r.source_url ? ` Source: ${r.source_url}` : "", noSrc = !r.source_url;
     const level = noSrc && /STRONG/.test(r.s2p_signal_level || "") ? "MODERATE SIGNAL" : r.s2p_signal_level || "NO SIGNAL", erpStatus = noSrc && r.erp_status === "FACT" ? "LIKELY" : r.erp_status || "UNKNOWN";
     const patch = { last_researched: today }, done = [];

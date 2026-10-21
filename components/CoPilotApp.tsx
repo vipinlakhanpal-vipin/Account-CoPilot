@@ -802,8 +802,9 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
             : <span className="muted">Click a band to narrow everything below to it. Uses the best figure we have: verified first, then estimates.</span>}</div>
           <div className="kpis rev-kpis">
             {REV_BANDS.map((b, i) => (
-              <button type="button" key={b.key} className={`kpi c${(i + 2) % 8 + 1}${band === b.key ? " on" : ""}`} onClick={() => setBand(band === b.key ? "" : b.key)} aria-pressed={band === b.key}
-                title={band === b.key ? "Click again to show all" : `Show only ${b.label}`}><b>{b.label}</b><small>{(bandCounts[b.key] || 0).toLocaleString()} accounts</small></button>))}
+              <button type="button" key={b.key} className={`kpi c${(i + 2) % 8 + 1}${band === b.key ? " on" : ""}`} aria-pressed={band === b.key}
+                onClick={() => { if (band === b.key) { setBand(""); return; } setBand(b.key); setDrill({ title: `Net revenue: ${b.label}`, kind: "accounts", rows: Aall.filter((a) => bandOf(bestRevenue(a).v) === b.key) }); }}
+                title={band === b.key ? "Click again to show all" : `Show the ${(bandCounts[b.key] || 0).toLocaleString()} accounts`}><b>{b.label}</b><small>{(bandCounts[b.key] || 0).toLocaleString()} accounts</small><span className="kpi-go" aria-hidden="true">View →</span></button>))}
           </div>
         </div>
         <div className="kpis">{kpis.map(([l, rows, kind], i) => (

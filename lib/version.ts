@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.35";
+export const APP_VERSION = "6.36";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.36", date: "2026-10-21", notes: "Clicking a Net revenue tile now opens the list of its accounts, like the other tiles, and the tile fonts match the tiles below.", changes: [
+      { what: "Each Net revenue band tile now opens the same records view as the other Dashboard tiles (with the accounts in that band), and also narrows the counts and charts below to it. Click the selected tile again, or Clear, to show all. The band name and the \"N accounts\" line use the same type sizes as the tiles below, and the Net revenue block sits in a thin frame so it reads as its own group", where: "Dashboard, Net revenue tiles", why: "Clicking a band showed no visible result, and the fonts did not match" },
+  ] },
   { version: "6.35", date: "2026-10-21", notes: "Net revenue tiles redesigned: bigger band names, the account count smaller below, and a Clear link.", changes: [
       { what: "The \"All revenue\" tile is gone. Each band tile now shows the band in large type with \"N accounts\" smaller below it. Click a tile to filter everything below; click it again, or the Clear link in the \"Selected: ...\" line, to show all", where: "Dashboard, Net revenue tiles", why: "You approved the simpler tile layout" },
   ] },
