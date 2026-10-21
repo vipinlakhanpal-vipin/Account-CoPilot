@@ -143,7 +143,7 @@ export default function Header({ meta, isOwner = false }: { meta: string; isOwne
     if (path === "/" && href.startsWith("/?") || (path === "/" && href === "/")) {
       e.preventDefault();
       // Keep the selected country when switching tabs.
-      const country = params.get("country");
+      const country = href === "/" ? null : params.get("country"); // the Dashboard tab itself always opens on all regions
       const url = country ? `${href}${href.includes("?") ? "&" : "?"}country=${encodeURIComponent(country)}` : href;
       window.history.pushState(null, "", url);
       window.scrollTo({ top: 0 });

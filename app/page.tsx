@@ -23,7 +23,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ t
   const data = { ...scoped, contacts: scoped.contacts.map(({ notes_company: _n, ...r }) => r) };
   const counts: Record<string, number> = {};
   data.accounts.forEach((a) => { const c = regionOf(a.country); counts[c] = (counts[c] || 0) + 1; });
-  const home = access.isSuper ? "UAE" : access.regions[0] || "UAE";
+  const home = access.isSuper ? "All" : access.regions[0] || "UAE"; // the Dashboard opens on all regions for a Super Admin; a Standard user starts on their own region
   if (!access.isSuper && !access.regions.length) return (<div className="wrap"><section className="view"><div className="panel"><h2>No region assigned yet</h2>
     <p>Your Super Admin needs to assign you a region in Setup → Team before you can see accounts.</p></div></section></div>);
   // A region's tile shows once it's Active in Define ICP (even with 0 accounts yet — the engine just hasn't run)

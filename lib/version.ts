@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.53";
+export const APP_VERSION = "6.54";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.54", date: "2026-10-21", notes: "Clicking Dashboard now opens All regions instead of UAE.", changes: [
+      { what: "The Dashboard tab (and the logo) opens on All regions for the Super Admin and Admins, with every region's tile in the bar to narrow it down. It no longer jumps to UAE or keeps the region you were last on. The other tabs still keep the region you picked. A Standard User still starts on their own region", where: "Dashboard", why: "You wanted the whole picture first" },
+  ] },
   { version: "6.53", date: "2026-10-21", notes: "Aria Setup (was Tips and settings) now holds the hourly alarm and lady's voice choices. The Dashboard uploads table shows when each file was uploaded and its progress bar is visible again.", changes: [
       { what: "Tips and settings under Aria is now called Aria Setup. The alarm (seven sounds or none), the lady's voice, the on/off switches, Hear it, Stop voice and Test it now are right there, next to Quiet mode. The tip line that used to open the section is gone", where: "Left panel, under Aria", why: "One place for everything about Aria, with no pop-up to find" },
       { what: "The Excel uploads table has an Uploaded column with the date and time (hover the Status or Uploaded cell to see when it was read). A file still waiting shows how long it has been waiting", where: "Dashboard, Data Sources", why: "You wanted to see when each file went in and how long it has waited" },
