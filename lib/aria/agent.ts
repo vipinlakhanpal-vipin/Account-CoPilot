@@ -7,6 +7,7 @@ import { type AriaContext, type AccountFilter, filterAccounts, searchAccounts, c
   fullTextSearch, searchSignals, searchTechnology, searchConflicts, searchHistory, icpRules, engineActivity } from "@/lib/aria/tools";
 import type { Criteria } from "@/lib/icp";
 import { detectProducts } from "@/lib/playbook";
+import { REPORT_CAP } from "@/lib/reportSelection";
 
 export type { AriaAction, AriaMessage, AriaResult };
 
@@ -105,7 +106,7 @@ export async function runTool(name: string, input: Record<string, unknown>, ctx:
     const accounts = filterAccounts(ctx, { ...f, region });
     if (!accounts.length) return { result: { error: `No ${region} companies match those filters.` } };
     const body = { companyIds: accounts.map((a) => a.id as string).slice(0, 1000), region, emailOnly: input.email_only !== false,
-      rank: (input.rank as string) || "fit", ...productBody, ...(input.limit ? { limit: Math.max(1, Math.min(1000, Number(input.limit))) } : {}) };
+      rank: (input.rank as string) || "fit", ...productBody, ...(input.limit ? { limit: Math.max(1, Math.min(REPORT_CAP, Number(input.limit))) } : {}) };
     const prev = await buildCampaignList(ctx.data, { region, statuses: [], emailOnly: body.emailOnly, generatedBy: "", ids: body.companyIds, def: ctx.def,
       limit: (body as { limit?: number }).limit, rank: body.rank as "fit" | "revenue" | "name", criteria: ctx.criteria as Partial<Criteria> | null });
     if (!prev.contacts) return { result: { error: `${accounts.length} ${region} companies match, but none has a contact${body.emailOnly ? " with an email, phone or LinkedIn profile" : ""} on file yet. Contacts exist only where the workbook or Seamless enrichment added them.` } };
@@ -115,7 +116,7 @@ export async function runTool(name: string, input: Record<string, unknown>, ctx:
 
   if (name === "create_pdf") {
     const names = Array.isArray(input.company_names) ? (input.company_names as string[]).slice(0, 10) : [];
-    const limit = Math.max(1, Math.min(150, Number(input.limit) || 25)), rank = (input.rank as string) || "fit";
+    const limit = Math.max(1, Math.min(REPORT_CAP, Number(input.limit) || REPORT_CAP)), rank = (input.rank as string) || "fit";
     if (names.length) {
       const ids: string[] = [], labels: string[] = [];
       for (const n of names) {

@@ -5,6 +5,7 @@ import type { AllData, Row } from "@/lib/data";
 import type { Score } from "@/lib/icp";
 import { icpMatch, opportunity, coupaFit, procurementMaturity, estimateSpend, whySelected, recommendedActions, withDefaults, revenueOf, revenueIsOfficial, fmtUsdM, fmtMoneyM, type Criteria } from "@/lib/icp";
 import { erpText } from "@/lib/techApps";
+import { selectReportAccounts, criteriaFor } from "@/lib/reportSelection";
 import { explainScore, type ScoreName } from "@/lib/scoreExplain";
 import { playbookFor, startersFor, productsLabel, type Detected } from "@/lib/playbook";
 import { rulesFor, regionOf, OPTIONS, REGIONS, describeRules, type Rules } from "@/lib/icpDefinition.mjs";
@@ -19,7 +20,7 @@ const STATUS_COLOR: Record<string, ReturnType<typeof rgb>> = {
 const REPLACE: Record<string, string> = { "≥": ">=", "≤": "<=", "≈": "~", "→": "->", "←": "<-", "✓": "v", "✕": "x", "●": "-", "·": "-", "…": "...", " ": " ", "​": "" };
 
 export const REPORT_STATUSES = ["ICP — Verified", "ICP — Likely", "ICP — Needs check"] as const;
-export type ReportOptions = { statuses: string[]; region: string; limit: number; generatedBy: string; criteria?: Partial<Criteria> | null; ids?: string[]; title?: string; rank?: "fit" | "revenue" | "name"; product?: Detected };
+export type ReportOptions = { statuses: string[]; region: string; limit?: number; generatedBy: string; criteria?: Partial<Criteria> | null; ids?: string[]; title?: string; rank?: "fit" | "revenue" | "name"; product?: Detected };
 const s = (v: unknown) => (v === null || v === undefined ? "" : String(v));
 const usd = (m: unknown) => { const n = Number(m); return m === null || m === undefined || m === "" ? "" : fmtUsdM(n); };
 type Cur = { code: string; per_usd: number };
@@ -252,18 +253,15 @@ export async function buildReport(all: AllData, def: unknown, opt: ReportOptions
   const criteria = withDefaults(opt.criteria);
   const hires: Record<string, number> = {};
   all.history.forEach((h) => { if (/change|promot|join|hire/i.test(s(h.determination))) hires[h.company_id] = (hires[h.company_id] || 0) + 1; });
-  const inRegion = (a: Row) => opt.region === "All" || regionOf(a.country) === opt.region;
   const single = opt.ids?.length === 1;
-  const scored = all.accounts.filter((a) => opt.ids?.length ? opt.ids.includes(a.id) && (single || inRegion(a)) : opt.statuses.includes(s(a.icp_status)) && inRegion(a)).map((a) => {
-    const c: Criteria = { ...criteria, company: { ...criteria.company, countries: [s(a.country) || "UAE"], regions: [] } };
+  // Which companies, and in what order, is decided by the same function the Excel uses, so the two files always match.
+  const sel = selectReportAccounts(all.accounts, { region: opt.region, ids: opt.ids, statuses: opt.statuses, rank: opt.rank, limit: opt.limit, criteria: opt.criteria });
+  const picked = sel.selected.map((a) => {
+    const c = criteriaFor(criteria, a);
     const focus = (rulesFor(def, a.country) as Rules).focus;
     return { a, m: icpMatch(a, c), o: opportunity(a, hires[a.id] || 0, focus), f: coupaFit(a, focus), c };
   });
-  const statusOrder = (x: string) => Math.max(0, REPORT_STATUSES.indexOf(x as typeof REPORT_STATUSES[number]));
-  if (opt.rank === "revenue") scored.sort((x, y) => (revenueOf(y.a) || 0) - (revenueOf(x.a) || 0));
-  else if (opt.rank === "name") scored.sort((x, y) => s(x.a.company_name).localeCompare(s(y.a.company_name)));
-  else scored.sort((x, y) => y.m.total - x.m.total || statusOrder(s(x.a.icp_status)) - statusOrder(s(y.a.icp_status)) || s(x.a.company_name).localeCompare(s(y.a.company_name)));
-  const total = scored.length, picked = scored.slice(0, opt.limit);
+  const total = sel.total;
 
   const w = await Writer.create();
   const regionName = (REGIONS.find((r: { key: string; name: string }) => r.key === opt.region)?.name) || (opt.region === "All" ? "all regions" : opt.region);

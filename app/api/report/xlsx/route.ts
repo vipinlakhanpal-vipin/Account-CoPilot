@@ -16,7 +16,7 @@ const Body = z.object({
   statuses: z.array(z.enum(STATUSES)).min(1).optional(),
   companyIds: z.array(z.string().min(8).max(60)).min(1).max(1000).optional(),
   emailOnly: z.boolean().default(true),
-  limit: z.number().int().min(1).max(1000).optional(),
+  limit: z.number().int().min(1).max(150).optional(), // same cap as the PDF, so both files hold the same companies
   rank: z.enum(["fit", "revenue", "name"]).default("fit"),
   products: z.array(z.string().max(40)).max(3).optional(),
   productMode: z.enum(["prospects", "customers"]).default("prospects"),

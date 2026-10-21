@@ -42,7 +42,7 @@ export default function ReportDialog({ accounts, icpDef, onClose, companyIds, li
   const [rank, setRank] = useState<"fit" | "revenue" | "name">("fit");
   // The number actually used: a typed custom number wins; the PDF is capped at 150 companies (it is a long document).
   const asked = custom.trim() ? Math.max(1, Math.floor(Number(custom)) || 1) : limit;
-  const eff = format === "pdf" ? (asked === 0 || asked > PDF_MAX ? PDF_MAX : asked) : asked; // 0 = every company with a contact
+  const eff = asked === 0 || asked > PDF_MAX ? PDF_MAX : asked; // the PDF and the Excel share one cap, so both files hold the same companies
   const [emailOnly, setEmailOnly] = useState(true);
   const [busy, setBusy] = useState(false);
 
@@ -121,8 +121,8 @@ export default function ReportDialog({ accounts, icpDef, onClose, companyIds, li
               <span className="pdf-chips">
                 {PRESETS.map((n) => (
                   <button type="button" key={n} className="pdf-chip" aria-pressed={!custom.trim() && limit === n}
-                    onClick={() => { setLimit(n); setCustom(""); }}>{n === 0 ? (format === "pdf" ? `Up to ${PDF_MAX}` : "All") : n}</button>))}
-                <input type="number" min={1} max={format === "pdf" ? PDF_MAX : 1000} className="pdf-custom" placeholder="Custom" aria-label="Custom number of companies"
+                    onClick={() => { setLimit(n); setCustom(""); }}>{n === 0 ? `Up to ${PDF_MAX}` : n}</button>))}
+                <input type="number" min={1} max={PDF_MAX} className="pdf-custom" placeholder="Custom" aria-label="Custom number of companies"
                   value={custom} onChange={(e) => setCustom(e.target.value)} />
               </span>
             </div>

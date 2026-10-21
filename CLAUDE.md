@@ -180,6 +180,9 @@ Every Anthropic-API route (`/api/research`, `/api/discover`, `/api/pitch`, and `
 - **Plan first (v4.74):** when the free rules cannot answer, `lib/aria/interpret.ts` makes one small call to the Aria model (Haiku, `ARIA_MODEL`) with a forced `plan` tool; `lib/aria/plan.ts` shows "I read this as:" and asks for confirmation when the plan is unsure, has assumptions, has unsupported limits or is a report, then runs it with the app's own tools (`§plan:` carries a confirmed plan, `§rephrase` asks again). `intent: other` falls back to the full agent (`runAria`).
 - **Voice** uses the browser's speech recognition; nothing extra to configure. Aria's spend is not yet added to the Settings spend total.
 
+## Excel and PDF always hold the same companies (user rule, 2026-10-21)
+- `lib/reportSelection.ts` (`selectReportAccounts`) is the only place that decides which companies a report covers and in what order (ICP Match first, then status, then name; or revenue; or A to Z). `lib/pdfReport.ts` and `lib/xlsxReport.ts` both call it, so "20 companies" gives 20 in each file. Cap is 150 for both (`REPORT_CAP`). The Excel lists a selected company with no reachable contact as one line saying so, so it never drops a company the PDF has. Never add a second selection path to either builder.
+
 ## Free pitch plan (v4.81)
 - Account page → Pitch planner: **Draft pitch plan (free)** (`components/FreePitch.tsx`) queues job mode `pitch`; a scheduled session reads `pitch_facts` (`lib/pitchFacts.ts`, contacts as names and titles only), may search public news, writes the plan and saves it with `save_pitch` into `companies.profile["Pitch plan"]` (read back by `GET /api/pitch?slug=`). The paid **Draft now (instant)** button (`/api/pitch` POST, Opus, PIN) is kept for when the answer is needed at once. The free one adds public-news research and an opening message; it takes minutes and uses the routine's model (Sonnet).
 

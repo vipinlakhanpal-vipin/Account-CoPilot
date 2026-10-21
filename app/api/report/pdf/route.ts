@@ -15,7 +15,7 @@ const MAX_COMPANIES = 150;
 const Body = z.object({
   statuses: z.array(z.enum(REPORT_STATUSES)).min(1).optional(),
   region: z.string().min(2).max(40).default("All"),
-  limit: z.number().int().min(1).max(MAX_COMPANIES).default(50),
+  limit: z.number().int().min(1).max(MAX_COMPANIES).optional(), // missing = up to 150, the same cap the Excel uses
   companyId: z.string().min(8).max(60).optional(),
   companyIds: z.array(z.string().min(8).max(60)).min(1).max(1000).optional(),
   title: z.string().max(120).optional(),

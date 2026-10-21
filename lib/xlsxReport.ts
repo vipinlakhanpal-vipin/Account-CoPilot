@@ -2,9 +2,10 @@ import "server-only";
 import ExcelJS from "exceljs";
 import type { AllData, Row } from "@/lib/data";
 import { buildPeople } from "@/lib/people";
-import { revenueOf, revenueIsOfficial, fmtMoneyM, icpMatch, withDefaults, type Criteria } from "@/lib/icp";
-import { regionOf, rulesFor } from "@/lib/icpDefinition.mjs";
+import { revenueOf, revenueIsOfficial, fmtMoneyM, type Criteria } from "@/lib/icp";
+import { rulesFor } from "@/lib/icpDefinition.mjs";
 import { playbookFor, startersFor, productsLabel, type Detected } from "@/lib/playbook";
+import { selectReportAccounts, REPORT_CAP } from "@/lib/reportSelection";
 
 // Campaign contact list: the people at the companies in a region, for a CRM or mailing tool.
 // Same rules as the Master Book's Contact List: official emails only (no generic mailboxes or personal domains), never guessed,
@@ -27,8 +28,10 @@ type Out = { company: string; name: string; first: string; last: string; title: 
   revenue: string; revType: string; employees: string; hq: string; tier: string; unit: string };
 
 export async function buildCampaignList(d: AllData, o: CampaignOptions) {
-  const idSet = o.ids ? new Set(o.ids) : null;
-  const accounts = d.accounts.filter((a) => (idSet ? idSet.has(a.id) : o.statuses.includes(s(a.icp_status))) && regionOf(a.country) === o.region);
+  // Which companies, and in what order, is decided by the same function the PDF uses, so the two files always match.
+  const sel = selectReportAccounts(d.accounts, { region: o.region, ids: o.ids, statuses: o.statuses, rank: o.rank, limit: o.limit, criteria: o.criteria });
+  const accounts = sel.selected;
+  const order = new Map(accounts.map((a, i) => [s(a.company_name), i]));
   const byId = new Map(accounts.map((a) => [a.id, a]));
   const people = buildPeople(d.contacts.filter((p) => byId.has(p.company_id))).filter((p) => p.trust !== "Conflicting");
 
@@ -53,18 +56,21 @@ export async function buildCampaignList(d: AllData, o: CampaignOptions) {
   // One block per company, so each company is listed once with its people beneath it.
   const groups: Out[][] = [];
   for (const r of rows) { const g = groups[groups.length - 1]; if (g && g[0].company === r.company) g.push(r); else groups.push([r]); }
-  // "Up to N companies": keep the N companies you asked for, picked by best ICP fit (default), largest revenue, or A to Z.
-  const totalWithContacts = groups.length;
-  const rank = o.rank || "fit";
-  if (o.limit || rank !== "fit") {
-    const base = withDefaults(o.criteria), score = new Map<string, number>();
-    accounts.forEach((a) => score.set(s(a.company_name), rank === "revenue" ? revenueOf(a) || 0
-      : rank === "name" ? 0 : icpMatch(a, { ...base, company: { ...base.company, countries: [s(a.country) || "UAE"], regions: [] } }).total));
-    groups.sort((x, y) => rank === "name" ? x[0].company.localeCompare(y[0].company)
-      : (score.get(y[0].company) || 0) - (score.get(x[0].company) || 0) || x[0].company.localeCompare(y[0].company));
-    if (o.limit && groups.length > o.limit) groups.length = o.limit;
+  const contacts = groups.reduce((n, g) => n + g.length, 0), totalWithContacts = groups.length;
+  // A selected company with no reachable contact is still listed (one line saying so), so this file has exactly the companies the PDF has.
+  const NO_CONTACT = o.emailOnly ? "No contact with an email, phone or LinkedIn on file" : "No contact on file";
+  const have = new Set(groups.map((g) => g[0].company));
+  for (const a of accounts) {
+    if (have.has(s(a.company_name))) continue;
+    const rev = revenueOf(a), cur = rulesFor(o.def, a.country).currency as { code: string; per_usd: number };
+    groups.push([{ company: s(a.company_name), name: NO_CONTACT, first: "", last: "", title: "", email: "", phone: "", linkedin: "", erp: known(a.erp).replace(/\s*\(.*$/, ""), s2p: known(a.existing_s2p_product),
+      revenue: rev ? fmtMoneyM(rev, cur) : "", revType: rev ? (revenueIsOfficial(a) ? "Official" : "Estimate") : "", employees: known(a.employee_range).replace(/\s*\(.*$/, ""),
+      hq: [s(a.hq_city), s(a.country)].filter(Boolean).join(", "), tier: "", unit: "" }]);
   }
-  const companies = groups.length, contacts = groups.reduce((n, g) => n + g.length, 0);
+  // Same order as the PDF: best ICP fit, largest revenue, or A to Z, as chosen.
+  const rank = o.rank || "fit";
+  groups.sort((x, y) => (order.get(x[0].company) ?? 1e9) - (order.get(y[0].company) ?? 1e9));
+  const companies = groups.length;
 
   const wb = new ExcelJS.Workbook();
   wb.creator = "Account CoPilot";
@@ -86,10 +92,10 @@ export async function buildCampaignList(d: AllData, o: CampaignOptions) {
   ws.getCell(1, 1).value = "Account CoPilot — campaign contact list";
   ws.getCell(1, 1).font = { bold: true, size: 15, color: { argb: GREEN } };
   ws.mergeCells(2, 1, 2, cols.length);
-  ws.getCell(2, 1).value = `Region: ${o.region}   |   Companies: ${companies} of ${accounts.length} selected${totalWithContacts > companies ? ` (${companies} of ${totalWithContacts} with contacts, picked by ${rank === "revenue" ? "largest revenue" : rank === "name" ? "name, A to Z" : "best ICP fit"})` : ""}   |   Contacts: ${contacts}`;
+  ws.getCell(2, 1).value = `Region: ${o.region}   |   Companies: ${companies} of ${sel.total} matching (picked by ${rank === "revenue" ? "largest revenue" : rank === "name" ? "name, A to Z" : "best ICP fit"}${sel.capped ? `, capped at ${REPORT_CAP}` : ""})   |   Contacts: ${totalWithContacts ? contacts - (companies - totalWithContacts) : 0}`;
   ws.getCell(2, 1).font = { bold: true, size: 12 };
   ws.mergeCells(3, 1, 3, cols.length);
-  ws.getCell(3, 1).value = `Each company is listed once with its contacts beneath it. Revenue is in USD, with the regional currency in brackets. ${accounts.length - totalWithContacts} of the ${accounts.length} companies have no contact${o.emailOnly ? " with an email, phone or LinkedIn profile" : ""} on file and are not listed.`;
+  ws.getCell(3, 1).value = `Each company is listed once with its contacts beneath it. Revenue is in USD, with the regional currency in brackets. ${companies - totalWithContacts} of the ${companies} companies have no contact${o.emailOnly ? " with an email, phone or LinkedIn profile" : ""} on file; they are still listed so this file has the same companies as the PDF.`;
   ws.getCell(3, 1).font = { italic: true, color: { argb: "FF5B6670" } };
   ws.getCell(3, 1).alignment = { wrapText: true, vertical: "top" };
   ws.getRow(3).height = 30;
@@ -171,5 +177,5 @@ export async function buildCampaignList(d: AllData, o: CampaignOptions) {
   }
 
   const buf = Buffer.from(await wb.xlsx.writeBuffer());
-  return { buf, contacts, companies, totalCompanies: accounts.length };
+  return { buf, contacts: contacts - (companies - totalWithContacts), companies, totalCompanies: sel.total };
 }
