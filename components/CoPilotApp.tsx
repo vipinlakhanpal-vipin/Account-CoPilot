@@ -812,7 +812,7 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
             <small>{l}</small><b>{rows.length.toLocaleString()}</b><span className="kpi-go" aria-hidden="true">View →</span>
           </button>))}</div>
         <RegionCompareChart accounts={dashAccounts} onDrill={(title, rows) => setDrill({ title, kind: "accounts", rows })} />
-        <div className="src-frame"><div className="rev-bands-head"><b>Where the data came from</b><span className="muted">Source records, how accounts entered the app, exchanges cited and your Excel uploads</span></div>
+        <div className="src-frame"><div className="rev-bands-head src-head"><h2 className="src-title">Data Sources</h2><span className="muted">Source records, how accounts entered the app, exchanges cited and your Excel uploads</span></div>
           <SourceChart accounts={dashAccounts} sources={data.sources} uploads={data.uploads || []} country={country} onDrill={(title, rows) => setDrill({ title, kind: "accounts", rows })} />
         </div>
         <div className="panel" style={{ marginTop: 16 }}>

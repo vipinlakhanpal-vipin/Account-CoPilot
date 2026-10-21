@@ -2893,6 +2893,10 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 /* Dashboard: a thin frame that groups the data-source charts so they read as their own section */
 .src-frame{margin:16px 0;padding:8px 10px 10px;border:1px solid var(--border,color-mix(in srgb,var(--text) 18%,transparent));border-radius:10px}
 .src-frame .grid2{margin-top:6px}
+/* v6.49: the frame title uses the same font as the page title (Dashboard-South Africa) */
+.src-frame .src-head{align-items:baseline;gap:14px;margin:2px 0 8px}
+.src-frame .src-title{margin:0;font:700 26px var(--display);letter-spacing:.01em;color:var(--text-strong);text-transform:none}
+.src-frame .src-head .muted{font-size:12px}
 
 .hw-staged{margin:10px 0 0;padding:10px 12px;border:1px solid color-mix(in srgb,#12A67A 45%,transparent);border-radius:8px;background:color-mix(in srgb,#12A67A 8%,transparent)}
 .hw-staged p{margin:0 0 8px}
