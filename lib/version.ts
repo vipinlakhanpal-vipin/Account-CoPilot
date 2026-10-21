@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.45";
+export const APP_VERSION = "6.46";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.46", date: "2026-10-21", notes: "Green progress gauges: while a file uploads in the Setup wizard, and for every Excel upload on the Dashboard.", changes: [
+      { what: "While an Excel file is uploading in the Setup wizard, a green gauge shows the real percentage sent, then \"Saving and checking the file\", then \"Uploaded\"", where: "Setup wizard, Add Data", why: "You could not tell whether a big file was still going up" },
+      { what: "The Dashboard's Excel uploads table has a Progress column: a gauge for each file that shows Waiting to be read, then Syncing with the real share of its companies already rated (for example 5 of 9), then Synced. A file with the same data as an earlier one shows as not read again, and a file that failed shows in red", where: "Dashboard, Where the data came from", why: "You wanted to see at a glance whether a file is still loading and syncing" },
+  ] },
   { version: "6.45", date: "2026-10-21", notes: "Setup wizard Add Data: clearer uploads, no pointless list under No, and read-time notes. Dashboard file names are shortened.", changes: [
       { what: "Under \"No, help me build one from scratch\" the \"Lists uploaded for ...\" line is gone. In its place the card shows where the country stands today (companies in the app, how many are ICP Verified, Likely or to check), what the Agent does each day and when you will see results", where: "Setup wizard, step 2 Add Data", why: "The uploaded-lists line made no sense under No" },
       { what: "The same data under a different file name is recognised: it is kept on file but not read a second time, and the status says which file it matches. Uploading a file now also starts the instant runner (when GITHUB_JOBS_TOKEN is set), so it is read within a few minutes instead of waiting for the 6:00 am Dubai run, and the message and a note under the list say how long reading and syncing take", where: "Setup wizard, step 2 Add Data", why: "Two files with the same data waited unread, and nobody could tell how long reading takes" },

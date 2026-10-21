@@ -35,6 +35,8 @@ const shortFile = (name: unknown) => {
   return words.length > 2 ? `${words.slice(0, 2).join(" ")}…` : base;
 };
 
+import ProgressGauge from "@/components/ProgressGauge";
+
 export default function SourceChart({ accounts, sources, uploads, country, onDrill }: { accounts: Row[]; sources: Row[]; uploads: Row[]; country: string; onDrill: Drill }) {
   const byId = useMemo(() => new Map(accounts.map((a) => [a.id, a])), [accounts]);
   const ev = useMemo(() => {
@@ -67,6 +69,17 @@ export default function SourceChart({ accounts, sources, uploads, country, onDri
   }, [accounts]);
 
   const ups = uploads.filter((u) => country === "All" || u.region === country);
+  // How far each file has got: waiting to be read, then read in, then its companies rated (a real share, from the accounts that came in with this file).
+  const progressOf = (u: Row): { pct: number; label: string; tone: "green" | "grey" | "red"; busy: boolean } => {
+    if (u.status === "error") return { pct: 100, label: "Could not be read", tone: "red", busy: false };
+    if (u.status !== "done") return { pct: 10, label: "Waiting to be read", tone: "green", busy: true };
+    if (/^Same data as/i.test(String(u.summary || ""))) return { pct: 100, label: "Same data, not read again", tone: "grey", busy: false };
+    const mine = accounts.filter((a) => (a.lists || []).some((l: string) => l === `User upload: ${u.filename}`));
+    if (!mine.length) return { pct: 100, label: "Nothing new to add", tone: "grey", busy: false };
+    const rated = mine.filter((a) => a.icp_status && a.icp_status !== "Unknown").length;
+    return rated >= mine.length ? { pct: 100, label: `Synced: ${mine.length} rated`, tone: "green", busy: false }
+      : { pct: Math.round(25 + (75 * rated) / mine.length), label: `Syncing: ${rated} of ${mine.length} rated`, tone: "green", busy: true };
+  };
   const upNew = ups.reduce((s, u) => s + (u.added || 0), 0), upOld = ups.reduce((s, u) => s + (u.already || 0), 0);
   const maxEv = Math.max(1, ...ev.kinds.map((k) => k.n)), maxOr = Math.max(1, ...origin.map((o) => o.n));
   return (
@@ -91,8 +104,8 @@ export default function SourceChart({ accounts, sources, uploads, country, onDri
         <div className="panel">
           <h2 className="with-count">Excel uploads in the Setup wizard {ups.length > 0 && <span className="count">{upNew} new · {upOld} already in the app</span>}</h2>
           {ups.length === 0 ? <p className="note">No Excel list uploaded{country === "All" ? "" : " for this country"} yet.</p> : (
-            <div className="tablewrap"><table><thead><tr><th>File</th><th>Country</th><th>Rows</th><th>New</th><th>Already in app</th><th>Status</th></tr></thead>
-              <tbody>{ups.map((u) => <tr key={u.id}><td title={u.filename}>{shortFile(u.filename)}</td><td>{u.region}</td><td>{u.rows ?? "—"}</td><td>{u.added ?? "—"}</td><td>{u.already ?? "—"}</td><td>{u.status === "done" ? "Read in" : u.status === "waiting" ? "Waiting" : u.status}</td></tr>)}</tbody></table></div>
+            <div className="tablewrap"><table><thead><tr><th>File</th><th>Country</th><th>Rows</th><th>New</th><th>Already in app</th><th>Status</th><th>Progress</th></tr></thead>
+              <tbody>{ups.map((u) => <tr key={u.id}><td title={u.filename}>{shortFile(u.filename)}</td><td>{u.region}</td><td>{u.rows ?? "—"}</td><td>{u.added ?? "—"}</td><td>{u.already ?? "—"}</td><td>{u.status === "done" ? "Read in" : u.status === "waiting" ? "Waiting" : u.status}</td><td>{(() => { const g = progressOf(u); return <ProgressGauge pct={g.pct} label={g.label} tone={g.tone} busy={g.busy} />; })()}</td></tr>)}</tbody></table></div>
           )}
         </div>
       </div>

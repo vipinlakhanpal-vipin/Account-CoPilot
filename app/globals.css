@@ -2879,3 +2879,13 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 .rev-clear{margin-left:6px;padding:1px 8px;font-size:11px;border-radius:999px;border:1px solid var(--border,#8884);background:transparent;color:inherit;cursor:pointer}
 .rev-kpis button.kpi.on{background:color-mix(in srgb,var(--k) 16%,var(--surface));border-color:var(--k);box-shadow:0 0 0 1px var(--k)}
 .score-total{margin:6px 0 0;font:700 12px var(--body);color:var(--teal)}
+
+/* Green progress gauge (uploads in the Setup wizard and in the Dashboard's Excel uploads table) */
+.gauge{display:flex;align-items:center;gap:8px;min-width:150px}
+.gauge-bar{flex:1;min-width:70px;height:8px;border-radius:999px;overflow:hidden;background:color-mix(in srgb,#12A67A 16%,transparent)}
+.gauge-bar i{display:block;height:100%;border-radius:999px;background:#12A67A;transition:width .35s ease}
+.gauge.busy .gauge-bar i{background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.4) 0 6px,transparent 6px 12px);background-size:17px 17px;animation:gauge-move .9s linear infinite}
+.gauge.grey .gauge-bar i{background:#9AA5B1}.gauge.red .gauge-bar i{background:#D64550}
+.gauge-txt{font-size:10px;white-space:nowrap;color:var(--text)}
+@keyframes gauge-move{to{background-position:17px 0}}
+.hw-uploading{margin:10px 0 0;max-width:420px}

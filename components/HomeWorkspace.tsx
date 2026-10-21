@@ -4,6 +4,7 @@ import { REGIONS, OPTIONS, normalizeDefinition, type Definition, type Rules } fr
 import type { Access } from "@/lib/access";
 import { ask, notify } from "@/components/Confirm";
 import { fmtDateTime } from "@/lib/dates";
+import ProgressGauge from "@/components/ProgressGauge";
 
 // Home workspace: a left rail with two destinations — About Account CoPilot (always free to read) and Setup Wizard
 // (reads and writes the exact settings.icp_definition record Setup → Define ICP uses, so there's no separate config to
@@ -95,6 +96,7 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
   const visibleRegions = useMemo(() => REGIONS.filter((r) => access.isSuper || access.regions.includes(r.key)), [access]);
   const [hasListBy, setHasListBy] = useState<Record<string, "yes" | "no">>({});
   const [uploadBusy, setUploadBusy] = useState(false);
+  const [uploadPct, setUploadPct] = useState<number | null>(null); // 0-100 while a file is being sent and checked
   const [dragOn, setDragOn] = useState(false);
   const [uploadMsg, setUploadMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [domainsBy, setDomainsBy] = useState<Record<string, string[]>>({});
@@ -179,9 +181,20 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
     try {
       const form = new FormData();
       form.append("file", file); form.append("region", region);
-      const res = await fetch("/api/wizard-upload", { method: "POST", body: form });
-      const j = await res.json().catch(() => ({}));
+      // XMLHttpRequest, because fetch cannot report how much of a file has been sent.
+      setUploadPct(0);
+      const res = await new Promise<{ ok: boolean; j: Record<string, any> }>((resolve) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "/api/wizard-upload");
+        xhr.upload.onprogress = (e) => { if (e.lengthComputable) setUploadPct(Math.min(90, Math.round((e.loaded / e.total) * 90))); };
+        xhr.upload.onload = () => setUploadPct(93); // sent: the server is now saving and checking the file
+        xhr.onload = () => { let j: Record<string, any> = {}; try { j = JSON.parse(xhr.responseText); } catch { /* not JSON */ } resolve({ ok: xhr.status >= 200 && xhr.status < 300, j }); }; // eslint-disable-line @typescript-eslint/no-explicit-any
+        xhr.onerror = () => resolve({ ok: false, j: { error: "Could not reach the server." } });
+        xhr.send(form);
+      });
+      const j = res.j;
       if (res.ok) {
+        setUploadPct(100);
         loadUploads();
         const when = j.duplicateOf ? `It has the same data as "${j.duplicateOf.filename}" (uploaded by ${j.duplicateOf.uploaded_by}), so it is kept on file but not read a second time.`
           : j.instant === "ok" ? "The instant runner has been started now; it usually picks the file up within a few minutes of starting, and the companies then appear under " + focusName + " only."
@@ -190,6 +203,7 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
       }
       else setUploadMsg({ ok: false, text: j.error || "Could not upload that file." });
     } catch { setUploadMsg({ ok: false, text: "Could not reach the server." }); }
+    setTimeout(() => setUploadPct(null), 1200);
     setUploadBusy(false);
   }
 
@@ -390,6 +404,7 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
                       <b>{uploadBusy ? "Uploading…" : `Drop your ${focusName} Excel file here, or click to browse`}</b>
                       <span className="hint">.xlsx or .xls only</span>
                     </label>
+                    {uploadPct !== null && <div className="hw-uploading"><ProgressGauge pct={uploadPct} busy={uploadPct < 100} label={uploadPct < 91 ? `Uploading ${uploadPct}%` : uploadPct < 100 ? "Saving and checking the file…" : "Uploaded"} /></div>}
                     <div className="hw-upload-tips">
                       <p><b>Before you upload</b></p>
                       <ul>
