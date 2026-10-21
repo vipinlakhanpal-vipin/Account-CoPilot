@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.56";
+export const APP_VERSION = "6.57";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.57", date: "2026-10-21", notes: "Uploads and discovery no longer drop companies named \"(Pty) Ltd\"; a missed hourly alarm now appears when you return to the tab.", changes: [
+      { what: "The duplicate check treated \"(Pty)\" as an acronym, so every \"(Pty) Ltd\" company matched the first one and was skipped. Legal forms in brackets are now ignored", where: "Engine worker (uploads, discovery, Find company)", why: "A South Africa upload would have lost about half its companies" },
+      { what: "The hourly break shows up to 15 minutes after the hour (was 5), appears as soon as you return to the tab, and is no longer blocked by a text box left in focus", where: "Hourly break (Aria)", why: "The 6pm alarm was missed" },
+  ] },
   { version: "6.56", date: "2026-10-21", notes: "Region review: accounts whose head office is in another country carry a red flag, can be moved to their head office's region from the account or from the Accounts table, and are counted on the Dashboard.", changes: [
       { what: "A red flag (⚑ HO <country>) marks an account filed in one country whose group head office is in another. The account brief opens with a red box: Move to the head office's region, Keep where it is, or move somewhere else. The Accounts table and every account list have a Region drop-down to move an account by hand to any region, or to any other country, which then shows under Other regions", where: "Accounts tab, account brief, Dashboard lists", why: "The ICP follows the head office, so an account filed in the wrong country must be decided by someone" },
       { what: "Dashboard, Data Sources: a red Region review panel counts the flags still to review, the accounts moved and those kept, and lists them on click. The Accounts table has an Owner column and the brief shows the account owner", where: "Dashboard → Data Sources, Accounts tab", why: "So it is clear where each flagged account went and who owns the decision" },

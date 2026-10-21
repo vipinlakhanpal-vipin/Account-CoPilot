@@ -7,7 +7,7 @@ import { DEFAULT_PREFS, loadPrefs, savePrefs, type Prefs } from "@/lib/hourlyPre
 // Hourly break reminder: between 10:00 and 18:00 (the person's own clock), on each full hour from 11:00 to 18:00, Aria peeks out
 // from behind a clock, rings an alarm and says an hour has passed. Everyone chooses their own alarm and lady's voice (or none) in
 // Aria Setup (left panel, under Aria, or the Settings link on the card). Quiet mode (the switch under Aria) turns it off.
-// Browser only: no API cost. Skipped while the person is typing, and only shown if the tab is in view within 5 minutes of the hour.
+// Browser only: no API cost. Skipped while the person is typing, and only shown if the tab is in view within 15 minutes of the hour (a missed alarm appears when you come back).
 const FIRST = 11, LAST = 18; // 10:00 is the start of the window, so the first full hour that has passed is 11:00
 const MESSAGE = "1 hour has passed. Take a 10 minute walk, or have a coffee and chill for some time, then come back.";
 const SPOKEN = "One hour has passed. Take a ten minute walk, or have a coffee, and relax for a little while. Then come back.";
@@ -27,7 +27,7 @@ export default function HourlyBreak() {
   }, []);
   useEffect(() => { const k = () => { lastKey.current = Date.now(); }; window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k); }, []);
 
-  const typing = () => { const a = document.activeElement as HTMLElement | null, t = a?.tagName; return (!!a && (t === "INPUT" || t === "TEXTAREA" || t === "SELECT" || a.isContentEditable)) || Date.now() - lastKey.current < 4000; };
+  const typing = () => Date.now() - lastKey.current < 4000; // only while keys are being pressed: a box left in focus must not block the alarm
   const hide = useCallback(() => { timers.current.forEach(clearTimeout); timers.current = []; setUp(false); stopSpeaking(); setSpeaking(false); setTimeout(() => setShow(null), 600); }, []);
   const open = useCallback((hour: number) => {
     const p = prefsRef.current;
@@ -40,17 +40,19 @@ export default function HourlyBreak() {
   useEffect(() => {
     const tick = () => {
       const d = new Date(), h = d.getHours(), key = `${d.toDateString()}-${h}`;
-      if (!prefsRef.current.on || h < FIRST || h > LAST || d.getMinutes() >= 5) return;
+      if (!prefsRef.current.on || h < FIRST || h > LAST || d.getMinutes() >= 15) return;
       let done = ""; try { done = localStorage.getItem("hourly-last") || ""; if (sessionStorage.getItem("hourly-off") === d.toDateString()) return; } catch { /* optional */ }
       if (done === key || quiet.current) return;
-      if (document.visibilityState !== "visible" || typing()) return; // waits, and tries again until five minutes past the hour
+      if (document.visibilityState !== "visible" || typing()) return; // waits, and tries again until a quarter past the hour
       try { localStorage.setItem("hourly-last", key); } catch { /* optional */ }
       open(h);
     };
     const t = setInterval(tick, 15000); tick();
+    const back = () => { if (document.visibilityState === "visible") tick(); }; // coming back to the tab shows a missed alarm at once
+    document.addEventListener("visibilitychange", back); window.addEventListener("focus", back);
     const test = () => open(new Date().getHours()); // window.dispatchEvent(new Event("hourly-break-test")) to see it now
     window.addEventListener("hourly-break-test", test);
-    return () => { clearInterval(t); window.removeEventListener("hourly-break-test", test); timers.current.forEach(clearTimeout); };
+    return () => { clearInterval(t); document.removeEventListener("visibilitychange", back); window.removeEventListener("focus", back); window.removeEventListener("hourly-break-test", test); timers.current.forEach(clearTimeout); };
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const hourDeg = ((show?.hour ?? 0) % 12) * 30;

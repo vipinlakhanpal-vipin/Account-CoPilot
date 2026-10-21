@@ -497,7 +497,9 @@ function existingPool(have: { company_name: string; domain?: string | null; prof
 const domRoot = (d: string) => dom(d).split(".")[0].replace(/(group|holding|holdings|intl|international|uae|me|global|co)$/g, "");
 const GENERIC = /\b(pjsc|psc|plc|llc|l l c|fze|fzco|fzc|group|groups|holding|holdings|company|companies|co|the|of|and|international|enterprises|general|contracting|construction|industrial|engineering|civil|trading|investment|investments|services|uae|emirates)\b/g;
 const core = (n: string) => n.toLowerCase().replace(/&/g, " and ").replace(/\(.*?\)/g, " ").replace(/[\'’]/g, "").replace(/[^a-z0-9 ]/g, " ").replace(GENERIC, " ").replace(/\s+/g, "");
-const acronym = (n: string) => (n.match(/\(([A-Za-z]{2,8})\)/)?.[1] || "").toLowerCase();
+// A legal form in brackets, such as "(Pty)", is not an acronym: it made every "(Pty) Ltd" company match the first one.
+const LEGAL_FORM = /^(pty|ltd|plc|inc|llc|pjsc|psc|pte|ltda|sa|nv|bv|ag|gmbh|pvt|cc)$/;
+const acronym = (n: string) => { const a = (n.match(/\(([A-Za-z]{2,8})\)/)?.[1] || "").toLowerCase(); return LEGAL_FORM.test(a) ? "" : a; };
 // Words too common to identify a company on their own (a core equal to one of these never matches by prefix)
 const WEAK = new Set(["dubai", "abudhabi", "sharjah", "ajman", "emirates", "emirati", "gulf", "arabian", "arabia", "national", "united", "first", "royal", "al", "middleeast", "global", "golden", "star", "new", "modern", "commercial", "commercialbank", "islamicbank", "nationalbank"]);
 function sameCompany(aName: string, aWeb: string, bName: string, bDom: string) {
