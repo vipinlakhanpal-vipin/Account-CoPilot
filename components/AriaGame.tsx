@@ -21,7 +21,7 @@ const TEASED_TOO_MUCH = { t: "Okay, now you're just teasing me. Click me if you 
 function Roamer() {
   const router = useRouter(), path = usePathname();
   const [mood, setMood] = useState<string | null>(null), lastMood = useRef(-1);
-  const [punched, setPunched] = useState(false), [away, setAway] = useState(false);
+  const [punched, setPunched] = useState(false), [away, setAway] = useState(false), [menu, setMenu] = useState(false); // menu: her two buttons show only after one click on her
   // Quiet mode: your own switch (kept in this browser) beats the Super Admin's default for everyone. Quiet means no roaming, no funny messages, no teasing; she waits calmly and a click still opens the playroom.
   const [pref, setPref] = useState<"1" | "0" | null>(null), [def, setDef] = useState<{ quietDefault: boolean; canSet: boolean; name?: string }>({ quietDefault: false, canSet: false });
   useEffect(() => { const read = () => { try { const v = localStorage.getItem("aria-quiet"); if (v === "1" || v === "0") setPref(v); } catch { /* optional */ } fetch("/api/aria-prefs", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((j) => j && setDef(j)).catch(() => {}); }; read(); window.addEventListener("aria-prefs-changed", read); return () => window.removeEventListener("aria-prefs-changed", read); }, []);
@@ -30,6 +30,13 @@ function Roamer() {
   const lastKey = useRef(0);
   useEffect(() => { const k = () => { lastKey.current = Date.now(); }; window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k); }, []);
   const typing = () => { const a = document.activeElement as HTMLElement | null, t = a?.tagName; return (!!a && (t === "INPUT" || t === "TEXTAREA" || t === "SELECT" || a.isContentEditable)) || Date.now() - lastKey.current < 4000; };
+  useEffect(() => { // the menu closes on a click elsewhere or Esc
+    if (!menu) return;
+    const out = (e: MouseEvent) => { if (!(e.target as HTMLElement | null)?.closest(".agame, .agame-legend")) setMenu(false); };
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") setMenu(false); };
+    document.addEventListener("mousedown", out); document.addEventListener("keydown", esc);
+    return () => { document.removeEventListener("mousedown", out); document.removeEventListener("keydown", esc); };
+  }, [menu]);
   const [hint, setHint] = useState(0); // the idle bubble alternates between inviting you to play and explaining her click tricks
   useEffect(() => { const t = setInterval(() => setHint((h) => (h + 1) % 2), 6500); return () => clearInterval(t); }, []);
   const [tease, setTease] = useState<{ t: string; m: (typeof TEASED)[number]["m"] } | null>(null), teaseRef = useRef({ last: 0, n: 0, first: 0, timer: undefined as ReturnType<typeof setTimeout> | undefined });
@@ -121,15 +128,15 @@ function Roamer() {
         ? <button type="button" className="agame-bubble funny" onClick={go} title="Open Aria's playroom">{tease ? tease.t : mood}</button>
         : hint === 0
           ? <button type="button" className="agame-bubble" onClick={go} title="Open Aria's playroom">Want to play? 🎮<br />Press here 👆</button>
-          : <button type="button" className="agame-bubble wide" onClick={go} title="Open Aria's playroom">One click: I follow you 🐾<br />Double-click: I go home 🏠</button>)}
-        <button type="button" className={`agame-bot${punched ? " punched" : ""}${tease ? " tickled" : mood && !punched ? " sad" : ""}`} onClick={() => { setMood(null); setAway(true); }} aria-label="Aria: send her exploring around the page (double-click her to bring her home)" title="Click me and I will follow your mouse">
+          : <button type="button" className="agame-bubble wide" onClick={go} title="Open Aria's playroom">One click: my menu 📋<br />Double-click: I explore 🐾</button>)}
+        <button type="button" className={`agame-bot${punched ? " punched" : ""}${tease ? " tickled" : mood && !punched ? " sad" : ""}`} onClick={() => { setMood(null); setMenu((m) => !m); }} onDoubleClick={() => { setMenu(false); setMood(null); setAway(true); }} aria-expanded={menu} aria-label="Aria: one click opens her menu, double-click sends her exploring around the page (double-click her to bring her home)" title="Click me for my menu. Double-click and I go exploring">
           <AriaFace mood={tease ? tease.m : mood ? "oops" : "happy"} />
         </button>
     </div>
-    {!away && <div className="agame-legend">
+    {!away && menu && <div className="agame-legend">
       <div className="agame-actions">
-        <button type="button" className="agame-ask" onClick={openChat}>💬 Ask Aria about your data</button>
-        <button type="button" className="agame-play" onClick={go}>🎮 Play games with Aria</button>
+        <button type="button" className="agame-ask" onClick={() => { setMenu(false); openChat(); }}>💬 Ask Aria about your data</button>
+        <button type="button" className="agame-play" onClick={() => { setMenu(false); go(); }}>🎮 Play games with Aria</button>
       </div>
     </div>}
     {away && <><p className="agame-note">Aria is out exploring. Double-click her, or press Esc, to call her home.</p><AriaTraveller getHome={getHome} onHome={() => setAway(false)} name={def.name || ""} /></>}

@@ -23,7 +23,7 @@ export default function AriaSetup() {
         <p className="note">How Aria behaves for you. These choices are kept in this browser.</p>
         <section className="aset-sec">
           <h3>Quiet mode</h3>
-          <p className="note">Aria stays calm: no roaming, no teasing or funny messages, and the hourly break stays off. She still opens the playroom when you click her.</p>
+          <p className="note">Aria stays calm: no roaming, no teasing or funny messages, and the hourly break stays off. She still shows her menu when you click her.</p>
           <label className="aset-row"><input type="checkbox" checked={quiet} onChange={(e) => setQuiet(e.target.checked)} /> Quiet mode (just me)</label>
           {def.canSet && <label className="aset-row" title="The default for every other user who has not chosen for themselves. Their own switch still wins."><input type="checkbox" checked={def.quietDefault} onChange={(e) => setEveryone(e.target.checked)} /> Quiet for everyone (default for other users)</label>}
         </section>

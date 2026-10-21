@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.59";
+export const APP_VERSION = "6.60";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.60", date: "2026-10-21", notes: "Aria's two buttons now show only after one click on her.", changes: [
+      { what: "Ask Aria and Play games are hidden until you click Aria once; they close when you click elsewhere, press Esc or pick one. Double-click Aria to send her exploring (double-click again or Esc to call her home)", where: "Left panel, Aria", why: "Keeps the left panel clean" },
+  ] },
   { version: "6.59", date: "2026-10-21", notes: "Team table: an Inactive days column before % used.", changes: [
       { what: "Settings → Team has an Inactive days column before % used: the days since each person last did anything. It turns amber from 10 days and red at 15, when the person is suspended and waits under Inactive users for you to Keep or Archive", where: "Settings → Team", why: "See at a glance who is going quiet before they are suspended" },
   ] },
