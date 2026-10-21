@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.27";
+export const APP_VERSION = "6.28";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.28", date: "2026-10-21", notes: "Every account explains its ICP Match, Opportunity and Coupa Fit percentages in plain words, beside the points.", changes: [
+      { what: "In the PDF, each company's scores section now has a framed note on the right: what each score asks, how its percentage came about (for example 35 of 70 points earned = 50%), which area gave the most points and which the fewest, and how to read the percentage. The same plain explanation sits inside each score card on the account page in the app. The full scoring rules are still at the end of the PDF", where: "PDF report and account page", why: "Readers could not follow the points and had to reach the end of the PDF to learn how they work" },
+  ] },
   { version: "6.27", date: "2026-10-21", notes: "ERP landscape shows only what makes sense: generic web and developer tags are hidden, third-party apps appear only when there is data.", changes: [
       { what: "Unverified technology tags in generic web, content, domain, cloud and developer categories (for example Ableton Live or .NET from Seamless technographics) are hidden everywhere: the account page, the ERP & apps tab, the PDF, the Excel, the Master Book and Aria. 502 of the 718 stored rows are hidden; nothing is deleted from the database", where: "Account page, ERP & apps, PDF, Excel, Master Book, Aria", why: "These tags said nothing about the company's procurement and finance systems" },
       { what: "The ERP landscape block always shows the ERP line (\"not_public\" now reads \"Not public\") and lists third-party apps only when there is data; the \"No third-party apps verified\" line is gone", where: "Account page and PDF", why: "You wanted third-party apps shown only when we have data" },

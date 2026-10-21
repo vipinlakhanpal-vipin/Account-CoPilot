@@ -2,8 +2,10 @@ import "server-only";
 import { SHOW_HUBSPOT } from "@/lib/features";
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import type { AllData, Row } from "@/lib/data";
+import type { Score } from "@/lib/icp";
 import { icpMatch, opportunity, coupaFit, procurementMaturity, estimateSpend, whySelected, recommendedActions, withDefaults, revenueOf, revenueIsOfficial, fmtUsdM, fmtMoneyM, type Criteria } from "@/lib/icp";
 import { erpText } from "@/lib/techApps";
+import { explainScore, type ScoreName } from "@/lib/scoreExplain";
 import { playbookFor, startersFor, productsLabel, type Detected } from "@/lib/playbook";
 import { rulesFor, regionOf, OPTIONS, REGIONS, describeRules, type Rules } from "@/lib/icpDefinition.mjs";
 
@@ -210,6 +212,41 @@ function pointsExplained(w: Writer) {
   w.p("Pipeline rank is a weighted blend of the three scores, using the weights saved in Define ICP. Spend and transaction figures are benchmark estimates, never company data.", { size: 9, color: MUTED, gap: 6 });
 }
 
+/** The three scores as lists of points on the left, and on the right a framed plain-language note on how each percentage came about. */
+function scoresWithFrame(w: Writer, items: [ScoreName, Score][]) {
+  const leftW = CW * 0.6, frameX = M + CW * 0.63, frameW = CW * 0.37, pad = 8;
+  type L = { t: string; size: number; font: PDFFont; color: ReturnType<typeof rgb>; x: number; gap?: number };
+  const left: L[] = [], right: L[] = [];
+  const addL = (t: string, size: number, font: PDFFont, color: ReturnType<typeof rgb>, indent: number, gap = 0) => w.wrap(t, font, size, leftW - indent).forEach((ln, i, a) => left.push({ t: ln, size, font, color, x: M + indent, gap: i === a.length - 1 ? gap : 0 }));
+  const addR = (t: string, size: number, font: PDFFont, color: ReturnType<typeof rgb>, gap = 0) => w.wrap(t, font, size, frameW - 2 * pad).forEach((ln, i, a) => right.push({ t: ln, size, font, color, x: frameX + pad, gap: i === a.length - 1 ? gap : 0 }));
+  for (const [label, sc] of items) {
+    addL(`${label}: ${sc.total}%`, 9.5, w.bold, INK, 0, 0);
+    sc.parts.forEach((x) => addL(`${x.label}: ${x.score} of ${x.max} pts - ${x.why}`, 8.5, w.font, MUTED, 10, 0));
+    left.push({ t: "", size: 8.5, font: w.font, color: INK, x: M, gap: 0 });
+  }
+  addR("HOW TO READ THESE SCORES", 8, w.bold, TEAL, 3);
+  addR("Each score is points earned divided by points available, shown as a percentage.", 8, w.font, MUTED, 6);
+  for (const [label, sc] of items) {
+    const e = explainScore(label, sc);
+    addR(`${e.name}: ${e.pct}%`, 8.5, w.bold, INK, 1);
+    addR(e.question, 8, w.font, INK, 2);
+    addR(e.sum, 8, w.bold, TEAL, 2);
+    if (e.extremes) addR(e.extremes, 8, w.font, INK, 2);
+    addR(e.reading, 8, w.font, MUTED, 7);
+  }
+  const hOf = (ls: L[]) => ls.reduce((t, l) => t + l.size * 1.35 + (l.gap || 0), 0);
+  const frameH = hOf(right) + 2 * pad, h = Math.max(hOf(left), frameH);
+  w.ensure(Math.min(h + 40, H - 2 * M - 20)); // the heading and the whole block stay on one page
+  w.h2("Scores: how well this account fits", 0);
+  const top = w.y;
+  w.page.drawRectangle({ x: frameX, y: top - frameH, width: frameW, height: frameH, color: rgb(0.94, 0.97, 0.96), borderColor: rgb(0.62, 0.8, 0.74), borderWidth: 0.8 });
+  let y = top;
+  for (const l of left) { y -= l.size * 1.35; if (l.t) w.page.drawText(l.t, { x: l.x, y, size: l.size, font: l.font, color: l.color }); y -= l.gap || 0; }
+  let ry = top - pad;
+  for (const l of right) { ry -= l.size * 1.35; w.page.drawText(l.t, { x: l.x, y: ry + 2, size: l.size, font: l.font, color: l.color }); ry -= l.gap || 0; }
+  w.y = Math.min(y, top - frameH) - 4;
+}
+
 export async function buildReport(all: AllData, def: unknown, opt: ReportOptions): Promise<{ bytes: Uint8Array; count: number; total: number }> {
   const criteria = withDefaults(opt.criteria);
   const hires: Record<string, number> = {};
@@ -239,7 +276,7 @@ export async function buildReport(all: AllData, def: unknown, opt: ReportOptions
   w.p(`Generated ${new Date().toISOString().slice(0, 16).replace("T", " ")} UTC by ${opt.generatedBy || "a team member"}  |  ${picked.length} of ${total} matching companies`, { size: 9, color: MUTED, gap: 8 });
   const regions = opt.region === "All" ? [...new Set(picked.map((x) => regionOf(x.a.country)))] : [opt.region];
   // The company comes first. How the report was produced and how the points work are explained on the last pages.
-  w.p("How this report was produced, and how each score is calculated, is explained at the end.", { size: 8.5, color: MUTED, gap: 8 });
+  w.p("Each company page explains its scores in a framed note beside the points. How this report was produced, and the full scoring rules, are at the end.", { size: 8.5, color: MUTED, gap: 8 });
 
   const curOf = (a: Row) => (rulesFor(def, a.country) as Rules).currency as Cur;
   const contactCos = new Set(all.contacts.map((p) => p.company_id));
@@ -293,12 +330,7 @@ export async function buildReport(all: AllData, def: unknown, opt: ReportOptions
     w.p(mat.why);
     w.kv("S2P platform", mat.platform); w.kv("ERP", mat.erp); w.kv("S2P signal", mat.signal); w.kv("Addressable spend", spend ? money(spend.total, cur) : "");
 
-    w.h2("AI intelligence (rule-based)", 140);
-    for (const [label, sc] of [["ICP Match", m], ["Opportunity", o], ["Coupa Fit", f]] as const) {
-      w.p(`${label}: ${sc.total}%`, { bold: true, gap: 0 });
-      sc.parts.forEach((x) => w.p(`${x.label}: ${x.score} of ${x.max} pts - ${x.why}`, { size: 8.5, color: MUTED, indent: 10, gap: 0 }));
-      w.y -= 3;
-    }
+    scoresWithFrame(w, [["ICP Match", m], ["Opportunity", o], ["Coupa Fit", f]]);
     const why = whySelected(a, c, m, spend);
     if (why.length) { w.p("Why this account was selected", { bold: true }); why.forEach((x) => w.bullet(x)); }
     if (spend) {

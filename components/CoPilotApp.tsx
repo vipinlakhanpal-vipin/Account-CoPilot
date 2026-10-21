@@ -1,6 +1,7 @@
 "use client";
 import SourceChart from "@/components/SourceChart";
 import { erpText } from "@/lib/techApps";
+import { explainScore, type ScoreName } from "@/lib/scoreExplain";
 import { addedAt, enrichedAt, dayKey } from "@/lib/dates";
 import { ask, paidFetch, notify } from "@/components/Confirm";
 import { rulesFor, regionOf } from "@/lib/icpDefinition.mjs";
@@ -989,6 +990,7 @@ function Brief({ a, data, people, onClose, onContact, scores, criteria, isSuper 
             <div className="score-cards">
               {([["ICP Match", scores.m], ["Opportunity", scores.o], ["Coupa Fit", scores.f]] as [string, Score][]).map(([l, sc]) => (
                 <div key={l} className="score-card"><small>{l}<InfoTip k={l === "ICP Match" ? "icpMatch" : l === "Opportunity" ? "opportunity" : "coupaFit"} /></small><b className={sc.total >= 70 ? "hi" : sc.total >= 45 ? "mid" : "lo"}>{sc.total}%</b>
+                  {(() => { const e = explainScore(l as ScoreName, sc); return <div className="score-how"><p>{e.question}</p><p><b>{e.sum}</b></p>{e.extremes && <p>{e.extremes}</p>}<p className="muted">{e.reading}</p></div>; })()}
                   <ul>{sc.parts.map((x) => <li key={x.label}><span>{x.label}</span><span className="mono" title="points earned of the points available">{x.score} of {x.max} pts</span><em>{x.why}</em></li>)}</ul></div>))}
             </div>
             <h5>Why this account was selected</h5><ul className="plain">{why.map((w) => <li key={w}>{w}</li>)}</ul>

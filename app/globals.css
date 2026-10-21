@@ -2861,3 +2861,7 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 .src-bars .bar{font-size:10px;grid-template-columns:minmax(78px,44%) 1fr 34px}
 .src-bars .bar .lab{font-size:10px}
 .src-bars .bar .n{font-size:9.5px}
+
+/* Plain-language "how this score came about" inside each score card on the account page */
+.score-how{margin:6px 0 8px;padding:8px 10px;border:1px solid color-mix(in srgb,var(--teal,#2EC4A6) 40%,transparent);border-radius:8px;background:color-mix(in srgb,var(--teal,#2EC4A6) 8%,transparent);font-size:11px;line-height:1.45}
+.score-how p{margin:0 0 3px}.score-how p:last-child{margin-bottom:0}
