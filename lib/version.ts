@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.09";
+export const APP_VERSION = "6.10";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.10", date: "2026-10-21", notes: "Process order is played by dragging.", changes: [
+      { what: "In Process order you drag each step into its numbered slot. A slot lights up as you hover over it, a wrong drop shakes the step and counts as a slip, and tapping the steps in order still works", where: "Aria's playroom, Process order", why: "Dragging suits putting things in order better than tapping" },
+  ] },
   { version: "6.09", date: "2026-10-21", notes: "Games shelves open one at a time from a drop-down, games carry a category, and the Daily run pill says which tabs list the new runs.", changes: [
       { what: "The shelf is now one drop-down: pick a shelf and its games fill the same space below, so every shelf uses one optimised area instead of sitting side by side. + New shelf can start empty or be filled with a category. Every game has a category tag (Thinking, Analysing, Memory, Focus, Speed, Language, Knowledge) shown in its row and when you hover its book; three shelves start grouped by tag", where: "Aria's playroom, shelf bar", why: "Shelf 1 and Shelf 2 took the same space and the library should stay compact whichever shelf is open" },
       { what: "The blue pill on the left panel's Daily run item now reads \"2 new runs\", and on opening Daily run the same pill sits on the Daily Run Summary and Run history tabs, the two tabs that list the new runs", where: "Left panel, Daily run", why: "It was unclear where the new runs could be seen" },

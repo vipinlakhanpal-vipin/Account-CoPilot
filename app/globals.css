@@ -2813,3 +2813,8 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 .gr-shelfbox{width:100%}
 .gr-chip.tag{background:var(--tab-on);color:var(--tab-on-fg)}
 .seg-toggle .navbadge.tabnew{margin-left:8px;padding:1px 7px;border-radius:999px;background:#2E7CF6;color:#fff;font:700 10.5px/1.4 var(--body)}
+
+/* v6.10: Process order is played by dragging a step into its slot (tapping still works) */
+.b2-step{cursor:grab}.b2-step.dragging{opacity:.45;cursor:grabbing}
+.b2-done li{transition:background .12s,border-color .12s}
+.b2-done li.over{border-style:solid;border-color:var(--teal);background:color-mix(in srgb,var(--teal) 14%,var(--surface))}

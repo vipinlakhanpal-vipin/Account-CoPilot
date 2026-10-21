@@ -110,28 +110,32 @@ const PROCESSES: { name: string; steps: string[] }[] = [
 ];
 export function ProcessOrder({ onClose, onEvent }: { onClose: () => void; onEvent?: Ev }) {
   const [order, setOrder] = useState(() => shuffle(PROCESSES)), [i, setI] = useState(0), [score, setScore] = useState(0), [mistakes, setMistakes] = useState(0);
-  const [shuf, setShuf] = useState(() => shuffle(order[0].steps)), [done, setDone] = useState<string[]>([]), [phase, setPhase] = useState<"play" | "next" | "over">("play"), [shake, setShake] = useState("");
+  const [shuf, setShuf] = useState(() => shuffle(order[0].steps)), [placed, setPlaced] = useState<(string | null)[]>(() => order[0].steps.map(() => null)), [phase, setPhase] = useState<"play" | "next" | "over">("play"), [shake, setShake] = useState(""), [over, setOver] = useState(-1), [drag, setDrag] = useState("");
   const [best, setBest] = useState<number | null>(getBest("aria-process-best"));
   useEffect(() => { onEvent?.("start"); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const p = order[i];
-  const tap = (s: string) => {
-    if (phase !== "play") return;
-    if (s === p.steps[done.length]) {
-      const d = [...done, s]; setDone(d); onEvent?.("good");
-      if (d.length === p.steps.length) { setScore((x) => x + (mistakes === 0 ? 1 : 0)); setPhase("next"); }
+  // Drag a step onto its slot, or tap it and it goes to the next free slot (only if that is where it belongs).
+  const put = (s: string, k: number) => {
+    if (phase !== "play" || placed[k]) return;
+    if (s === p.steps[k]) {
+      const d = placed.map((x, j) => (j === k ? s : x)); setPlaced(d); onEvent?.("good");
+      if (d.every(Boolean)) { setScore((x) => x + (mistakes === 0 ? 1 : 0)); setPhase("next"); }
     } else { setMistakes((m) => m + 1); setShake(s); setTimeout(() => setShake(""), 400); onEvent?.("bad"); }
   };
+  const tap = (s: string) => put(s, placed.findIndex((x) => !x));
   const next = () => {
     if (i + 1 >= order.length) { setPhase("over"); setBest((b) => { const n = b === null || score > b ? score : b; setBestKey("aria-process-best", n); return n; }); onEvent?.(score >= 3 ? "win" : "lose", `${score} of ${order.length} perfect`, { score, total: order.length }); return; }
-    setI(i + 1); setShuf(shuffle(order[i + 1].steps)); setDone([]); setMistakes(0); setPhase("play");
+    setI(i + 1); setShuf(shuffle(order[i + 1].steps)); setPlaced(order[i + 1].steps.map(() => null)); setMistakes(0); setPhase("play");
   };
-  const again = () => { const o = shuffle(PROCESSES); setOrder(o); setI(0); setScore(0); setMistakes(0); setShuf(shuffle(o[0].steps)); setDone([]); setPhase("play"); onEvent?.("start"); };
+  const again = () => { const o = shuffle(PROCESSES); setOrder(o); setI(0); setScore(0); setMistakes(0); setShuf(shuffle(o[0].steps)); setPlaced(o[0].steps.map(() => null)); setPhase("play"); onEvent?.("start"); };
   return (
-    <Shell title={phase === "over" ? "Finished" : p.name} sub={phase === "over" ? `${score} of ${order.length} in perfect order${best !== null ? ` · best ${best}` : ""}` : "Tap the steps in the order they happen. No timer."}
+    <Shell title={phase === "over" ? "Finished" : p.name} sub={phase === "over" ? `${score} of ${order.length} in perfect order${best !== null ? ` · best ${best}` : ""}` : "Drag each step into its place, in the order they happen (or tap them in order). No timer."}
       info={phase === "over" ? "" : `Process ${i + 1} of ${order.length}`} info2={`${score} perfect`} onClose={onClose} onRestart={again}>
       {phase !== "over" ? (
-        <div className="cg-q"><ol className="b2-done">{p.steps.map((s, k) => <li key={s} className={k < done.length ? "on" : ""}>{k < done.length ? s : `Step ${k + 1}`}</li>)}</ol>
-          <div className="cg-opts" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(170px,1fr))" }}>{shuf.filter((s) => !done.includes(s)).map((s) => <button type="button" key={s} className={`btn cg-opt b2-step${shake === s ? " wrong" : ""}`} onClick={() => tap(s)}>{s}</button>)}</div>
+        <div className="cg-q"><ol className="b2-done">{p.steps.map((_, k) => <li key={k} className={`${placed[k] ? "on" : ""}${over === k ? " over" : ""}`}
+            onDragOver={(e) => { if (!placed[k]) { e.preventDefault(); setOver(k); } }} onDragLeave={() => setOver(-1)} onDrop={(e) => { e.preventDefault(); setOver(-1); const t = e.dataTransfer.getData("text/plain") || drag; if (t) put(t, k); setDrag(""); }}>{placed[k] || `Step ${k + 1}`}</li>)}</ol>
+          <div className="cg-opts" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(170px,1fr))" }}>{shuf.filter((s) => !placed.includes(s)).map((s) => <button type="button" key={s} draggable className={`btn cg-opt b2-step${shake === s ? " wrong" : ""}${drag === s ? " dragging" : ""}`} onClick={() => tap(s)}
+            onDragStart={(e) => { e.dataTransfer.setData("text/plain", s); e.dataTransfer.effectAllowed = "move"; setDrag(s); }} onDragEnd={() => { setDrag(""); setOver(-1); }}>{s}</button>)}</div>
           {phase === "next" && <><p className="agm-why ok"><b>Correct!</b> {mistakes === 0 ? "In perfect order." : `Done, with ${mistakes} slip${mistakes === 1 ? "" : "s"}.`}</p><div className="agm-row"><button type="button" className="btn primary" onClick={next} autoFocus>{i + 1 >= order.length ? "Finish" : "Next process"}</button></div></>}</div>
       ) : <div className="agm-end static"><button type="button" className="btn primary" onClick={again}>Play again</button></div>}
     </Shell>
