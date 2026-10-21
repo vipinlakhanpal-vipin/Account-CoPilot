@@ -90,6 +90,7 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
   useEffect(() => { onStepChange?.(step); }, [step]); // eslint-disable-line react-hooks/exhaustive-deps
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [justSaved, setJustSaved] = useState(false); // the Save button reads "Saved" until the user moves to another step or country
   const [def, setDef] = useState<Definition | null>(null);
   const visibleRegions = useMemo(() => REGIONS.filter((r) => access.isSuper || access.regions.includes(r.key)), [access]);
   const [hasListBy, setHasListBy] = useState<Record<string, "yes" | "no">>({});
@@ -115,6 +116,7 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
   const overview = focusProp === "ALL"; // "All countries (overview)": a read-only look at every region, nothing is set or saved there
   const focus = focusProp && focusProp !== "ALL" && visibleRegions.some((r) => r.key === focusProp) ? focusProp : (visibleRegions[0]?.key || "");
   const regions = overview ? visibleRegions.map((r) => r.key) : (focus ? [focus] : []); // the country being set up (or every region in the overview)
+  useEffect(() => { setJustSaved(false); }, [step, regions.join(",")]);
   const focusName = REGIONS.find((r) => r.key === focus)?.name || focus;
   const defDomains = (k: string) => { const r = def?.regions[k]; return r ? OPTIONS.domains.filter((x) => r.personas.departments.includes(x.department)).map((x) => x.key) : []; };
   const defDraft = (k: string): Draft => { const r = def?.regions[k]; return { discoverPerDay: r?.engine.discover_per_day || 5, verifyPerDay: r?.engine.verify_per_day || 25 }; };
@@ -219,7 +221,7 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
     try {
       const res = await fetch("/api/icp", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "save", definition: n }) });
       const j = await res.json();
-      if (j.ok) { notify(`Saved and applied — ${j.changed || 0} account${j.changed === 1 ? "" : "s"} changed status.`, "ok"); setDef(n); }
+      if (j.ok) { notify(`Saved and applied — ${j.changed || 0} account${j.changed === 1 ? "" : "s"} changed status.`, "ok"); setDef(n); setJustSaved(true); }
       else notify(j.error || j.problems?.[0] || "Could not save.", "error");
     } catch { notify("Could not reach the server.", "error"); }
     setSaving(false);
@@ -547,7 +549,7 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
                       <td>{pl.domains.length ? pl.domains.map((d) => OPTIONS.domains.find((x) => x.key === d)?.label).join(", ") : "no change"}</td>
                       <td>find {pl.draft.discoverPerDay}, verify {pl.draft.verifyPerDay} per day</td>
                       <td>{pl.activate ? "On" : st === "next" ? "Will start Paused" : "Paused"}</td></tr>); })}</tbody></table></div>
-                {overview ? <p className="note" style={{ marginTop: 16 }}>Pick a country above to review and save it. The overview is read-only.</p> : <button type="button" className="btn primary" disabled={saving || !regions.length} onClick={save} style={{ marginTop: 16 }}>{saving ? "Saving…" : "Save & apply"}</button>}
+                {overview ? <p className="note" style={{ marginTop: 16 }}>Pick a country above to review and save it. The overview is read-only.</p> : <button type="button" className="btn primary" disabled={saving || justSaved || !regions.length} onClick={save} style={{ marginTop: 16 }}>{saving ? "Saving…" : justSaved ? "Saved ✓" : "Save & apply"}</button>}
               </div>
             )}
 

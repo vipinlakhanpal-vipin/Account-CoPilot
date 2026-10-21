@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.20";
+export const APP_VERSION = "6.21";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.21", date: "2026-10-21", notes: "Save & apply buttons read Saved after a save, until you move on.", changes: [
+      { what: "After you save and apply in Define ICP or the Setup wizard (step 6), the button reads \"Saved ✓\" instead of going back to \"Save & apply\". In Define ICP it stays until your next edit or until you open another region; in the wizard it stays until you move to another step or country", where: "Define ICP, Setup wizard", why: "You wanted a clear sign that the save went through" },
+  ] },
   { version: "6.20", date: "2026-10-21", notes: "Setup wizard step 1: a Files column next to Status lists the uploaded files to download.", changes: [
       { what: "Step 1 (Region and size) has a new Files column right after Status. It lists each file uploaded for that country as a download link (⬇ file name), or \"None uploaded\". Same download rule as before: the Super Admin or the uploader", where: "Setup wizard, step 1", why: "You asked for the files in their own column next to Status, not under it" },
   ] },

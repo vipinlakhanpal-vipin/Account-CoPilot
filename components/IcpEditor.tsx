@@ -118,6 +118,8 @@ export default function IcpEditor({ initial, counts, isSuper, allowed, roleLabel
   // Save automatically (default on): a change of status saves at once with a message; other edits save 2 seconds after you stop typing. Turn it off to save by hand.
   const [auto, setAuto] = useState(true);
   const [lastSaved, setLastSaved] = useState("");
+  const [justSaved, setJustSaved] = useState(false); // the Save button reads "Saved" until the next edit or until another region is opened
+  useEffect(() => { setJustSaved(false); }, [region]);
   const [stuck, setStuck] = useState(false); // a save failed: wait for the next edit (or the Save button) instead of retrying forever
   const statusChange = useRef<{ region: string; status: string } | null>(null);
   useEffect(() => { try { if (localStorage.getItem("icp-autosave") === "0") setAuto(false); } catch { /* optional */ } }, []);
@@ -129,7 +131,7 @@ export default function IcpEditor({ initial, counts, isSuper, allowed, roleLabel
   const problems = useMemo(() => visible.flatMap(({ key }) => validateRules(key, def.regions[key])), [def, visible]);
   const set = (fn: (x: Rules) => void) => {
     setDef((d) => { const n = clone(d); const before = n.regions[region].status; fn(n.regions[region]); if (n.regions[region].status !== before) statusChange.current = { region, status: n.regions[region].status }; return n; });
-    setResult(null); setStuck(false);
+    setResult(null); setStuck(false); setJustSaved(false);
   };
 
   async function call(action: "preview" | "save", auto = false) {
@@ -147,7 +149,7 @@ export default function IcpEditor({ initial, counts, isSuper, allowed, roleLabel
           : sc ? `${sc.region} is now ${word(sc.status)}. Saved and applied${sc.status === "active" ? `; the daily run includes it from tomorrow 6am.` : "."}`
           : `ICP saved as v${j.saved.version} and applied — ${j.changed} account${j.changed === 1 ? "" : "s"} changed status.`;
         notify(msg, j.ok ? "ok" : "error");
-        if (j.ok && j.saved) setLastSaved(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })); else setStuck(true);
+        if (j.ok && j.saved) { setLastSaved(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })); setJustSaved(true); } else setStuck(true);
       }
       if (action === "preview") notify(j.ok ? `Preview: ${j.changed} account${j.changed === 1 ? "" : "s"} would change status (details below the settings). Nothing saved.` : (j.problems?.[0] || j.error || "Check the settings."), j.ok ? "ok" : "error");
       if (action === "save" && j.ok && j.saved) {
@@ -186,7 +188,7 @@ export default function IcpEditor({ initial, counts, isSuper, allowed, roleLabel
           <span className="icp-dirty" aria-live="polite">{problems.length ? `${problems.length} to fix (see below)` : busy === "save" ? "Saving…" : dirty ? (auto ? `Saving ${dirtyRegions.join(", ")} in a moment…` : `Unsaved: ${dirtyRegions.join(", ")}`) : lastSaved ? `Saved ${lastSaved}` : ""}</span>
           {!readOnly && <button type="button" className="btn" disabled={!dirty || !!busy} onClick={() => { setDef(clone(saved)); setResult(null); }}>Discard changes</button>}
           {!readOnly && <button type="button" className="btn" disabled={!!busy || !!problems.length} onClick={() => call("preview")}>{busy === "preview" ? "Checking…" : "Preview impact"}</button>}
-          {!readOnly && <button type="button" className="btn primary" disabled={!dirty || !!busy || !!problems.length} onClick={() => call("save")}>{busy === "save" ? "Saving…" : "Save & apply"}</button>}
+          {!readOnly && <button type="button" className="btn primary" disabled={!dirty || !!busy || !!problems.length} onClick={() => call("save")}>{busy === "save" ? "Saving…" : justSaved && !dirty ? "Saved ✓" : "Save & apply"}</button>}
         </div>
       </div>
 
@@ -390,7 +392,7 @@ export default function IcpEditor({ initial, counts, isSuper, allowed, roleLabel
           <span className="acts">
             <button type="button" className="btn" disabled={!!busy} onClick={() => { setDef(clone(saved)); setResult(null); }}>Discard changes</button>
             <button type="button" className="btn" disabled={!!busy || !!problems.length} onClick={() => call("preview")}>{busy === "preview" ? "Checking…" : "Preview impact"}</button>
-            <button type="button" className="btn primary" disabled={!!busy || !!problems.length} onClick={() => call("save")}>{busy === "save" ? "Saving…" : "Save & apply"}</button>
+            <button type="button" className="btn primary" disabled={!!busy || !!problems.length} onClick={() => call("save")}>{busy === "save" ? "Saving…" : justSaved && !dirty ? "Saved ✓" : "Save & apply"}</button>
           </span>
         </div>
       )}
