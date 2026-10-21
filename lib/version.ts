@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.29";
+export const APP_VERSION = "6.30";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.30", date: "2026-10-21", notes: "Ask Aria / Play games buttons use the standard small font and are shorter.", changes: [
+      { what: "The Ask Aria about your data and Play games with Aria buttons in the left panel use the same small font as the other panel items at every screen size (12.5 px), with less padding so each button is shorter, and the full text fits. The Tips and settings line uses the same standard size. This replaces the screen-size scaling of v6.16", where: "Left panel", why: "The buttons looked oversized and cut the text off" },
+  ] },
   { version: "6.29", date: "2026-10-21", notes: "Downloads (Master Book, PDF, Excel) are now a per-person switch: on for the Super Admin and Nardus, blocked for everyone else.", changes: [
       { what: "Master Book, PDF and Excel downloads (and Aria's file buttons) are open only to the Super Admin and to people whose download switch is on. Nardus is switched on; every other user, including Admins and Standard users, stays blocked. The switch is the new can_download field on each user's access record, off by default", where: "All downloads", why: "You asked to keep downloads open for Nardus only" },
   ] },

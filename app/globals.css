@@ -2835,11 +2835,11 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 .navmid .agame-bot{left:calc(-36px * var(--as,1));top:calc(-36px * var(--as,1));width:calc(72px * var(--as,1));height:calc(72px * var(--as,1))}
 .navmid .agame-bubble,.navmid .agame-bubble.funny{bottom:calc(12px + 36px * var(--as,1))}
 
-/* v6.16: the Ask Aria / Play buttons and the tips line scale with the window height (11 px on a 13 inch laptop up to 14 px on a 32 inch monitor); sizes are in em so padding follows the text */
-.agame-legend{--lf:clamp(10.5px,calc(.52vh + 7.25px),14.5px);font-size:calc(var(--lf) * .92)}
-.agame-legend .agame-ask,.agame-legend .agame-play{font-size:var(--lf);padding:.5em .8em;border-width:max(1.5px,.14em)}
-.agame-actions{gap:calc(var(--lf) * .5);margin-bottom:calc(var(--lf) * .4)}
-.agame-legend .agame-more{font-size:calc(var(--lf) * .92)}
+/* v6.30: the Ask Aria / Play buttons and the tips line use the standard small font of the left panel at every screen size, and the buttons are shorter (this replaces the v6.16 scaling) */
+.agame-legend{font-size:12px}
+.agame-legend .agame-ask,.agame-legend .agame-play{font:600 12.5px var(--body);line-height:1.25;padding:5px 10px;border-width:1.5px}
+.agame-actions{gap:6px;margin-bottom:6px}
+.agame-legend .agame-more{font-size:12px}
 
 /* v6.18: the wizard drop zone highlights while a file is dragged over it */
 .hw-dropzone.drag{border-style:solid;border-color:var(--teal);background:color-mix(in srgb,var(--teal) 14%,var(--accent-soft))}
