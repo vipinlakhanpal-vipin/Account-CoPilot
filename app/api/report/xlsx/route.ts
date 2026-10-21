@@ -18,6 +18,8 @@ const Body = z.object({
   emailOnly: z.boolean().default(true),
   limit: z.number().int().min(1).max(1000).optional(),
   rank: z.enum(["fit", "revenue", "name"]).default("fit"),
+  products: z.array(z.string().max(40)).max(3).optional(),
+  productMode: z.enum(["prospects", "customers"]).default("prospects"),
 }).refine((b) => b.statuses || b.companyIds, { message: "statuses or companyIds required" });
 
 export async function POST(req: Request) {
@@ -25,7 +27,7 @@ export async function POST(req: Request) {
   if (!user) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
   const parsed = Body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Choose a region and at least one status." }, { status: 400 });
-  const { region, statuses = [...STATUSES], emailOnly, companyIds, limit, rank } = parsed.data;
+  const { region, statuses = [...STATUSES], emailOnly, companyIds, limit, rank, products, productMode } = parsed.data;
   const access = await getAccess(user);
   if (!access.canDownload) return NextResponse.json({ error: "Downloads are not available for your role. You can see the data in the app." }, { status: 403 });
   if (!canSeeRegion(access, region)) return NextResponse.json({ error: "You don't have access to that region." }, { status: 403 });
@@ -36,7 +38,7 @@ export async function POST(req: Request) {
     db.from("settings").select("value").eq("key", "icp_definition").maybeSingle().then((r) => r.data?.value),
     db.from("settings").select("value").eq("key", "icp_criteria").maybeSingle().then((r) => r.data?.value),
   ]);
-  const out = await buildCampaignList(all, { region, statuses, emailOnly, generatedBy: access.email, ids: companyIds, def, limit, rank, criteria: crit });
+  const out = await buildCampaignList(all, { region, statuses, emailOnly, generatedBy: access.email, ids: companyIds, def, limit, rank, criteria: crit, product: products?.length ? { products, mode: productMode } : undefined });
   if (out.contacts === 0) {
     return NextResponse.json({ error: `No contacts${emailOnly ? " with an official email" : ""} are on file for ${region} companies ${companyIds ? "in that list" : "with those statuses"} yet. Contacts come from your workbook or Seamless enrichment.` }, { status: 404 });
   }

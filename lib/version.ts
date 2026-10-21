@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.24";
+export const APP_VERSION = "6.25";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.25", date: "2026-10-21", notes: "Aria Excel and PDF files carry a Playbook and Discovery Questions when the search names a product. Data sources charts restyled.", changes: [
+      { what: "When an Aria search names a product (Coupa, SAP Ariba, another S2P platform or an ERP such as SAP or Oracle), the Excel gets two extra worksheets, Playbook and Discovery Questions, and the PDF gets the same two sections at the end. The playbook covers positioning, who to talk to, triggers, the sales motion, objections, competition, proof to bring and messages, plus a starting play for each account in the file worked out from its ERP, S2P platform and signal. Prospect lists and customer lists get different wording. It holds method and questions only: no figures or customer stories", where: "Aria Excel contact list and PDF report", why: "You wanted a playbook and discovery questions in every download for the product the search is about" },
+      { what: "The Data sources charts on the Dashboard now use the same label, number and bar sizes as the other charts, in their own panels", where: "Dashboard", why: "The first version used oversized fonts and did not match the other charts" },
+  ] },
   { version: "6.24", date: "2026-10-21", notes: "Aria: download a finished search again as Excel or PDF from History, and copy any prompt you asked.", changes: [
       { what: "In Aria, a list answer now keeps its Excel contact list and PDF report buttons in History, and a file answer shows both formats. One tap rebuilds the file from today's data and downloads it, without adding anything to the chat (if Aria needs more detail first, the question goes into the chat). Chats saved before this update only get the buttons on their file answers", where: "Aria, History and chat", why: "The Excel contact list line in History was not clickable and you wanted to download it again as PDF or Excel" },
       { what: "Every prompt you asked has a copy icon beside it that copies the text, so you can paste and edit it", where: "Aria", why: "You wanted to reuse a prompt without retyping it" },

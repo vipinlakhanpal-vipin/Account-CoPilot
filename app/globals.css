@@ -2856,3 +2856,8 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 .flt-date-l{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--muted,#8896A8)}
 .flt-date-l input[type="date"]{min-width:0;padding:4px 6px;border-radius:8px;border:1px solid var(--line,#2a3446);background:transparent;color:inherit;font:inherit}
 .flt-date-l input[type="date"].on{border-color:var(--accent,#3AA0FF)}
+
+/* Dashboard "Data sources" charts: rows are buttons, so pin the sizes to match the other charts */
+.src-bars .bar{font-size:10px;grid-template-columns:minmax(78px,44%) 1fr 34px}
+.src-bars .bar .lab{font-size:10px}
+.src-bars .bar .n{font-size:9.5px}

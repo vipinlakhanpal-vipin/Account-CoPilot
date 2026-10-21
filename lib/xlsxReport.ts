@@ -4,6 +4,7 @@ import type { AllData, Row } from "@/lib/data";
 import { buildPeople } from "@/lib/people";
 import { revenueOf, revenueIsOfficial, fmtMoneyM, icpMatch, withDefaults, type Criteria } from "@/lib/icp";
 import { regionOf, rulesFor } from "@/lib/icpDefinition.mjs";
+import { playbookFor, startersFor, productsLabel, type Detected } from "@/lib/playbook";
 
 // Campaign contact list: the people at the companies in a region, for a CRM or mailing tool.
 // Same rules as the Master Book's Contact List: official emails only (no generic mailboxes or personal domains), never guessed,
@@ -19,7 +20,7 @@ const splitName = (full: string) => {
   return { first: parts[0] || "", last: parts.slice(1).join(" ") };
 };
 
-export type CampaignOptions = { region: string; statuses: string[]; emailOnly: boolean; generatedBy: string; ids?: string[]; def?: unknown; limit?: number; rank?: "fit" | "revenue" | "name"; criteria?: Partial<Criteria> | null };
+export type CampaignOptions = { region: string; statuses: string[]; emailOnly: boolean; generatedBy: string; ids?: string[]; def?: unknown; limit?: number; rank?: "fit" | "revenue" | "name"; criteria?: Partial<Criteria> | null; product?: Detected };
 
 const GREEN = "FF0F6E56", BAND = "FFF1F7F5", LINE = "FFD5DEDA";
 type Out = { company: string; name: string; first: string; last: string; title: string; email: string; phone: string; linkedin: string; erp: string; s2p: string;
@@ -118,6 +119,56 @@ export async function buildCampaignList(d: AllData, o: CampaignOptions) {
     if (end > start) COMPANY_LEVEL.forEach((c) => ws.mergeCells(start, c, end, c));
     ws.getCell(start, 1).font = { bold: true };
   });
+
+  // A search that names a product (Coupa, SAP Ariba, another platform) also gets a Playbook sheet and a Discovery Questions sheet.
+  if (o.product?.products.length) {
+    const names = new Set(groups.map((g) => g[0].company));
+    const picked = accounts.filter((a) => names.has(s(a.company_name)));
+    const plays = playbookFor(o.product), label = productsLabel(o.product);
+    const head = (sh: ExcelJS.Worksheet, row: number, labels: string[]) => { labels.forEach((h, i) => { sh.getCell(row, i + 1).value = h; }); styleHeader(sh.getRow(row)); };
+    const wrap = (sh: ExcelJS.Worksheet, from: number, to: number, nCols: number) => { for (let rr = from; rr <= to; rr++) for (let c = 1; c <= nCols; c++) { const cell = sh.getCell(rr, c);
+      cell.alignment = { vertical: "top", wrapText: true }; cell.border = { bottom: { style: "hair", color: { argb: LINE } } }; } };
+
+    const pb = wb.addWorksheet("Playbook", { views: [{ state: "frozen", ySplit: 3, showGridLines: false }] });
+    pb.columns = [{ width: 26 }, { width: 34 }, { width: 90 }, { width: 30 }];
+    pb.mergeCells(1, 1, 1, 4); pb.getCell(1, 1).value = `Playbook — ${label} (${o.product.mode === "customers" ? "existing customers" : "new business"})`;
+    pb.getCell(1, 1).font = { bold: true, size: 15, color: { argb: GREEN } };
+    pb.mergeCells(2, 1, 2, 4); pb.getCell(2, 1).value = "A working guide for the accounts in this file. It holds method and questions to test, not figures or customer stories: add SCP's own approved references before you share it with a customer. Anything the app estimated is marked as an estimate.";
+    pb.getCell(2, 1).font = { italic: true, color: { argb: "FF5B6670" } }; pb.getCell(2, 1).alignment = { wrapText: true, vertical: "top" }; pb.getRow(2).height = 32;
+    let pr = 3;
+    for (const pl of plays) {
+      if (plays.length > 1) { pb.mergeCells(pr, 1, pr, 4); pb.getCell(pr, 1).value = pl.product; pb.getCell(pr, 1).font = { bold: true, size: 13, color: { argb: GREEN } }; pr++; }
+      head(pb, pr, ["Section", "Play", "Detail", "Use it when"]); pr++;
+      const first = pr; let last = "";
+      for (const row of pl.rows) { pb.getCell(pr, 1).value = row.section === last ? "" : row.section; pb.getCell(pr, 1).font = { bold: true }; last = row.section;
+        pb.getCell(pr, 2).value = row.point; pb.getCell(pr, 2).font = { bold: true }; pb.getCell(pr, 3).value = row.detail; pb.getCell(pr, 4).value = row.use; pr++; }
+      wrap(pb, first, pr - 1, 4); pr++;
+    }
+    // Where each account starts, from the ERP, S2P platform and signal the app holds.
+    const st = startersFor(picked, o.product);
+    pb.getCell(pr, 1).value = "Where each account starts"; pb.getCell(pr, 1).font = { bold: true, size: 13, color: { argb: GREEN } }; pr++;
+    pb.mergeCells(pr, 1, pr, 4); pb.getCell(pr, 1).value = "Worked out from the ERP, S2P platform and signal level on file for each company. Check it against the account page before you act."; pb.getCell(pr, 1).font = { italic: true, color: { argb: "FF5B6670" } }; pr++;
+    const cols2 = ["Company", "ERP / S2P platform", "Signal / status", "Starting play and who to lead with"];
+    head(pb, pr, cols2); pr++;
+    const f2 = pr;
+    st.forEach((x) => { pb.getCell(pr, 1).value = x.company; pb.getCell(pr, 1).font = { bold: true }; pb.getCell(pr, 2).value = [x.erp && `ERP: ${x.erp}`, x.s2p && `S2P: ${x.s2p}`].filter(Boolean).join("\n") || "—";
+      pb.getCell(pr, 3).value = `${x.signal} / ${x.status}`; pb.getCell(pr, 4).value = `${x.play}\nLead with: ${x.lead}.`; pr++; });
+    wrap(pb, f2, pr - 1, 4);
+
+    const dq = wb.addWorksheet("Discovery Questions", { views: [{ state: "frozen", ySplit: 3, showGridLines: false }] });
+    dq.columns = [{ width: 5 }, { width: 22 }, { width: 62 }, { width: 40 }, { width: 44 }, { width: 24 }];
+    dq.mergeCells(1, 1, 1, 6); dq.getCell(1, 1).value = `Discovery questions — ${label}`; dq.getCell(1, 1).font = { bold: true, size: 15, color: { argb: GREEN } };
+    dq.mergeCells(2, 1, 2, 6); dq.getCell(2, 1).value = "Ask them in the buyer's own words, and write down the answer. Leave each meeting with the pain, the process, the systems, the decision path and a date.";
+    dq.getCell(2, 1).font = { italic: true, color: { argb: "FF5B6670" } }; dq.getCell(2, 1).alignment = { wrapText: true, vertical: "top" };
+    let dr = 3;
+    for (const pl of plays) {
+      if (plays.length > 1) { dq.mergeCells(dr, 1, dr, 6); dq.getCell(dr, 1).value = pl.product; dq.getCell(dr, 1).font = { bold: true, size: 13, color: { argb: GREEN } }; dr++; }
+      head(dq, dr, ["#", "Topic", "Question", "Why we ask", "Listen for", "Best asked of"]); dr++;
+      const first = dr;
+      pl.questions.forEach((q, i) => { dq.getCell(dr, 1).value = i + 1; dq.getCell(dr, 2).value = q.topic; dq.getCell(dr, 2).font = { bold: true }; dq.getCell(dr, 3).value = q.q; dq.getCell(dr, 4).value = q.why; dq.getCell(dr, 5).value = q.listen; dq.getCell(dr, 6).value = q.who; dr++; });
+      wrap(dq, first, dr - 1, 6); dr++;
+    }
+  }
 
   const buf = Buffer.from(await wb.xlsx.writeBuffer());
   return { buf, contacts, companies, totalCompanies: accounts.length };

@@ -3,6 +3,7 @@ import { SHOW_HUBSPOT } from "@/lib/features";
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import type { AllData, Row } from "@/lib/data";
 import { icpMatch, opportunity, coupaFit, procurementMaturity, estimateSpend, whySelected, recommendedActions, withDefaults, revenueOf, revenueIsOfficial, fmtUsdM, fmtMoneyM, type Criteria } from "@/lib/icp";
+import { playbookFor, startersFor, productsLabel, type Detected } from "@/lib/playbook";
 import { rulesFor, regionOf, OPTIONS, REGIONS, describeRules, type Rules } from "@/lib/icpDefinition.mjs";
 
 // One PDF with the same information the Account brief shows for a company, for the companies in the chosen ICP statuses.
@@ -15,7 +16,7 @@ const STATUS_COLOR: Record<string, ReturnType<typeof rgb>> = {
 const REPLACE: Record<string, string> = { "≥": ">=", "≤": "<=", "≈": "~", "→": "->", "←": "<-", "✓": "v", "✕": "x", "●": "-", "·": "-", "…": "...", " ": " ", "​": "" };
 
 export const REPORT_STATUSES = ["ICP — Verified", "ICP — Likely", "ICP — Needs check"] as const;
-export type ReportOptions = { statuses: string[]; region: string; limit: number; generatedBy: string; criteria?: Partial<Criteria> | null; ids?: string[]; title?: string; rank?: "fit" | "revenue" | "name" };
+export type ReportOptions = { statuses: string[]; region: string; limit: number; generatedBy: string; criteria?: Partial<Criteria> | null; ids?: string[]; title?: string; rank?: "fit" | "revenue" | "name"; product?: Detected };
 const s = (v: unknown) => (v === null || v === undefined ? "" : String(v));
 const usd = (m: unknown) => { const n = Number(m); return m === null || m === undefined || m === "" ? "" : fmtUsdM(n); };
 type Cur = { code: string; per_usd: number };
@@ -363,6 +364,36 @@ export async function buildReport(all: AllData, def: unknown, opt: ReportOptions
     w.h2(`Evidence (${srcs.length} sources)`);
     srcs.slice(0, 20).forEach((x) => w.bullet(`[${s(x.source_tier)}] ${s(x.source)}${x.date_published ? ` (${s(x.date_published)})` : ""} - ${s(x.information_found)}${x.url ? ` - ${s(x.url)}` : ""}`));
     if (srcs.length > 20) w.p(`+ ${srcs.length - 20} more sources in the app.`, { size: 8.5, color: MUTED });
+  }
+
+  // A search that names a product (Coupa, SAP Ariba, another platform) also gets a Playbook and a Discovery Questions section.
+  if (opt.product?.products.length) {
+    const plays = playbookFor(opt.product), label = productsLabel(opt.product);
+    w.newPage();
+    w.h1(`Playbook: ${label}`);
+    w.p(`${opt.product.mode === "customers" ? "Existing customers" : "New business"}. A working guide for the accounts in this report. It holds method and questions to test, not figures or customer stories: add SCP's own approved references before sharing it with a customer.`, { size: 8.5, color: MUTED, gap: 6 });
+    for (const pl of plays) {
+      if (plays.length > 1) w.h2(pl.product, 60);
+      let last = "";
+      for (const row of pl.rows) {
+        if (row.section !== last) { w.h2(row.section.replace(/^\d+\.\s*/, ""), 70); last = row.section; }
+        w.p(row.point, { bold: true, gap: 0 });
+        w.p(row.detail + (row.use ? `  (${row.use})` : ""), { size: 9, indent: 8, gap: 3 });
+      }
+    }
+    if (picked.length) {
+      w.h2("Where each account starts", 120);
+      w.p("Worked out from the ERP, S2P platform and signal level on file for each company. Check it against the account page before you act.", { size: 8.5, color: MUTED, gap: 3 });
+      w.table(["Company", "ERP / S2P platform", "Signal", "Starting play"],
+        startersFor(picked.map((x) => x.a), opt.product).map((x) => [x.company, [x.erp, x.s2p].filter(Boolean).join(" / ") || "-", x.signal, x.play]), [0.22, 0.2, 0.1, 0.48], 8);
+    }
+    w.newPage();
+    w.h1(`Discovery questions: ${label}`);
+    w.p("Ask them in the buyer's own words and write down the answer. Leave each meeting with the pain, the process, the systems, the decision path and a date.", { size: 8.5, color: MUTED, gap: 6 });
+    for (const pl of plays) {
+      if (plays.length > 1) w.h2(pl.product, 80);
+      w.table(["#", "Topic", "Question", "Why we ask / listen for", "Ask"], pl.questions.map((q, i) => [String(i + 1), q.topic, q.q, `${q.why} Listen for: ${q.listen}`, q.who]), [0.04, 0.12, 0.32, 0.38, 0.14], 8);
+    }
   }
 
   // Bottom of the report: how it was produced and how the points are calculated.

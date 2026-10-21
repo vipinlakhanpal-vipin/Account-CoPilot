@@ -6,9 +6,15 @@ import { buildCampaignList } from "@/lib/xlsxReport";
 import { type AriaContext, type AccountFilter, filterAccounts, searchAccounts, countAccounts, getAccount, findAccounts, searchContacts, regionKey,
   fullTextSearch, searchSignals, searchTechnology, searchConflicts, searchHistory, icpRules, engineActivity } from "@/lib/aria/tools";
 import type { Criteria } from "@/lib/icp";
+import { detectProducts } from "@/lib/playbook";
 
 export type { AriaAction, AriaMessage, AriaResult };
 
+// When the request is about a product (Coupa, SAP Ariba, another platform), the Excel and PDF also carry a Playbook and Discovery Questions.
+const PRODUCT_PROPS = {
+  products: { type: "array", items: { type: "string" }, description: "Products the request is about, for example [\"Coupa\"] or [\"SAP Ariba\"]. Leave out when no product is mentioned." },
+  product_mode: { type: "string", enum: ["prospects", "customers"], description: "customers when the list is of companies that already run the product; otherwise prospects" },
+};
 const FILTER_PROPS = {
   region: { type: "string", description: "Region or country: UAE, KSA, Qatar, Kuwait, UK, USA, Oman, Bahrain, Egypt..." },
   icp_status: { type: "array", items: { type: "string", enum: ["Verified", "Likely", "Needs check", "Unknown", "Not ICP"] } },
@@ -51,9 +57,9 @@ const TOOLS = [
     input_schema: { type: "object", required: ["question", "options"], properties: { question: { type: "string" }, options: { type: "array", items: { type: "string" } } } } },
   { name: "create_excel", description: "Prepare an Excel contact list (company once, its contacts beneath) for ONE region. The user gets a download button. The region is required: if the user has not said which region, ask them instead of guessing.",
     input_schema: { type: "object", required: ["region"], properties: { ...FILTER_PROPS, region: { type: "string" }, limit: { type: "integer", description: "How many companies; omit for all with a contact" },
-      rank: { type: "string", enum: ["fit", "revenue", "name"] }, email_only: { type: "boolean" } } } },
+      rank: { type: "string", enum: ["fit", "revenue", "name"] }, email_only: { type: "boolean" }, ...PRODUCT_PROPS } } },
   { name: "create_pdf", description: "Prepare a detailed PDF report. Pass company_names for one or a few specific companies (works for a single company), or filters for a set. The user gets a download button.",
-    input_schema: { type: "object", properties: { ...FILTER_PROPS, company_names: { type: "array", items: { type: "string" } }, limit: { type: "integer" }, rank: { type: "string", enum: ["fit", "revenue", "name"] } } } },
+    input_schema: { type: "object", properties: { ...FILTER_PROPS, company_names: { type: "array", items: { type: "string" } }, limit: { type: "integer" }, rank: { type: "string", enum: ["fit", "revenue", "name"] }, ...PRODUCT_PROPS } } },
 ] as unknown as Anthropic.Tool[];
 
 const SYSTEM = (regions: string[], today: string) => `You are Aria, the Automatic Responsive Intelligent Assistant inside Account CoPilot, a B2B procurement-intelligence app used by SCP (a Coupa / SAP Ariba implementation and managed-services partner).
@@ -75,6 +81,10 @@ How you work
 export type Out = { result: unknown; action?: AriaAction };
 export async function runTool(name: string, input: Record<string, unknown>, ctx: AriaContext): Promise<Out> {
   const f = input as AccountFilter & { sort_by?: string; limit?: number; group_by?: string };
+  // the product the file is about: named in the request, or implied by the platform filters
+  const named = Array.isArray(input.products) ? (input.products as unknown[]).map(String).filter(Boolean).slice(0, 3) : [];
+  const det = named.length ? { products: named, mode: input.product_mode === "customers" ? ("customers" as const) : ("prospects" as const) } : detectProducts("", f);
+  const productBody = det.products.length ? { products: det.products, productMode: det.mode } : {};
   if (name === "search_accounts") return { result: searchAccounts(ctx, f) };
   if (name === "count_accounts") return { result: countAccounts(ctx, f) };
   if (name === "get_account") return { result: getAccount(ctx, { id: input.id as string | undefined, name: input.name as string | undefined }) };
@@ -95,7 +105,7 @@ export async function runTool(name: string, input: Record<string, unknown>, ctx:
     const accounts = filterAccounts(ctx, { ...f, region });
     if (!accounts.length) return { result: { error: `No ${region} companies match those filters.` } };
     const body = { companyIds: accounts.map((a) => a.id as string).slice(0, 1000), region, emailOnly: input.email_only !== false,
-      rank: (input.rank as string) || "fit", ...(input.limit ? { limit: Math.max(1, Math.min(1000, Number(input.limit))) } : {}) };
+      rank: (input.rank as string) || "fit", ...productBody, ...(input.limit ? { limit: Math.max(1, Math.min(1000, Number(input.limit))) } : {}) };
     const prev = await buildCampaignList(ctx.data, { region, statuses: [], emailOnly: body.emailOnly, generatedBy: "", ids: body.companyIds, def: ctx.def,
       limit: (body as { limit?: number }).limit, rank: body.rank as "fit" | "revenue" | "name", criteria: ctx.criteria as Partial<Criteria> | null });
     if (!prev.contacts) return { result: { error: `${accounts.length} ${region} companies match, but none has a contact${body.emailOnly ? " with an email, phone or LinkedIn profile" : ""} on file yet. Contacts exist only where the workbook or Seamless enrichment added them.` } };
@@ -123,7 +133,7 @@ export async function runTool(name: string, input: Record<string, unknown>, ctx:
     if (!accounts.length) return { result: { error: "No companies match those filters." } };
     const n = Math.min(limit, accounts.length);
     return { result: { prepared: true, companies_matching: accounts.length, companies_in_pdf: n },
-      action: { kind: "pdf", label: `Download PDF · ${n} companies`, body: { companyIds: accounts.map((a) => a.id as string).slice(0, 1000), region: region || "All", limit, rank, title: region ? `${region} selection` : "selected companies" } } };
+      action: { kind: "pdf", label: `Download PDF · ${n} companies`, body: { companyIds: accounts.map((a) => a.id as string).slice(0, 1000), region: region || "All", limit, rank, title: region ? `${region} selection` : "selected companies", ...productBody } } };
   }
   return { result: { error: `Unknown tool ${name}` } };
 }

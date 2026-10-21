@@ -4,6 +4,7 @@ import { type AriaContext, type AccountFilter, regionKey, filterAccounts, search
 import { runTool } from "@/lib/aria/agent";
 import type { AriaAction, AriaChoice } from "@/packages/aria/types";
 import { REGIONS } from "@/lib/icpDefinition.mjs";
+import { detectProducts } from "@/lib/playbook";
 
 // The free path. Most questions people ask Aria are one of a handful of shapes (counts, lists, one company, contacts, rules, a PDF or an
 // Excel). These are read by plain rules and answered straight from the database: no AI, no API cost. Anything the rules cannot read
@@ -180,17 +181,18 @@ export async function tryFree(question: string, ctx: AriaContext): Promise<FreeR
     if (!kind) return { text: `Which format for ${heard}?`, actions: [], choices: [{ label: "📄 PDF report", value: stem("pdf", f.region) }, { label: "📊 Excel contact list", value: stem("xlsx", f.region) }] };
     if (!limit && !wantsAll) return { text: `How many ${f.region} companies should I include?`, actions: [], choices: [...["1", "5", "10", "25", "50", "all"].map((n) => ({ label: n === "all" ? "All" : n, value: `${stem(kind, f.region!)}, ${n === "all" ? "all companies" : `top ${n}`}` })), { label: "Other number", value: `${stem(kind, f.region!)}, top {n}`, number: true }] };
     if (!rank) return { text: "How should I pick them?", actions: [], choices: [["Best ICP fit", "best fit"], ["Largest revenue", "largest revenue"], ["A to Z", "A to Z"]].map(([l, w]) => ({ label: l, value: `${stem(kind, f.region!)}, ${wantsAll ? "all companies" : `top ${limit}`}, by ${w}` })) };
+    const det = detectProducts(t, f), productInput = det.products.length ? { products: det.products, product_mode: det.mode } : {};
     const how = rank === "revenue" ? "largest revenue" : rank === "name" ? "name" : "best ICP fit";
     if (kind === "xlsx") {
-      const out = await runTool("create_excel", { ...f, region: f.region, rank, ...(limit && !wantsAll ? { limit } : {}) }, ctx);
+      const out = await runTool("create_excel", { ...f, region: f.region, rank, ...productInput, ...(limit && !wantsAll ? { limit } : {}) }, ctx);
       const r = out.result as { error?: string; companies_in_file?: number; contacts_in_file?: number; companies_matching?: number };
       if (r.error || !out.action) return { text: r.error || "I could not prepare that file.", actions: [], choices: [] };
-      return { text: `Your Excel is ready: **${r.companies_in_file} companies** and **${r.contacts_in_file} contacts** for ${heard}, picked by ${how} (from ${r.companies_matching} matching companies). Each company is listed once with its people beneath it: email, phone and LinkedIn where they are on file.`, actions: [out.action], choices: [] };
+      return { text: `Your Excel is ready: **${r.companies_in_file} companies** and **${r.contacts_in_file} contacts** for ${heard}, picked by ${how} (from ${r.companies_matching} matching companies). Each company is listed once with its people beneath it: email, phone and LinkedIn where they are on file.${det.products.length ? ` It also has a Playbook sheet and a Discovery Questions sheet for ${det.products.join(" and ")}.` : ""}`, actions: [out.action], choices: [] };
     }
-    const out = await runTool("create_pdf", { ...f, region: f.region, limit: wantsAll ? 150 : limit, rank }, ctx);
+    const out = await runTool("create_pdf", { ...f, region: f.region, limit: wantsAll ? 150 : limit, rank, ...productInput }, ctx);
     const r = out.result as { error?: string; companies_matching?: number; companies_in_pdf?: number };
     if (r.error || !out.action) return { text: r.error || "I could not prepare that report.", actions: [], choices: [] };
-    return { text: `Your PDF is ready: **${r.companies_in_pdf} companies** (of ${r.companies_matching} matching) for ${heard}, picked by ${how}. Each company has its facts, scores, signals and stakeholders with email, phone and LinkedIn where on file.`, actions: [out.action], choices: [] };
+    return { text: `Your PDF is ready: **${r.companies_in_pdf} companies** (of ${r.companies_matching} matching) for ${heard}, picked by ${how}. Each company has its facts, scores, signals and stakeholders with email, phone and LinkedIn where on file.${det.products.length ? ` It ends with a Playbook and Discovery Questions for ${det.products.join(" and ")}.` : ""}`, actions: [out.action], choices: [] };
   }
   if (wantsPdf || wantsReport) return null; // "report" with nothing to anchor it: let the AI read it
 

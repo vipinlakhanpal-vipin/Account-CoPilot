@@ -16,13 +16,13 @@ type Drill = (title: string, rows: Row[]) => void;
 
 function Rows({ items, max, onPick }: { items: { name: string; n: number; sub?: string; color: string; rows: Row[] }[]; max: number; onPick: Drill }) {
   return (
-    <div className="bars">
+    <div className="bars src-bars">
       {items.map((it) => (
         <button type="button" key={it.name} className="bar sigbar region-compare-row" style={{ "--c": it.color } as CSSProperties}
           disabled={it.rows.length === 0} title={`${it.name}: ${it.n}${it.sub ? ` (${it.sub})` : ""}${it.rows.length ? " — click to list the accounts" : ""}`} onClick={() => onPick(it.name, it.rows)}>
           <span className="lab">{it.name}</span>
           <span className="trk"><span className="fill" style={{ width: `${(it.n / max) * 100}%` }} /></span>
-          <span className="n">{it.n}{it.sub ? <small className="muted"> · {it.sub}</small> : null}</span>
+          <span className="n">{it.n.toLocaleString()}</span>
         </button>
       ))}
     </div>
@@ -49,12 +49,12 @@ export default function SourceChart({ accounts, sources, uploads, country, onDri
 
   const origin = useMemo(() => {
     const groups: [string, string, (a: Row) => boolean][] = [
-      ["Your Excel workbook (target lists + Stakeholders)", "#3AA0FF", (a) => originOf(a) === "workbook"],
-      ["Excel uploaded in the Setup wizard", "#E052C8", (a) => (a.lists || []).some((l: string) => String(l).startsWith("User upload:"))],
+      ["Your Excel workbook", "#3AA0FF", (a) => originOf(a) === "workbook"],
+      ["Excel uploaded (wizard)", "#E052C8", (a) => (a.lists || []).some((l: string) => String(l).startsWith("User upload:"))],
       ["Seamless discovery", "#F5A623", (a) => originOf(a) === "seamless-discovery"],
       ["Claude discovery", "#5AD1FF", (a) => originOf(a) === "claude-discovery"],
       ["Claude research", "#2ECC8F", (a) => originOf(a) === "claude-research"],
-      ["Your customer list (Coupa customers)", "#F2C46B", (a) => originOf(a) === "user-list" && !(a.lists || []).some((l: string) => String(l).startsWith("User upload:"))],
+      ["Your Coupa customer list", "#F2C46B", (a) => originOf(a) === "user-list" && !(a.lists || []).some((l: string) => String(l).startsWith("User upload:"))],
     ];
     const seen = new Set<string>();
     return groups.map(([name, color, f]) => { const rows = accounts.filter((a) => !seen.has(a.id) && f(a)); rows.forEach((a) => seen.add(a.id)); return { name, n: rows.length, color, rows }; });
@@ -64,30 +64,32 @@ export default function SourceChart({ accounts, sources, uploads, country, onDri
   const upNew = ups.reduce((s, u) => s + (u.added || 0), 0), upOld = ups.reduce((s, u) => s + (u.already || 0), 0);
   const maxEv = Math.max(1, ...ev.kinds.map((k) => k.n)), maxOr = Math.max(1, ...origin.map((o) => o.n));
   return (
-    <div className="panel" style={{ marginTop: 16 }}>
-      <h2 className="with-count">Where the data came from <span className="count">{ev.total.toLocaleString()} source records</span></h2>
-      <p className="note">Every fact in the app keeps its source. Left: the type of source behind the facts. Right: how each account got into the app. Click a bar to list its accounts.</p>
+    <>
       <div className="grid2">
-        <div>
-          <h3 style={{ marginBottom: 8 }}>Evidence by source type</h3>
+        <div className="panel">
+          <h2 className="with-count">Data sources by type <span className="count">{ev.total.toLocaleString()} source records</span></h2>
           <Rows items={ev.kinds} max={maxEv} onPick={(t, r) => onDrill(`Sources: ${t}`, r)} />
-          {ev.exchanges.length > 0 && <>
-            <h3 style={{ margin: "14px 0 8px" }}>Stock exchanges and regulators cited</h3>
-            <Rows items={ev.exchanges} max={Math.max(1, ...ev.exchanges.map((e) => e.n))} onPick={(t, r) => onDrill(`Filings from ${t}`, r)} />
-          </>}
-          <p className="note" style={{ marginTop: 8 }}>LinkedIn counts public search snippets only (no login, no scraping). Blogs are matched by link or title, so the count may be small.</p>
+          <p className="note" style={{ marginTop: 8 }}>Every fact keeps its source. Click a bar to list its accounts. LinkedIn counts public search snippets only. Blogs are matched by link or title, so that count is small.</p>
         </div>
-        <div>
-          <h3 style={{ marginBottom: 8 }}>Accounts by how they entered the app</h3>
+        <div className="panel">
+          <h2>Accounts by how they entered the app</h2>
           <Rows items={origin} max={maxOr} onPick={(t, r) => onDrill(t, r)} />
-          <h3 style={{ margin: "14px 0 8px" }}>Excel uploads in the Setup wizard</h3>
-          {ups.length === 0 ? <p className="note">No Excel list uploaded{country === "All" ? "" : " for this country"} yet.</p> : <>
-            <p className="note" style={{ marginTop: 0 }}><b>{upNew}</b> new accounts added · <b>{upOld}</b> were already in the app</p>
-            <div className="tablewrap"><table><thead><tr><th>File</th><th>Country</th><th>Rows</th><th>New added</th><th>Already in app</th><th>Status</th></tr></thead>
-              <tbody>{ups.map((u) => <tr key={u.id}><td>{u.filename}</td><td>{u.region}</td><td>{u.rows ?? "—"}</td><td>{u.added ?? "—"}</td><td>{u.already ?? "—"}</td><td>{u.status === "done" ? "Read in" : u.status === "waiting" ? "Waiting for the daily run" : u.status}</td></tr>)}</tbody></table></div>
-          </>}
+          <p className="note" style={{ marginTop: 8 }}>Each account is counted once, under the way it first came in.</p>
+        </div>
+        {ev.exchanges.length > 0 && (
+          <div className="panel">
+            <h2>Stock exchanges and regulators cited</h2>
+            <Rows items={ev.exchanges} max={Math.max(1, ...ev.exchanges.map((e) => e.n))} onPick={(t, r) => onDrill(`Filings from ${t}`, r)} />
+          </div>
+        )}
+        <div className="panel">
+          <h2 className="with-count">Excel uploads in the Setup wizard {ups.length > 0 && <span className="count">{upNew} new · {upOld} already in the app</span>}</h2>
+          {ups.length === 0 ? <p className="note">No Excel list uploaded{country === "All" ? "" : " for this country"} yet.</p> : (
+            <div className="tablewrap"><table><thead><tr><th>File</th><th>Country</th><th>Rows</th><th>New</th><th>Already in app</th><th>Status</th></tr></thead>
+              <tbody>{ups.map((u) => <tr key={u.id}><td>{u.filename}</td><td>{u.region}</td><td>{u.rows ?? "—"}</td><td>{u.added ?? "—"}</td><td>{u.already ?? "—"}</td><td>{u.status === "done" ? "Read in" : u.status === "waiting" ? "Waiting" : u.status}</td></tr>)}</tbody></table></div>
+          )}
         </div>
       </div>
-    </div>
+    </>
   );
 }

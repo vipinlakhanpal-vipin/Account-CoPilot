@@ -20,6 +20,8 @@ const Body = z.object({
   companyIds: z.array(z.string().min(8).max(60)).min(1).max(1000).optional(),
   title: z.string().max(120).optional(),
   rank: z.enum(["fit", "revenue", "name"]).default("fit"),
+  products: z.array(z.string().max(40)).max(3).optional(),
+  productMode: z.enum(["prospects", "customers"]).default("prospects"),
 }).refine((b) => b.companyId || b.companyIds || b.statuses, { message: "statuses, companyIds or companyId required" });
 
 export async function POST(req: Request) {
@@ -27,7 +29,7 @@ export async function POST(req: Request) {
   if (!user) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
   const parsed = Body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Pick at least one status and a region." }, { status: 400 });
-  const { statuses = [...REPORT_STATUSES], region, limit, companyId, companyIds, title, rank } = parsed.data;
+  const { statuses = [...REPORT_STATUSES], region, limit, companyId, companyIds, title, rank, products, productMode } = parsed.data;
   const ids = companyId ? [companyId] : companyIds;
   const access = await getAccess(user);
   if (!access.canDownload) return NextResponse.json({ error: "Downloads are not available for your role. You can see the data in the app." }, { status: 403 });
@@ -39,7 +41,7 @@ export async function POST(req: Request) {
     db.from("settings").select("value").eq("key", "icp_definition").maybeSingle().then((r) => r.data?.value),
     db.from("settings").select("value").eq("key", "icp_criteria").maybeSingle().then((r) => r.data?.value),
   ]);
-  const { bytes, count, total } = await buildReport(all, def, { statuses, region, limit, generatedBy: access.email, criteria: crit, ids, title, rank });
+  const { bytes, count, total } = await buildReport(all, def, { statuses, region, limit, generatedBy: access.email, criteria: crit, ids, title, rank, product: products?.length ? { products, mode: productMode } : undefined });
   if (count === 0) return NextResponse.json({ error: companyId ? "That company wasn't found, or you don't have access to it." : ids ? "None of the companies in that list are in the region you chose." : "No companies match those statuses in that region." }, { status: 404 });
   const date = new Date().toISOString().slice(0, 10);
   return new NextResponse(new Uint8Array(bytes), {
