@@ -376,6 +376,22 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 .agame-legend .agame-more:focus-visible{outline:2px solid #fff;outline-offset:2px}
 .agame-more-body{margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.25)}
 .agame-legend .agame-ask,.agame-legend .agame-play{white-space:nowrap;font:700 12px var(--body);padding:8px 8px;overflow:hidden;letter-spacing:0}
+.agame-dial{position:absolute;pointer-events:none;overflow:visible}
+.agame-dial .dl-ring{fill:rgba(255,255,255,.04);stroke:rgba(255,255,255,.2);stroke-width:.02}
+.agame-dial .dl-tick{stroke:rgba(255,255,255,.28);stroke-width:.025;stroke-linecap:round}
+.agame-dial .dl-num{fill:rgba(255,255,255,.5);font:700 .2px var(--body);text-anchor:middle;dominant-baseline:middle}
+.agame-dial .dl-dir{fill:rgba(255,255,255,.3);font:600 .13px var(--body);text-anchor:middle;dominant-baseline:middle;letter-spacing:.02em}
+.agame-dial .dl-hour,.agame-dial .dl-min{stroke-linecap:round}
+.agame-dial .dl-hour{stroke:rgba(255,255,255,.3);stroke-width:.045}
+.agame-dial .dl-min{stroke:rgba(255,255,255,.2);stroke-width:.025}
+.agame-dial .dl-sec{fill:#F5A623;opacity:.75}
+.agame-dial .dl-hub{fill:rgba(255,255,255,.4)}
+.gr-shelfpick{display:inline-flex;align-items:center;gap:6px;font:700 12px var(--body);color:var(--muted)}
+.gr-shelfpick select,.gr-newshelf select{font:600 12.5px var(--body);padding:4px 8px;border-radius:8px;border:1px solid var(--line-2);background:var(--surface);color:var(--text)}
+.gr-newshelf{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
+.gr-shelves{display:block}
+.gr-shelfbox{width:100%}
+.gr-chip.tag{background:var(--tab-on);color:var(--tab-on-fg)}
 
 /* tab colour tokens used by the games' tabs, chips and switches */
 :root{--tab-bg:color-mix(in srgb,#2ECC8F 24%,var(--surface));--tab-hover:color-mix(in srgb,#2ECC8F 42%,var(--surface));--tab-fg:var(--text);--tab-on:#0F6E56;--tab-on-fg:#fff;--tab-accent:#2EC4A6;--tab-line:#0F6E56}

@@ -51,7 +51,7 @@ export default function NavPanel({ isSuper, isOwner = false }: { isSuper: boolea
       <nav>
         {item("/nav/find", "find", "Find and search", path.startsWith("/nav/find"))}
         {item("/nav/about", "about", "About CoPilot", path.startsWith("/nav/about"))}
-        {item("/nav/daily-run", "bell", "Daily run", path.startsWith("/nav/daily-run"), path.startsWith("/nav/daily-run") ? 0 : unread)}
+        {item("/nav/daily-run", "bell", "Daily run", path.startsWith("/nav/daily-run"), path.startsWith("/nav/daily-run") ? 0 : unread, "new runs")}
         {item("/nav/market", "market", "Market intelligence", onMarket)}
         {item("/nav/signals", "signals", "Buying signals", path.startsWith("/nav/signals"))}
       </nav>

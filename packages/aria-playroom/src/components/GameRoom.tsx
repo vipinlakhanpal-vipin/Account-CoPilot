@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { GAMES, type GameEvent, type GameId, type WinData } from "@/components/games/registry";
+import { GAMES, type GameEvent, type GameId, type WinData, TAGS } from "@/components/games/registry";
 import { AriaOrb, type Mood } from "@/components/AriaFace";
 import Jigsaw from "@/components/games/Jigsaw";
 import { Quiz, Words } from "@/components/AriaMiniGames";
@@ -161,19 +161,20 @@ function AwardCard({ a, onClose }: { a: Award; onClose: () => void }) {
   );
 }
 
-// Shelves: the books are kept on named shelves that sit side by side in one row. Two to start; you add shelves, rename them and move each game to the shelf you like. Kept in this browser.
+// Shelves: the books are kept on named shelves, and one drop-down picks the shelf shown, so the space below stays the same whichever shelf you open. Each game carries a category tag (Thinking, Analysing, Memory, ...); three shelves start grouped by tag, you add shelves (empty or filled from a tag), rename them and move games. Kept in this browser.
 type Shelf = { id: string; name: string; games: GameId[] };
 const SHELF_KEY = "aria-shelves";
 const defaultShelves = (): Shelf[] => [
-  { id: "s1", name: "Shelf 1", games: ["jigsaw", "quiz", "words", "pattern", "math", "stroop"] },
-  { id: "s2", name: "Shelf 2", games: ["series", "react", "digits", "odd", "process"] },
+  { id: "s1", name: "Thinking and analysing", games: GAMES.filter((g) => g.tag === "Thinking" || g.tag === "Analysing").map((g) => g.id) },
+  { id: "s2", name: "Memory and focus", games: GAMES.filter((g) => g.tag === "Memory" || g.tag === "Focus").map((g) => g.id) },
+  { id: "s3", name: "Speed and language", games: GAMES.filter((g) => g.tag === "Speed" || g.tag === "Language" || g.tag === "Knowledge").map((g) => g.id) },
 ];
 const normShelves = (raw: Shelf[]): Shelf[] => { // every game on exactly one shelf; games added later land on the last shelf
   const seen = new Set<GameId>(), out = raw.map((sh) => ({ ...sh, games: sh.games.filter((id) => GAMES.some((g) => g.id === id) && !seen.has(id) && !!seen.add(id)) }));
   const lost = GAMES.map((g) => g.id).filter((id) => !seen.has(id)); if (out.length && lost.length) out[out.length - 1].games.push(...lost);
   return out.length ? out : defaultShelves();
 };
-const loadShelves = (): Shelf[] => { try { const v = JSON.parse(localStorage.getItem(SHELF_KEY) || "null"); if (Array.isArray(v) && v.length) return normShelves(v); } catch { /* optional */ } return normShelves(defaultShelves()); };
+const loadShelves = (): Shelf[] => { try { const v = JSON.parse(localStorage.getItem(SHELF_KEY) || "null"); if (Array.isArray(v) && v.length) { if (v.length === 2 && v[0]?.name === "Shelf 1" && v[1]?.name === "Shelf 2") return normShelves(defaultShelves()); return normShelves(v); } } catch { /* optional */ } return normShelves(defaultShelves()); };
 const OWNED_KEY = "aria-games-owned";
 const loadOwned = (): GameId[] => { try { const v = JSON.parse(localStorage.getItem(OWNED_KEY) || "null"); if (Array.isArray(v)) return v; } catch { /* optional */ } return GAMES.filter((g) => g.starter).map((g) => g.id); };
 
@@ -184,18 +185,24 @@ export default function GameRoom() {
   const [owned, setOwned] = useState<GameId[]>(() => GAMES.filter((g) => g.starter).map((g) => g.id)), [getting, setGetting] = useState<GameId | null>(null);
   const [filter, setFilter] = useState<"all" | "mine" | "new">("all");
   const [hover, setHover] = useState<number | null>(null);
-  const [shelves, setShelves] = useState<Shelf[]>(() => normShelves(defaultShelves())), [adding, setAdding] = useState(false), [newName, setNewName] = useState(""), [editing, setEditing] = useState<string | null>(null);
+  const [shelves, setShelves] = useState<Shelf[]>(() => normShelves(defaultShelves())), [adding, setAdding] = useState(false), [newName, setNewName] = useState(""), [newTag, setNewTag] = useState(""), [sel, setSel] = useState("s1"), [editing, setEditing] = useState<string | null>(null);
   const saveShelves = (next: Shelf[]) => { setShelves(next); try { localStorage.setItem(SHELF_KEY, JSON.stringify(next)); } catch { /* optional */ } };
+  const cur = shelves.find((sh) => sh.id === sel) || shelves[0];
   const shelfOf = (id: GameId) => shelves.find((sh) => sh.games.includes(id));
-  const addShelf = () => { const n = newName.trim().slice(0, 24); if (!n) return; saveShelves([...shelves, { id: `s${Date.now()}`, name: n, games: [] }]); setNewName(""); setAdding(false); speak(`New shelf "${n}". Use Move to shelf in the game row to put games on it.`, "happy", "hop"); };
+  const addShelf = () => {
+    const n = newName.trim().slice(0, 24); if (!n) return; const id = `s${Date.now()}`, take = newTag ? GAMES.filter((g) => g.tag === newTag).map((g) => g.id) : [];
+    saveShelves([...shelves.map((sh) => ({ ...sh, games: sh.games.filter((x) => !take.includes(x)) })), { id, name: n, games: take }]); pickShelf(id); setNewName(""); setNewTag(""); setAdding(false);
+    speak(take.length ? `New shelf "${n}" with the ${newTag.toLowerCase()} games.` : `New shelf "${n}". Use Move to shelf in the game row to put games on it.`, "happy", "hop");
+  };
+  const pickShelf = (id: string) => { setSel(id); try { localStorage.setItem("aria-shelf-sel", id); } catch { /* optional */ } };
   const renameShelf = (id: string, name: string) => { const n = name.trim().slice(0, 24); if (n) saveShelves(shelves.map((sh) => (sh.id === id ? { ...sh, name: n } : sh))); setEditing(null); };
   const removeShelf = (id: string) => {
     if (shelves.length < 2) return; const gone = shelves.find((sh) => sh.id === id)!, rest = shelves.filter((sh) => sh.id !== id);
-    rest[0] = { ...rest[0], games: [...rest[0].games, ...gone.games] }; saveShelves(rest); speak(`"${gone.name}" is gone. Its games moved to ${rest[0].name}.`, "oops");
+    rest[0] = { ...rest[0], games: [...rest[0].games, ...gone.games] }; saveShelves(rest); pickShelf(rest[0].id); speak(`"${gone.name}" is gone. Its games moved to ${rest[0].name}.`, "oops");
   };
   const moveGame = (id: GameId, to: string) => saveShelves(shelves.map((sh) => ({ ...sh, games: sh.id === to ? (sh.games.includes(id) ? sh.games : [...sh.games, id]) : sh.games.filter((x) => x !== id) })));
   const [msgs, setMsgs] = useState<{ who: "you" | "aria"; text: string }[]>([]), [q, setQ] = useState(""), [offerFull, setOfferFull] = useState(false), logRef = useRef<HTMLDivElement>(null);
-  useEffect(() => { setAwards(loadAwards()); setOwned(loadOwned()); setShelves(loadShelves()); }, []);
+  useEffect(() => { setAwards(loadAwards()); setOwned(loadOwned()); setShelves(loadShelves()); try { setSel(localStorage.getItem("aria-shelf-sel") || "s1"); } catch { /* optional */ } }, []);
   const speak = useCallback((text: string, m: Mood, a: "" | "hop" | "shake" | "spin" | "peek" = "") => {
     last.current = text; idleAt.current = Date.now(); setSay(text); setMood(m); setAnim(""); if (a) setTimeout(() => setAnim(a), 20);
   }, []);
@@ -309,14 +316,20 @@ export default function GameRoom() {
         <span className="gr-filters" role="group" aria-label="Show">
           {([["all", "All games"], ["mine", "On my shelf"], ["new", "Not downloaded"]] as const).map(([k, l]) => <button type="button" key={k} aria-pressed={filter === k} onClick={() => setFilter(k)}>{l}</button>)}
         </span>
+        <label className="gr-shelfpick">Shelf
+          <select value={cur.id} onChange={(e) => pickShelf(e.target.value)} aria-label="Choose a shelf">
+            {shelves.map((sh) => <option key={sh.id} value={sh.id}>{sh.name} ({sh.games.length})</option>)}
+          </select></label>
         {adding
-          ? <form className="gr-newshelf" onSubmit={(e) => { e.preventDefault(); addShelf(); }}><input autoFocus value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Shelf name" maxLength={24} aria-label="New shelf name" /><button type="submit" className="btn tiny primary">Add</button><button type="button" className="btn tiny" onClick={() => { setAdding(false); setNewName(""); }}>Cancel</button></form>
+          ? <form className="gr-newshelf" onSubmit={(e) => { e.preventDefault(); addShelf(); }}><input autoFocus value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Shelf name" maxLength={24} aria-label="New shelf name" />
+              <select value={newTag} onChange={(e) => setNewTag(e.target.value)} aria-label="Fill the new shelf with a category"><option value="">Start empty</option>{TAGS.map((t) => <option key={t} value={t}>Fill with {t} games</option>)}</select>
+              <button type="submit" className="btn tiny primary">Add</button><button type="button" className="btn tiny" onClick={() => { setAdding(false); setNewName(""); setNewTag(""); }}>Cancel</button></form>
           : <button type="button" className="btn tiny" onClick={() => setAdding(true)}>+ New shelf</button>}
         <button type="button" className="btn tiny" onClick={restoreStarters} title="Keep only the three starter games">Restore starter set</button>
       </div>
       <div className="gr-shelfwrap" onMouseLeave={() => setHover(null)}>
         <div className="gr-shelves">
-          {shelves.map((sh) => {
+          {[cur].map((sh) => {
             const shown = sh.games.map((id) => GAMES.findIndex((x) => x.id === id)).filter((i) => i >= 0 && !((filter === "mine" && !owned.includes(GAMES[i].id)) || (filter === "new" && owned.includes(GAMES[i].id))));
             return (
               <div key={sh.id} className="gr-shelfbox">
@@ -347,14 +360,14 @@ export default function GameRoom() {
           })}
         </div>
         <p className="gr-preview" aria-live="polite">{hover !== null
-          ? <><b>{GAMES[hover].name}</b> · {GAMES[hover].timed ? "⏱ " : "∞ "}{GAMES[hover].time} · {GAMES[hover].skill}. {GAMES[hover].blurb} <em>{owned.includes(GAMES[hover].id) ? "On your shelf." : "Not downloaded: press the arrow on the book."}</em></>
+          ? <><b>{GAMES[hover].name}</b> · {GAMES[hover].timed ? "⏱ " : "∞ "}{GAMES[hover].time} · {GAMES[hover].tag} · {GAMES[hover].skill}. {GAMES[hover].blurb} <em>{owned.includes(GAMES[hover].id) ? "On your shelf." : "Not downloaded: press the arrow on the book."}</em></>
           : "Move over a book to read about it. Click it to select. A book with a download arrow can be downloaded right there."}</p>
       </div>
 
       <div className="gr-row">
         <span className="gr-ic" style={{ background: g.fill, color: g.ink }}>{g.icon}</span>
         <div className="gr-row-main">
-          <div className="gr-row-title"><b>{g.name}</b><span className="gr-chip">{g.timed ? "⏱ " : "∞ "}{g.time}</span><span className="gr-chip skill">{g.skill}</span></div>
+          <div className="gr-row-title"><b>{g.name}</b><span className="gr-chip">{g.timed ? "⏱ " : "∞ "}{g.time}</span><span className="gr-chip tag">{g.tag}</span><span className="gr-chip skill">{g.skill}</span></div>
           <p>{g.blurb}</p>
         </div>
         <span className="gr-row-best">🏆 {g.best()}</span>

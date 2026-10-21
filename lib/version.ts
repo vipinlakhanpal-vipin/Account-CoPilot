@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.07";
+export const APP_VERSION = "6.09";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,13 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.09", date: "2026-10-21", notes: "Games shelves open one at a time from a drop-down, games carry a category, and the Daily run pill says which tabs list the new runs.", changes: [
+      { what: "The shelf is now one drop-down: pick a shelf and its games fill the same space below, so every shelf uses one optimised area instead of sitting side by side. + New shelf can start empty or be filled with a category. Every game has a category tag (Thinking, Analysing, Memory, Focus, Speed, Language, Knowledge) shown in its row and when you hover its book; three shelves start grouped by tag", where: "Aria's playroom, shelf bar", why: "Shelf 1 and Shelf 2 took the same space and the library should stay compact whichever shelf is open" },
+      { what: "The blue pill on the left panel's Daily run item now reads \"2 new runs\", and on opening Daily run the same pill sits on the Daily Run Summary and Run history tabs, the two tabs that list the new runs", where: "Left panel, Daily run", why: "It was unclear where the new runs could be seen" },
+  ] },
+  { version: "6.08", date: "2026-10-21", notes: "Aria rides a light clock dial and tells the time by where she sits.", changes: [
+      { what: "Aria no longer bounces around a box. She sits on the minute hand of a faint clock dial (12, 3, 6, 9 with N, E, S, W beside them) and glides round as the time ticks; a thin hour hand and an amber second dot sweep the ring. She pauses while the pointer is on her. The dial is light so the menu stays readable", where: "Left panel, Aria", why: "A calmer, meaningful movement that also shows the time" },
+  ] },
   { version: "6.07", date: "2026-10-20", notes: "The workbook block on an account page shows only workbook data.", changes: [
       { what: "On the Atlantis page the Your profiling (reference workbook, unchanged) block was spelling the original name out one letter per box and showing a Parent group card: both were notes the app keeps for itself (the former name and the parent group), which that block wrongly listed. The block now shows only the sheets of your workbook; the app's own entries (merged names, parent group, original name, enrichment, revenue check and so on) are no longer listed there", where: "Account page", why: "My Kerzner change added entries the block was not built to skip" },
   ] },

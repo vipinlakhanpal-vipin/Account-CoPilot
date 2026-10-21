@@ -51,48 +51,40 @@ function Roamer() {
     loop(true);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
-  // Aria rolls around the free space of her area and bounces off its edges: she never goes past the left or right edge (or the top or bottom), and her speech bubble is kept inside too.
-  // She pauses while the pointer is on her, while the tab is hidden, and stays put for people who prefer reduced motion.
-  const wrap = useRef<HTMLDivElement>(null);
+  // Aria rides a clock dial in the free space of her area: she sits on the minute hand's tip and glides round as the time ticks, so her place tells the time (12 at the top, 3 right, 6 bottom, 9 left; the compass letters N, E, S, W sit beside them).
+  // The dial is drawn faint and light on the panel. She pauses while the pointer is on her.
+  const wrap = useRef<HTMLDivElement>(null), dial = useRef<SVGSVGElement>(null);
   useEffect(() => {
-    const el = wrap.current, area = el?.parentElement;
-    if (!el || !area) return;
-    const R = 36, PAD = 8, GAP = 54; // orb radius, margin, distance from her centre to the top of the bubble
-    const st = { x: area.clientWidth / 2, y: R + PAD + 6, vx: 26, vy: 18, hover: false, last: 0, placed: false };
-    const bot = el.querySelector<HTMLElement>(".agame-bot");
-    const bump = (cls: string) => { if (!bot) return; bot.classList.remove("bump-x", "bump-y"); void bot.offsetWidth; bot.classList.add(cls); setTimeout(() => bot.classList.remove(cls), 280); };
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let raf = 0;
-    // She lives in the middle of the free space (between the menu above and her buttons below) and roams only a little around it, bouncing off the edges of that small box.
-    const draw = () => {
-      const W = area.clientWidth, H = area.clientHeight, bubbleH = el.querySelector<HTMLElement>(".agame-bubble")?.offsetHeight || 66;
+    const el = wrap.current, area = el?.parentElement, svg = dial.current;
+    if (!el || !area || !svg) return;
+    const R = 36, PAD = 8;
+    const hourH = svg.querySelector<SVGLineElement>(".dl-hour"), minH = svg.querySelector<SVGLineElement>(".dl-min"), secD = svg.querySelector<SVGCircleElement>(".dl-sec");
+    const st = { hover: false, first: true };
+    const tick = () => {
+      const W = area.clientWidth, H = area.clientHeight;
       const free = H - ((area.querySelector<HTMLElement>(".agame-legend")?.offsetHeight || 46) + 6); // height above the legend
-      const block = R + GAP + bubbleH;                                                              // her orb, the gap and her bubble under it
-      const cx = W / 2, cy = Math.max(R + PAD, (free - block) / 2 + R);
-      const minX = Math.max(R + PAD, cx - 62), maxX = Math.min(Math.max(R + PAD, W - R - PAD), cx + 62);
-      const minY = Math.max(R + PAD, cy - 30), maxY = Math.max(minY, cy + 30);
-      return { W, minX, maxX: Math.max(minX, maxX), minY, maxY, cx, cy };
-    };
-    const tick = (ts: number) => {
-      raf = requestAnimationFrame(tick);
-      const dt = Math.min(0.05, (ts - (st.last || ts)) / 1000); st.last = ts;
-      const b = draw();
-      if (!st.placed) { st.x = b.cx; st.y = b.cy; st.placed = true; } // first frame: start in the middle
-      if (!reduced && !st.hover && !quietRef.current && document.visibilityState === "visible") {
-        st.x += st.vx * dt; st.y += st.vy * dt;
-        if (st.x <= b.minX) { st.x = b.minX; st.vx = Math.abs(st.vx); bump("bump-x"); } else if (st.x >= b.maxX) { st.x = b.maxX; st.vx = -Math.abs(st.vx); bump("bump-x"); }
-        if (st.y <= b.minY) { st.y = b.minY; st.vy = Math.abs(st.vy); bump("bump-y"); } else if (st.y >= b.maxY) { st.y = b.maxY; st.vy = -Math.abs(st.vy); bump("bump-y"); }
-      } else { st.x = Math.min(b.maxX, Math.max(b.minX, st.x)); st.y = Math.min(b.maxY, Math.max(b.minY, st.y)); }
-      el.style.transform = `translate(${st.x}px,${st.y}px)`;
+      const rho = Math.max(16, Math.min(56, W / 2 - R - PAD, free / 2 - R - PAD));                     // orbit radius
+      const cx = W / 2, cy = Math.max(free / 2, rho + R + PAD);
+      svg.style.left = `${cx - 1.3 * rho}px`; svg.style.top = `${cy - 1.3 * rho}px`; svg.style.width = svg.style.height = `${2.6 * rho}px`;
+      const now = new Date(), s = now.getSeconds() + now.getMilliseconds() / 1000, m = now.getMinutes() + s / 60, h = (now.getHours() % 12) + m / 60;
+      const pt = (deg: number, k: number) => ({ x: Math.sin((deg * Math.PI) / 180) * k, y: -Math.cos((deg * Math.PI) / 180) * k });
+      const mp = pt(m * 6, 1), hp = pt(h * 30, 0.5), sp = pt(s * 6, 1);
+      if (minH) { minH.setAttribute("x2", String(mp.x)); minH.setAttribute("y2", String(mp.y)); }
+      if (hourH) { hourH.setAttribute("x2", String(hp.x)); hourH.setAttribute("y2", String(hp.y)); }
+      if (secD) { secD.setAttribute("cx", String(sp.x)); secD.setAttribute("cy", String(sp.y)); }
+      if (st.hover) return;
+      el.style.transition = st.first ? "none" : "transform 1s linear"; st.first = false;
+      el.style.transform = `translate(${cx + mp.x * rho}px,${cy + mp.y * rho}px)`;
       // keep the bubble fully inside the area, whatever the orb's place; its pointer still points at her
-      const bw = el.querySelector<HTMLElement>(".agame-bubble")?.offsetWidth || 176;
-      const left = Math.min(b.W - PAD - bw - st.x, Math.max(PAD - st.x, -bw / 2));
+      const bw = el.querySelector<HTMLElement>(".agame-bubble")?.offsetWidth || 176, x = cx + mp.x * rho;
+      const left = Math.min(W - PAD - bw - x, Math.max(PAD - x, -bw / 2));
       el.style.setProperty("--bx", `${left}px`); el.style.setProperty("--ax", `${-left - 5}px`);
     };
-    raf = requestAnimationFrame(tick);
+    tick();
+    const id = setInterval(tick, 1000), ro = new ResizeObserver(() => { st.first = true; tick(); }); ro.observe(area);
     const over = () => { st.hover = true; }, out = () => { st.hover = false; };
     el.addEventListener("mouseenter", over); el.addEventListener("mouseleave", out);
-    return () => { cancelAnimationFrame(raf); el.removeEventListener("mouseenter", over); el.removeEventListener("mouseleave", out); };
+    return () => { clearInterval(id); ro.disconnect(); el.removeEventListener("mouseenter", over); el.removeEventListener("mouseleave", out); };
   }, []);
   const onHover = () => {
     const r = teaseRef.current, now = Date.now(); if (away || quietRef.current || typing() || now - r.last < 3500) return;
@@ -108,6 +100,12 @@ function Roamer() {
   const go = () => { setMood(null); setPunched(true); setTimeout(() => { setPunched(false); if (!path.startsWith("/nav/games")) router.push("/nav/games"); }, 450); };
   return (
     <>
+    <svg className="agame-dial" ref={dial} viewBox="-1.3 -1.3 2.6 2.6" aria-hidden="true">
+      <circle r="1" className="dl-ring" />
+      {Array.from({ length: 12 }, (_, i) => { const a = (i * 30 * Math.PI) / 180, k = i % 3 === 0 ? 0.86 : 0.92; return <line key={i} className="dl-tick" x1={Math.sin(a) * k} y1={-Math.cos(a) * k} x2={Math.sin(a) * 1.06} y2={-Math.cos(a) * 1.06} />; })}
+      {([["12", 0, -1.22, "N", 0, -0.7], ["3", 1.2, 0.07, "E", 0.7, 0.07], ["6", 0, 1.3, "S", 0, 0.77], ["9", -1.2, 0.07, "W", -0.7, 0.07]] as const).map(([n, nx, ny, d, dx, dy]) => <g key={n}><text className="dl-num" x={nx} y={ny}>{n}</text><text className="dl-dir" x={dx} y={dy}>{d}</text></g>)}
+      <line className="dl-hour" x1="0" y1="0" x2="0" y2="-0.5" /><line className="dl-min" x1="0" y1="0" x2="0" y2="-1" /><circle className="dl-sec" r="0.05" cx="0" cy="-1" /><circle className="dl-hub" r="0.04" />
+    </svg>
     <div className={`agame${away ? " gone" : ""}`} ref={wrap} onMouseEnter={onHover}>
       {!punched && !away && !quiet && (tease || mood
         ? <button type="button" className="agame-bubble funny" onClick={go} title="Open Aria's playroom">{tease ? tease.t : mood}</button>
