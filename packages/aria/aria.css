@@ -161,3 +161,6 @@
 
 .aria-redo{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:8px;font:500 12px var(--aria-body);color:var(--aria-muted)}
 .aria-redo button{border:1px solid #0B7A66;background:color-mix(in srgb,#2ECC8F 22%,#fff);color:#0B5A47;border-radius:999px;padding:5px 12px;font:600 12px var(--aria-body);cursor:pointer}
+.aria-redo-err{flex-basis:100%;color:#B3261E;font-weight:600}
+.aria-copy{flex:none;align-self:center;width:28px;height:28px;border-radius:50%;border:1px solid var(--aria-line);background:var(--aria-surface);color:var(--aria-muted);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font:700 13px var(--aria-body)}
+.aria-copy:hover{color:#0F6E56;border-color:#0F6E56}

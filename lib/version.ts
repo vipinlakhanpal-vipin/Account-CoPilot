@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.23";
+export const APP_VERSION = "6.24";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.24", date: "2026-10-21", notes: "Aria: download a finished search again as Excel or PDF from History, and copy any prompt you asked.", changes: [
+      { what: "In Aria, a list answer now keeps its Excel contact list and PDF report buttons in History, and a file answer shows both formats. One tap rebuilds the file from today's data and downloads it, without adding anything to the chat (if Aria needs more detail first, the question goes into the chat). Chats saved before this update only get the buttons on their file answers", where: "Aria, History and chat", why: "The Excel contact list line in History was not clickable and you wanted to download it again as PDF or Excel" },
+      { what: "Every prompt you asked has a copy icon beside it that copies the text, so you can paste and edit it", where: "Aria", why: "You wanted to reuse a prompt without retyping it" },
+  ] },
   { version: "6.23", date: "2026-10-21", notes: "Every table can be filtered by date: Data added or Data enriched.", changes: [
       { what: "Every list table now has a Date filter next to the other filters: choose Data added (when the row first entered the app) or Data enriched (when it was last researched, verified or filled in), then pick a from and to day, or use Today, 7 days or 30 days. Rows with no date for that choice drop out while it is on. The filter is not saved inside saved reports", where: "Accounts, Pipeline, Stakeholders, Signals, ERP, Sources, Reports and every dashboard drill-down", why: "You wanted to see what dates data was added and enriched" },
   ] },

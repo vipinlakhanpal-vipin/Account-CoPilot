@@ -4,8 +4,17 @@ import { createPortal } from "react-dom";
 import type { AriaAction, AriaChoice } from "./types";
 
 type Action = AriaAction;
-type Conv = { id: string; at: number; title: string; msgs: { role: "user" | "assistant"; content: string; display?: string; mode?: string; note?: string; ms?: number; redo?: string }[] };
-type Msg = { role: "user" | "assistant"; content: string; display?: string; actions?: Action[]; choices?: AriaChoice[]; mode?: string; note?: string; ms?: number; redo?: string };
+type Conv = { id: string; at: number; title: string; msgs: { role: "user" | "assistant"; content: string; display?: string; mode?: string; note?: string; ms?: number; redo?: string; downloads?: Dl[] }[] };
+type Dl = { label: string; value: string }; // a saved Excel / PDF request: the full question that rebuilds the file from today's data
+type Msg = { role: "user" | "assistant"; content: string; display?: string; actions?: Action[]; choices?: AriaChoice[]; mode?: string; note?: string; ms?: number; redo?: string; downloads?: Dl[] };
+const isFileChoice = (label: string) => /\b(excel|pdf)\b/i.test(label);
+const XL_STEM = /^(?:📊\s*)?excel contact list/i, PDF_STEM = /^(?:📄\s*)?pdf report/i;
+/** Both formats for a saved file request, so a finished search can be downloaded again as Excel or PDF. */
+function bothFormats(value: string): Dl[] {
+  if (XL_STEM.test(value)) return [{ label: "📊 Excel contact list", value }, { label: "📄 PDF report", value: value.replace(XL_STEM, "PDF report") }];
+  if (PDF_STEM.test(value)) return [{ label: "📊 Excel contact list", value: value.replace(PDF_STEM, "Excel contact list") }, { label: "📄 PDF report", value }];
+  return [{ label: "⬇ Download this file again", value }];
+}
 const GIVE_UP_MS = 90_000;
 
 const DEFAULT_EXAMPLES: [string, string][] = [
@@ -186,7 +195,12 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
     if (!convId.current) convId.current = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
     const first = msgs.find((m) => m.role === "user")!;
     const conv: Conv = { id: convId.current, at: Date.now(), title: (first.display || first.content).slice(0, 120),
-      msgs: msgs.map(({ role, content, display, mode, note, ms, actions, redo }, k) => ({ role, content, display, mode, note, ms, redo: redo || (actions && actions.length && k > 0 && msgs[k - 1].role === "user" ? msgs[k - 1].content : undefined) })) };
+      msgs: msgs.map(({ role, content, display, mode, note, ms, actions, redo, choices, downloads }, k) => {
+        const redoQ = redo || (actions && actions.length && k > 0 && msgs[k - 1].role === "user" ? msgs[k - 1].content : undefined);
+        // a list answer keeps its Excel / PDF choices (they carry the filters, so the file draws on the same companies); a file answer keeps the request that built it
+        const dl = downloads || (choices || []).filter((c) => typeof c !== "string" && !c.number && isFileChoice(c.label)).map((c) => ({ label: (c as { label: string }).label, value: (c as { value: string }).value }));
+        return { role, content, display, mode, note, ms, redo: redoQ, downloads: dl.length ? dl : redoQ ? bothFormats(redoQ) : undefined };
+      }) };
     const keep = history.filter((h) => h.id !== conv.id && Date.now() - h.at < 90 * 864e5).slice(0, 99);
     saveHistory([conv, ...keep]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -263,6 +277,29 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
     convId.current = null; setMsgs([]); setText(""); setBusy(false); setListening(false); setView("chat");
     setTimeout(() => inputRef.current?.focus(), 30);
   }
+  // One tap on a saved Excel / PDF request: rebuild it from today's data and download it, without adding anything to the chat.
+  // If Aria needs more information first (how many, how to pick), the question goes into the chat so it can be answered there.
+  // Copy a prompt you asked, so it can be pasted into the box again (and edited).
+  const [copied, setCopied] = useState(-1);
+  async function copyPrompt(t: string, i: number) {
+    try { await navigator.clipboard.writeText(t); }
+    catch { const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); } catch { /* optional */ } ta.remove(); }
+    setCopied(i); setTimeout(() => setCopied((c) => (c === i ? -1 : c)), 1500);
+  }
+  const [dlNote, setDlNote] = useState<{ key: string; text: string } | null>(null);
+  async function redownload(d: Dl, key: string) {
+    setFiling(key); setDlNote(null);
+    try {
+      const init = { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: [{ role: "user", content: d.value }], flow: true }) };
+      const res = await (sendFn ? sendFn(endpoint, init) : fetch(endpoint, init));
+      const j = await res.json().catch(() => ({}));
+      const a = (j.actions || [])[0] as Action | undefined;
+      if (res.ok && a) await onAction?.(a);
+      else if (res.ok && (j.choices || []).length) { setView("chat"); send(d.value, d.label.replace(/^\S+\s/, "")); }
+      else setDlNote({ key, text: String(j.error || j.text || "I could not build that file just now.").replace(/\*\*/g, "") });
+    } catch { setDlNote({ key, text: "I could not reach the server. Try again." }); }
+    finally { setFiling(""); }
+  }
   async function file(a: Action, key: string) { setFiling(key); try { await onAction?.(a); } finally { setFiling(""); } }
 
   const last = msgs[msgs.length - 1];
@@ -326,6 +363,10 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
               )}
               {view === "chat" && msgs.map((m, i) => (
                 <div key={i} className={`aria-msg ${m.role}`}>
+                  {m.role === "user" && (
+                    <button type="button" className="aria-copy" title={copied === i ? "Copied" : "Copy this prompt"} aria-label="Copy this prompt" onClick={() => copyPrompt(m.display || m.content, i)}>
+                      {copied === i ? "✓" : <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8.5" rx="1.5" fill="none" stroke="currentColor" strokeWidth="1.4" /><path d="M10.5 3.5v-.5A1.5 1.5 0 0 0 9 1.5H3.5A1.5 1.5 0 0 0 2 3v6.5A1.5 1.5 0 0 0 3.5 11H4" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" /></svg>}
+                    </button>)}
                   {m.role === "assistant" && <span className="aria-avatar" aria-hidden="true">{name.charAt(0)}</span>}
                   <div className="aria-bubble">
                     {m.role === "assistant" ? <Md text={m.content} /> : <p>{m.display || m.content}</p>}
@@ -334,9 +375,10 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
                         <button type="button" key={j} className="btn btn-dl big no-ic" disabled={filing === `${i}-${j}`} onClick={() => file(a, `${i}-${j}`)}>
                           {filing === `${i}-${j}` ? "Building…" : `⬇ ${a.label}`}</button>))}</div>
                     )}
-                    {m.redo && !(m.actions && m.actions.length) && (
-                      <div className="aria-redo"><span>This file was built earlier, and the download button is not kept in History.</span>
-                        <button type="button" disabled={busy} onClick={() => { if (window.confirm("Create this file again with today's data?")) send(m.redo!, "Create this file again"); }}>↻ Create it again</button></div>
+                    {m.role === "assistant" && m.downloads && m.downloads.length > 0 && !(m.choices && m.choices.length && i === msgs.length - 1) && (
+                      <div className="aria-redo"><span>Download this again with today&apos;s data:</span>
+                        {m.downloads.map((d, j) => <button type="button" key={j} disabled={busy || !!filing} onClick={() => redownload(d, `dl${i}-${j}`)}>{filing === `dl${i}-${j}` ? "Building…" : d.label}</button>)}
+                        {dlNote && dlNote.key.startsWith(`dl${i}-`) && <span className="aria-redo-err">{dlNote.text}</span>}</div>
                     )}
                     {m.role === "assistant" && !busy && <button type="button" className="aria-clear" title="Remove this question and its answer from the screen" onClick={() => setMsgs((all) => all.filter((_, k) => k !== i && !(k === i - 1 && all[k].role === "user")))}>↩ Clear this answer</button>}
                     {m.note && <p className={`aria-note ${m.mode === "ai" ? "ai" : "free"}`}>{m.note}{m.ms !== undefined ? ` · ${(m.ms / 1000).toFixed(1)}s` : ""}</p>}
