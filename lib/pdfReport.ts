@@ -222,16 +222,15 @@ function scoresWithFrame(w: Writer, items: [ScoreName, Score][]) {
   for (const [label, sc] of items) {
     addL(`${label}: ${sc.total}%`, 9.5, w.bold, INK, 0, 0);
     sc.parts.forEach((x) => addL(`${x.label}: ${x.score} of ${x.max} pts - ${x.why}`, 8.5, w.font, MUTED, 10, 0));
+    addL(explainScore(label, sc).total, 9, w.bold, TEAL, 10, 0);
     left.push({ t: "", size: 8.5, font: w.font, color: INK, x: M, gap: 0 });
   }
   addR("HOW TO READ THESE SCORES", 7.5, w.bold, TEAL, 2);
-  addR("On the left, \"10 of 30 pts\" means 10 points earned out of 30 available. Add up the earned points and the available points of one score, then: earned ÷ available × 100 = the percentage (0 to 100). The totals differ because each score has its own checks.", 7.5, w.font, MUTED, 5);
+  addR("The simple rule: score = points the company got, divided by the points it could get, times 100. Every score ends up between 0 and 100. Example: 35 out of 70 is half, so 50%.", 7.5, w.font, INK, 5);
   for (const [label, sc] of items) {
     const e = explainScore(label, sc);
     addR(`${e.name}: ${e.pct}%`, 8, w.bold, INK, 1);
     addR(e.question, 7.5, w.font, INK, 1);
-    addR(e.earned, 7, w.font, MUTED, 0);
-    addR(e.available, 7, w.font, MUTED, 0);
     addR(e.formula, 7.5, w.bold, TEAL, 1);
     if (e.extremes) addR(e.extremes, 7.5, w.font, INK, 1);
     addR(e.reading, 7, w.font, MUTED, 5);
