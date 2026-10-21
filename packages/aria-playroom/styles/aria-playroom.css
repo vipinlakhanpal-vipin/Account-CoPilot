@@ -371,10 +371,6 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 .agame-legend .agame-ask:hover{filter:brightness(1.06);transform:translateY(-1px)}
 .agame-legend .agame-ask:focus-visible{outline:2px solid #fff;outline-offset:3px}
 .agame-legend .agame-play{margin:0}
-.agame-legend .agame-more{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font:700 11.5px var(--body);color:rgba(255,255,255,.9);text-decoration:none;padding:2px 2px}
-.agame-legend .agame-more:hover{color:#fff}
-.agame-legend .agame-more:focus-visible{outline:2px solid #fff;outline-offset:2px}
-.agame-more-body{margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.25)}
 .agame-legend .agame-ask,.agame-legend .agame-play{white-space:nowrap;font:700 12px var(--body);padding:8px 8px;overflow:hidden;letter-spacing:0}
 .agame-dial{position:absolute;pointer-events:none;overflow:visible}
 .agame-dial .dl-shadow{fill:rgba(0,0,0,.4)}
@@ -404,7 +400,6 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 .agame-legend{font-size:12px}
 .agame-legend .agame-ask,.agame-legend .agame-play{font:600 12.5px var(--body);line-height:1.25;padding:5px 10px;border-width:1.5px}
 .agame-actions{gap:6px;margin-bottom:6px}
-.agame-legend .agame-more{font-size:12px}
 .agame-legend.open{max-height:calc(100% - 12px);overflow-y:auto;padding:8px 10px;border-radius:12px;background:rgba(13,24,48,.94);box-shadow:0 4px 14px rgba(0,0,0,.35);scrollbar-width:thin}
 
 /* tab colour tokens used by the games' tabs, chips and switches */

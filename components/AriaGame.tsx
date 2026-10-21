@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AriaFace } from "@/components/AriaFace";
 import AriaTraveller from "@/components/AriaTraveller";
-import HourlySettings from "@/components/HourlySettings";
 
 // Aria floats in the left panel. Clicking her opens the Game room page on the right (components/GameRoom.tsx). Now and then, while she sits idle, she flashes a funny message for a few seconds.
 const MOODS = [
@@ -25,10 +24,8 @@ function Roamer() {
   const [punched, setPunched] = useState(false), [away, setAway] = useState(false);
   // Quiet mode: your own switch (kept in this browser) beats the Super Admin's default for everyone. Quiet means no roaming, no funny messages, no teasing; she waits calmly and a click still opens the playroom.
   const [pref, setPref] = useState<"1" | "0" | null>(null), [def, setDef] = useState<{ quietDefault: boolean; canSet: boolean; name?: string }>({ quietDefault: false, canSet: false });
-  useEffect(() => { try { const v = localStorage.getItem("aria-quiet"); if (v === "1" || v === "0") setPref(v); } catch { /* optional */ } fetch("/api/aria-prefs", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((j) => j && setDef(j)).catch(() => {}); }, []);
+  useEffect(() => { const read = () => { try { const v = localStorage.getItem("aria-quiet"); if (v === "1" || v === "0") setPref(v); } catch { /* optional */ } fetch("/api/aria-prefs", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((j) => j && setDef(j)).catch(() => {}); }; read(); window.addEventListener("aria-prefs-changed", read); return () => window.removeEventListener("aria-prefs-changed", read); }, []);
   const quiet = pref !== null ? pref === "1" : def.quietDefault, quietRef = useRef(false); quietRef.current = quiet;
-  const setQuiet = (on: boolean) => { setPref(on ? "1" : "0"); try { localStorage.setItem("aria-quiet", on ? "1" : "0"); } catch { /* optional */ } setMood(null); setTease(null); };
-  const setEveryone = (on: boolean) => { fetch("/api/aria-prefs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ quietDefault: on }) }).then((r) => r.ok && setDef((d) => ({ ...d, quietDefault: on }))).catch(() => {}); };
   // she never speaks while you are typing: a field has focus, or a key was pressed in the last few seconds
   const lastKey = useRef(0);
   useEffect(() => { const k = () => { lastKey.current = Date.now(); }; window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k); }, []);
@@ -101,8 +98,6 @@ function Roamer() {
     if (r.n >= 5) r.n = 0;
     setTease(pickT); setMood(null); clearTimeout(r.timer); r.timer = setTimeout(() => setTease(null), 3000);
   };
-  const [tips, setTips] = useState(false);
-  useEffect(() => { try { setTips(localStorage.getItem("aria-tips-open") === "1"); } catch { /* optional */ } const o = () => setTips(true); window.addEventListener("aria-setup-open", o); return () => window.removeEventListener("aria-setup-open", o); }, []);
   const openChat = () => document.querySelector<HTMLButtonElement>(".nav-aria-mini")?.click(); // Aria's data chat (the assistant that answers questions about the accounts, contacts and signals)
   const getHome = () => wrap.current?.querySelector<HTMLElement>(".agame-bot")?.getBoundingClientRect() || null;
   const go = () => { setMood(null); setPunched(true); setTimeout(() => { setPunched(false); if (!path.startsWith("/nav/games")) router.push("/nav/games"); }, 450); };
@@ -131,21 +126,11 @@ function Roamer() {
           <AriaFace mood={tease ? tease.m : mood ? "oops" : "happy"} />
         </button>
     </div>
-    {!away && <div className={`agame-legend${tips ? " open" : ""}`}>
+    {!away && <div className="agame-legend">
       <div className="agame-actions">
         <button type="button" className="agame-ask" onClick={openChat}>💬 Ask Aria about your data</button>
         <button type="button" className="agame-play" onClick={go}>🎮 Play games with Aria</button>
       </div>
-      <button type="button" className="agame-more" aria-expanded={tips} onClick={() => { const n = !tips; setTips(n); try { localStorage.setItem("aria-tips-open", n ? "1" : "0"); } catch { /* optional */ } }}>
-        <svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true" style={{ transform: tips ? "none" : "rotate(-90deg)", transition: "transform .15s" }}><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg> Aria Setup</button>
-      {tips && <div className="agame-more-body">
-        {quiet && <p>Quiet mode is on: Aria stays calm and does not interrupt, and the hourly break stays off.</p>}
-        <span className="agame-toggles">
-          <label title="Only for you, in this browser: no roaming, teasing or funny messages"><input type="checkbox" checked={quiet} onChange={(e) => setQuiet(e.target.checked)} /> Quiet mode (just me)</label>
-          {def.canSet && <label title="The default for every other user who has not chosen for themselves. Their own switch still wins."><input type="checkbox" checked={def.quietDefault} onChange={(e) => setEveryone(e.target.checked)} /> Quiet for everyone (default for other users)</label>}
-        </span>
-        <HourlySettings />
-      </div>}
     </div>}
     {away && <><p className="agame-note">Aria is out exploring. Double-click her, or press Esc, to call her home.</p><AriaTraveller getHome={getHome} onHome={() => setAway(false)} name={def.name || ""} /></>}
     </>

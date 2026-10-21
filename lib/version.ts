@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.57";
+export const APP_VERSION = "6.58";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.58", date: "2026-10-21", notes: "Aria Setup moved to Settings as its own tab, before Learn me. The Aria block in the left panel keeps only Ask Aria and Play games.", changes: [
+      { what: "Settings has a new Aria Setup tab (before Learn me) with Quiet mode and the hourly break: on or off, alarm, lady's voice and a test button. The Aria Setup drop-down in the left panel is gone", where: "Settings → Aria Setup", why: "The left panel was too small for the settings; they now have a full page" },
+  ] },
   { version: "6.57", date: "2026-10-21", notes: "Uploads and discovery no longer drop companies named \"(Pty) Ltd\"; a missed hourly alarm now appears when you return to the tab.", changes: [
       { what: "The duplicate check treated \"(Pty)\" as an acronym, so every \"(Pty) Ltd\" company matched the first one and was skipped. Legal forms in brackets are now ignored", where: "Engine worker (uploads, discovery, Find company)", why: "A South Africa upload would have lost about half its companies" },
       { what: "The hourly break shows up to 15 minutes after the hour (was 5), appears as soon as you return to the tab, and is no longer blocked by a text box left in focus", where: "Hourly break (Aria)", why: "The 6pm alarm was missed" },

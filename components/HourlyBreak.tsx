@@ -1,18 +1,20 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AriaFace } from "@/components/AriaFace";
 import { playAlarm, speak, stopSpeaking } from "@/lib/hourlyAudio";
 import { DEFAULT_PREFS, loadPrefs, savePrefs, type Prefs } from "@/lib/hourlyPrefs";
 
 // Hourly break reminder: between 10:00 and 18:00 (the person's own clock), on each full hour from 11:00 to 18:00, Aria peeks out
 // from behind a clock, rings an alarm and says an hour has passed. Everyone chooses their own alarm and lady's voice (or none) in
-// Aria Setup (left panel, under Aria, or the Settings link on the card). Quiet mode (the switch under Aria) turns it off.
+// Aria Setup (Settings, Aria Setup tab, or the link on the card). Quiet mode (the switch under Aria) turns it off.
 // Browser only: no API cost. Skipped while the person is typing, and only shown if the tab is in view within 15 minutes of the hour (a missed alarm appears when you come back).
 const FIRST = 11, LAST = 18; // 10:00 is the start of the window, so the first full hour that has passed is 11:00
 const MESSAGE = "1 hour has passed. Take a 10 minute walk, or have a coffee and chill for some time, then come back.";
 const SPOKEN = "One hour has passed. Take a ten minute walk, or have a coffee, and relax for a little while. Then come back.";
 
 export default function HourlyBreak() {
+  const router = useRouter();
   const [prefs, setPrefsState] = useState<Prefs>(DEFAULT_PREFS), prefsRef = useRef<Prefs>(DEFAULT_PREFS);
   const [show, setShow] = useState<{ hour: number } | null>(null), [up, setUp] = useState(false), [speaking, setSpeaking] = useState(false);
   const lastKey = useRef(0), timers = useRef<ReturnType<typeof setTimeout>[]>([]), quiet = useRef(false);
@@ -21,9 +23,12 @@ export default function HourlyBreak() {
   useEffect(() => { const read = () => { const p = loadPrefs(); prefsRef.current = p; setPrefsState(p); }; read(); window.addEventListener("hourly-prefs-changed", read); return () => window.removeEventListener("hourly-prefs-changed", read); }, []);
   // Quiet mode: the person's own choice wins, otherwise the Super Admin's default for everyone (same rule as Aria's roaming).
   useEffect(() => {
-    let local: string | null = null; try { local = localStorage.getItem("aria-quiet"); } catch { /* optional */ }
-    if (local === "1" || local === "0") { quiet.current = local === "1"; return; }
-    fetch("/api/aria-prefs", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((j) => { quiet.current = !!j?.quietDefault; }).catch(() => {});
+    const read = () => {
+      let local: string | null = null; try { local = localStorage.getItem("aria-quiet"); } catch { /* optional */ }
+      if (local === "1" || local === "0") { quiet.current = local === "1"; return; }
+      fetch("/api/aria-prefs", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((j) => { quiet.current = !!j?.quietDefault; }).catch(() => {});
+    };
+    read(); window.addEventListener("aria-prefs-changed", read); return () => window.removeEventListener("aria-prefs-changed", read);
   }, []);
   useEffect(() => { const k = () => { lastKey.current = Date.now(); }; window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k); }, []);
 
@@ -79,7 +84,7 @@ export default function HourlyBreak() {
           <div className="hb-quick">
             <label><input type="checkbox" checked={prefs.sound !== "off"} onChange={(e) => setPrefs({ sound: e.target.checked ? (prefs.sound === "off" ? "cuckoo" : prefs.sound) : "off" })} /> Alarm sound</label>
             <label><input type="checkbox" checked={prefs.voiceOn} onChange={(e) => { setPrefs({ voiceOn: e.target.checked }); if (!e.target.checked) { stopSpeaking(); setSpeaking(false); } }} /> Voice</label>
-            <button type="button" className="link" onClick={() => { hide(); window.dispatchEvent(new Event("aria-setup-open")); }}>Aria Setup…</button>
+            <button type="button" className="link" onClick={() => { hide(); router.push("/nav/settings/aria"); }}>Aria Setup…</button>
           </div>
         </div>
       )}
