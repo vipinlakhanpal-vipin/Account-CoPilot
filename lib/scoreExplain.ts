@@ -3,7 +3,7 @@
 import type { Score } from "@/lib/icp";
 
 export type ScoreName = "ICP Match" | "Opportunity" | "Coupa Fit";
-export type Explained = { name: ScoreName; pct: number; question: string; formula: string; available: string; extremes: string; reading: string };
+export type Explained = { name: ScoreName; pct: number; question: string; earned: string; formula: string; available: string; extremes: string; reading: string };
 
 const QUESTION: Record<ScoreName, string> = {
   "ICP Match": "Does it look like your ideal customer? Checked against your ICP rules.",
@@ -23,5 +23,5 @@ export function explainScore(name: ScoreName, sc: Score): Explained {
   const reading = name === "Opportunity" && sc.total === 0
     ? "0% means no buying signs seen yet, not that it will never buy."
     : "70 or more is strong, 45 to 69 partial, below 45 weak.";
-  return { name, pct: sc.total, question: QUESTION[name], formula: `${earned} ÷ ${max} × 100 = ${sc.total}%`, available: `Points available: ${parts.map((p) => p.max).join(" + ")} = ${max}`, extremes, reading };
+  return { name, pct: sc.total, question: QUESTION[name], earned: `Points earned: ${parts.map((p) => p.score).join(" + ")} = ${earned}`, formula: `${earned} ÷ ${max} × 100 = ${sc.total}%`, available: `Points available: ${parts.map((p) => p.max).join(" + ")} = ${max}`, extremes, reading };
 }
