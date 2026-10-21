@@ -1,5 +1,6 @@
 "use client";
 import SourceChart from "@/components/SourceChart";
+import { erpText } from "@/lib/techApps";
 import { addedAt, enrichedAt, dayKey } from "@/lib/dates";
 import { ask, paidFetch, notify } from "@/components/Confirm";
 import { rulesFor, regionOf } from "@/lib/icpDefinition.mjs";
@@ -1016,8 +1017,8 @@ function Brief({ a, data, people, onClose, onContact, scores, criteria, isSuper 
                 <div className="note">{s.evidence} {s.date && `· ${s.date}`} <Ext href={s.source_url}>source</Ext></div></div>))}
           </div>
           <div className="block"><h4>ERP landscape and third-party apps</h4>
-            <p><b>ERP:</b> {a.erp || "Unknown"} <StatusTag s={a.erp_status} /></p>{a.erp_evidence && <p className="note">{a.erp_evidence}</p>}
-            <div>{apps.length ? apps.map((x) => <span key={x.id} className="tag" title={x.evidence}>{x.name} · {x.category} · {x.status}</span>) : <span className="muted">No third-party apps verified.</span>}</div>
+            <p><b>ERP:</b> {erpText(a.erp)} <StatusTag s={a.erp_status} /></p>{a.erp_evidence && <p className="note">{a.erp_evidence}</p>}
+            {apps.length > 0 && <div>{apps.map((x) => <span key={x.id} className="tag" title={x.evidence}>{x.name} · {x.category} · {x.status}</span>)}</div>}
           </div>
           <div className="block"><h4>Transformation context</h4>
             {a.procurement_model && <p><b>Procurement model:</b> {a.procurement_model}</p>}

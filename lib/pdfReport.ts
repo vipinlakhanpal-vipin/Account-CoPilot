@@ -3,6 +3,7 @@ import { SHOW_HUBSPOT } from "@/lib/features";
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import type { AllData, Row } from "@/lib/data";
 import { icpMatch, opportunity, coupaFit, procurementMaturity, estimateSpend, whySelected, recommendedActions, withDefaults, revenueOf, revenueIsOfficial, fmtUsdM, fmtMoneyM, type Criteria } from "@/lib/icp";
+import { erpText } from "@/lib/techApps";
 import { playbookFor, startersFor, productsLabel, type Detected } from "@/lib/playbook";
 import { rulesFor, regionOf, OPTIONS, REGIONS, describeRules, type Rules } from "@/lib/icpDefinition.mjs";
 
@@ -338,9 +339,9 @@ export async function buildReport(all: AllData, def: unknown, opt: ReportOptions
     sigs.forEach((x) => w.bullet(`${s(x.signal)} [${s(x.level)}${x.category ? `, ${s(x.category)}` : ""}] ${s(x.evidence)}${x.date ? ` (${s(x.date)})` : ""}${x.source_url ? ` - ${s(x.source_url)}` : ""}`));
 
     w.h2("ERP landscape and third-party apps");
-    w.p(`ERP: ${s(a.erp) || "Unknown"}${a.erp_status ? ` (${s(a.erp_status)})` : ""}`);
+    w.p(`ERP: ${erpText(a.erp)}${a.erp_status && !/^not[ _]public$/i.test(s(a.erp)) ? ` (${s(a.erp_status)})` : ""}`);
     if (a.erp_evidence) w.p(s(a.erp_evidence), { size: 8.5, color: MUTED });
-    if (apps.length) apps.forEach((x) => w.bullet(`${s(x.name)} - ${s(x.category)} - ${s(x.status)}`)); else w.p("No third-party apps verified.", { size: 8.5, color: MUTED });
+    if (apps.length) { w.p("Third-party apps", { bold: true, gap: 1 }); apps.forEach((x) => w.bullet(`${s(x.name)} - ${s(x.category)} - ${s(x.status)}`)); } // listed only when there is data
 
     const trans = [["Procurement model", a.procurement_model], ["Procurement transformation", a.procurement_transformation_signals], ["Digital transformation", a.digital_transformation_signals],
       ["Implementation partner", a.known_implementation_partner], ["Subsidiaries", a.subsidiaries]].filter(([, v]) => v);

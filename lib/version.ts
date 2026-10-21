@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.26";
+export const APP_VERSION = "6.27";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.27", date: "2026-10-21", notes: "ERP landscape shows only what makes sense: generic web and developer tags are hidden, third-party apps appear only when there is data.", changes: [
+      { what: "Unverified technology tags in generic web, content, domain, cloud and developer categories (for example Ableton Live or .NET from Seamless technographics) are hidden everywhere: the account page, the ERP & apps tab, the PDF, the Excel, the Master Book and Aria. 502 of the 718 stored rows are hidden; nothing is deleted from the database", where: "Account page, ERP & apps, PDF, Excel, Master Book, Aria", why: "These tags said nothing about the company's procurement and finance systems" },
+      { what: "The ERP landscape block always shows the ERP line (\"not_public\" now reads \"Not public\") and lists third-party apps only when there is data; the \"No third-party apps verified\" line is gone", where: "Account page and PDF", why: "You wanted third-party apps shown only when we have data" },
+  ] },
   { version: "6.26", date: "2026-10-21", notes: "Aria: download-again buttons now also appear in chats saved before v6.24.", changes: [
       { what: "Under every list answer and every \"Your Excel / PDF is ready\" answer in Aria, a row \"Download this again with today's data\" offers the Excel contact list and the PDF report, one tap each. For chats saved before v6.24 the request is rebuilt from the question you asked (for example the 20 UAE prospects between $250M and $650M gives the same 20 companies and 38 contacts, with the Coupa playbook)", where: "Aria chat and History", why: "The buttons from v6.24 did not show in the chats you already had" },
   ] },

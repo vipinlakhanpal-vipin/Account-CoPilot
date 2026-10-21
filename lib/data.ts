@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { isNoiseApp } from "@/lib/techApps";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Row = Record<string, any>;
@@ -52,6 +53,6 @@ export async function loadAll(sb: SupabaseClient): Promise<AllData> {
   return {
     accounts, contacts: people, signals: signals.map(withCo), sources: sources.map(withCo),
     conflicts: conflicts.map((r) => ({ ...r, company: byId.get(r.company_id)?.company_name ?? "" })),
-    apps: [...erp, ...apps.map(withCo)], history: history.map((h) => ({ ...h })), runs: runs.reverse(), uploads,
+    apps: [...erp, ...apps.filter((x) => !isNoiseApp(x)).map(withCo)], history: history.map((h) => ({ ...h })), runs: runs.reverse(), uploads,
   };
 }
