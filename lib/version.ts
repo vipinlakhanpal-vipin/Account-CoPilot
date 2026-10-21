@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.50";
+export const APP_VERSION = "6.51";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.51", date: "2026-10-21", notes: "Hourly break: choose your alarm and a softer lady's voice, or switch the voice and the sound off.", changes: [
+      { what: "New Hourly break settings: pick the alarm from seven sounds (cuckoo clock, soft bell, wind chime, ding-dong, marimba, gentle harp, singing bowl) or No sound, with a Play button, and pick a lady's voice from the ones on your device, with Hear it and Stop. The voice now speaks more slowly and softly, and the app picks the softest lady's voice it finds when you have not chosen one", where: "Aria, Tips and settings, Hourly break: alarm and voice (also Settings on the reminder card)", why: "The first voice sounded robotic and there was no way to change or stop it" },
+      { what: "The reminder card has Stop voice while she is speaking, quick Alarm sound and Voice switches, and a Settings link. A switch to turn the whole hourly reminder off is in the settings. Your choices are kept in your browser", where: "Hourly break reminder card", why: "You can stop the voice or the sound at any time" },
+  ] },
   { version: "6.50", date: "2026-10-21", notes: "Hourly break reminder: between 10am and 6pm Aria peeks out from behind a clock on every full hour, rings a chime and tells you to take a break.", changes: [
       { what: "On every full hour from 11:00 to 18:00 (your own clock; nothing before 10am or after 6pm) Aria slides up from behind a clock in the bottom-right corner, a cuckoo chime rings and she says: 1 hour has passed, take a 10 minute walk or have a coffee and chill for some time, then come back. The message is also read aloud by your browser's voice; Voice off turns that off, Not today skips the rest of the day, Got it closes it", where: "Every page, bottom-right corner", why: "A regular nudge to step away from the screen" },
       { what: "It stays quiet while you are typing (it waits up to five minutes past the hour), when the tab is not in view, and whenever Aria's Quiet mode is on. It costs nothing: no server or API calls", where: "Aria, Quiet mode switch", why: "It must never interrupt work or add cost" },

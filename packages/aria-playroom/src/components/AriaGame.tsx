@@ -143,6 +143,7 @@ function Roamer() {
           <label title="Only for you, in this browser: no roaming, teasing or funny messages"><input type="checkbox" checked={quiet} onChange={(e) => setQuiet(e.target.checked)} /> Quiet mode (just me)</label>
           {def.canSet && <label title="The default for every other user who has not chosen for themselves. Their own switch still wins."><input type="checkbox" checked={def.quietDefault} onChange={(e) => setEveryone(e.target.checked)} /> Quiet for everyone (default for other users)</label>}
         </span>
+        <button type="button" className="btn tiny" onClick={() => window.dispatchEvent(new Event("hourly-break-settings"))} title="Choose the hourly alarm and a lady's voice, or switch them off">Hourly break: alarm and voice…</button>
       </div>}
     </div>}
     {away && <><p className="agame-note">Aria is out exploring. Double-click her, or press Esc, to call her home.</p><AriaTraveller getHome={getHome} onHome={() => setAway(false)} name={def.name || ""} /></>}
