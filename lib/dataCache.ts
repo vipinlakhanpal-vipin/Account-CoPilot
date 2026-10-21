@@ -39,7 +39,7 @@ export function loadFindCached(): Promise<AllData> {
     const COLS = "id,slug,company_name,country,hq_city,industry,erp,existing_s2p_product,domain,company_website,listing_status,s2p_signal_level,icp_status,employee_range,"
       + 'verified_revenue_usd_m,revenue_usd_m,verified_revenue_status,parent_company,dr:profile->"Display revenue",mc:profile->"Merged companies"';
     const data = Promise.all([pageAll("companies", COLS, "created_at"), pageAll("contacts", "id,company_id,full_name", "created_at")])
-      .then(([companies, contacts]) => ({ accounts: companies.map(({ dr, mc, ...c }) => ({ ...c, company_id: c.id, profile: { "Display revenue": dr, "Merged companies": mc } })), contacts, signals: [], sources: [], conflicts: [], apps: [], history: [], runs: [] } as AllData));
+      .then(([companies, contacts]) => ({ accounts: companies.map(({ dr, mc, ...c }) => ({ ...c, company_id: c.id, profile: { "Display revenue": dr, "Merged companies": mc } })), contacts, signals: [], sources: [], conflicts: [], apps: [], history: [], runs: [], uploads: [] } as AllData));
     findCached = { at: Date.now(), data };
     data.catch(() => { findCached = null; });
   }

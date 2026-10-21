@@ -117,3 +117,34 @@ export function indexSources(accounts: Row[], sources: Row[], contacts: Row[]): 
 /** Evidence group for one sources-table row (used as a filter in the Sources table). */
 export const evidenceGroup = (s: Row) => SOURCES.find((d) => d.group === "evidence" && d.match({}, [s], []))?.name
   || (s.source_type === "User confirmation" ? "Your confirmations" : /linkedin/i.test(String(s.source_type)) ? "LinkedIn snippets" : s.source_type === "Discovery" ? "Claude discovery" : "Other");
+
+// ---- Where the evidence comes from (Dashboard "Sources" chart) ----
+// One bucket per sources-table row, read from the link first (an exchange, LinkedIn, an aggregator) and then from the source type.
+export const EXCHANGE_HOSTS: [string, string][] = [
+  ["adx.ae", "ADX (Abu Dhabi)"], ["dfm.ae", "DFM (Dubai)"], ["nasdaqdubai.com", "Nasdaq Dubai"], ["saudiexchange.sa", "Saudi Exchange (Tadawul)"], ["jse.co.za", "JSE (Johannesburg)"],
+  ["sec.gov", "SEC EDGAR (US)"], ["data.fca.org.uk", "FCA (UK)"], ["londonstockexchange.com", "London Stock Exchange"], ["boursakuwait.com.kw", "Boursa Kuwait"], ["qe.com.qa", "Qatar Exchange"],
+  ["egx.com.eg", "EGX (Egypt)"], ["msx.om", "Muscat Exchange"], ["nasdaq.com", "Nasdaq"], ["nyse.com", "NYSE"], ["sca.gov.ae", "SCA (UAE regulator)"], ["adgm.com", "ADGM"],
+];
+const AGGREGATOR_HOSTS = /(zoominfo|rocketreach|owler|prospeo|appsruntheworld|stockanalysis|wikipedia|pitchbook|craft\.co|dnb\.com|tradingview|marketscreener|quartr|theorg|decypha|kamcoinvest|africanfinancials|growjo|crunchbase|globaldata|statista)/;
+const PRESS_HOSTS = /(zawya|gulfnews|thenationalnews|forbesmiddleeast|arabianbusiness|agbi\.com|khaleejtimes|reuters|bloomberg|argaam|mubasher|enterpriseam|cbnme|tradearabia|gulfbusiness|qatar-tribune|consultancy-me|ft\.com|cnbc)/;
+const PRESS_RELEASE_HOSTS = /(businesswire|prnewswire|globenewswire|mediaoffice\.ae|zawya\.com\/en\/press)/;
+export const EVIDENCE_KINDS = ["Stock exchanges & regulators", "Annual & results reports", "Company websites & portals", "Press releases", "News & business press", "Blogs", "LinkedIn (public snippets)", "Job postings", "Seamless.ai", "Data aggregators & estimates", "Your confirmations", "Other / not stated"] as const;
+export type EvidenceKind = (typeof EVIDENCE_KINDS)[number];
+const hostOf = (u: unknown) => { try { return new URL(String(u)).hostname.replace(/^www\./, "").toLowerCase(); } catch { return ""; } };
+export const exchangeOf = (s: Row): string => { const h = hostOf(s.url); return EXCHANGE_HOSTS.find(([d]) => h === d || h.endsWith("." + d))?.[1] || ""; };
+export function evidenceKind(s: Row): EvidenceKind {
+  const h = hostOf(s.url), t = String(s.source_type || ""), txt = String(s.source || "");
+  if (exchangeOf(s) || /exchange|regulator/i.test(t)) return "Stock exchanges & regulators";
+  if (/linkedin/i.test(h) || /linkedin/i.test(t)) return /job/i.test(t) ? "Job postings" : "LinkedIn (public snippets)";
+  if (/seamless/i.test(h) || /seamless/i.test(t)) return "Seamless.ai";
+  if (t === "User confirmation") return "Your confirmations";
+  if (AGGREGATOR_HOSTS.test(h) || /estimate|aggregator|market data|financial data|technographics|contact data/i.test(t)) return "Data aggregators & estimates";
+  if (/job/i.test(t)) return "Job postings";
+  if (/medium\.com|blogspot|wordpress|substack|\/blog\b/i.test(String(s.url)) || /\bblog\b/i.test(txt)) return "Blogs";
+  if (/press release/i.test(t) || PRESS_RELEASE_HOSTS.test(h)) return "Press releases";
+  if (/news|business press/i.test(t) || PRESS_HOSTS.test(h)) return "News & business press";
+  if (/annual|financial statements|results|investor|sustainability|bond|disclosure/i.test(t)) return "Annual & results reports";
+  if (/company report/i.test(t) && (/\.pdf($|\?)/i.test(String(s.url)) || /report|results|financial|annual|prospectus|presentation/i.test(txt))) return "Annual & results reports";
+  if (/company|supplier|portal|leadership|website|conference|vendor/i.test(t) && h) return "Company websites & portals";
+  return "Other / not stated";
+}

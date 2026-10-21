@@ -34,5 +34,5 @@ export function scopeData(d: AllData, a: Access): AllData {
   const ids = new Set(accounts.map((x) => x.id));
   const mine = (r: Row) => ids.has(r.company_id);
   return { ...d, accounts, contacts: d.contacts.filter(mine), sources: d.sources.filter(mine), signals: d.signals.filter(mine),
-    conflicts: d.conflicts.filter(mine), apps: d.apps.filter(mine), history: d.history.filter(mine), runs: d.runs.filter(mine) };
+    conflicts: d.conflicts.filter(mine), apps: d.apps.filter(mine), history: d.history.filter(mine), runs: d.runs.filter(mine), uploads: d.uploads.filter((u) => canSeeRegion(a, u.region)) };
 }

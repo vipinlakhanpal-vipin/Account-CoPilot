@@ -4,6 +4,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export type Row = Record<string, any>;
 export type AllData = {
   accounts: Row[]; contacts: Row[]; signals: Row[]; sources: Row[]; conflicts: Row[]; apps: Row[]; history: Row[]; runs: Row[];
+  /** Excel lists uploaded in the Setup wizard (settings.uploaded_lists), with how many rows were new and how many were already in the app. */
+  uploads: Row[];
 };
 
 // Pages of 1,000 rows are requested three at a time, so a table of 1,800 rows costs one round trip instead of two.
@@ -28,6 +30,11 @@ export async function loadAll(sb: SupabaseClient): Promise<AllData> {
     fetchAll(sb, "conflicts"), fetchAll(sb, "technology_evidence"), fetchAll(sb, "employment_history"),
     fetchAll(sb, "research_runs", "started_at"),
   ]);
+  const { data: upSetting } = await sb.from("settings").select("value").eq("key", "uploaded_lists").maybeSingle();
+  const uploads = ((upSetting?.value as { items?: Row[] } | null)?.items || []).map((u) => {
+    const m = String(u.summary || "").match(/(\d+)\s*added[^\d]*(\d+)\s*already/i); // the summary the daily run (or a local session) wrote: "N added, M already in the app"
+    return { id: u.id, filename: u.filename, region: u.region, rows: u.rows, status: u.status, uploaded_at: u.uploaded_at, added: m ? Number(m[1]) : null, already: m ? Number(m[2]) : null };
+  });
   const byId = new Map(companies.map((c) => [c.id, c]));
   const withCo = (r: Row) => ({ ...r, company: r.company ?? byId.get(r.company_id)?.company_name ?? "" });
   const accounts = companies.map((c) => ({ ...c, company_id: c.id }));
@@ -45,6 +52,6 @@ export async function loadAll(sb: SupabaseClient): Promise<AllData> {
   return {
     accounts, contacts: people, signals: signals.map(withCo), sources: sources.map(withCo),
     conflicts: conflicts.map((r) => ({ ...r, company: byId.get(r.company_id)?.company_name ?? "" })),
-    apps: [...erp, ...apps.map(withCo)], history: history.map((h) => ({ ...h })), runs: runs.reverse(),
+    apps: [...erp, ...apps.map(withCo)], history: history.map((h) => ({ ...h })), runs: runs.reverse(), uploads,
   };
 }

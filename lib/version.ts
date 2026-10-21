@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.21";
+export const APP_VERSION = "6.22";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.22", date: "2026-10-21", notes: "Dashboard chart: where the data came from, by source type and by how accounts entered the app.", changes: [
+      { what: "New Dashboard panel \"Where the data came from\". Left: every source record grouped by type (stock exchanges and regulators, annual and results reports, company websites, press releases, news and business press, blogs, LinkedIn public snippets, job postings, Seamless.ai, aggregators and estimates, your confirmations), plus which exchanges were cited (ADX, DFM, Saudi Exchange, JSE, SEC and others). Right: accounts by how they entered the app, and a table of the Excel files uploaded in the Setup wizard with how many rows were new and how many were already in the app. Click a bar to list its accounts", where: "Dashboard", why: "You wanted to see where the data came from, source by source" },
+  ] },
   { version: "6.21", date: "2026-10-21", notes: "Save & apply buttons read Saved after a save, until you move on.", changes: [
       { what: "After you save and apply in Define ICP or the Setup wizard (step 6), the button reads \"Saved ✓\" instead of going back to \"Save & apply\". In Define ICP it stays until your next edit or until you open another region; in the wizard it stays until you move to another step or country", where: "Define ICP, Setup wizard", why: "You wanted a clear sign that the save went through" },
   ] },
