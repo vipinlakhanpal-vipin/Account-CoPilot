@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.44";
+export const APP_VERSION = "6.45";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,12 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.45", date: "2026-10-21", notes: "Setup wizard Add Data: clearer uploads, no pointless list under No, and read-time notes. Dashboard file names are shortened.", changes: [
+      { what: "Under \"No, help me build one from scratch\" the \"Lists uploaded for ...\" line is gone. In its place the card shows where the country stands today (companies in the app, how many are ICP Verified, Likely or to check), what the Agent does each day and when you will see results", where: "Setup wizard, step 2 Add Data", why: "The uploaded-lists line made no sense under No" },
+      { what: "The same data under a different file name is recognised: it is kept on file but not read a second time, and the status says which file it matches. Uploading a file now also starts the instant runner (when GITHUB_JOBS_TOKEN is set), so it is read within a few minutes instead of waiting for the 6:00 am Dubai run, and the message and a note under the list say how long reading and syncing take", where: "Setup wizard, step 2 Add Data", why: "Two files with the same data waited unread, and nobody could tell how long reading takes" },
+      { what: "A person who cannot save the ICP (a Standard User) now sees that their uploaded file is already stored and needs no Save; the red message explains that saving the size rule, targeting and daily plan is the Super Admin's", where: "Setup wizard", why: "Nardus uploaded a file and then saw \"Consult Super Admin\", which looked as if the upload had failed" },
+      { what: "The Excel file names in the Dashboard's Excel uploads table show the first two words, with the full name on hover", where: "Dashboard, Where the data came from", why: "Long file names filled the table" },
+  ] },
   { version: "6.44", date: "2026-10-21", notes: "Every company in the PDF has a number, its sections are numbered 1.1, 1.2 ... and the lines inside them 1, 2, 3, so any detail can be found by number.", changes: [
       { what: "Each company's pages now open with its number (the same \"#\" as in the Companies table and the Excel \"Companies (same as PDF)\" sheet). Its sections are numbered with that number first, for example 7.1 Facts, 7.2 Procurement and IT maturity, 7.3 Scores, and the lines inside a section are numbered 1, 2, 3, including the facts, recommended actions, signals, apps, stakeholders and evidence. The intro page says how the numbers work", where: "PDF report (every company page)", why: "You wanted to track every detail of the whole document by number" },
   ] },

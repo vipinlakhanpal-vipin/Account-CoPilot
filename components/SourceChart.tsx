@@ -29,6 +29,12 @@ function Rows({ items, max, onPick }: { items: { name: string; n: number; sub?: 
   );
 }
 
+/** A file name as its first two words (without .xlsx); the full name shows on hover. */
+const shortFile = (name: unknown) => {
+  const base = String(name ?? "").replace(/\.(xlsx|xls)$/i, "").trim(), words = base.split(/[\s_]+/).filter(Boolean);
+  return words.length > 2 ? `${words.slice(0, 2).join(" ")}…` : base;
+};
+
 export default function SourceChart({ accounts, sources, uploads, country, onDrill }: { accounts: Row[]; sources: Row[]; uploads: Row[]; country: string; onDrill: Drill }) {
   const byId = useMemo(() => new Map(accounts.map((a) => [a.id, a])), [accounts]);
   const ev = useMemo(() => {
@@ -86,7 +92,7 @@ export default function SourceChart({ accounts, sources, uploads, country, onDri
           <h2 className="with-count">Excel uploads in the Setup wizard {ups.length > 0 && <span className="count">{upNew} new · {upOld} already in the app</span>}</h2>
           {ups.length === 0 ? <p className="note">No Excel list uploaded{country === "All" ? "" : " for this country"} yet.</p> : (
             <div className="tablewrap"><table><thead><tr><th>File</th><th>Country</th><th>Rows</th><th>New</th><th>Already in app</th><th>Status</th></tr></thead>
-              <tbody>{ups.map((u) => <tr key={u.id}><td>{u.filename}</td><td>{u.region}</td><td>{u.rows ?? "—"}</td><td>{u.added ?? "—"}</td><td>{u.already ?? "—"}</td><td>{u.status === "done" ? "Read in" : u.status === "waiting" ? "Waiting" : u.status}</td></tr>)}</tbody></table></div>
+              <tbody>{ups.map((u) => <tr key={u.id}><td title={u.filename}>{shortFile(u.filename)}</td><td>{u.region}</td><td>{u.rows ?? "—"}</td><td>{u.added ?? "—"}</td><td>{u.already ?? "—"}</td><td>{u.status === "done" ? "Read in" : u.status === "waiting" ? "Waiting" : u.status}</td></tr>)}</tbody></table></div>
           )}
         </div>
       </div>

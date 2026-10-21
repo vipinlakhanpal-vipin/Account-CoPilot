@@ -130,7 +130,8 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
   // This country's uploaded lists (what it already has waiting or processed), loaded when the country changes and after each upload.
   type Upload = { id: string; filename: string; region: string; uploaded_by: string; uploaded_at: string; rows: number; status: "waiting" | "done" | "error"; summary?: string };
   const [uploads, setUploads] = useState<Upload[]>([]);
-  const loadUploads = () => fetch("/api/wizard-upload", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((j) => j && setUploads(j.items || [])).catch(() => {});
+  const [coverage, setCoverage] = useState<Record<string, { total: number; verified: number; likely: number; check: number; other: number }>>({});
+  const loadUploads = () => fetch("/api/wizard-upload", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((j) => { if (j) { setUploads(j.items || []); setCoverage(j.coverage || {}); } }).catch(() => {});
   useEffect(() => { loadUploads(); }, [focus]); // eslint-disable-line react-hooks/exhaustive-deps
   const canGetFile = (u: Upload) => access.canDownload || u.uploaded_by === access.email;
   const fileLink = (u: Upload) => canGetFile(u) ? <a href={`/api/wizard-upload?download=${u.id}`} title="Download the original file">⬇ {u.filename}</a> : <>{u.filename}</>;
@@ -180,7 +181,13 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
       form.append("file", file); form.append("region", region);
       const res = await fetch("/api/wizard-upload", { method: "POST", body: form });
       const j = await res.json().catch(() => ({}));
-      if (res.ok) { loadUploads(); setUploadMsg({ ok: true, text: `"${file.name}" uploaded for ${focusName} (${j.item?.rows ?? "?"} rows found). The next scheduled session reads it and adds the companies under ${focusName} only; its status shows in the list below.` }); }
+      if (res.ok) {
+        loadUploads();
+        const when = j.duplicateOf ? `It has the same data as "${j.duplicateOf.filename}" (uploaded by ${j.duplicateOf.uploaded_by}), so it is kept on file but not read a second time.`
+          : j.instant === "ok" ? "The instant runner has been started now; it usually picks the file up within a few minutes of starting, and the companies then appear under " + focusName + " only."
+          : `The next scheduled run reads it (the daily run is at 6:00 am Dubai time) and adds the companies under ${focusName} only.`;
+        setUploadMsg({ ok: true, text: `"${file.name}" is stored for ${focusName} (${j.item?.rows ?? "?"} rows found). ${when} You do not need to press Save: Save is only for the size rule, targeting and daily plan. Its status shows in the list below.` });
+      }
       else setUploadMsg({ ok: false, text: j.error || "Could not upload that file." });
     } catch { setUploadMsg({ ok: false, text: "Could not reach the server." }); }
     setUploadBusy(false);
@@ -188,7 +195,7 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
 
   async function save() {
     if (!def) return;
-    if (!access.isSuper) { notify("Consult Super Admin if any change is required.", "error"); return; }
+    if (!access.isSuper) { notify("Saving the size rule, targeting and daily plan is for the Super Admin: consult them if a change is needed. Any file you uploaded is already stored and needs no saving.", "error"); return; }
     if (overview) { notify("Pick a country above first: the overview is read-only.", "error"); return; }
     if (!regions.length) { notify("Pick a country above first.", "error"); return; }
     const named: { key: string; s: SizeDraft }[] = regions.map((key) => ({ key, s: sizeFor(key) }));
@@ -397,7 +404,7 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
                 {(() => {
                   const mine = uploads.filter((u) => u.region === focus);
                   // only where it makes sense: with "Yes" always (that is where you upload), otherwise only if lists already exist for this country; "No" with nothing uploaded shows nothing
-                  if (hasList !== "yes" && !mine.length) return null;
+                  if (hasList === "no" || (hasList !== "yes" && !mine.length)) return null; // under "No" this list says nothing useful: the card below shows where the country stands instead
                   return (
                     <div className="hw-uploads">
                       <p className="hw-lead hw-lead-wide"><b>Lists uploaded for {focusName}</b>{mine.length ? ` (${mine.length})` : ""}.{hasList === "yes" ? " To change a list, upload the corrected file; the new one is added and anything already in the app is left alone." : " Already in the app; choose \u201cYes, I have one\u201d above to add another."}</p>
@@ -406,13 +413,21 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
                           <tbody>{mine.map((u) => <tr key={u.id}><td className="wrap">{fileLink(u)}<div className="muted">{u.uploaded_by}</div></td><td className="muted">{u.rows}</td><td className="muted">{fmtDateTime(u.uploaded_at)}</td>
                             <td>{u.status === "waiting" ? <span className="status-plain st-l">Waiting to be read</span> : u.status === "done" ? <span className="status-plain st-v">Added{u.summary ? ` — ${u.summary}` : ""}</span> : <span className="status-plain st-u">Error{u.summary ? ` — ${u.summary}` : ""}</span>}</td></tr>)}</tbody></table></div>
                         : <p className="note">Nothing uploaded for {focusName} yet.</p>}
+                      {mine.some((u) => u.status === "waiting") && <p className="note"><b>Waiting to be read</b> means no run has opened the file yet. Uploading starts the instant runner, which usually opens it within a few minutes; if that is off, the daily run at 6:00 am Dubai time reads it. Reading itself takes a few minutes. The companies then appear at once, and their revenue check, ICP status, signals and contacts follow over the next daily runs, a batch at a time.</p>}
                     </div>);
                 })()}
                 {hasList === "no" && (
                   <div className="hw-about-card hw-yesno-no selected">
-                    <h4>Nothing to do here</h4>
-                    <p>Just continue to the next step — the free daily engine builds your list from nothing, using its own web search. It starts at a
-                      slower pace until it has found and verified enough companies to feel complete; you&apos;ll set that pace in step 4.</p></div>
+                    <h4>Nothing to upload: the Agent builds {focusName}&apos;s list</h4>
+                    {(() => {
+                      const cv = coverage[focus], mineCount = uploads.filter((u) => u.region === focus).length;
+                      return <>
+                        <p><b>Where {focusName} stands today.</b> {cv && cv.total
+                          ? <>{cv.total.toLocaleString()} {cv.total === 1 ? "company is" : "companies are"} already in the app: {cv.verified} ICP Verified, {cv.likely} ICP Likely, {cv.check} to check{cv.other ? `, ${cv.other} not yet rated` : ""}.{mineCount ? ` The ${mineCount} list${mineCount === 1 ? "" : "s"} uploaded for ${focusName} are part of this.` : ""} The Agent adds to this list and never overwrites it.</>
+                          : <>No companies are in the app for {focusName} yet, so the first daily runs build the list from nothing.</>}</p>
+                        <p><b>What it does each day.</b> At the 6:00 am Dubai run it searches the web for companies that meet your size rule from step 1, checks their revenue, and files them under {focusName} only. People are found at verified companies using the domains you pick in step 3, at the pace you set in step 4.</p>
+                        <p><b>When you will see it.</b> New companies appear after the next daily run. Revenue checks, signals and contacts arrive a batch at a time, so the list fills in gradually. Choose Yes above whenever you have a list of your own to add.</p></>;
+                    })()}</div>
                 )}
               </div>
             )}
