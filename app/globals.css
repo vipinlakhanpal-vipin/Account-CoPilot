@@ -1822,7 +1822,7 @@ table.ft td.num{width:1%;text-align:right}
 .tablewrap table:not(.prose):not(.mkt-table):not(.aria-table) td.wrap,.tablewrap table.ft td.wrap,.tablewrap table.ft td.co-cell{white-space:nowrap;min-width:0;max-width:300px}
 .tablewrap table:not(.prose):not(.mkt-table):not(.aria-table) th{white-space:nowrap;vertical-align:bottom}
 /* cells that hold buttons, menus, gauges or links must not clip them */
-.tablewrap table:not(.prose):not(.mkt-table):not(.aria-table) td:has(button,select,input,form,.gauge,.fc-wrap,.longtext,.job-link,.btn){overflow:visible;max-width:none;text-overflow:clip}
+.tablewrap table:not(.prose):not(.mkt-table):not(.aria-table) td:has(button,select,input,form,.gauge,.pgauge,.fc-wrap,.longtext,.job-link,.btn){overflow:visible;max-width:none;text-overflow:clip}
 .tablewrap table td.is-cut{padding-right:28px;cursor:pointer}
 .tablewrap table td.is-cut::after{content:"i";position:absolute;right:6px;top:50%;transform:translateY(-50%);width:15px;height:15px;border-radius:50%;border:1.3px solid var(--muted);color:var(--muted);font:italic 700 10px/12px Georgia,serif;text-align:center;background:var(--surface)}
 .tablewrap table td.is-cut:hover::after{background:#0F6E56;border-color:#0F6E56;color:#fff}
@@ -2881,12 +2881,12 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 .score-total{margin:6px 0 0;font:700 12px var(--body);color:var(--teal)}
 
 /* Green progress gauge (uploads in the Setup wizard and in the Dashboard's Excel uploads table) */
-.gauge{display:flex;align-items:center;gap:8px;min-width:150px}
-.gauge-bar{flex:1;min-width:70px;height:8px;border-radius:999px;overflow:hidden;background:color-mix(in srgb,#12A67A 16%,transparent)}
-.gauge-bar i{display:block;height:100%;border-radius:999px;background:#12A67A;transition:width .35s ease}
-.gauge.busy .gauge-bar i{background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.4) 0 6px,transparent 6px 12px);background-size:17px 17px;animation:gauge-move .9s linear infinite}
-.gauge.grey .gauge-bar i{background:#9AA5B1}.gauge.red .gauge-bar i{background:#D64550}
-.gauge-txt{font-size:10px;white-space:nowrap;color:var(--text)}
+.pgauge{display:flex;align-items:center;gap:8px;min-width:150px}
+.pgauge-bar{flex:1;min-width:70px;height:8px;border-radius:999px;overflow:hidden;background:color-mix(in srgb,#12A67A 16%,transparent)}
+.pgauge-bar i{display:block;height:100%;border-radius:999px;background:#12A67A;transition:width .35s ease}
+.pgauge.busy .pgauge-bar i{background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.4) 0 6px,transparent 6px 12px);background-size:17px 17px;animation:gauge-move .9s linear infinite}
+.pgauge.grey .pgauge-bar i{background:#9AA5B1}.pgauge.red .pgauge-bar i{background:#D64550}
+.pgauge-txt{font-size:10px;white-space:nowrap;color:var(--text)}
 @keyframes gauge-move{to{background-position:17px 0}}
 .hw-uploading{margin:10px 0 0;max-width:420px}
 
@@ -2922,10 +2922,17 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 .hb-quick{display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--muted)}
 .hb-quick label,.hb-row{display:flex;align-items:center;gap:6px;cursor:pointer}
 .hb-quick .link{background:none;border:0;color:var(--text-strong);text-decoration:underline;font:inherit;cursor:pointer;padding:0}
-.hb-set{position:fixed;right:20px;bottom:20px;width:340px;z-index:61;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:0 10px 30px rgba(0,0,0,.22);font-size:13px;color:var(--text-strong);display:flex;flex-direction:column;gap:12px}
-.hb-set-head{display:flex;justify-content:space-between;align-items:center;font-size:14px}
-.hb-x{background:none;border:0;font-size:20px;line-height:1;color:var(--muted);cursor:pointer}
-.hb-field{display:flex;flex-direction:column;gap:5px}.hb-field>span{color:var(--muted);font-size:12px}
-.hb-pick{display:flex;gap:6px;align-items:center}.hb-pick select{flex:1;min-width:0}
-.hb-note{margin:0;font-size:11.5px;color:var(--muted);line-height:1.5}
-@media (max-width:640px){.hb-set{right:10px;left:10px;width:auto;bottom:10px}}
+
+/* v6.53: alarm and lady's voice inside Aria Setup (left panel) */
+.as-box{display:flex;flex-direction:column;gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,.25);font:600 12px var(--body);color:#fff}
+.as-title{font:700 12px var(--body);color:#fff}
+.as-row{display:flex;align-items:center;gap:8px;cursor:pointer}
+.as-row input{accent-color:#2EC4A6;width:15px;height:15px;margin:0}
+.as-lab{font:600 11px var(--body);color:rgba(255,255,255,.8);margin-top:2px}
+.as-pick{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.as-pick select{flex:1;min-width:0;max-width:100%;font:500 12px var(--body);padding:5px 6px;border-radius:8px;border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.95);color:#13233f}
+.as-note{margin:2px 0 0;font:500 11px/1.45 var(--body);color:rgba(255,255,255,.8)}
+.agame-legend.open{max-height:calc(100% - 12px);overflow-y:auto;padding:8px 10px;border-radius:12px;background:rgba(13,24,48,.94);box-shadow:0 4px 14px rgba(0,0,0,.35);scrollbar-width:thin}
+
+/* v6.54: the progress gauge has its own class: it shared .gauge with the older job gauge, whose column layout squashed the bar to nothing */
+.tablewrap td .pgauge{width:210px;max-width:none}

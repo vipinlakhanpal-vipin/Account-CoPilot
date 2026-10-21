@@ -2,9 +2,9 @@
 export default function ProgressGauge({ pct, label, busy = false, tone = "green" }: { pct: number; label: string; busy?: boolean; tone?: "green" | "grey" | "red" }) {
   const p = Math.max(0, Math.min(100, Math.round(pct)));
   return (
-    <div className={`gauge ${tone}${busy ? " busy" : ""}`} role="progressbar" aria-valuenow={p} aria-valuemin={0} aria-valuemax={100} aria-label={label}>
-      <span className="gauge-bar"><i style={{ width: `${p}%` }} /></span>
-      <span className="gauge-txt">{label}</span>
+    <div className={`pgauge ${tone}${busy ? " busy" : ""}`} role="progressbar" aria-valuenow={p} aria-valuemin={0} aria-valuemax={100} aria-label={label}>
+      <span className="pgauge-bar"><i style={{ width: `${p}%` }} /></span>
+      <span className="pgauge-txt">{label}</span>
     </div>
   );
 }

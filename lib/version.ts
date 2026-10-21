@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.52";
+export const APP_VERSION = "6.53";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,16 +9,21 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.53", date: "2026-10-21", notes: "Aria Setup (was Tips and settings) now holds the hourly alarm and lady's voice choices. The Dashboard uploads table shows when each file was uploaded and its progress bar is visible again.", changes: [
+      { what: "Tips and settings under Aria is now called Aria Setup. The alarm (seven sounds or none), the lady's voice, the on/off switches, Hear it, Stop voice and Test it now are right there, next to Quiet mode. The tip line that used to open the section is gone", where: "Left panel, under Aria", why: "One place for everything about Aria, with no pop-up to find" },
+      { what: "The Excel uploads table has an Uploaded column with the date and time (hover the Status or Uploaded cell to see when it was read). A file still waiting shows how long it has been waiting", where: "Dashboard, Data Sources", why: "You wanted to see when each file went in and how long it has waited" },
+      { what: "The green progress bar under Progress (and the upload bar in the Setup wizard) was squashed to nothing by an older style with the same name, so only the text showed. It has its own style now and the bar, the moving stripes and the percentage fill show again", where: "Dashboard Progress column, Setup wizard Add Data", why: "The gauge looked missing" },
+  ] },
   { version: "6.52", date: "2026-10-21", notes: "Hourly break settings has a Test it now button, so you can see and hear the reminder at once.", changes: [
-      { what: "A Test it now button in the Hourly break settings shows the clock, Aria, the alarm and the voice immediately, using your current choices", where: "Aria, Tips and settings, Hourly break: alarm and voice", why: "You should not have to wait for the next full hour to try your choices" },
+      { what: "A Test it now button in the Hourly break settings shows the clock, Aria, the alarm and the voice immediately, using your current choices", where: "Aria Setup (left panel)", why: "You should not have to wait for the next full hour to try your choices" },
   ] },
   { version: "6.51", date: "2026-10-21", notes: "Hourly break: choose your alarm and a softer lady's voice, or switch the voice and the sound off.", changes: [
-      { what: "New Hourly break settings: pick the alarm from seven sounds (cuckoo clock, soft bell, wind chime, ding-dong, marimba, gentle harp, singing bowl) or No sound, with a Play button, and pick a lady's voice from the ones on your device, with Hear it and Stop. The voice now speaks more slowly and softly, and the app picks the softest lady's voice it finds when you have not chosen one", where: "Aria, Tips and settings, Hourly break: alarm and voice (also Settings on the reminder card)", why: "The first voice sounded robotic and there was no way to change or stop it" },
+      { what: "New Hourly break settings: pick the alarm from seven sounds (cuckoo clock, soft bell, wind chime, ding-dong, marimba, gentle harp, singing bowl) or No sound, with a Play button, and pick a lady's voice from the ones on your device, with Hear it and Stop. The voice now speaks more slowly and softly, and the app picks the softest lady's voice it finds when you have not chosen one", where: "Aria Setup (left panel)", why: "The first voice sounded robotic and there was no way to change or stop it" },
       { what: "The reminder card has Stop voice while she is speaking, quick Alarm sound and Voice switches, and a Settings link. A switch to turn the whole hourly reminder off is in the settings. Your choices are kept in your browser", where: "Hourly break reminder card", why: "You can stop the voice or the sound at any time" },
   ] },
   { version: "6.50", date: "2026-10-21", notes: "Hourly break reminder: between 10am and 6pm Aria peeks out from behind a clock on every full hour, rings a chime and tells you to take a break.", changes: [
       { what: "On every full hour from 11:00 to 18:00 (your own clock; nothing before 10am or after 6pm) Aria slides up from behind a clock in the bottom-right corner, a cuckoo chime rings and she says: 1 hour has passed, take a 10 minute walk or have a coffee and chill for some time, then come back. The message is also read aloud by your browser's voice; Voice off turns that off, Not today skips the rest of the day, Got it closes it", where: "Every page, bottom-right corner", why: "A regular nudge to step away from the screen" },
-      { what: "It stays quiet while you are typing (it waits up to five minutes past the hour), when the tab is not in view, and whenever Aria's Quiet mode is on. It costs nothing: no server or API calls", where: "Aria, Quiet mode switch", why: "It must never interrupt work or add cost" },
+      { what: "It stays quiet while you are typing (it waits up to five minutes past the hour), when the tab is not in view, and whenever Aria's Quiet mode is on. It costs nothing: no server or API calls", where: "Aria Setup, Quiet mode", why: "It must never interrupt work or add cost" },
   ] },
   { version: "6.49", date: "2026-10-21", notes: "The Dashboard's sources frame now has the title Data Sources, in the same font as the page title.", changes: [
       { what: "The frame under the region comparison is titled Data Sources, in the same large font as the page title (Dashboard-South Africa), with the line about source records, exchanges and Excel uploads beside it", where: "Dashboard", why: "The section needed a proper title" },

@@ -2,6 +2,7 @@
 import { useMemo } from "react";
 import type { CSSProperties } from "react";
 import type { Row } from "@/lib/data";
+import { fmtDateTime } from "@/lib/dates";
 import { EVIDENCE_KINDS, evidenceKind, exchangeOf, originOf, type EvidenceKind } from "@/lib/sources";
 
 // Dashboard: where the data came from. Left, the evidence behind the facts (one bucket per source record: stock exchanges,
@@ -67,7 +68,11 @@ export default function SourceChart({ accounts, sources, uploads, country, onDri
   // How far each file has got: waiting to be read, then read in, then its companies rated (a real share, from the accounts that came in with this file).
   const progressOf = (u: Row): { pct: number; label: string; tone: "green" | "grey" | "red"; busy: boolean } => {
     if (u.status === "error") return { pct: 100, label: "Could not be read", tone: "red", busy: false };
-    if (u.status !== "done") return { pct: 10, label: "Waiting to be read", tone: "green", busy: true };
+    if (u.status !== "done") {
+      const mins = Math.max(0, Math.round((Date.now() - new Date(String(u.uploaded_at || "")).getTime()) / 60000));
+      const age = !Number.isFinite(mins) ? "" : mins < 60 ? ` for ${mins} min` : ` for ${Math.floor(mins / 60)} h ${mins % 60} min`;
+      return { pct: 10, label: `Waiting to be read${age}`, tone: "green", busy: true };
+    }
     if (/^Same data as/i.test(String(u.summary || ""))) return { pct: 100, label: "Same data, not read again", tone: "grey", busy: false };
     const mine = accounts.filter((a) => (a.lists || []).some((l: string) => l === `User upload: ${u.filename}`));
     if (!mine.length) return { pct: 100, label: "Nothing new to add", tone: "grey", busy: false };
@@ -99,8 +104,8 @@ export default function SourceChart({ accounts, sources, uploads, country, onDri
         <div className="panel" style={{ gridColumn: "1 / -1" }}>
           <h2 className="with-count">Excel uploads in the Setup wizard {ups.length > 0 && <span className="count">{upNew} new · {upOld} already in the app</span>}</h2>
           {ups.length === 0 ? <p className="note">No Excel list uploaded{country === "All" ? "" : " for this country"} yet.</p> : (
-            <div className="tablewrap"><table><thead><tr><th>File</th><th>Country</th><th>Rows</th><th>New</th><th>Already in app</th><th>Status</th><th>Progress</th></tr></thead>
-              <tbody>{ups.map((u) => <tr key={u.id}><td title={u.filename}>{shortFile(u.filename)}</td><td>{String(u.region).replace(/([a-z])([A-Z])/g, "$1 $2")}</td><td>{u.rows ?? "—"}</td><td>{u.added ?? "—"}</td><td>{u.already ?? "—"}</td><td>{u.status === "done" ? "Read in" : u.status === "waiting" ? "Waiting" : u.status}</td><td>{(() => { const g = progressOf(u); return <ProgressGauge pct={g.pct} label={g.label} tone={g.tone} busy={g.busy} />; })()}</td></tr>)}</tbody></table></div>
+            <div className="tablewrap"><table><thead><tr><th>File</th><th>Country</th><th>Uploaded</th><th>Rows</th><th>New</th><th>Already in app</th><th>Status</th><th>Progress</th></tr></thead>
+              <tbody>{ups.map((u) => <tr key={u.id}><td title={u.filename}>{shortFile(u.filename)}</td><td>{String(u.region).replace(/([a-z])([A-Z])/g, "$1 $2")}</td><td title={u.processed_at ? `Read in on ${fmtDateTime(u.processed_at)}` : "Not read yet"}>{fmtDateTime(u.uploaded_at) || "—"}</td><td>{u.rows ?? "—"}</td><td>{u.added ?? "—"}</td><td>{u.already ?? "—"}</td><td>{u.status === "done" ? "Read in" : u.status === "waiting" ? "Waiting" : u.status}</td><td>{(() => { const g = progressOf(u); return <ProgressGauge pct={g.pct} label={g.label} tone={g.tone} busy={g.busy} />; })()}</td></tr>)}</tbody></table></div>
           )}
         </div>
       </div>

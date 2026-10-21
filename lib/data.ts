@@ -34,7 +34,7 @@ export async function loadAll(sb: SupabaseClient): Promise<AllData> {
   const { data: upSetting } = await sb.from("settings").select("value").eq("key", "uploaded_lists").maybeSingle();
   const uploads = ((upSetting?.value as { items?: Row[] } | null)?.items || []).map((u) => {
     const m = String(u.summary || "").match(/(\d+)\s*added[^\d]*(\d+)\s*already/i); // the summary the daily run (or a local session) wrote: "N added, M already in the app"
-    return { id: u.id, filename: u.filename, region: u.region, rows: u.rows, status: u.status, uploaded_at: u.uploaded_at, added: m ? Number(m[1]) : null, already: m ? Number(m[2]) : null };
+    return { id: u.id, filename: u.filename, region: u.region, rows: u.rows, status: u.status, uploaded_at: u.uploaded_at, processed_at: u.processed_at, added: m ? Number(m[1]) : null, already: m ? Number(m[2]) : null };
   });
   const byId = new Map(companies.map((c) => [c.id, c]));
   const withCo = (r: Row) => ({ ...r, company: r.company ?? byId.get(r.company_id)?.company_name ?? "" });

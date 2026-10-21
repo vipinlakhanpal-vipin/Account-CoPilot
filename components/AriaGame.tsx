@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AriaFace } from "@/components/AriaFace";
 import AriaTraveller from "@/components/AriaTraveller";
+import HourlySettings from "@/components/HourlySettings";
 
 // Aria floats in the left panel. Clicking her opens the Game room page on the right (components/GameRoom.tsx). Now and then, while she sits idle, she flashes a funny message for a few seconds.
 const MOODS = [
@@ -101,7 +102,7 @@ function Roamer() {
     setTease(pickT); setMood(null); clearTimeout(r.timer); r.timer = setTimeout(() => setTease(null), 3000);
   };
   const [tips, setTips] = useState(false);
-  useEffect(() => { try { setTips(localStorage.getItem("aria-tips-open") === "1"); } catch { /* optional */ } }, []);
+  useEffect(() => { try { setTips(localStorage.getItem("aria-tips-open") === "1"); } catch { /* optional */ } const o = () => setTips(true); window.addEventListener("aria-setup-open", o); return () => window.removeEventListener("aria-setup-open", o); }, []);
   const openChat = () => document.querySelector<HTMLButtonElement>(".nav-aria-mini")?.click(); // Aria's data chat (the assistant that answers questions about the accounts, contacts and signals)
   const getHome = () => wrap.current?.querySelector<HTMLElement>(".agame-bot")?.getBoundingClientRect() || null;
   const go = () => { setMood(null); setPunched(true); setTimeout(() => { setPunched(false); if (!path.startsWith("/nav/games")) router.push("/nav/games"); }, 450); };
@@ -130,20 +131,20 @@ function Roamer() {
           <AriaFace mood={tease ? tease.m : mood ? "oops" : "happy"} />
         </button>
     </div>
-    {!away && <div className="agame-legend">
+    {!away && <div className={`agame-legend${tips ? " open" : ""}`}>
       <div className="agame-actions">
         <button type="button" className="agame-ask" onClick={openChat}>💬 Ask Aria about your data</button>
         <button type="button" className="agame-play" onClick={go}>🎮 Play games with Aria</button>
       </div>
       <button type="button" className="agame-more" aria-expanded={tips} onClick={() => { const n = !tips; setTips(n); try { localStorage.setItem("aria-tips-open", n ? "1" : "0"); } catch { /* optional */ } }}>
-        <svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true" style={{ transform: tips ? "none" : "rotate(-90deg)", transition: "transform .15s" }}><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg> Tips and settings</button>
+        <svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true" style={{ transform: tips ? "none" : "rotate(-90deg)", transition: "transform .15s" }}><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg> Aria Setup</button>
       {tips && <div className="agame-more-body">
-        {quiet ? <p>Quiet mode is on: Aria stays calm and does not interrupt.</p> : <p>Click Aria: she follows your mouse. Double-click: she goes home.</p>}
+        {quiet && <p>Quiet mode is on: Aria stays calm and does not interrupt, and the hourly break stays off.</p>}
         <span className="agame-toggles">
           <label title="Only for you, in this browser: no roaming, teasing or funny messages"><input type="checkbox" checked={quiet} onChange={(e) => setQuiet(e.target.checked)} /> Quiet mode (just me)</label>
           {def.canSet && <label title="The default for every other user who has not chosen for themselves. Their own switch still wins."><input type="checkbox" checked={def.quietDefault} onChange={(e) => setEveryone(e.target.checked)} /> Quiet for everyone (default for other users)</label>}
         </span>
-        <button type="button" className="btn tiny" onClick={() => window.dispatchEvent(new Event("hourly-break-settings"))} title="Choose the hourly alarm and a lady's voice, or switch them off">Hourly break: alarm and voice…</button>
+        <HourlySettings />
       </div>}
     </div>}
     {away && <><p className="agame-note">Aria is out exploring. Double-click her, or press Esc, to call her home.</p><AriaTraveller getHome={getHome} onHome={() => setAway(false)} name={def.name || ""} /></>}
