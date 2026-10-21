@@ -385,9 +385,11 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
                 )}
                 {(() => {
                   const mine = uploads.filter((u) => u.region === focus);
+                  // only where it makes sense: with "Yes" always (that is where you upload), otherwise only if lists already exist for this country; "No" with nothing uploaded shows nothing
+                  if (hasList !== "yes" && !mine.length) return null;
                   return (
                     <div className="hw-uploads">
-                      <p className="hw-lead hw-lead-wide"><b>Lists uploaded for {focusName}</b>{mine.length ? ` (${mine.length})` : ""}. To change a list, upload the corrected file; the new one is added and anything already in the app is left alone.</p>
+                      <p className="hw-lead hw-lead-wide"><b>Lists uploaded for {focusName}</b>{mine.length ? ` (${mine.length})` : ""}.{hasList === "yes" ? " To change a list, upload the corrected file; the new one is added and anything already in the app is left alone." : " Already in the app; choose \u201cYes, I have one\u201d above to add another."}</p>
                       {mine.length
                         ? <div className="tablewrap"><table><thead><tr><th>File</th><th>Rows</th><th>Uploaded</th><th>Status</th></tr></thead>
                           <tbody>{mine.map((u) => <tr key={u.id}><td className="wrap">{u.filename}<div className="muted">{u.uploaded_by}</div></td><td className="muted">{u.rows}</td><td className="muted">{fmtDateTime(u.uploaded_at)}</td>
