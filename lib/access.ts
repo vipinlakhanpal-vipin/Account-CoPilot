@@ -8,7 +8,7 @@ import type { AllData, Row } from "@/lib/data";
 // Standard: only their assigned region(s) — their data, their region's ICP — nothing else.
 // Stored in public.user_access (see supabase/migrations/0004_region_access.sql); the database enforces the same rules.
 export type Role = "super_admin" | "admin" | "standard";
-// isSuper = full access to every region, the team, the engine and every ICP (Super Admin and Admin). isOwner = the Super Admin only. canDownload = false for an Admin: no Master Book, PDF or Excel.
+// isSuper = full access to every region, the team, the engine and every ICP (Super Admin and Admin). isOwner = the Super Admin only. canDownload = Master Book, PDF and Excel: the Super Admin, plus anyone whose can_download switch is on (user_access.can_download, v6.29). Everyone else is blocked.
 export type Access = { role: Role; regions: string[]; email: string; isSuper: boolean; isOwner: boolean; canDownload: boolean; ready: boolean };
 export const ALL_REGIONS = REGIONS.map((r) => r.key);
 export const ROLE_LABEL: Record<Role, string> = { super_admin: "Super Admin", admin: "Admin", standard: "Standard User" };
@@ -16,12 +16,16 @@ export const ROLE_LABEL: Record<Role, string> = { super_admin: "Super Admin", ad
 export async function getAccess(user: User | null): Promise<Access> {
   const email = (user?.email || "").toLowerCase();
   if (!user) return { role: "standard", regions: [], email, isSuper: false, isOwner: false, canDownload: false, ready: true };
-  const { data, error } = await supabaseAdmin().from("user_access").select("role,regions").eq("user_id", user.id).maybeSingle();
+  const db = supabaseAdmin();
+  type AccessRow = { data: { role: string; regions: string[] | null; can_download?: boolean } | null; error: { message: string } | null };
+  let { data, error } = (await db.from("user_access").select("role,regions,can_download").eq("user_id", user.id).maybeSingle()) as AccessRow;
+  // Before migration 0012 the can_download column does not exist: read the row without it, and then only the Super Admin can download.
+  if (error && /can_download/i.test(error.message)) ({ data, error } = (await db.from("user_access").select("role,regions").eq("user_id", user.id).maybeSingle()) as AccessRow);
   // Before the migration has been run the table doesn't exist: keep today's behaviour (everyone sees everything).
   if (error && /user_access|relation|schema cache/i.test(error.message)) return { role: "super_admin", regions: ALL_REGIONS, email, isSuper: true, isOwner: true, canDownload: true, ready: false };
   if (!data) return { role: "standard", regions: [], email, isSuper: false, isOwner: false, canDownload: false, ready: true };
   const role = data.role as Role, full = role === "super_admin" || role === "admin";
-  return { role, regions: full ? ALL_REGIONS : (data.regions || []).filter((r: string) => ALL_REGIONS.includes(r)), email, isSuper: full, isOwner: role === "super_admin", canDownload: role !== "admin", ready: true };
+  return { role, regions: full ? ALL_REGIONS : (data.regions || []).filter((r: string) => ALL_REGIONS.includes(r)), email, isSuper: full, isOwner: role === "super_admin", canDownload: role === "super_admin" || data.can_download === true, ready: true };
 }
 
 export const canSeeCountry = (a: Access, country: unknown) => a.isSuper || a.regions.includes(regionOf(country));

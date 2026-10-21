@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.28";
+export const APP_VERSION = "6.29";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.29", date: "2026-10-21", notes: "Downloads (Master Book, PDF, Excel) are now a per-person switch: on for the Super Admin and Nardus, blocked for everyone else.", changes: [
+      { what: "Master Book, PDF and Excel downloads (and Aria's file buttons) are open only to the Super Admin and to people whose download switch is on. Nardus is switched on; every other user, including Admins and Standard users, stays blocked. The switch is the new can_download field on each user's access record, off by default", where: "All downloads", why: "You asked to keep downloads open for Nardus only" },
+  ] },
   { version: "6.28", date: "2026-10-21", notes: "Every account explains its ICP Match, Opportunity and Coupa Fit percentages in plain words, beside the points.", changes: [
       { what: "In the PDF, each company's scores section now has a framed note on the right: what each score asks, how its percentage came about (for example 35 of 70 points earned = 50%), which area gave the most points and which the fewest, and how to read the percentage. The same plain explanation sits inside each score card on the account page in the app. The full scoring rules are still at the end of the PDF", where: "PDF report and account page", why: "Readers could not follow the points and had to reach the end of the PDF to learn how they work" },
   ] },
