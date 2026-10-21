@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.34";
+export const APP_VERSION = "6.35";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.35", date: "2026-10-21", notes: "Net revenue tiles redesigned: bigger band names, the account count smaller below, and a Clear link.", changes: [
+      { what: "The \"All revenue\" tile is gone. Each band tile now shows the band in large type with \"N accounts\" smaller below it. Click a tile to filter everything below; click it again, or the Clear link in the \"Selected: ...\" line, to show all", where: "Dashboard, Net revenue tiles", why: "You approved the simpler tile layout" },
+  ] },
   { version: "6.34", date: "2026-10-21", notes: "Each score list ends with a Total line, and the score note is one simple rule.", changes: [
       { what: "Under each list of points a bold line now gives the total, for example \"Total: 35 out of 70 points = 50%\". The framed note beside it is cut down to one simple rule (score = points the company got, divided by the points it could get, times 100; 35 out of 70 is half, so 50%), with each score's question, its sum, its best and weakest area, and how to read it. The same Total line shows on the account page", where: "PDF report and account page", why: "You asked for the simplest rule that anyone can follow" },
   ] },

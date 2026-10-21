@@ -797,12 +797,13 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
     view = (
       <>
         <div className="rev-bands">
-          <div className="rev-bands-head"><b>Net revenue</b><span className="muted">{band ? `Showing only ${REV_BANDS.find((b) => b.key === band)?.label}. Click it again to show all.` : "Click a band to narrow everything below to it. Uses the best figure we have: verified first, then estimates."}</span></div>
+          <div className="rev-bands-head"><b>Net revenue</b>{band
+            ? <span className="rev-sel">Selected: <b>{REV_BANDS.find((b) => b.key === band)?.label}</b> <button type="button" className="rev-clear" onClick={() => setBand("")}>Clear</button></span>
+            : <span className="muted">Click a band to narrow everything below to it. Uses the best figure we have: verified first, then estimates.</span>}</div>
           <div className="kpis rev-kpis">
-            <button type="button" className={`kpi c1${!band ? " on" : ""}`} onClick={() => setBand("")} aria-pressed={!band}><small>All revenue</small><b>{Aall.length.toLocaleString()}</b></button>
             {REV_BANDS.map((b, i) => (
               <button type="button" key={b.key} className={`kpi c${(i + 2) % 8 + 1}${band === b.key ? " on" : ""}`} onClick={() => setBand(band === b.key ? "" : b.key)} aria-pressed={band === b.key}
-                title={`${(bandCounts[b.key] || 0).toLocaleString()} accounts`}><small>{b.label}</small><b>{(bandCounts[b.key] || 0).toLocaleString()}</b></button>))}
+                title={band === b.key ? "Click again to show all" : `Show only ${b.label}`}><b>{b.label}</b><small>{(bandCounts[b.key] || 0).toLocaleString()} accounts</small></button>))}
           </div>
         </div>
         <div className="kpis">{kpis.map(([l, rows, kind], i) => (
