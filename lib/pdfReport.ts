@@ -262,7 +262,7 @@ export async function buildReport(all: AllData, def: unknown, opt: ReportOptions
   const statusOrder = (x: string) => Math.max(0, REPORT_STATUSES.indexOf(x as typeof REPORT_STATUSES[number]));
   if (opt.rank === "revenue") scored.sort((x, y) => (revenueOf(y.a) || 0) - (revenueOf(x.a) || 0));
   else if (opt.rank === "name") scored.sort((x, y) => s(x.a.company_name).localeCompare(s(y.a.company_name)));
-  else scored.sort((x, y) => statusOrder(s(x.a.icp_status)) - statusOrder(s(y.a.icp_status)) || y.m.total - x.m.total);
+  else scored.sort((x, y) => y.m.total - x.m.total || statusOrder(s(x.a.icp_status)) - statusOrder(s(y.a.icp_status)) || s(x.a.company_name).localeCompare(s(y.a.company_name)));
   const total = scored.length, picked = scored.slice(0, opt.limit);
 
   const w = await Writer.create();

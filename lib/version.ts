@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.38";
+export const APP_VERSION = "6.39";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.39", date: "2026-10-21", notes: "The PDF now picks its top companies the same way the Excel does, so a company in the Excel is no longer left out of the PDF.", changes: [
+      { what: "When a PDF is limited to the top N companies (Aria's default is 25), it now ranks them by ICP Match score first, exactly as the Excel does, instead of listing every Verified company before any Likely one. Status only breaks ties. This matches the PDF's own line \"most promising first (by ICP Match)\"", where: "PDF report (Aria and the report builder)", why: "Core42 (ICP Likely) was in the Excel but missing from the PDF, because 25 Verified companies came first" },
+  ] },
   { version: "6.38", date: "2026-10-21", notes: "Every tile list now shows which region each account belongs to.", changes: [
       { what: "Every list that opens from a Dashboard or Accounts tile (accounts, contacts, signals, conflicts and people) now has a Region column and a Region filter, using the region name such as Saudi Arabia or South Africa", where: "Dashboard and Accounts tiles, the list that opens when you click one", why: "You wanted to see at a glance which region each account belongs to" },
   ] },
