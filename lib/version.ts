@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.19";
+export const APP_VERSION = "6.20";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.20", date: "2026-10-21", notes: "Setup wizard step 1: a Files column next to Status lists the uploaded files to download.", changes: [
+      { what: "Step 1 (Region and size) has a new Files column right after Status. It lists each file uploaded for that country as a download link (⬇ file name), or \"None uploaded\". Same download rule as before: the Super Admin or the uploader", where: "Setup wizard, step 1", why: "You asked for the files in their own column next to Status, not under it" },
+  ] },
   { version: "6.19", date: "2026-10-21", notes: "Uploaded wizard files can be downloaded again from the wizard.", changes: [
       { what: "Each file you uploaded in the Setup wizard now shows as a download link (📎 file name) next to the country's status on step 1 (Region and size) and in the uploaded-lists table on step 2. It gives back your original file. Only the Super Admin, or the person who uploaded the file, can download it", where: "Setup wizard, steps 1 and 2", why: "You could not get an uploaded file back from the app" },
   ] },

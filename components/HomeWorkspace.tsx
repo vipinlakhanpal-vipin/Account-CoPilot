@@ -131,7 +131,7 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
   const loadUploads = () => fetch("/api/wizard-upload", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((j) => j && setUploads(j.items || [])).catch(() => {});
   useEffect(() => { loadUploads(); }, [focus]); // eslint-disable-line react-hooks/exhaustive-deps
   const canGetFile = (u: Upload) => access.canDownload || u.uploaded_by === access.email;
-  const fileLink = (u: Upload) => canGetFile(u) ? <a href={`/api/wizard-upload?download=${u.id}`} title="Download the original file">📎 {u.filename}</a> : <>{u.filename}</>;
+  const fileLink = (u: Upload) => canGetFile(u) ? <a href={`/api/wizard-upload?download=${u.id}`} title="Download the original file">⬇ {u.filename}</a> : <>{u.filename}</>;
 
   useEffect(() => {
     let cancelled = false;
@@ -318,7 +318,7 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
                 </div>
                 <fieldset disabled={overview} className="hw-fieldset"><div className="hw-region-list">
                   <div className="hw-region-grid hw-region-headrow" aria-hidden="true">
-                    <span>Region</span><span>Min net rev</span><span>Min employees</span><span>Stock listing</span><span>Which entities count</span><span>Status</span>
+                    <span>Region</span><span>Min net rev</span><span>Min employees</span><span>Stock listing</span><span>Which entities count</span><span>Status</span><span>Files</span>
                   </div>
                   {visibleRegions.filter((r) => regions.includes(r.key)).map((r) => {
                     const st = def.regions[r.key]?.status;
@@ -337,8 +337,9 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
                           {OPTIONS.listing.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
                         <label aria-label={`${r.name}: which entities count`}><select value={s.entity} onChange={(e) => setSize(r.key, { entity: e.target.value as Rules["entity_level"] })}>
                           {OPTIONS.entity.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
-                        <span className={`hw-region-activated s-${st || "next"}`}>{statusText}
-                          {uploads.filter((u) => u.region === r.key).map((u) => <small key={u.id} className="hw-region-file">{fileLink(u)}</small>)}</span>
+                        <span className={`hw-region-activated s-${st || "next"}`}>{statusText}</span>
+                        <span className="hw-region-files">{uploads.filter((u) => u.region === r.key).map((u) => <span key={u.id} className="hw-region-file">{fileLink(u)}</span>)}
+                          {!uploads.some((u) => u.region === r.key) && <span className="hw-region-nofile">None uploaded</span>}</span>
                       </div>
                     );
                   })}
