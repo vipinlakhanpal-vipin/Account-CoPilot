@@ -68,8 +68,8 @@ function Roamer() {
       if (area.style.minHeight !== `${need}px`) area.style.minHeight = `${need}px`;
       const free = Math.max(area.clientHeight, need) - (legendH + 6); // height above the legend
       // The glass dome takes the free space, whatever the screen: as wide as the panel allows and as tall as the free height allows (shadow included), up to 170 px so it never looks huge on a 32 inch monitor.
-      // Aria and her speech bubbles scale with the dome (--as): 22 to 62 px orb radius.
-      const D = Math.max(DMIN, Math.min(170, W / 2 - PAD, (free - 2 * PAD) / 2.2)), R = Math.min(62, Math.max(22, 0.34 * D)), rho = D - R - 5;
+      // Aria and her speech bubbles scale with the dome (--as): 18 to 50 px orb radius.
+      const D = Math.max(DMIN, Math.min(170, W / 2 - PAD, (free - 2 * PAD) / 2.2)), R = Math.min(50, Math.max(18, 0.27 * D)), rho = D - R - 5;
       area.style.setProperty("--as", String(R / 36));
       const cx = W / 2, cy = (free - 2.2 * D) / 2 + D;
       svg.style.left = `${cx - 1.06 * D}px`; svg.style.top = `${cy - 1.06 * D}px`; svg.style.width = `${2.12 * D}px`; svg.style.height = `${2.32 * D}px`;

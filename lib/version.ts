@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.15";
+export const APP_VERSION = "6.16";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.16", date: "2026-10-21", notes: "Ask Aria and Play buttons scale with the screen, and Aria's orb is smaller.", changes: [
+      { what: "The Ask Aria about your data and Play games with Aria buttons and the Tips line now scale with the window height: about 11 px text on a 13 inch laptop up to 14 px on a 32 inch monitor, with padding and spacing following. Aria's orb is smaller relative to the clock (about 27% of the dome radius instead of 34%)", where: "Left panel, Aria", why: "The buttons stayed the same size when the clock shrank, and Aria looked too big on the dome" },
+  ] },
   { version: "6.15", date: "2026-10-21", notes: "Aria and her clock now fit any screen: no overlap on laptops, bigger on large monitors.", changes: [
       { what: "The glass dome is now sized from the free space in the left panel (width and height), so it no longer runs over the Ask Aria and Play buttons on a 13 inch laptop, and it grows to fill the panel on large monitors (up to 170 px radius). Aria and her speech bubbles scale with it. The panel reserves a minimum room for the dome and scrolls on very short windows instead", where: "Left panel, Aria", why: "v6.14 was tied to window height only: it overlapped on a 13 inch laptop and stayed small on a 32 inch monitor" },
   ] },
