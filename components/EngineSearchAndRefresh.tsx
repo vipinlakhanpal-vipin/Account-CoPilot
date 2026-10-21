@@ -21,7 +21,10 @@ const money = (n: number) => `$${n.toFixed(2)}`;
 // Mission Control: the two paid/free "find or update companies" actions, moved out of Settings (which now holds
 // only genuine configuration — PIN, token, balance, uploads, pending activation). Fetches its own engine summary
 // independently, same pattern as ScheduledRunHistory.
+import useIsOwner from "@/components/useIsOwner";
+
 export default function EngineSearchAndRefresh() {
+  const isOwner = useIsOwner(); // only the Super Admin can cancel a queued job
   const [s, setS] = useState<Summary | null>(null);
   const [msg, setMsg] = useState<ReactNode>("");
   const [q, setQ] = useState({ region: "UAE", count: "50", mode: "verify", company: "", website: "" });
@@ -142,7 +145,7 @@ export default function EngineSearchAndRefresh() {
                 {j.status === "done" && (held
                   ? <div><a className="job-link" href="/settings#engine-pending">Waiting for {(parsed ? realRegion : legacyHeld?.[1]) || "region"} Region Activation →</a></div>
                   : <div><a className="job-link" href={j.slug ? `/?open=${encodeURIComponent(j.slug)}&country=${encodeURIComponent(realRegion)}` : `/?tab=accounts&country=${encodeURIComponent(realRegion)}`}>{j.slug ? `View ${parsed ? parsed[1].trim() : j.company_name || "the"} (${realRegion}) Account →` : `View the (${realRegion}) Accounts →`}</a></div>)}</td>
-              <td>{j.status === "queued" && <button type="button" className="btn tiny ghost" onClick={() => post({ action: "cancel", id: j.id }, "Job cancelled.")}>Cancel</button>}</td></tr>]; })}</tbody></table></div>}
+              <td>{j.status === "queued" && isOwner && <button type="button" className="btn tiny ghost" onClick={() => post({ action: "cancel", id: j.id }, "Job cancelled.")}>Cancel</button>}</td></tr>]; })}</tbody></table></div>}
         </div>
 
         <div className="eng-card paid">

@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.46";
+export const APP_VERSION = "6.47";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,12 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.47", date: "2026-10-21", notes: "Uploads: duplicate question before storing, time estimates and a notification when read, and a delete button for the Super Admin. Only the Super Admin can delete or cancel anything.", changes: [
+      { what: "If a file has the same data as one already uploaded for the country (even under a different file name), or the same name and the same number of rows, the app now says so before storing it, names the earlier file and who uploaded it, and asks whether to continue. Continuing is safe: the app adds only what is not already in its database and leaves the rest", where: "Setup wizard, Add Data", why: "Two users uploaded the same file and nobody was warned" },
+      { what: "After an upload the message gives the approximate time: how long the upload took, when a session will read it (about 10 minutes once the instant runner starts, otherwise the 6:00 am Dubai run), and how long rating the new companies takes at the country's daily pace. When the file has been read a notice appears and the bell carries an entry", where: "Setup wizard, Add Data, and the bell", why: "You wanted to know how long it takes and to be told when it is done" },
+      { what: "Choosing an Excel file now only stages it: nothing is uploaded until the person presses Save & apply, which every user sees, Standard Users included (in Add Data right under the chosen file, and in Review). For a Standard User Save & apply uploads the file and cannot touch the ICP, so the red \"Consult Super Admin\" message no longer appears. The Super Admin gets a Delete button on every uploaded file (the stored file and its line are removed; companies already added from it stay). Deleting or cancelling anything else is now Super Admin only as well: saved filters and queued jobs or searches. Standard Users and Admins no longer see those buttons and the server refuses the request", where: "Setup wizard, Saved filters, Find company, Search and refresh", why: "Only the Super Admin may delete anything" },
+      { what: "Excel file names are shortened to the first two words with the full name on hover, in the wizard list as well as the Dashboard. The Dashboard's data-source charts and the uploads table sit inside a thin frame headed \"Where the data came from\"", where: "Setup wizard and Dashboard", why: "Long names filled the tables and the source charts needed their own section" },
+  ] },
   { version: "6.46", date: "2026-10-21", notes: "Green progress gauges: while a file uploads in the Setup wizard, and for every Excel upload on the Dashboard.", changes: [
       { what: "While an Excel file is uploading in the Setup wizard, a green gauge shows the real percentage sent, then \"Saving and checking the file\", then \"Uploaded\"", where: "Setup wizard, Add Data", why: "You could not tell whether a big file was still going up" },
       { what: "The Dashboard's Excel uploads table has a Progress column: a gauge for each file that shows Waiting to be read, then Syncing with the real share of its companies already rated (for example 5 of 9), then Synced. A file with the same data as an earlier one shows as not read again, and a file that failed shows in red", where: "Dashboard, Where the data came from", why: "You wanted to see at a glance whether a file is still loading and syncing" },

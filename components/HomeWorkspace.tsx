@@ -1,10 +1,11 @@
 "use client";
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { REGIONS, OPTIONS, normalizeDefinition, type Definition, type Rules } from "@/lib/icpDefinition.mjs";
 import type { Access } from "@/lib/access";
 import { ask, notify } from "@/components/Confirm";
 import { fmtDateTime } from "@/lib/dates";
 import ProgressGauge from "@/components/ProgressGauge";
+import { shortFile } from "@/lib/shortFile";
 
 // Home workspace: a left rail with two destinations — About Account CoPilot (always free to read) and Setup Wizard
 // (reads and writes the exact settings.icp_definition record Setup → Define ICP uses, so there's no separate config to
@@ -99,6 +100,8 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
   const [uploadPct, setUploadPct] = useState<number | null>(null); // 0-100 while a file is being sent and checked
   const [dragOn, setDragOn] = useState(false);
   const [uploadMsg, setUploadMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  // A chosen file waits here and is NOT uploaded until the person presses Save & apply (everyone, Standard Users included).
+  const [staged, setStaged] = useState<File | null>(null);
   const [domainsBy, setDomainsBy] = useState<Record<string, string[]>>({});
   const [sources, setSources] = useState<Sources>({ checked: [], custom: [] });
   const [newSource, setNewSource] = useState("");
@@ -130,13 +133,13 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
   const setActivateNow = (v: boolean) => setActivateBy((cur) => ({ ...cur, [focus]: v }));
   const setHasList = (v: "yes" | "no") => setHasListBy((cur) => ({ ...cur, [focus]: v }));
   // This country's uploaded lists (what it already has waiting or processed), loaded when the country changes and after each upload.
-  type Upload = { id: string; filename: string; region: string; uploaded_by: string; uploaded_at: string; rows: number; status: "waiting" | "done" | "error"; summary?: string };
+  type Upload = { id: string; filename: string; region: string; uploaded_by: string; uploaded_at: string; rows: number; status: "waiting" | "done" | "error"; summary?: string; processed_at?: string };
   const [uploads, setUploads] = useState<Upload[]>([]);
   const [coverage, setCoverage] = useState<Record<string, { total: number; verified: number; likely: number; check: number; other: number }>>({});
   const loadUploads = () => fetch("/api/wizard-upload", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((j) => { if (j) { setUploads(j.items || []); setCoverage(j.coverage || {}); } }).catch(() => {});
   useEffect(() => { loadUploads(); }, [focus]); // eslint-disable-line react-hooks/exhaustive-deps
   const canGetFile = (u: Upload) => access.canDownload || u.uploaded_by === access.email;
-  const fileLink = (u: Upload) => canGetFile(u) ? <a href={`/api/wizard-upload?download=${u.id}`} title="Download the original file">⬇ {u.filename}</a> : <>{u.filename}</>;
+  const fileLink = (u: Upload) => canGetFile(u) ? <a href={`/api/wizard-upload?download=${u.id}`} title={`${u.filename} (click to download the original)`}>⬇ {shortFile(u.filename)}</a> : <span title={u.filename}>{shortFile(u.filename)}</span>;
 
   useEffect(() => {
     let cancelled = false;
@@ -173,39 +176,87 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
     else saveSources({ checked: [...sources.checked, name], custom: [...sources.custom, name] });
     setNewSource("");
   };
-  async function uploadFile(file: File) {
+  // Sends the file with a real progress percentage (fetch cannot report that, so XMLHttpRequest). `force` = the user chose to continue after the duplicate question.
+  function sendFile(file: File, region: string, force: boolean) {
+    return new Promise<{ status: number; j: Record<string, any> }>((resolve) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+      const form = new FormData(); form.append("file", file); form.append("region", region); if (force) form.append("force", "1");
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", "/api/wizard-upload");
+      xhr.upload.onprogress = (e) => { if (e.lengthComputable) setUploadPct(Math.min(90, Math.round((e.loaded / e.total) * 90))); };
+      xhr.upload.onload = () => setUploadPct(93); // sent: the server is now saving and checking the file
+      xhr.onload = () => { let j: Record<string, any> = {}; try { j = JSON.parse(xhr.responseText); } catch { /* not JSON */ } resolve({ status: xhr.status, j }); }; // eslint-disable-line @typescript-eslint/no-explicit-any
+      xhr.onerror = () => resolve({ status: 0, j: { error: "Could not reach the server." } });
+      xhr.send(form);
+    });
+  }
+  async function uploadFile(file: File): Promise<"ok" | "cancelled" | "error"> {
     const region = focus;
-    if (!region) { setUploadMsg({ ok: false, text: "Pick a country above the tabs first." }); return; }
-    if (!/\.(xlsx|xls)$/i.test(file.name)) { setUploadMsg({ ok: false, text: "Only .xlsx or .xls files are accepted." }); return; }
-    setUploadBusy(true); setUploadMsg(null);
+    if (!region) { setUploadMsg({ ok: false, text: "Pick a country above the tabs first." }); return "error"; }
+    if (!/\.(xlsx|xls)$/i.test(file.name)) { setUploadMsg({ ok: false, text: "Only .xlsx or .xls files are accepted." }); return "error"; }
+    setUploadBusy(true); setUploadMsg(null); setUploadPct(0);
+    const t0 = Date.now();
+    let outcome: "ok" | "cancelled" | "error" = "error";
     try {
-      const form = new FormData();
-      form.append("file", file); form.append("region", region);
-      // XMLHttpRequest, because fetch cannot report how much of a file has been sent.
-      setUploadPct(0);
-      const res = await new Promise<{ ok: boolean; j: Record<string, any> }>((resolve) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-        const xhr = new XMLHttpRequest();
-        xhr.open("POST", "/api/wizard-upload");
-        xhr.upload.onprogress = (e) => { if (e.lengthComputable) setUploadPct(Math.min(90, Math.round((e.loaded / e.total) * 90))); };
-        xhr.upload.onload = () => setUploadPct(93); // sent: the server is now saving and checking the file
-        xhr.onload = () => { let j: Record<string, any> = {}; try { j = JSON.parse(xhr.responseText); } catch { /* not JSON */ } resolve({ ok: xhr.status >= 200 && xhr.status < 300, j }); }; // eslint-disable-line @typescript-eslint/no-explicit-any
-        xhr.onerror = () => resolve({ ok: false, j: { error: "Could not reach the server." } });
-        xhr.send(form);
-      });
+      let res = await sendFile(file, region, false);
+      if (res.status === 409 && res.j.duplicate) {
+        // The same data (even under another file name), or the same name and number of rows: say so now and let the user decide.
+        const m = (res.j.matches || []) as { filename: string; uploaded_by: string; uploaded_at: string; rows: number; sameData: boolean }[];
+        setUploadPct(null);
+        const go = await ask({ title: "This file looks like one that is already uploaded", body: "The app adds only the companies that are not already in its database and leaves the rest of the file alone, so continuing creates no duplicates. Do you want to continue?",
+          points: m.map((x) => `"${shortFile(x.filename)}" by ${x.uploaded_by}, ${fmtDateTime(x.uploaded_at)}, ${x.rows} rows: ${x.sameData ? "the same data inside" : "the same name and number of rows"}`), confirm: "Continue" });
+        if (!go) { setUploadMsg({ ok: true, text: "Cancelled. Nothing was stored." }); setUploadBusy(false); return "cancelled"; }
+        setUploadPct(0); res = await sendFile(file, region, true);
+      }
       const j = res.j;
-      if (res.ok) {
-        setUploadPct(100);
+      if (res.status >= 200 && res.status < 300) {
+        setUploadPct(100); outcome = "ok";
         loadUploads();
-        const when = j.duplicateOf ? `It has the same data as "${j.duplicateOf.filename}" (uploaded by ${j.duplicateOf.uploaded_by}), so it is kept on file but not read a second time.`
-          : j.instant === "ok" ? "The instant runner has been started now; it usually picks the file up within a few minutes of starting, and the companies then appear under " + focusName + " only."
-          : `The next scheduled run reads it (the daily run is at 6:00 am Dubai time) and adds the companies under ${focusName} only.`;
-        setUploadMsg({ ok: true, text: `"${file.name}" is stored for ${focusName} (${j.item?.rows ?? "?"} rows found). ${when} You do not need to press Save: Save is only for the size rule, targeting and daily plan. Its status shows in the list below.` });
+        const secs = Math.max(1, Math.round((Date.now() - t0) / 1000));
+        const est = j.estimate as { read?: string; sync?: string } | undefined;
+        setUploadMsg({ ok: true, text: `"${file.name}" is saved and applied for ${focusName} (${j.item?.rows ?? "?"} rows found); the upload took about ${secs} second${secs === 1 ? "" : "s"}. ${est?.read || ""} ${est?.sync || ""} You will be notified here and in the bell when it has been read.` });
       }
       else setUploadMsg({ ok: false, text: j.error || "Could not upload that file." });
     } catch { setUploadMsg({ ok: false, text: "Could not reach the server." }); }
     setTimeout(() => setUploadPct(null), 1200);
     setUploadBusy(false);
+    return outcome;
   }
+  // Choosing a file only stages it; Save & apply sends it.
+  function stageFile(f: File) {
+    setUploadMsg(null);
+    if (!/\.(xlsx|xls)$/i.test(f.name)) { setUploadMsg({ ok: false, text: "Only .xlsx or .xls files are accepted." }); return; }
+    if (f.size > 10 * 1024 * 1024) { setUploadMsg({ ok: false, text: "That file is too large (10 MB limit)." }); return; }
+    setStaged(f);
+  }
+  async function applyStaged() {
+    if (!staged || uploadBusy) return;
+    const r = await uploadFile(staged);
+    if (r !== "error") setStaged(null); // on an error the file stays chosen so Save & apply can be pressed again
+  }
+  useEffect(() => { setStaged(null); }, [focus]); // a file chosen for one country is never sent to another
+  // Delete (Super Admin only; the server checks too). Companies already added from the file stay in the app.
+  async function deleteUpload(u: Upload) {
+    const ok = await ask({ title: "Delete this uploaded file?", body: u.filename, tone: "danger", confirm: "Delete",
+      points: [u.status === "done" ? "The stored file and its line in this list are removed. Companies already added from it stay in the app." : "The stored file and its line in this list are removed. It has not been read yet, so nothing was added from it."] });
+    if (!ok) return;
+    const r = await fetch("/api/wizard-upload", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: u.id }) });
+    const j = await r.json().catch(() => ({}));
+    if (r.ok) { notify("File deleted.", "ok"); loadUploads(); } else notify(j.error || "Could not delete that file.", "error");
+  }
+  // While a file waits to be read, look again every 20 seconds; when one is read, tell the user (the bell also carries it).
+  const seenStatus = useRef<Record<string, string>>({});
+  useEffect(() => {
+    for (const u of uploads) {
+      if (seenStatus.current[u.id] === "waiting" && u.status === "done") {
+        const mins = u.processed_at ? Math.max(1, Math.round((new Date(u.processed_at).getTime() - new Date(u.uploaded_at).getTime()) / 60000)) : 0;
+        notify(`"${shortFile(u.filename)}" has been read${mins ? ` (about ${mins} minute${mins === 1 ? "" : "s"} after the upload)` : ""}: ${u.summary || "done"}. Revenue checks and contacts follow over the daily runs.`, "ok");
+      } else if (seenStatus.current[u.id] === "waiting" && u.status === "error") notify(`"${shortFile(u.filename)}" could not be read: ${u.summary || "see the list"}.`, "error");
+      seenStatus.current[u.id] = u.status;
+    }
+    if (!uploads.some((u) => u.status === "waiting")) return;
+    const t = setInterval(loadUploads, 20000);
+    return () => clearInterval(t);
+  }, [uploads]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function save() {
     if (!def) return;
@@ -397,13 +448,15 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
                       onDragEnter={(e) => { e.preventDefault(); if (!uploadBusy) setDragOn(true); }}
                       onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; }}
                       onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDragOn(false); }}
-                      onDrop={(e) => { e.preventDefault(); setDragOn(false); const f = e.dataTransfer.files?.[0]; if (f && !uploadBusy) uploadFile(f); }}>
+                      onDrop={(e) => { e.preventDefault(); setDragOn(false); const f = e.dataTransfer.files?.[0]; if (f && !uploadBusy) stageFile(f); }}>
                       <input type="file" accept=".xlsx,.xls" style={{ display: "none" }} disabled={uploadBusy}
-                        onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadFile(f); e.target.value = ""; }} />
+                        onChange={(e) => { const f = e.target.files?.[0]; if (f) stageFile(f); e.target.value = ""; }} />
                       <span className="hw-dropzone-icon">📊</span>
-                      <b>{uploadBusy ? "Uploading…" : `Drop your ${focusName} Excel file here, or click to browse`}</b>
+                      <b>{uploadBusy ? "Uploading…" : staged ? `Chosen: ${shortFile(staged.name)}` : `Drop your ${focusName} Excel file here, or click to browse`}</b>
                       <span className="hint">.xlsx or .xls only</span>
                     </label>
+                    {staged && !uploadBusy && <div className="hw-staged"><p><b title={staged.name}>{shortFile(staged.name)}</b> ({Math.max(1, Math.round(staged.size / 1024)).toLocaleString()} KB) is chosen but <b>not uploaded yet</b>. Press Save &amp; apply to upload it for {focusName}.</p>
+                      <button type="button" className="btn primary" onClick={applyStaged}>Save &amp; apply</button> <button type="button" className="btn ghost" onClick={() => setStaged(null)}>Remove</button></div>}
                     {uploadPct !== null && <div className="hw-uploading"><ProgressGauge pct={uploadPct} busy={uploadPct < 100} label={uploadPct < 91 ? `Uploading ${uploadPct}%` : uploadPct < 100 ? "Saving and checking the file…" : "Uploaded"} /></div>}
                     <div className="hw-upload-tips">
                       <p><b>Before you upload</b></p>
@@ -424,9 +477,9 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
                     <div className="hw-uploads">
                       <p className="hw-lead hw-lead-wide"><b>Lists uploaded for {focusName}</b>{mine.length ? ` (${mine.length})` : ""}.{hasList === "yes" ? " To change a list, upload the corrected file; the new one is added and anything already in the app is left alone." : " Already in the app; choose \u201cYes, I have one\u201d above to add another."}</p>
                       {mine.length
-                        ? <div className="tablewrap"><table><thead><tr><th>File</th><th>Rows</th><th>Uploaded</th><th>Status</th></tr></thead>
+                        ? <div className="tablewrap"><table><thead><tr><th>File</th><th>Rows</th><th>Uploaded</th><th>Status</th>{access.isOwner && <th></th>}</tr></thead>
                           <tbody>{mine.map((u) => <tr key={u.id}><td className="wrap">{fileLink(u)}<div className="muted">{u.uploaded_by}</div></td><td className="muted">{u.rows}</td><td className="muted">{fmtDateTime(u.uploaded_at)}</td>
-                            <td>{u.status === "waiting" ? <span className="status-plain st-l">Waiting to be read</span> : u.status === "done" ? <span className="status-plain st-v">Added{u.summary ? ` — ${u.summary}` : ""}</span> : <span className="status-plain st-u">Error{u.summary ? ` — ${u.summary}` : ""}</span>}</td></tr>)}</tbody></table></div>
+                            <td>{u.status === "waiting" ? <span className="status-plain st-l">Waiting to be read</span> : u.status === "done" ? <span className="status-plain st-v">Added{u.summary ? ` — ${u.summary}` : ""}</span> : <span className="status-plain st-u">Error{u.summary ? ` — ${u.summary}` : ""}</span>}</td>{access.isOwner && <td><button type="button" className="btn tiny danger" onClick={() => deleteUpload(u)}>Delete</button></td>}</tr>)}</tbody></table></div>
                         : <p className="note">Nothing uploaded for {focusName} yet.</p>}
                       {mine.some((u) => u.status === "waiting") && <p className="note"><b>Waiting to be read</b> means no run has opened the file yet. Uploading starts the instant runner, which usually opens it within a few minutes; if that is off, the daily run at 6:00 am Dubai time reads it. Reading itself takes a few minutes. The companies then appear at once, and their revenue check, ICP status, signals and contacts follow over the next daily runs, a batch at a time.</p>}
                     </div>);
@@ -579,7 +632,7 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
                       <td>{pl.domains.length ? pl.domains.map((d) => OPTIONS.domains.find((x) => x.key === d)?.label).join(", ") : "no change"}</td>
                       <td>find {pl.draft.discoverPerDay}, verify {pl.draft.verifyPerDay} per day</td>
                       <td>{pl.activate ? "On" : st === "next" ? "Will start Paused" : "Paused"}</td></tr>); })}</tbody></table></div>
-                {overview ? <p className="note" style={{ marginTop: 16 }}>Pick a country above to review and save it. The overview is read-only.</p> : <button type="button" className="btn primary" disabled={saving || justSaved || !regions.length} onClick={save} style={{ marginTop: 16 }}>{saving ? "Saving…" : justSaved ? "Saved ✓" : "Save & apply"}</button>}
+                {overview ? <p className="note" style={{ marginTop: 16 }}>Pick a country above to review and save it. The overview is read-only.</p> : !access.isSuper ? <div style={{ marginTop: 16 }}><button type="button" className="btn primary" disabled={!staged || uploadBusy} onClick={applyStaged}>Save &amp; apply</button><p className="note">{staged ? <>Press Save &amp; apply to upload <b>{shortFile(staged.name)}</b> for {focusName}.</> : <>Nothing waiting. Choose an Excel file in step 2, then press Save &amp; apply. The size rule, targeting and daily plan are set by the Super Admin.</>}</p></div> : <button type="button" className="btn primary" disabled={saving || (justSaved && !staged) || (!regions.length && !staged)} onClick={async () => { if (staged) await applyStaged(); await save(); }} style={{ marginTop: 16 }}>{saving ? "Saving…" : justSaved && !staged ? "Saved ✓" : "Save & apply"}</button>}
               </div>
             )}
 

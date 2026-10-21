@@ -4,7 +4,7 @@ import { requireUser } from "@/lib/auth";
 import { getAccess, canSeeRegion } from "@/lib/access";
 import { createHash } from "node:crypto";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { regionOf } from "@/lib/icpDefinition.mjs";
+import { regionOf, effectiveEngine } from "@/lib/icpDefinition.mjs";
 
 // Setup Wizard's "Add Data" step: upload a spreadsheet of the user's own companies. Stored in Supabase Storage
 // (bucket "uploads"), logged in settings.uploaded_lists — the scheduled session reads and imports it later
@@ -91,20 +91,47 @@ export async function POST(req: Request) {
   if (rows === 0) return NextResponse.json({ error: "That sheet doesn't have any data rows below the header." }, { status: 400 });
 
   const db = supabaseAdmin();
+  // Same data (even under another file name) or the same name and number of rows, from anyone, for this country: ask before storing it.
+  const have = await getItems(db), norm = (n: string) => n.trim().toLowerCase();
+  const matches = have.filter((x) => x.region === region && x.status !== "error" && ((hash && x.hash === hash) || (norm(x.filename) === norm(file.name) && x.rows === rows)));
+  if (matches.length && String(form?.get("force") || "") !== "1")
+    return NextResponse.json({ duplicate: true, matches: matches.map((m) => ({ filename: m.filename, uploaded_by: m.uploaded_by, uploaded_at: m.uploaded_at, rows: m.rows, sameData: !!hash && m.hash === hash })) }, { status: 409 });
   const id = crypto.randomUUID().slice(0, 8);
   const safeName = file.name.replace(/[^A-Za-z0-9._-]/g, "_");
   const path = `${region}/${Date.now()}-${safeName}`;
   const { error: upErr } = await db.storage.from("uploads").upload(path, buf, { contentType: file.type || "application/octet-stream", upsert: false });
   if (upErr) return NextResponse.json({ error: upErr.message }, { status: 500 });
 
-  const items = await getItems(db);
+  const items = have;
   const item: UploadItem = { id, filename: file.name, region, path, uploaded_by: user.email || "", uploaded_at: new Date().toISOString(), rows, status: "waiting", hash };
-  // The same data under another name: keep the file, but do not read it a second time.
-  const twin = hash ? items.find((x) => x.hash === hash && x.region === region && x.status !== "error") : undefined;
-  if (twin) { item.status = "done"; item.processed_at = item.uploaded_at; item.summary = `Same data as "${twin.filename}" (uploaded by ${twin.uploaded_by}); not read again`; }
   items.unshift(item);
   const { error: setErr } = await db.from("settings").upsert({ key: "uploaded_lists", value: { items: items.slice(0, 100) }, updated_at: new Date().toISOString() });
   if (setErr) return NextResponse.json({ error: setErr.message }, { status: 500 });
-  const instant = twin ? "duplicate" : await openUploadIssue(item);
-  return NextResponse.json({ ok: true, item, duplicateOf: twin ? { filename: twin.filename, uploaded_by: twin.uploaded_by } : null, instant });
+  const instant = await openUploadIssue(item);
+  // Approximate times, said honestly as estimates: when a session will open the file, and how long rating the new companies takes at this country's daily pace.
+  const { data: defRow } = await db.from("settings").select("value").eq("key", "icp_definition").maybeSingle();
+  const eng = effectiveEngine((defRow?.value as { regions?: Record<string, unknown> } | null)?.regions?.[region]);
+  const next = new Date(); next.setUTCHours(2, 0, 0, 0); if (next.getTime() <= Date.now()) next.setUTCDate(next.getUTCDate() + 1); // the daily run: 02:00 UTC = 6:00 am Dubai
+  const hours = Math.max(1, Math.round((next.getTime() - Date.now()) / 3600000));
+  const read = instant === "ok" ? "Reading it should take about 10 minutes (the instant runner has been started)." : `Reading it waits for the next daily run at 6:00 am Dubai time, about ${hours} hour${hours === 1 ? "" : "s"} from now, and takes about 10 minutes.`;
+  const days = eng.verify_per_day > 0 ? Math.max(1, Math.ceil(rows / eng.verify_per_day)) : 0;
+  const sync = days ? `Rating every new company (revenue, ICP status, contacts) then takes up to about ${days} day${days === 1 ? "" : "s"} at ${eng.verify_per_day} a day; it is quicker when many are already in the app.` : "Revenue checks, ICP status and contacts then follow over the daily runs.";
+  return NextResponse.json({ ok: true, item, instant, estimate: { read, sync } });
+}
+
+// Only the Super Admin can delete an uploaded file. Companies already added from it stay in the app.
+export async function DELETE(req: Request) {
+  const user = await requireUser();
+  if (!user) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
+  const access = await getAccess(user);
+  if (!access.isOwner) return NextResponse.json({ error: "Only the Super Admin can delete an uploaded file." }, { status: 403 });
+  const { id } = await req.json().catch(() => ({}));
+  if (typeof id !== "string") return NextResponse.json({ error: "Bad request." }, { status: 400 });
+  const db = supabaseAdmin();
+  const items = await getItems(db), item = items.find((x) => x.id === id);
+  if (!item) return NextResponse.json({ error: "File not found." }, { status: 404 });
+  await db.storage.from("uploads").remove([item.path]);
+  const { error } = await db.from("settings").upsert({ key: "uploaded_lists", value: { items: items.filter((x) => x.id !== id) }, updated_at: new Date().toISOString() });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ ok: true });
 }

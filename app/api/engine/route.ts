@@ -321,6 +321,7 @@ export async function POST(req: Request) {
     await setSetting(db, "engine_jobs", st);
     return NextResponse.json(await summary(db));
   }
+  if (b.action === "cancel" && !access.isOwner) return NextResponse.json({ error: "Only the Super Admin can cancel a queued job." }, { status: 403 });
   if (b.action === "queue" || b.action === "cancel") {
     const st = await getSetting<{ jobs: Job[] }>(db, "engine_jobs", { jobs: [] });
     // A job still "running" an hour after it started has lost its session (often the plan's usage limit): close it so it stops blocking a new scan.

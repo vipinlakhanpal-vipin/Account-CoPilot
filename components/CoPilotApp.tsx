@@ -812,7 +812,9 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
             <small>{l}</small><b>{rows.length.toLocaleString()}</b><span className="kpi-go" aria-hidden="true">View →</span>
           </button>))}</div>
         <RegionCompareChart accounts={dashAccounts} onDrill={(title, rows) => setDrill({ title, kind: "accounts", rows })} />
-        <SourceChart accounts={dashAccounts} sources={data.sources} uploads={data.uploads || []} country={country} onDrill={(title, rows) => setDrill({ title, kind: "accounts", rows })} />
+        <div className="src-frame"><div className="rev-bands-head"><b>Where the data came from</b><span className="muted">Source records, how accounts entered the app, exchanges cited and your Excel uploads</span></div>
+          <SourceChart accounts={dashAccounts} sources={data.sources} uploads={data.uploads || []} country={country} onDrill={(title, rows) => setDrill({ title, kind: "accounts", rows })} />
+        </div>
         <div className="panel" style={{ marginTop: 16 }}>
           <h2>Existing Customers — Expansion &amp; Services</h2>
           <p className="note">Separate from ICP status above (that's for prospects still being evaluated) — these already run an S2P platform, so the question is what to sell them next, not whether to pursue them.</p>

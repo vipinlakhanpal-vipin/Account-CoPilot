@@ -56,8 +56,11 @@ export function SaveReportButton({ criteria, tableState, onSaved }:
     </span>;
 }
 
+import useIsOwner from "@/components/useIsOwner";
+
 export default function SavedReportsList({ items, onOpen, onDelete }:
   { items: SavedReport[]; onOpen: (c: Criteria, tf: TableFilters, name: string) => void; onDelete: (items: SavedReport[]) => void }) {
+  const isOwner = useIsOwner(); // only the Super Admin can delete
   async function del(it: SavedReport) {
     if (!(await ask({ title: "Delete this saved filter?", body: it.name, points: ["This can't be undone."], confirm: "Delete", tone: "danger" }))) return;
     try {
@@ -80,7 +83,7 @@ export default function SavedReportsList({ items, onOpen, onDelete }:
             <div className="saved-reports-row-actions">
               <button type="button" className="btn icon" title="Open this filter" aria-label="Open this filter"
                 onClick={() => onOpen(it.criteria, it.table_filters || { q: "", fv: [], cf: [] }, it.name)}><ViewIcon /></button>
-              <button type="button" className="btn icon danger" title="Delete this filter" aria-label="Delete this filter" onClick={() => del(it)}><DeleteIcon /></button>
+              {isOwner && <button type="button" className="btn icon danger" title="Delete this filter" aria-label="Delete this filter" onClick={() => del(it)}><DeleteIcon /></button>}
             </div>
           </div>
         ))}</div>

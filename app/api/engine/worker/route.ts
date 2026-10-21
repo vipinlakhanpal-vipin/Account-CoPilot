@@ -396,11 +396,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ uploads: withUrls.filter((x) => x.url) });
   }
   if (b.action === "finish_upload") {
-    const st = await get<{ items: { id: string; status: string; processed_at?: string; summary?: string }[] }>(db, "uploaded_lists", { items: [] });
+    const st = await get<{ items: { id: string; filename: string; region: string; status: string; processed_at?: string; summary?: string }[] }>(db, "uploaded_lists", { items: [] });
     const item = st.items.find((x) => x.id === b.id);
     if (!item) return NextResponse.json({ error: "Upload not found." }, { status: 404 });
     item.status = b.status; item.processed_at = now; item.summary = b.summary;
     await put(db, "uploaded_lists", st);
+    // The bell tells everyone the list has been read.
+    const lg = await get<{ entries: unknown[] }>(db, "engine_log", { entries: [] });
+    lg.entries.unshift({ at: now, summary: `Excel list read: ${item.filename} (${item.region}): ${b.status === "done" ? b.summary : `could not be read: ${b.summary}`}`, source: "upload", region: item.region });
+    await put(db, "engine_log", { entries: lg.entries.slice(0, 60) });
     invalidateAllData();
     return NextResponse.json({ ok: true });
   }

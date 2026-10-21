@@ -51,7 +51,10 @@ function Info({ text }: { text: string }) {
 const FREE_INFO = "Basic profile: revenue and ICP status from official sources. Costs nothing. A scheduled Claude session does it, usually in about 2 minutes.";
 const PAID_INFO = "Full profile: revenue, ERP and S2P signals, sources and contacts for your persona roles. Uses the Anthropic API and asks for your PIN.";
 
+import useIsOwner from "@/components/useIsOwner";
+
 export default function FindCompany({ initialMode, initialQuery, initialRegion }: { initialMode: Mode; initialQuery: string; initialRegion: string }) {
+  const isOwner = useIsOwner(); // only the Super Admin can cancel a queued search
   const [mode, setMode] = useState<Mode>(initialMode);
   const lastLogged = useRef("");
   const [info, setInfo] = useState<Info | null>(null);
@@ -459,7 +462,7 @@ export default function FindCompany({ initialMode, initialQuery, initialRegion }
                     return [<tr key={j.id}>
                       <td className="wrap">{parsed ? parsed[1].trim() : label}</td><td>{st}</td><td className="muted">{when}</td>
                       <td className="wrap">{j.result}{j.status === "done" && j.slug && <div><Link className="job-link" href={openAccount({ slug: j.slug, region: parsed ? parsed[2].trim() : j.region })}>View account →</Link></div>}</td>
-                      <td>{j.status === "queued" && <button type="button" className="btn tiny ghost" onClick={() => act({ action: "cancel", id: j.id }, "Search cancelled.")}>Cancel</button>}</td></tr>];
+                      <td>{j.status === "queued" && isOwner && <button type="button" className="btn tiny ghost" onClick={() => act({ action: "cancel", id: j.id }, "Search cancelled.")}>Cancel</button>}</td></tr>];
                   })}</tbody>
                 </table></div>)}
             </div>

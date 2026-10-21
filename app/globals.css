@@ -2889,3 +2889,10 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 .gauge-txt{font-size:10px;white-space:nowrap;color:var(--text)}
 @keyframes gauge-move{to{background-position:17px 0}}
 .hw-uploading{margin:10px 0 0;max-width:420px}
+
+/* Dashboard: a thin frame that groups the data-source charts so they read as their own section */
+.src-frame{margin:16px 0;padding:8px 10px 10px;border:1px solid var(--border,color-mix(in srgb,var(--text) 18%,transparent));border-radius:10px}
+.src-frame .grid2{margin-top:6px}
+
+.hw-staged{margin:10px 0 0;padding:10px 12px;border:1px solid color-mix(in srgb,#12A67A 45%,transparent);border-radius:8px;background:color-mix(in srgb,#12A67A 8%,transparent)}
+.hw-staged p{margin:0 0 8px}

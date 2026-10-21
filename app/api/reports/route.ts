@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { getAccess } from "@/lib/access";
 import type { Criteria } from "@/lib/icp";
 
 // Dashboard → Reports: a saved search/filter, re-run live (not a frozen snapshot) whenever it's opened again.
@@ -44,6 +45,7 @@ export async function POST(req: Request) {
 export async function DELETE(req: Request) {
   const user = await requireUser();
   if (!user) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
+  if (!(await getAccess(user)).isOwner) return NextResponse.json({ error: "Only the Super Admin can delete a saved filter." }, { status: 403 });
   const { id } = await req.json().catch(() => ({}));
   if (typeof id !== "string") return NextResponse.json({ error: "Bad request." }, { status: 400 });
   const db = supabaseAdmin();

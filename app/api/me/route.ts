@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { requireUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { getAccess } from "@/lib/access";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +22,7 @@ export async function GET() {
   }
   return NextResponse.json({
     email: user.email, name: meta.full_name || "", joined_from: meta.joined_from || "Not recorded",
-    joined_at: user.created_at, last_sign_in: user.last_sign_in_at, invited_by: meta.invited_by || "",
+    joined_at: user.created_at, last_sign_in: user.last_sign_in_at, invited_by: meta.invited_by || "", isOwner: (await getAccess(user)).isOwner,
   });
 }
 

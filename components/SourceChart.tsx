@@ -29,13 +29,8 @@ function Rows({ items, max, onPick }: { items: { name: string; n: number; sub?: 
   );
 }
 
-/** A file name as its first two words (without .xlsx); the full name shows on hover. */
-const shortFile = (name: unknown) => {
-  const base = String(name ?? "").replace(/\.(xlsx|xls)$/i, "").trim(), words = base.split(/[\s_]+/).filter(Boolean);
-  return words.length > 2 ? `${words.slice(0, 2).join(" ")}…` : base;
-};
-
 import ProgressGauge from "@/components/ProgressGauge";
+import { shortFile } from "@/lib/shortFile";
 
 export default function SourceChart({ accounts, sources, uploads, country, onDrill }: { accounts: Row[]; sources: Row[]; uploads: Row[]; country: string; onDrill: Drill }) {
   const byId = useMemo(() => new Map(accounts.map((a) => [a.id, a])), [accounts]);
