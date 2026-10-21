@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.31";
+export const APP_VERSION = "6.32";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.32", date: "2026-10-21", notes: "Dashboard: net revenue tiles above the other tiles, acting as a filter.", changes: [
+      { what: "A new row of Net revenue tiles sits above the Dashboard tiles: All revenue, Under $50M, $50M-$100M, $100M-$200M, $200M-$500M, Over $500M and No revenue yet, each with its count. Click a band and every tile, chart and drill-down below narrows to accounts in that band; click it again to clear. It uses the best revenue figure we have (verified first, then estimates), follows the country tab and the Filters panel, and does not affect the other tabs", where: "Dashboard", why: "You wanted to see the data by net revenue band" },
+  ] },
   { version: "6.31", date: "2026-10-21", notes: "Score notes show the formula and where the points available come from, in a smaller, simpler box.", changes: [
       { what: "The framed note beside each account's scores now shows the formula (for example 35 ÷ 70 × 100 = 50%) and how the points available are built (30 + 15 + 15 + 10 = 70), says that every score is a percentage from 0 to 100, and uses a smaller font and shorter text so the box fits. The same lines show on the account page", where: "PDF report and account page", why: "The first version did not say where the total points came from" },
   ] },

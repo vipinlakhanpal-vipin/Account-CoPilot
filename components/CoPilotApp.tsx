@@ -1,6 +1,7 @@
 "use client";
 import SourceChart from "@/components/SourceChart";
 import { erpText } from "@/lib/techApps";
+import { REV_BANDS, bandOf, type RevBand } from "@/lib/revBands";
 import { explainScore, type ScoreName } from "@/lib/scoreExplain";
 import { addedAt, enrichedAt, dayKey } from "@/lib/dates";
 import { ask, paidFetch, notify } from "@/components/Confirm";
@@ -521,7 +522,14 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
   }
   // Criteria: text fields filter companies; everything else is scored so accounts are ranked, not hidden.
   const contactSet = Object.entries(criteria.contact).some(([, v]) => (Array.isArray(v) ? v.length : v));
-  const A = useMemo(() => data.accounts.filter((a) => companyPasses(a, criteria)), [data.accounts, criteria]);
+  // Dashboard net revenue tiles: picking a band narrows every count and chart on the Dashboard to accounts in that band (other tabs are not affected).
+  const [band, setBand] = useState<RevBand | "">("");
+  const inBand = (a: Row) => !band || bandOf(bestRevenue(a).v) === band;
+  const Aall = useMemo(() => data.accounts.filter((a) => companyPasses(a, criteria)), [data.accounts, criteria]);
+  const bandCounts = useMemo(() => { const m: Record<string, number> = {}; for (const a of Aall) { const k = bandOf(bestRevenue(a).v); m[k] = (m[k] || 0) + 1; } return m; }, [Aall]);
+  const dashBand = tab === "dashboard" ? band : "";
+  const A = useMemo(() => (dashBand ? Aall.filter((a) => bandOf(bestRevenue(a).v) === dashBand) : Aall), [Aall, dashBand]);
+  const dashAccounts = useMemo(() => (dashBand ? data.accounts.filter((a) => bandOf(bestRevenue(a).v) === dashBand) : data.accounts), [data.accounts, dashBand]);
   const P = useMemo(() => { const ids = new Set(A.map((a) => a.id));
     return data.contacts.filter((p) => ids.has(p.company_id) && (!contactSet || contactMatches(p, criteria, data.history, famKey))); }, [data, A, criteria, contactSet]);
   const people = useMemo(() => buildPeople(P), [P]);
@@ -788,12 +796,21 @@ export default function CoPilotApp({ data: all, home = DEFAULT_COUNTRY, isSuper 
 
     view = (
       <>
+        <div className="rev-bands">
+          <div className="rev-bands-head"><b>Net revenue</b><span className="muted">{band ? `Showing only ${REV_BANDS.find((b) => b.key === band)?.label}. Click it again to show all.` : "Click a band to narrow everything below to it. Uses the best figure we have: verified first, then estimates."}</span></div>
+          <div className="kpis rev-kpis">
+            <button type="button" className={`kpi c1${!band ? " on" : ""}`} onClick={() => setBand("")} aria-pressed={!band}><small>All revenue</small><b>{Aall.length.toLocaleString()}</b></button>
+            {REV_BANDS.map((b, i) => (
+              <button type="button" key={b.key} className={`kpi c${(i + 2) % 8 + 1}${band === b.key ? " on" : ""}`} onClick={() => setBand(band === b.key ? "" : b.key)} aria-pressed={band === b.key}
+                title={`${(bandCounts[b.key] || 0).toLocaleString()} accounts`}><small>{b.label}</small><b>{(bandCounts[b.key] || 0).toLocaleString()}</b></button>))}
+          </div>
+        </div>
         <div className="kpis">{kpis.map(([l, rows, kind], i) => (
           <button type="button" key={l} className={`kpi c${(i % 8) + 1}`} onClick={() => setDrill({ title: l, kind, rows })} title={`Show the ${rows.length.toLocaleString()} records`}>
             <small>{l}</small><b>{rows.length.toLocaleString()}</b><span className="kpi-go" aria-hidden="true">View →</span>
           </button>))}</div>
-        <RegionCompareChart accounts={data.accounts} onDrill={(title, rows) => setDrill({ title, kind: "accounts", rows })} />
-        <SourceChart accounts={data.accounts} sources={data.sources} uploads={data.uploads || []} country={country} onDrill={(title, rows) => setDrill({ title, kind: "accounts", rows })} />
+        <RegionCompareChart accounts={dashAccounts} onDrill={(title, rows) => setDrill({ title, kind: "accounts", rows })} />
+        <SourceChart accounts={dashAccounts} sources={data.sources} uploads={data.uploads || []} country={country} onDrill={(title, rows) => setDrill({ title, kind: "accounts", rows })} />
         <div className="panel" style={{ marginTop: 16 }}>
           <h2>Existing Customers — Expansion &amp; Services</h2>
           <p className="note">Separate from ICP status above (that's for prospects still being evaluated) — these already run an S2P platform, so the question is what to sell them next, not whether to pursue them.</p>
