@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.43";
+export const APP_VERSION = "6.44";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.44", date: "2026-10-21", notes: "Every company in the PDF has a number, its sections are numbered 1.1, 1.2 ... and the lines inside them 1, 2, 3, so any detail can be found by number.", changes: [
+      { what: "Each company's pages now open with its number (the same \"#\" as in the Companies table and the Excel \"Companies (same as PDF)\" sheet). Its sections are numbered with that number first, for example 7.1 Facts, 7.2 Procurement and IT maturity, 7.3 Scores, and the lines inside a section are numbered 1, 2, 3, including the facts, recommended actions, signals, apps, stakeholders and evidence. The intro page says how the numbers work", where: "PDF report (every company page)", why: "You wanted to track every detail of the whole document by number" },
+  ] },
   { version: "6.43", date: "2026-10-21", notes: "The line saying how many score lines earned points is highlighted in amber, and examples start on their own line.", changes: [
       { what: "In the framed note beside the scores, the sentence that says how many numbered lines scored (for example \"All 7 numbered lines scored 0, so the total is 0 and the score is 0%\") now has an amber highlight, in the PDF and on the account page score cards", where: "PDF report and account page", why: "It was missing from the PDF in v6.42, and you want that line to stand out" },
       { what: "In the score notes, \"Example: 35 out of 70 is half, so 50%.\" now starts on its own line instead of continuing the paragraph above it, in the PDF note and in the Rank help tip", where: "PDF report and the Rank help tip", why: "You asked for every example to be a fresh line" },

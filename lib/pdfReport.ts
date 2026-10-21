@@ -29,6 +29,8 @@ const day = (v: unknown) => s(v).slice(0, 10);
 
 class Writer {
   pdf!: PDFDocument; font!: PDFFont; bold!: PDFFont; mono!: PDFFont; page!: PDFPage; y = 0; chars = new Set<number>();
+  // Numbering inside a company: co = the company's number (as in the "Companies in this report" table), secNo = section 1.1, 1.2 ..., itemNo = line 1, 2, 3 inside a section. co = 0 outside company pages.
+  co = 0; secNo = 0; itemNo = 0;
   static async create() {
     const w = new Writer();
     w.pdf = await PDFDocument.create();
@@ -86,11 +88,12 @@ class Writer {
   bullet(text: unknown, indent = 8) {
     const lead = 9.5 * 1.35;
     this.ensure(lead);
-    const first = this.wrap(s(text), this.font, 9.5, CW - indent - 8);
+    const mark = this.co ? `${++this.itemNo}.` : "-", gutter = this.co ? 18 : 8;
+    const first = this.wrap(s(text), this.font, 9.5, CW - indent - gutter);
     first.forEach((ln, i) => {
       this.ensure(lead); this.y -= lead;
-      if (i === 0) this.page.drawText("-", { x: M + indent, y: this.y, size: 9.5, font: this.font, color: MUTED });
-      this.page.drawText(ln, { x: M + indent + 8, y: this.y, size: 9.5, font: this.font, color: INK });
+      if (i === 0) this.page.drawText(mark, { x: M + indent, y: this.y, size: 9.5, font: this.font, color: MUTED });
+      this.page.drawText(ln, { x: M + indent + gutter, y: this.y, size: 9.5, font: this.font, color: INK });
     });
     this.y -= 1;
   }
@@ -98,18 +101,25 @@ class Writer {
   /** `keep` is the room the heading needs below it, so a heading never ends a page with its content on the next. */
   h2(t: string, keep = 100) {
     this.ensure(keep); this.y -= 6;
-    this.p(t.toUpperCase(), { size: 9.5, bold: true, color: TEAL, gap: 1 });
+    this.itemNo = 0;
+    this.p((this.co ? `${this.co}.${++this.secNo}  ${t}` : t).toUpperCase(), { size: 9.5, bold: true, color: TEAL, gap: 1 });
     this.y -= 3;
     this.page.drawLine({ start: { x: M, y: this.y }, end: { x: W - M, y: this.y }, thickness: 0.6, color: LINE }); this.y -= 5;
+  }
+  /** A numbered bold sub-heading inside a company page (for example 7.4 Why this account was selected). */
+  sub(t: string) {
+    if (!this.co) { this.p(t, { bold: true }); return; }
+    this.itemNo = 0;
+    this.p(`${this.co}.${++this.secNo}  ${t}`, { bold: true });
   }
   kv(label: string, value: unknown, lw = 96) {
     const v = this.clean(value);
     if (!v) return;
-    const lead = 9.5 * 1.35, lines = this.wrap(v, this.font, 9.5, CW - lw);
+    const lead = 9.5 * 1.35, lines = this.wrap(v, this.font, 9.5, CW - lw), no = this.co ? ++this.itemNo : 0;
     this.ensure(lead);
     lines.forEach((ln, i) => {
       this.ensure(lead); this.y -= lead;
-      if (i === 0) this.page.drawText(this.clean(label), { x: M, y: this.y, size: 8.5, font: this.bold, color: MUTED });
+      if (i === 0) this.page.drawText(this.clean(this.co ? `${no}. ${label}` : label), { x: M, y: this.y, size: 8.5, font: this.bold, color: MUTED });
       this.page.drawText(ln, { x: M + lw, y: this.y, size: 9.5, font: this.font, color: INK });
     });
     this.y -= 1;
@@ -277,7 +287,7 @@ export async function buildReport(all: AllData, def: unknown, opt: ReportOptions
   w.p(`Generated ${new Date().toISOString().slice(0, 16).replace("T", " ")} UTC by ${opt.generatedBy || "a team member"}  |  ${picked.length} of ${total} matching companies`, { size: 9, color: MUTED, gap: 8 });
   const regions = opt.region === "All" ? [...new Set(picked.map((x) => regionOf(x.a.country)))] : [opt.region];
   // The company comes first. How the report was produced and how the points work are explained on the last pages.
-  w.p("Each company page explains its scores in a framed note beside the points. How this report was produced, and the full scoring rules, are at the end.", { size: 8.5, color: MUTED, gap: 8 });
+  w.p("Each company has a number (1, 2, 3 ...) that matches the table below and the Excel list. Its sections are numbered 1.1, 1.2 ... and the lines inside a section 1, 2, 3, so any detail can be found by number. Each company page explains its scores in a framed note beside the points. How this report was produced, and the full scoring rules, are at the end.", { size: 8.5, color: MUTED, gap: 8 });
 
   const curOf = (a: Row) => (rulesFor(def, a.country) as Rules).currency as Cur;
   const contactCos = new Set(all.contacts.map((p) => p.company_id));
@@ -295,6 +305,7 @@ export async function buildReport(all: AllData, def: unknown, opt: ReportOptions
 
   for (const [idx, { a, m, o, f, c }] of picked.entries()) {
     if (idx > 0 || !single) w.newPage(); // a single-company report starts right under the title
+    w.co = idx + 1; w.secNo = 0; w.itemNo = 0; // the company's number is the "#" in the Companies table and the Excel list
     const people = all.contacts.filter((p) => p.company_id === a.id);
     const seen = new Set<string>(), cs = people.filter((p) => { const k = `${s(p.full_name)}|${s(p.title_verbatim)}`.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; })
       .sort((x, y) => (s(x.business_unit) ? 1 : 0) - (s(y.business_unit) ? 1 : 0) || s(x.business_unit).localeCompare(s(y.business_unit)) || s(x.contact_tier).localeCompare(s(y.contact_tier)));
@@ -308,7 +319,7 @@ export async function buildReport(all: AllData, def: unknown, opt: ReportOptions
     const hs = a.profile?.["HubSpot"] as Record<string, unknown> | undefined;
 
     w.p(`${s(a.exchange)} ${s(a.ticker)} ${s(a.industry)}`.trim(), { size: 8.5, color: MUTED, gap: 0 });
-    w.h1(s(a.company_name));
+    w.h1(`${idx + 1}. ${s(a.company_name)}`);
     w.pill(s(a.icp_status) || "Unknown", STATUS_COLOR[s(a.icp_status)] || MUTED);
 
     w.h2("Facts");
@@ -333,7 +344,7 @@ export async function buildReport(all: AllData, def: unknown, opt: ReportOptions
 
     scoresWithFrame(w, [["ICP Match", m], ["Opportunity", o], ["Coupa Fit", f]]);
     const why = whySelected(a, c, m, spend);
-    if (why.length) { w.p("Why this account was selected", { bold: true }); why.forEach((x) => w.bullet(x)); }
+    if (why.length) { w.sub("Why this account was selected"); why.forEach((x) => w.bullet(x)); }
     if (spend) {
       w.h2("Procurement & spend intelligence (ESTIMATE)", 230);
       w.p(`Annual addressable spend is revenue x a sector benchmark, split by category. Amounts in USD${cur.code === "USD" ? "" : `, with ${cur.code} in brackets (at ${cur.per_usd} per USD)`}.`, { size: 8.5, color: MUTED, gap: 4 });
@@ -357,7 +368,7 @@ export async function buildReport(all: AllData, def: unknown, opt: ReportOptions
       w.p(spend.basis, { size: 8, color: MUTED });
     }
     const rec = recommendedActions(a, cs, f);
-    w.p("Recommended actions", { bold: true });
+    w.sub("Recommended actions");
     w.kv("Connect with", rec.stakeholders.length ? rec.stakeholders.join("; ") : "No buying-committee contact on file yet: research the CPO / CFO.");
     w.kv("Messaging", rec.messaging);
     w.kv("Questions", rec.questions.join(" | "));
@@ -387,10 +398,10 @@ export async function buildReport(all: AllData, def: unknown, opt: ReportOptions
     if (a.account_notes) w.p(a.account_notes, { size: 8.5, color: MUTED });
 
     w.h2(`Stakeholders (${cs.length})`, 150);
-    if (cs.length) w.table(hasUnit ? ["Name", "Property / unit", "Title", "Tier", "Email", "Phone", "LinkedIn"] : ["Name", "Title", "Tier", "Email", "Phone", "LinkedIn"],
-      cs.slice(0, 25).map((p) => { const li = s(p.linkedin_url).replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
-        return hasUnit ? [s(p.full_name), s(p.business_unit) || "Main account", s(p.title_verbatim), s(p.contact_tier), s(p.email), s(p.phone), li] : [s(p.full_name), s(p.title_verbatim), s(p.contact_tier), s(p.email), s(p.phone), li]; }),
-      hasUnit ? [0.13, 0.11, 0.2, 0.05, 0.17, 0.13, 0.21] : [0.15, 0.22, 0.06, 0.2, 0.15, 0.22], 8);
+    if (cs.length) w.table(hasUnit ? ["#", "Name", "Property / unit", "Title", "Tier", "Email", "Phone", "LinkedIn"] : ["#", "Name", "Title", "Tier", "Email", "Phone", "LinkedIn"],
+      cs.slice(0, 25).map((p, pi) => { const li = s(p.linkedin_url).replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
+        return hasUnit ? [String(pi + 1), s(p.full_name), s(p.business_unit) || "Main account", s(p.title_verbatim), s(p.contact_tier), s(p.email), s(p.phone), li] : [String(pi + 1), s(p.full_name), s(p.title_verbatim), s(p.contact_tier), s(p.email), s(p.phone), li]; }),
+      hasUnit ? [0.04, 0.12, 0.11, 0.19, 0.05, 0.16, 0.12, 0.21] : [0.04, 0.14, 0.21, 0.06, 0.19, 0.14, 0.22], 8);
     else w.p("No stakeholder contacts are on file for this company yet. The daily engine finds companies and verifies revenue; it does not collect people. Contacts reach the app from your reference workbook or from Seamless enrichment.", { size: 8.5, color: MUTED });
 
     if (conf.length) { w.h2(`Conflicts retained (${conf.length})`); w.p("Sources disagree on one or more fields for this company. The app keeps both values; open the account in the app to review them.", { size: 8.5, color: MUTED }); }
@@ -399,6 +410,8 @@ export async function buildReport(all: AllData, def: unknown, opt: ReportOptions
     srcs.slice(0, 20).forEach((x) => w.bullet(`[${s(x.source_tier)}] ${s(x.source)}${x.date_published ? ` (${s(x.date_published)})` : ""} - ${s(x.information_found)}${x.url ? ` - ${s(x.url)}` : ""}`));
     if (srcs.length > 20) w.p(`+ ${srcs.length - 20} more sources in the app.`, { size: 8.5, color: MUTED });
   }
+
+  w.co = 0; // numbering is for the company pages only
 
   // A search that names a product (Coupa, SAP Ariba, another platform) also gets a Playbook and a Discovery Questions section.
   if (opt.product?.products.length) {
