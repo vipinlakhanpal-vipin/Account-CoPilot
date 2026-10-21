@@ -2840,3 +2840,6 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 .agame-legend .agame-ask,.agame-legend .agame-play{font-size:var(--lf);padding:.5em .8em;border-width:max(1.5px,.14em)}
 .agame-actions{gap:calc(var(--lf) * .5);margin-bottom:calc(var(--lf) * .4)}
 .agame-legend .agame-more{font-size:calc(var(--lf) * .92)}
+
+/* v6.18: the wizard drop zone highlights while a file is dragged over it */
+.hw-dropzone.drag{border-style:solid;border-color:var(--teal);background:color-mix(in srgb,var(--teal) 14%,var(--accent-soft))}

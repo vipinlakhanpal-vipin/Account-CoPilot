@@ -94,6 +94,7 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
   const visibleRegions = useMemo(() => REGIONS.filter((r) => access.isSuper || access.regions.includes(r.key)), [access]);
   const [hasListBy, setHasListBy] = useState<Record<string, "yes" | "no">>({});
   const [uploadBusy, setUploadBusy] = useState(false);
+  const [dragOn, setDragOn] = useState(false);
   const [uploadMsg, setUploadMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [domainsBy, setDomainsBy] = useState<Record<string, string[]>>({});
   const [sources, setSources] = useState<Sources>({ checked: [], custom: [] });
@@ -365,7 +366,11 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
                     <p className="hw-lead hw-lead-justify">Already have a spreadsheet? You don&apos;t need to reshape it into the template — as long as it&apos;s
                       one worksheet, one company per row, with column headers in the first row, just drop it in below as-is. It can have as many columns
                       as you like; Account CoPilot picks out the fields it needs (company name, website, country, industry, HQ city) and leaves the rest alone.</p>
-                    <label className="hw-dropzone">
+                    <label className={`hw-dropzone${dragOn ? " drag" : ""}`}
+                      onDragEnter={(e) => { e.preventDefault(); if (!uploadBusy) setDragOn(true); }}
+                      onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; }}
+                      onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDragOn(false); }}
+                      onDrop={(e) => { e.preventDefault(); setDragOn(false); const f = e.dataTransfer.files?.[0]; if (f && !uploadBusy) uploadFile(f); }}>
                       <input type="file" accept=".xlsx,.xls" style={{ display: "none" }} disabled={uploadBusy}
                         onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadFile(f); e.target.value = ""; }} />
                       <span className="hw-dropzone-icon">📊</span>

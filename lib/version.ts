@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.17";
+export const APP_VERSION = "6.18";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.18", date: "2026-10-21", notes: "Setup wizard: dropping an Excel file onto the upload box now uploads it.", changes: [
+      { what: "The upload box on step 2 now accepts a file dragged onto it (it only worked by clicking before, and dropping a file made the browser open or download it instead). The box lights up while you drag over it; the file still must be .xlsx or .xls, one worksheet", where: "Setup wizard, step 2 (Yes, I have one)", why: "Dropped files were not accepted" },
+  ] },
   { version: "6.17", date: "2026-10-21", notes: "Setup wizard step 2: the uploaded-lists line only shows where it makes sense.", changes: [
       { what: "On step 2 (Add data), the line \"Lists uploaded for <country>\" and its \"Nothing uploaded yet\" note now show only when you choose \"Yes, I have one\", or when lists were already uploaded for that country. Choosing \"No — help me build one from scratch\" with nothing uploaded shows just the \"Nothing to do here\" card", where: "Setup wizard, step 2", why: "Talking about uploaded lists made no sense after choosing to build from scratch" },
   ] },
