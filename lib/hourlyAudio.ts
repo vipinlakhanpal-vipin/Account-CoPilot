@@ -8,6 +8,12 @@ export const ALARMS = [
   { key: "marimba", label: "Marimba" },
   { key: "harp", label: "Gentle harp" },
   { key: "bowl", label: "Singing bowl" },
+  { key: "kalimba", label: "Kalimba" },
+  { key: "glass", label: "Glass ping" },
+  { key: "three", label: "Three-note chime" },
+  { key: "church", label: "Church bell" },
+  { key: "twinkle", label: "Twinkle" },
+  { key: "gong", label: "Soft gong" },
 ] as const;
 export type AlarmKey = (typeof ALARMS)[number]["key"];
 
@@ -28,6 +34,12 @@ export function playAlarm(kind: string) {
     else if (kind === "marimba") { [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.14, 0.45, 0.3, "triangle", [[1, 1], [4, 0.08]])); total = 1.5; }
     else if (kind === "harp") { [1047, 880, 784, 659, 523].forEach((f, i) => tone(f, i * 0.18, 1.6, 0.16, "sine", [[1, 1], [2, 0.18]])); total = 3; }
     else if (kind === "bowl") { tone(220, 0, 4.5, 0.3, "sine", [[1, 1], [2.01, 0.5], [3.02, 0.25]]); total = 5; }
+    else if (kind === "kalimba") { [659, 784, 988, 784].forEach((f, i) => tone(f, i * 0.22, 1.1, 0.22, "sine", [[1, 1], [6, 0.06]])); total = 2.5; }
+    else if (kind === "glass") { tone(1568, 0, 1.8, 0.2, "sine", [[1, 1], [2.4, 0.3], [4.1, 0.12]]); tone(1568, 0.45, 1.8, 0.12, "sine", [[1, 1], [2.4, 0.3]]); total = 2.5; }
+    else if (kind === "three") { [523.25, 659.25, 783.99].forEach((f, i) => tone(f, i * 0.3, 1.4, 0.26, "sine", [[1, 1], [2, 0.2]])); total = 2.6; }
+    else if (kind === "church") { [0, 1.6, 3.2].forEach((t) => tone(392, t, 2.2, 0.3, "sine", [[1, 1], [2.4, 0.4], [4.2, 0.2], [0.5, 0.35]])); total = 5.6; }
+    else if (kind === "twinkle") { [1319, 1568, 1976, 1568, 2093].forEach((f, i) => tone(f, i * 0.11, 0.7, 0.12, "sine", [[1, 1], [2, 0.15]])); total = 1.6; }
+    else if (kind === "gong") { tone(130.8, 0, 5, 0.38, "sine", [[1, 1], [1.5, 0.3], [2.02, 0.4], [3.1, 0.2]]); total = 5.5; }
     else { tone(784, 0, 0.32, 0.3); tone(659, 0.38, 0.5, 0.3); total = 1.5; } // cuckoo
     setTimeout(() => c.close().catch(() => {}), total * 1000 + 500);
   } catch { /* the browser blocks sound until the page has had a click */ }

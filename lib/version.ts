@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.54";
+export const APP_VERSION = "6.55";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.55", date: "2026-10-21", notes: "Six more hourly alarms: kalimba, glass ping, three-note chime, church bell, twinkle and soft gong.", changes: [
+      { what: "The alarm list in Aria Setup now has 13 sounds: the earlier seven plus Kalimba, Glass ping, Three-note chime, Church bell, Twinkle and Soft gong. Picking one plays it", where: "Aria Setup, Alarm", why: "More choice for the hourly reminder" },
+  ] },
   { version: "6.54", date: "2026-10-21", notes: "Clicking Dashboard now opens All regions instead of UAE.", changes: [
       { what: "The Dashboard tab (and the logo) opens on All regions for the Super Admin and Admins, with every region's tile in the bar to narrow it down. It no longer jumps to UAE or keeps the region you were last on. The other tabs still keep the region you picked. A Standard User still starts on their own region", where: "Dashboard", why: "You wanted the whole picture first" },
   ] },
