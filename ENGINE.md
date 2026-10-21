@@ -26,10 +26,10 @@ uploaded from the Setup Wizard's "Add Data" step, waiting to be read in. If it's
 2. The header row's exact wording varies — map columns by meaning, not literal text: a company-name column (e.g. "Company Name", "Company", "Name")
    is required; website, country, industry, HQ city and notes columns are optional and may be named slightly differently or missing entirely.
    Skip a row with no usable company name. Never invent a value for a blank cell.
-3. If `region` isn't given for a row, use the upload's own `region` field. Do not research or verify revenue for these — they're the user's own list,
+3. An upload belongs to ONE country, its `region` field (the user chose it in the Setup wizard). A row with no country is filed under that country; a row whose country is another region is left out (the app skips it and says so), never filed elsewhere. Do not research or verify revenue for these — they're the user's own list,
    added as-is (same principle as the original workbook import in CLAUDE.md: reference data is kept verbatim, never pattern-guessed or invented).
 4. Write the extracted rows to a file (e.g. `data/verification/upload_rows.json`): `[{"name","website","country","industry","hq_city","notes"}]`,
-   then run `node scripts/engine_client.mjs add_upload data/verification/upload_rows.json "<original filename>"`. It skips anything already in the
+   then run `node scripts/engine_client.mjs add_upload data/verification/upload_rows.json "<original filename>" <upload id>` (the id keeps the rows in the upload's country). It skips anything already in the
    app (by name or domain) the same way `add` does.
 5. Finish with `node scripts/engine_client.mjs upload_done <id> done "<N added, M already in the app>"` (or `upload_done <id> error "<reason>"`
    if the file couldn't be read at all — e.g. wrong format, no recognizable company-name column).

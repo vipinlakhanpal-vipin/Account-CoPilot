@@ -23,7 +23,7 @@
 //   node scripts/engine_client.mjs pitch_facts <slug>                  → writes data/verification/pitch_facts.json: the facts on one account for a pitch plan (a "pitch" job)
 //   node scripts/engine_client.mjs save_pitch <slug> <file.txt>        → saves the written pitch plan on the account
 //   node scripts/engine_client.mjs uploads                              → writes data/verification/uploaded_lists.json: [{"id","filename","region","url"}] waiting to be read
-//   node scripts/engine_client.mjs add_upload <file.json> <filename>    → imports one upload's extracted rows (format: see ENGINE.md "Reading an uploaded list")
+//   node scripts/engine_client.mjs add_upload <file.json> <filename> [upload id]    → imports one upload's extracted rows (format: see ENGINE.md "Reading an uploaded list")
 //   node scripts/engine_client.mjs upload_done <id> done|error "<summary>"
 import fs from "node:fs";
 import path from "node:path";
@@ -58,7 +58,7 @@ else if (cmd === "queue") {
   const list = JSON.parse(fs.readFileSync(a || "data/verification/new_companies.json", "utf8"));
   const { added, skipped, skipped_detail = [] } = await call({ action: "add_companies", companies: list });
   added.forEach((x) => console.log(`added ${x.company_name} (${x.slug})`));
-  skipped_detail.forEach((x) => console.log(`SKIPPED ${x.name}: already in the app as "${x.matches}"`));
+  skipped_detail.forEach((x) => console.log(`SKIPPED ${x.name}: ${/^a different country/.test(x.matches) ? x.matches : `already in the app as "${x.matches}"`}`));
   console.log(`${added.length} added, ${skipped} already in the app${skipped ? " (find replacements so the day still adds 5)" : ""}`);
 } else if (cmd === "hold") {
   const list = JSON.parse(fs.readFileSync(a || "data/verification/new_companies.json", "utf8"));
@@ -141,9 +141,9 @@ else if (cmd === "queue") {
   fs.writeFileSync("data/verification/uploaded_lists.json", JSON.stringify(uploads, null, 1));
   console.log(`${uploads.length} upload(s) waiting → data/verification/uploaded_lists.json (each has an "url" to download)`);
 } else if (cmd === "add_upload") {
-  // add_upload <file.json> <original filename>  → file.json: [{"name","website","country","industry","hq_city","notes"}]
+  // add_upload <file.json> <original filename> [upload id]  → the upload id keeps the rows in that upload's country. file.json: [{"name","website","country","industry","hq_city","notes"}]
   const list = JSON.parse(fs.readFileSync(a, "utf8"));
-  const { added, skipped, skipped_detail = [] } = await call({ action: "add_uploaded_companies", filename: b, companies: list });
+  const { added, skipped, skipped_detail = [] } = await call({ action: "add_uploaded_companies", filename: b, upload_id: c || undefined, companies: list });
   added.forEach((x) => console.log(`added ${x.company_name} (${x.slug})`));
   skipped_detail.forEach((x) => console.log(`SKIPPED ${x.name}: already in the app as "${x.matches}"`));
   console.log(`${added.length} added, ${skipped} already in the app`);

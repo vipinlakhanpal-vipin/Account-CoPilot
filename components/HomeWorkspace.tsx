@@ -78,7 +78,7 @@ const STEPS: { n: number; label: string; icon: keyof typeof ICON; cls: string; g
   { n: 6, label: "Review", icon: "clipboard", cls: "hw-step--review" },
 ];
 
-export default function HomeWorkspace({ access, layout = "stack", forceStep, onStepChange }: { access: Access; layout?: "stack" | "columns" | "about" | "wizard"; forceStep?: number; onStepChange?: (n: number) => void }) {
+export default function HomeWorkspace({ access, layout = "stack", forceStep, onStepChange, focus: focusProp }: { access: Access; layout?: "stack" | "columns" | "about" | "wizard"; forceStep?: number; onStepChange?: (n: number) => void; focus?: string }) {
   // Two stacked, collapsible blocks (About, then Setup Wizard); the choice is remembered in this browser.
   const [aboutOpen, setAboutOpen] = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
@@ -93,15 +93,15 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
   const [def, setDef] = useState<Definition | null>(null);
   const visibleRegions = useMemo(() => REGIONS.filter((r) => access.isSuper || access.regions.includes(r.key)), [access]);
   const [regions, setRegions] = useState<string[]>([]);
-  const [hasList, setHasList] = useState<"yes" | "no" | "">("");
+  const [hasListBy, setHasListBy] = useState<Record<string, "yes" | "no">>({});
   const [uploadBusy, setUploadBusy] = useState(false);
   const [uploadMsg, setUploadMsg] = useState<{ ok: boolean; text: string } | null>(null);
-  const [domains, setDomains] = useState<string[]>([]);
+  const [domainsBy, setDomainsBy] = useState<Record<string, string[]>>({});
   const [sources, setSources] = useState<Sources>({ checked: [], custom: [] });
   const [newSource, setNewSource] = useState("");
-  const [activateNow, setActivateNow] = useState(true);
+  const [activateBy, setActivateBy] = useState<Record<string, boolean>>({});
   const [wantsProfiling, setWantsProfiling] = useState<"free" | "paid" | "">("");
-  const [draft, setDraft] = useState<Draft>({ discoverPerDay: 5, verifyPerDay: 25 });
+  const [draftBy, setDraftBy] = useState<Record<string, Draft>>({});
   const [sizeDraft, setSizeDraft] = useState<Record<string, SizeDraft>>({});
   // Each region keeps its own size rule — Europe or the USA can carry a higher bar than the Gulf. Falls back to that
   // region's own last-saved value (every region always has one, even unconfigured ones — DEFAULT_RULES), not a shared draft.
@@ -109,6 +109,26 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
     ? { revenue: def.regions[key].revenue.min_usd_m, employees: def.regions[key].employees.min, listing: def.regions[key].listing, entity: def.regions[key].entity_level }
     : { revenue: 250, employees: 100, listing: "any", entity: "group_hq" });
   const setSize = (key: string, patch: Partial<SizeDraft>) => setSizeDraft((cur) => ({ ...cur, [key]: { ...sizeFor(key), ...patch } }));
+
+  // From step 2 on the wizard works on ONE country, chosen above the tabs: its upload, its targeting domains, its daily plan and its on/off switch.
+  // Each country keeps its own draft (starting from what is saved for it), so switching country never mixes them up.
+  const focus = focusProp && visibleRegions.some((r) => r.key === focusProp) ? focusProp : (regions[0] || visibleRegions[0]?.key || "");
+  const focusName = REGIONS.find((r) => r.key === focus)?.name || focus;
+  const defDomains = (k: string) => { const r = def?.regions[k]; return r ? OPTIONS.domains.filter((x) => r.personas.departments.includes(x.department)).map((x) => x.key) : []; };
+  const defDraft = (k: string): Draft => { const r = def?.regions[k]; return { discoverPerDay: r?.engine.discover_per_day || 5, verifyPerDay: r?.engine.verify_per_day || 25 }; };
+  const defActive = (k: string) => def?.regions[k]?.status === "active";
+  const planFor = (k: string) => ({ domains: domainsBy[k] ?? defDomains(k), draft: draftBy[k] ?? defDraft(k), activate: activateBy[k] ?? defActive(k) });
+  const domains = planFor(focus).domains, draft = planFor(focus).draft, activateNow = planFor(focus).activate, hasList = hasListBy[focus] || "";
+  const setDomains = (u: string[] | ((c: string[]) => string[])) => setDomainsBy((cur) => ({ ...cur, [focus]: typeof u === "function" ? u(cur[focus] ?? defDomains(focus)) : u }));
+  const setDraft = (u: Draft | ((c: Draft) => Draft)) => setDraftBy((cur) => ({ ...cur, [focus]: typeof u === "function" ? u(cur[focus] ?? defDraft(focus)) : u }));
+  const setActivateNow = (v: boolean) => setActivateBy((cur) => ({ ...cur, [focus]: v }));
+  const setHasList = (v: "yes" | "no") => setHasListBy((cur) => ({ ...cur, [focus]: v }));
+  const focusTicked = regions.includes(focus);
+  // This country's uploaded lists (what it already has waiting or processed), loaded when the country changes and after each upload.
+  type Upload = { id: string; filename: string; region: string; uploaded_by: string; uploaded_at: string; rows: number; status: "waiting" | "done" | "error"; summary?: string };
+  const [uploads, setUploads] = useState<Upload[]>([]);
+  const loadUploads = () => fetch("/api/wizard-upload", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((j) => j && setUploads(j.items || [])).catch(() => {});
+  useEffect(() => { loadUploads(); }, [focus]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     let cancelled = false;
@@ -125,12 +145,6 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
         const first = alreadyActive[0] || visibleRegions[0]?.key;
         if (first) {
           setRegions(alreadyActive.length ? alreadyActive : [first]);
-          const r = d.regions[first];
-          if (r) {
-            setDraft({ discoverPerDay: r.engine.discover_per_day || 5, verifyPerDay: r.engine.verify_per_day || 25 });
-            setDomains(OPTIONS.domains.filter((x) => r.personas.departments.includes(x.department)).map((x) => x.key));
-            setActivateNow(r.status === "active");
-          }
         }
         const s = await srcRes.json().catch(() => null);
         if (!cancelled && s && Array.isArray(s.checked)) setSources({ checked: s.checked, custom: Array.isArray(s.custom) ? s.custom : [] });
@@ -157,8 +171,8 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
     setNewSource("");
   };
   async function uploadFile(file: File) {
-    const region = regions[0];
-    if (!region) { setUploadMsg({ ok: false, text: "Pick at least one region in step 1 first." }); return; }
+    const region = focus;
+    if (!region) { setUploadMsg({ ok: false, text: "Pick a country above the tabs first." }); return; }
     if (!/\.(xlsx|xls)$/i.test(file.name)) { setUploadMsg({ ok: false, text: "Only .xlsx or .xls files are accepted." }); return; }
     setUploadBusy(true); setUploadMsg(null);
     try {
@@ -166,7 +180,7 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
       form.append("file", file); form.append("region", region);
       const res = await fetch("/api/wizard-upload", { method: "POST", body: form });
       const j = await res.json().catch(() => ({}));
-      if (res.ok) setUploadMsg({ ok: true, text: `"${file.name}" uploaded (${j.item?.rows ?? "?"} rows found) — it'll be read and imported by the next scheduled session. Track it in Settings → Discovery & refresh engine → Uploaded lists.` });
+      if (res.ok) { loadUploads(); setUploadMsg({ ok: true, text: `"${file.name}" uploaded for ${focusName} (${j.item?.rows ?? "?"} rows found). The next scheduled session reads it and adds the companies under ${focusName} only; its status shows in the list below.` }); }
       else setUploadMsg({ ok: false, text: j.error || "Could not upload that file." });
     } catch { setUploadMsg({ ok: false, text: "Could not reach the server." }); }
     setUploadBusy(false);
@@ -183,24 +197,24 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
     if (!(await ask({ title: "Save this setup?", confirm: "Save & apply", body: `Applies to ${names}.`,
       points: ["Every company's ICP status is recalculated straight away.", "The next daily run uses these rules for each region checked."] }))) return;
     setSaving(true);
-    const chosenDepts = domains.map((k) => OPTIONS.domains.find((x) => x.key === k)?.department).filter((x): x is string => !!x);
-    const extraTriggers = domains.flatMap((k) => OPTIONS.domains.find((x) => x.key === k)?.extraTriggers || []);
     const n = clone(def);
     for (const key of regions) {
       const target = n.regions[key];
       if (!target) continue;
-      const s = sizeFor(key);
+      const s = sizeFor(key), plan = planFor(key);
+      const chosenDepts = plan.domains.map((k) => OPTIONS.domains.find((x) => x.key === k)?.department).filter((x): x is string => !!x);
+      const extraTriggers = plan.domains.flatMap((k) => OPTIONS.domains.find((x) => x.key === k)?.extraTriggers || []);
       target.revenue.min_usd_m = s.revenue;
       target.employees.min = s.employees;
       target.listing = s.listing;
       target.entity_level = s.entity;
       target.personas.departments = [...new Set(chosenDepts.length ? chosenDepts : target.personas.departments)];
       target.focus.triggers = [...new Set([...target.focus.triggers, ...extraTriggers])];
-      target.engine.discover_per_day = draft.discoverPerDay;
-      target.engine.verify_per_day = draft.verifyPerDay;
+      target.engine.discover_per_day = plan.draft.discoverPerDay;
+      target.engine.verify_per_day = plan.draft.verifyPerDay;
       // Configuring a region here is what starts it: a region still marked "next phase" always leaves that state,
       // landing on Active or Paused depending on the checkbox in step 5 — never left stuck as "not started".
-      if (activateNow) target.status = "active";
+      if (plan.activate) target.status = "active";
       else if (target.status === "next") target.status = "paused";
     }
     try {
@@ -213,7 +227,6 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
   }
 
   const regionNames = regions.map((k) => REGIONS.find((r) => r.key === k)?.name || k);
-  const uniformSize = regions.length > 0 && regions.every((k) => sizeFor(k).revenue === sizeFor(regions[0]).revenue && sizeFor(k).employees === sizeFor(regions[0]).employees);
   const startingRegions = regions.filter((k) => def?.regions[k]?.status === "next").map((k) => REGIONS.find((r) => r.key === k)?.name || k);
   // Shared by the "Setup Wizard" label and the chevron, so both always behave the same way: switching in from
   // elsewhere opens the step list, and clicking again once already there toggles it open or closed.
@@ -301,9 +314,10 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
                 <div className="hw-tint hw-tint--region">
                   <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--teal)")}><Ico name="pin" /></span><h3>Which regions, and what counts as a fit?</h3></div>
                   <p className="hw-lead hw-lead-wide">Tick every region you want this wizard to configure, and set its own size rule right in the same row — Europe or the
-                    USA can carry a higher bar than the Gulf, for instance. Targeting, data sources and daily plan (the steps ahead) are set once and applied to every
-                    region checked here. Regions marked <b>not started yet</b> haven&apos;t been set up at all — ticking one starts it: it moves to Active or Paused
-                    (your choice in step 5) once you save.</p>
+                    USA can carry a higher bar than the Gulf, for instance. From step 2 on, the wizard works on <b>one country at a time</b>: pick it in the
+                    <b> Country</b> bar above the tabs and its list upload, targeting and daily plan are kept for that country only. Regions marked
+                    <b> not started yet</b> haven&apos;t been set up at all — ticking one starts it: it moves to Active or Paused (your choice in step 4)
+                    once you save.</p>
                 </div>
                 <div className="hw-region-list">
                   <div className="hw-region-grid hw-region-headrow" aria-hidden="true">
@@ -336,7 +350,7 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
                 </div>
                 <p className="hw-lead hw-lead-wide" style={{ marginTop: 12 }}>
                   {regions.length
-                    ? <><b>Selected: {regionNames.join(", ")}.</b> Targeting, data sources and daily plan will apply to all of these.
+                    ? <><b>Selected: {regionNames.join(", ")}.</b> Pick one of them in the Country bar above the tabs to set its list, targeting and daily plan.
                       {startingRegions.length > 0 && <> <b>{startingRegions.join(", ")}</b> {startingRegions.length === 1 ? "isn't" : "aren't"} started yet
                         — saving this wizard starts {startingRegions.length === 1 ? "it" : "them"}.</>}</>
                     : "Pick at least one region to continue."}
@@ -345,12 +359,13 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
               </div>
             )}
 
+            {(step === 3 || step === 4) && focus && !focusTicked && <p className="note" role="status"><b>{focusName} is not ticked in step 1.</b> Tick it there, or its targeting and daily plan are not saved. A list upload (step 2) works either way.</p>}
             {step === 2 && (
               <div>
                 <div className="hw-tint hw-tint--region">
-                  <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--teal)")}><Ico name="folder" /></span><h3>Do you already have a validated list?</h3></div>
-                  <p className="hw-lead hw-lead-wide">This decides how the Agent gets started for the region(s) you checked in step 1. Answer for whichever region
-                    you have the most data for — you can give a different answer next time you run the wizard for another region.</p>
+                  <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--teal)")}><Ico name="folder" /></span><h3>Do you already have a validated list for {focusName}?</h3></div>
+                  <p className="hw-lead hw-lead-wide">This decides how the Agent gets started for <b>{focusName}</b> only. A file you upload here is added under {focusName} and nowhere else;
+                    to add a list for another country, pick that country in the bar above the tabs.</p>
                 </div>
                 <div className="hw-pillrow">
                   <button type="button" className={`hw-pill ${hasList === "yes" ? "on" : ""}`} onClick={() => setHasList("yes")}>Yes, I have one</button>
@@ -369,7 +384,7 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
                       <input type="file" accept=".xlsx,.xls" style={{ display: "none" }} disabled={uploadBusy}
                         onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadFile(f); e.target.value = ""; }} />
                       <span className="hw-dropzone-icon">📊</span>
-                      <b>{uploadBusy ? "Uploading…" : "Drop your Excel file here, or click to browse"}</b>
+                      <b>{uploadBusy ? "Uploading…" : `Drop your ${focusName} Excel file here, or click to browse`}</b>
                       <span className="hint">.xlsx or .xls only</span>
                     </label>
                     <div className="hw-upload-tips">
@@ -383,6 +398,18 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
                     {uploadMsg && <p className={`now-msg ${uploadMsg.ok ? "ok" : "err"}`}>{uploadMsg.text}</p>}
                   </div>
                 )}
+                {(() => {
+                  const mine = uploads.filter((u) => u.region === focus);
+                  return (
+                    <div className="hw-uploads">
+                      <p className="hw-lead hw-lead-wide"><b>Lists uploaded for {focusName}</b>{mine.length ? ` (${mine.length})` : ""}. To change a list, upload the corrected file; the new one is added and anything already in the app is left alone.</p>
+                      {mine.length
+                        ? <div className="tablewrap"><table><thead><tr><th>File</th><th>Rows</th><th>Uploaded</th><th>Status</th></tr></thead>
+                          <tbody>{mine.map((u) => <tr key={u.id}><td className="wrap">{u.filename}<div className="muted">{u.uploaded_by}</div></td><td className="muted">{u.rows}</td><td className="muted">{fmtDateTime(u.uploaded_at)}</td>
+                            <td>{u.status === "waiting" ? <span className="status-plain st-l">Waiting to be read</span> : u.status === "done" ? <span className="status-plain st-v">Added{u.summary ? ` — ${u.summary}` : ""}</span> : <span className="status-plain st-u">Error{u.summary ? ` — ${u.summary}` : ""}</span>}</td></tr>)}</tbody></table></div>
+                        : <p className="note">Nothing uploaded for {focusName} yet.</p>}
+                    </div>);
+                })()}
                 {hasList === "no" && (
                   <div className="hw-about-card hw-yesno-no selected">
                     <h4>Nothing to do here</h4>
@@ -395,7 +422,7 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
             {step === 3 && (
               <div>
                 <div className="hw-tint hw-tint--people">
-                  <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--gold)")}><Ico name="crosshair" /></span><h3>Which domains do you want to target?</h3></div>
+                  <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--gold)")}><Ico name="crosshair" /></span><h3>Which domains do you want to target in {focusName}?</h3></div>
                   <p className="hw-lead hw-lead-wide">This decides which people at each company the Agent treats as decision-makers — who gets surfaced first on
                     Stakeholders, and whose seniority counts toward Pipeline rank. Pick as many as apply.</p>
                 </div>
@@ -411,7 +438,7 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
                   {domains.length
                     ? <><b>Selected: {domains.map((k) => OPTIONS.domains.find((x) => x.key === k)?.label).join(", ")}.</b> The Agent prioritizes
                       matching titles when it scores contacts.</>
-                    : "Pick at least one domain, or the wizard keeps whatever targeting is already saved for these regions."}
+                    : "Pick at least one domain, or the wizard keeps whatever targeting is already saved for this country."}
                 </p>
               </div>
             )}
@@ -419,7 +446,7 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
             {step === 4 && (
               <div>
                 <div className="hw-tint hw-tint--data">
-                  <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--sky)")}><Ico name="calendar" /></span><h3>Daily plan</h3></div>
+                  <div className="hw-tint-head"><span className="hw-icon-badge" style={stepColor("var(--sky)")}><Ico name="calendar" /></span><h3>Daily plan for {focusName}</h3></div>
                   <p className="hw-lead hw-lead-wide">Sets how much unattended work the daily run does, on your Claude plan at no extra cost. A good
                     starting point for extending an existing list: find 5 a day, verify 25.</p>
                 </div>
@@ -430,8 +457,8 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
                   <input type="number" min={0} max={60} value={draft.verifyPerDay} onChange={(e) => setDraft((d) => ({ ...d, verifyPerDay: Number(e.target.value) || 0 }))} />
                   <span className="hint">How many existing companies get their revenue and size re-checked each morning, oldest checks first.</span></label>
                 <label className="hw-checkrow"><input type="checkbox" checked={activateNow} onChange={(e) => setActivateNow(e.target.checked)} />
-                  Turn the daily run <b>ON</b> now for {regionNames.length ? <b>{regionNames.join(", ")}</b> : "the regions checked in step 1"}</label>
-                <span className="hint">Checked: these regions start the daily run automatically once you save. Unchecked: everything above is still
+                  Turn the daily run <b>ON</b> now for <b>{focusName}</b></label>
+                <span className="hint">Checked: this country starts the daily run automatically once you save. Unchecked: everything above is still
                   saved, but nothing runs until you come back and turn it on.</span>
 
                 <div className="hw-tint hw-tint--data" style={{ marginTop: 18 }}>
@@ -508,37 +535,22 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
                 </div>
                 <p className="hw-lead hw-lead-wide" style={{ marginBottom: 16 }}>
                   You&apos;re setting up <b>{regionNames.length || 0} region{regionNames.length === 1 ? "" : "s"}</b>
-                  {regionNames.length ? <> ({regionNames.join(", ")})</> : null}{" "}
-                  {uniformSize ? <>with a bar of <b>{usdM(sizeFor(regions[0]).revenue)} revenue</b> and <b>{sizeFor(regions[0]).employees}+ employees</b></>
-                    : <>each with its own revenue and employee bar (see below)</>}. {activateNow ? "Once you save, the daily run switches on for these regions" : "These rules save now, but the daily run stays paused for these regions until you activate them"} —
-                  every day it looks for <b>{draft.discoverPerDay} new</b> matching companies and re-checks <b>{draft.verifyPerDay} existing</b> ones,
-                  weighted toward {domains.length ? domains.map((k) => OPTIONS.domains.find((x) => x.key === k)?.label).join(", ") : "your current targeting"}.
-                  All of this runs on your Claude plan, at no extra cost.{wantsProfiling === "paid" ? " Whenever you want it to go deeper than that free pace, Research Queue (Data tab) or Research more (the left panel on Dashboard) will do it, at the rates shown in the previous step." : ""}
+                  {regionNames.length ? <> ({regionNames.join(", ")})</> : null}. Each country below keeps its own size bar, targeting and daily plan; once you save,
+                  the daily run works through every country marked On, on your Claude plan at no extra cost.{wantsProfiling === "paid" ? " Whenever you want it to go deeper than that free pace, Research Queue (Data tab) or Research more (the left panel on Dashboard) will do it, at the rates shown in the previous step." : ""}
                 </p>
                 <p className="hw-lead hw-lead-wide" style={{ marginBottom: 16 }}>
                   <b>When to expect something worth looking at:</b> the first new and re-checked companies land within a day or two of the run
                   switching on. A dataset that&apos;s broadly verified across everything in these regions typically takes <b>2–4 weeks</b> to build up
                   at this pace — sooner if you&apos;re starting from an existing list, longer for a region starting from nothing.
                 </p>
-                <div className="hw-review-grid">
-                  <div className="hw-review-row hw-review-row--region">
-                    <span className="k">Regions</span>
-                    <span className="v">{regionNames.length ? regionNames.join(", ") : "none checked"}{activateNow ? " — will be Active" : startingRegions.length ? ` — ${startingRegions.join(", ")} will move to Paused` : ""}</span>
-                  </div>
-                  <div className="hw-review-row hw-review-row--region">
-                    <span className="k">Company size</span>
-                    <span className="v">{uniformSize ? `revenue ≥ ${usdM(sizeFor(regions[0]).revenue)}, employees ≥ ${sizeFor(regions[0]).employees}`
-                      : regions.map((k) => `${REGIONS.find((r) => r.key === k)?.name || k}: revenue ≥ ${usdM(sizeFor(k).revenue)}, employees ≥ ${sizeFor(k).employees}`).join(" · ")}</span>
-                  </div>
-                  <div className="hw-review-row hw-review-row--people">
-                    <span className="k">Targeting</span>
-                    <span className="v">{domains.length ? domains.map((k) => OPTIONS.domains.find((x) => x.key === k)?.label).join(", ") : "no change to current targeting"}</span>
-                  </div>
-                  <div className="hw-review-row hw-review-row--data">
-                    <span className="k">Daily plan</span>
-                    <span className="v">find {draft.discoverPerDay}, verify {draft.verifyPerDay} per day</span>
-                  </div>
-                </div>
+                <div className="tablewrap"><table className="prose hw-review-table">
+                  <thead><tr><th>Country</th><th>Company size</th><th>Targeting</th><th>Daily plan</th><th>Daily run</th></tr></thead>
+                  <tbody>{regions.map((k) => { const pl = planFor(k), sz = sizeFor(k), st = def?.regions[k]?.status; return (
+                    <tr key={k}><td><b>{REGIONS.find((r) => r.key === k)?.name || k}</b></td>
+                      <td>revenue ≥ {usdM(sz.revenue)}, employees ≥ {sz.employees}</td>
+                      <td>{pl.domains.length ? pl.domains.map((d) => OPTIONS.domains.find((x) => x.key === d)?.label).join(", ") : "no change"}</td>
+                      <td>find {pl.draft.discoverPerDay}, verify {pl.draft.verifyPerDay} per day</td>
+                      <td>{pl.activate ? "On" : st === "next" ? "Will start Paused" : "Paused"}</td></tr>); })}</tbody></table></div>
                 <button type="button" className="btn primary" disabled={saving || !regions.length} onClick={save} style={{ marginTop: 16 }}>{saving ? "Saving…" : "Save & apply"}</button>
               </div>
             )}

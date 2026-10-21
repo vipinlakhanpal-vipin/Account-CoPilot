@@ -47,7 +47,7 @@ const EntityType = z.enum(["Regional HQ", "Branch", "Foreign Branch", "Unknown"]
 const NewCo = z.object({ name: z.string().min(2), website: z.string().optional().default(""), country: z.string().default("UAE").transform((v) => canonCountry(v)), industry: z.string().optional().default(""), watch: z.boolean().optional().default(false),
   hq_city: z.string().optional().default(""), why_icp: z.string().optional().default(""), source_url: z.string().optional().default(""), entity_type: EntityType,
   user_platform: z.enum(["Coupa", "SAP Ariba", "Jaggaer", "Ivalua", "GEP", "Zycus", "Oracle Procurement", "Other S2P"]).optional(), focus: z.string().trim().max(160).optional() }); // set when the user who asked for the company said it already uses that platform
-const NewCoUpload = z.object({ name: z.string().min(2), website: z.string().optional().default(""), country: z.string().default("UAE").transform((v) => canonCountry(v)), industry: z.string().optional().default(""),
+const NewCoUpload = z.object({ name: z.string().min(2), website: z.string().optional().default(""), country: z.string().optional().default("").transform((v) => (v.trim() ? canonCountry(v) : "")), industry: z.string().optional().default(""),
   hq_city: z.string().optional().default(""), notes: z.string().optional().default("") });
 const NewContact = z.object({ full_name: z.string().trim().min(3).max(120), title_verbatim: z.string().trim().min(2).max(200),
   email: z.string().trim().max(160).optional().default(""), phone: z.string().trim().max(40).optional().default(""), phone_type: z.enum(["Direct", "Mobile", "Switchboard", ""]).optional().default(""),
@@ -93,7 +93,7 @@ const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("icp") }),
   z.object({ action: z.literal("uploads") }),
   z.object({ action: z.literal("finish_upload"), id: z.string(), status: z.enum(["done", "error"]), summary: z.string().max(1000) }),
-  z.object({ action: z.literal("add_uploaded_companies"), filename: z.string(), companies: z.array(NewCoUpload).max(2000) }),
+  z.object({ action: z.literal("add_uploaded_companies"), filename: z.string(), upload_id: z.string().optional(), companies: z.array(NewCoUpload).max(2000) }),
   z.object({ action: z.literal("watch"), slug: z.string().optional() }),
   z.object({ action: z.literal("log"), summary: z.string().max(1000), verified: z.number().int().min(0).default(0), new_companies: z.array(z.string()).max(100).default([]),
     details: z.array(z.object({ name: z.string(), status: z.string(), revenue: z.string().optional().default(""), region: z.string().optional(), entity_type: EntityType })).max(60).optional().default([]),
@@ -432,11 +432,15 @@ export async function POST(req: Request) {
     const day = now.slice(0, 10);
     const added: { slug: string; company_name: string }[] = [], skipped: { name: string; matches: string }[] = [];
     const pool = existingPool(have || []);
+    // A list uploaded for one country stays in that country: blank rows take its country, and a row that names another country is left out (never filed under the wrong region).
+    const up = b.upload_id ? (await get<{ items: { id: string; region: string }[] }>(db, "uploaded_lists", { items: [] })).items.find((x) => x.id === b.upload_id) : undefined;
+    const upCountry = up ? canonCountry(up.region) : "";
     for (const c of b.companies) {
+      if (up && c.country && regionOf(c.country) !== up.region) { skipped.push({ name: c.name, matches: `a different country (${c.country}); this list was uploaded for ${upCountry}` }); continue; }
       const hit = pool.find((x) => sameCompany(c.name, c.website, x.name, x.domain));
       if (hit) { skipped.push({ name: c.name, matches: hit.as }); continue; }
       const row = {
-        slug: "cd-" + c.name.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60), company_name: c.name, country: c.country,
+        slug: "cd-" + c.name.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60), company_name: c.name, country: c.country || upCountry || "UAE",
         company_website: c.website || null, domain: dom(c.website) || null, hq_city: c.hq_city || null, industry: c.industry || null, research_channel: "User",
         lists: [`User upload: ${b.filename}`], icp_status: "Unknown", account_notes: `From "${b.filename}", uploaded via Setup Wizard on ${day}.${c.notes ? ` Notes: ${c.notes}` : ""}`,
         profile: { "User upload": { filename: b.filename, notes: c.notes || "", at: now } } };
