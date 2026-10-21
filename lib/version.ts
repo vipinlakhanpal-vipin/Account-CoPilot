@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.49";
+export const APP_VERSION = "6.50";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.50", date: "2026-10-21", notes: "Hourly break reminder: between 10am and 6pm Aria peeks out from behind a clock on every full hour, rings a chime and tells you to take a break.", changes: [
+      { what: "On every full hour from 11:00 to 18:00 (your own clock; nothing before 10am or after 6pm) Aria slides up from behind a clock in the bottom-right corner, a cuckoo chime rings and she says: 1 hour has passed, take a 10 minute walk or have a coffee and chill for some time, then come back. The message is also read aloud by your browser's voice; Voice off turns that off, Not today skips the rest of the day, Got it closes it", where: "Every page, bottom-right corner", why: "A regular nudge to step away from the screen" },
+      { what: "It stays quiet while you are typing (it waits up to five minutes past the hour), when the tab is not in view, and whenever Aria's Quiet mode is on. It costs nothing: no server or API calls", where: "Aria, Quiet mode switch", why: "It must never interrupt work or add cost" },
+  ] },
   { version: "6.49", date: "2026-10-21", notes: "The Dashboard's sources frame now has the title Data Sources, in the same font as the page title.", changes: [
       { what: "The frame under the region comparison is titled Data Sources, in the same large font as the page title (Dashboard-South Africa), with the line about source records, exchanges and Excel uploads beside it", where: "Dashboard", why: "The section needed a proper title" },
   ] },
