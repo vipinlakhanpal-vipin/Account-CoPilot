@@ -286,6 +286,22 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
     catch { const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); } catch { /* optional */ } ta.remove(); }
     setCopied(i); setTimeout(() => setCopied((c) => (c === i ? -1 : c)), 1500);
   }
+  // The Excel / PDF buttons for a message, also for chats saved before they were kept: a file answer takes the request that built it, a list answer
+  // (a table of companies) rebuilds its own question as an Excel or PDF request.
+  const dlFor = (m: Msg, i: number): Dl[] => {
+    if (m.role !== "assistant" || (m.choices && m.choices.length && i === msgs.length - 1)) return [];
+    if (m.downloads && m.downloads.length) return m.downloads;
+    if (m.redo) return bothFormats(m.redo);
+    const prev = msgs[i - 1];
+    if (!prev || prev.role !== "user") return [];
+    if ((m.actions && m.actions.length) || /^your (excel|pdf)\b.*\bis ready/i.test(m.content)) return XL_STEM.test(prev.content) || PDF_STEM.test(prev.content) ? bothFormats(prev.content) : [];
+    if (/\|\s*company\s*\|/i.test(m.content)) {
+      const q = (prev.display || prev.content).replace(/^§\w+:\s*/, "").trim();
+      const pick = /largest by revenue/i.test(m.content) ? ", by largest revenue" : /best (icp )?fit/i.test(m.content) ? ", by best fit" : /a to z/i.test(m.content) ? ", by A to Z" : "";
+      return [{ label: "📊 Excel contact list", value: `Excel contact list for ${q}${pick}` }, { label: "📄 PDF report", value: `PDF report for ${q}${pick}` }];
+    }
+    return [];
+  };
   const [dlNote, setDlNote] = useState<{ key: string; text: string } | null>(null);
   async function redownload(d: Dl, key: string) {
     setFiling(key); setDlNote(null);
@@ -375,11 +391,11 @@ export default function AriaChat({ endpoint = "/api/aria", send: sendFn, onActio
                         <button type="button" key={j} className="btn btn-dl big no-ic" disabled={filing === `${i}-${j}`} onClick={() => file(a, `${i}-${j}`)}>
                           {filing === `${i}-${j}` ? "Building…" : `⬇ ${a.label}`}</button>))}</div>
                     )}
-                    {m.role === "assistant" && m.downloads && m.downloads.length > 0 && !(m.choices && m.choices.length && i === msgs.length - 1) && (
+                    {(() => { const dls = dlFor(m, i); return dls.length > 0 && (
                       <div className="aria-redo"><span>Download this again with today&apos;s data:</span>
-                        {m.downloads.map((d, j) => <button type="button" key={j} disabled={busy || !!filing} onClick={() => redownload(d, `dl${i}-${j}`)}>{filing === `dl${i}-${j}` ? "Building…" : d.label}</button>)}
+                        {dls.map((d, j) => <button type="button" key={j} disabled={busy || !!filing} onClick={() => redownload(d, `dl${i}-${j}`)}>{filing === `dl${i}-${j}` ? "Building…" : d.label}</button>)}
                         {dlNote && dlNote.key.startsWith(`dl${i}-`) && <span className="aria-redo-err">{dlNote.text}</span>}</div>
-                    )}
+                    ); })()}
                     {m.role === "assistant" && !busy && <button type="button" className="aria-clear" title="Remove this question and its answer from the screen" onClick={() => setMsgs((all) => all.filter((_, k) => k !== i && !(k === i - 1 && all[k].role === "user")))}>↩ Clear this answer</button>}
                     {m.note && <p className={`aria-note ${m.mode === "ai" ? "ai" : "free"}`}>{m.note}{m.ms !== undefined ? ` · ${(m.ms / 1000).toFixed(1)}s` : ""}</p>}
                     {m.choices && m.choices.length > 0 && i === msgs.length - 1 && !busy && (

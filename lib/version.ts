@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.25";
+export const APP_VERSION = "6.26";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.26", date: "2026-10-21", notes: "Aria: download-again buttons now also appear in chats saved before v6.24.", changes: [
+      { what: "Under every list answer and every \"Your Excel / PDF is ready\" answer in Aria, a row \"Download this again with today's data\" offers the Excel contact list and the PDF report, one tap each. For chats saved before v6.24 the request is rebuilt from the question you asked (for example the 20 UAE prospects between $250M and $650M gives the same 20 companies and 38 contacts, with the Coupa playbook)", where: "Aria chat and History", why: "The buttons from v6.24 did not show in the chats you already had" },
+  ] },
   { version: "6.25", date: "2026-10-21", notes: "Aria Excel and PDF files carry a Playbook and Discovery Questions when the search names a product. Data sources charts restyled.", changes: [
       { what: "When an Aria search names a product (Coupa, SAP Ariba, another S2P platform or an ERP such as SAP or Oracle), the Excel gets two extra worksheets, Playbook and Discovery Questions, and the PDF gets the same two sections at the end. The playbook covers positioning, who to talk to, triggers, the sales motion, objections, competition, proof to bring and messages, plus a starting play for each account in the file worked out from its ERP, S2P platform and signal. Prospect lists and customer lists get different wording. It holds method and questions only: no figures or customer stories", where: "Aria Excel contact list and PDF report", why: "You wanted a playbook and discovery questions in every download for the product the search is about" },
       { what: "The Data sources charts on the Dashboard now use the same label, number and bar sizes as the other charts, in their own panels", where: "Dashboard", why: "The first version used oversized fonts and did not match the other charts" },
