@@ -3,12 +3,12 @@
 import type { Score } from "@/lib/icp";
 
 export type ScoreName = "ICP Match" | "Opportunity" | "Coupa Fit";
-export type Explained = { name: ScoreName; pct: number; question: string; sum: string; extremes: string; reading: string };
+export type Explained = { name: ScoreName; pct: number; question: string; formula: string; available: string; extremes: string; reading: string };
 
 const QUESTION: Record<ScoreName, string> = {
-  "ICP Match": "Does this company look like the customer you want? It is checked against your ICP rules (size, location, procurement maturity).",
-  Opportunity: "Is this company likely to buy soon? Buying signals count most, then transformation programmes, ERP changes, cost cutting, new leaders and growth.",
-  "Coupa Fit": "How well does Coupa suit this company? Five areas are checked: source-to-pay, suppliers, contracts, spend analytics and invoices.",
+  "ICP Match": "Does it look like your ideal customer? Checked against your ICP rules.",
+  Opportunity: "Is it likely to buy soon? Buying signals count most.",
+  "Coupa Fit": "How well does Coupa suit it? Five areas, plus your platform focus.",
 };
 
 export function explainScore(name: ScoreName, sc: Score): Explained {
@@ -21,7 +21,7 @@ export function explainScore(name: ScoreName, sc: Score): Explained {
     : earned === max ? "Every area has full points."
     : `Most points: ${best.label} (${best.score} of ${best.max}). Fewest: ${worst.label} (${worst.score} of ${worst.max}).`;
   const reading = name === "Opportunity" && sc.total === 0
-    ? "0% means no buying signs have been seen yet. It does not mean the company will never buy."
-    : "70% or more is strong, 45 to 69% is partial, under 45% is weak.";
-  return { name, pct: sc.total, question: QUESTION[name], sum: `${earned} of ${max} points earned = ${sc.total}%.`, extremes, reading };
+    ? "0% means no buying signs seen yet, not that it will never buy."
+    : "70 or more is strong, 45 to 69 partial, below 45 weak.";
+  return { name, pct: sc.total, question: QUESTION[name], formula: `${earned} ÷ ${max} × 100 = ${sc.total}%`, available: `Points available: ${parts.map((p) => p.max).join(" + ")} = ${max}`, extremes, reading };
 }

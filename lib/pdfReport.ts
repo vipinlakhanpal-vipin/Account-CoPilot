@@ -224,15 +224,16 @@ function scoresWithFrame(w: Writer, items: [ScoreName, Score][]) {
     sc.parts.forEach((x) => addL(`${x.label}: ${x.score} of ${x.max} pts - ${x.why}`, 8.5, w.font, MUTED, 10, 0));
     left.push({ t: "", size: 8.5, font: w.font, color: INK, x: M, gap: 0 });
   }
-  addR("HOW TO READ THESE SCORES", 8, w.bold, TEAL, 3);
-  addR("Each score is points earned divided by points available, shown as a percentage.", 8, w.font, MUTED, 6);
+  addR("HOW TO READ THESE SCORES", 7.5, w.bold, TEAL, 2);
+  addR("Every score is a percentage from 0 to 100: points earned ÷ points available × 100. The points available differ because each score has its own checks, listed on the left.", 7.5, w.font, MUTED, 5);
   for (const [label, sc] of items) {
     const e = explainScore(label, sc);
-    addR(`${e.name}: ${e.pct}%`, 8.5, w.bold, INK, 1);
-    addR(e.question, 8, w.font, INK, 2);
-    addR(e.sum, 8, w.bold, TEAL, 2);
-    if (e.extremes) addR(e.extremes, 8, w.font, INK, 2);
-    addR(e.reading, 8, w.font, MUTED, 7);
+    addR(`${e.name}: ${e.pct}%`, 8, w.bold, INK, 1);
+    addR(e.question, 7.5, w.font, INK, 1);
+    addR(e.formula, 7.5, w.bold, TEAL, 1);
+    addR(e.available, 7, w.font, MUTED, 1);
+    if (e.extremes) addR(e.extremes, 7.5, w.font, INK, 1);
+    addR(e.reading, 7, w.font, MUTED, 5);
   }
   const hOf = (ls: L[]) => ls.reduce((t, l) => t + l.size * 1.35 + (l.gap || 0), 0);
   const frameH = hOf(right) + 2 * pad, h = Math.max(hOf(left), frameH);

@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.30";
+export const APP_VERSION = "6.31";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.31", date: "2026-10-21", notes: "Score notes show the formula and where the points available come from, in a smaller, simpler box.", changes: [
+      { what: "The framed note beside each account's scores now shows the formula (for example 35 ÷ 70 × 100 = 50%) and how the points available are built (30 + 15 + 15 + 10 = 70), says that every score is a percentage from 0 to 100, and uses a smaller font and shorter text so the box fits. The same lines show on the account page", where: "PDF report and account page", why: "The first version did not say where the total points came from" },
+  ] },
   { version: "6.30", date: "2026-10-21", notes: "Ask Aria / Play games buttons use the standard small font and are shorter.", changes: [
       { what: "The Ask Aria about your data and Play games with Aria buttons in the left panel use the same small font as the other panel items at every screen size (12.5 px), with less padding so each button is shorter, and the full text fits. The Tips and settings line uses the same standard size. This replaces the screen-size scaling of v6.16", where: "Left panel", why: "The buttons looked oversized and cut the text off" },
   ] },
