@@ -377,15 +377,18 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 .agame-more-body{margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.25)}
 .agame-legend .agame-ask,.agame-legend .agame-play{white-space:nowrap;font:700 12px var(--body);padding:8px 8px;overflow:hidden;letter-spacing:0}
 .agame-dial{position:absolute;pointer-events:none;overflow:visible}
-.agame-dial .dl-ring{fill:rgba(255,255,255,.04);stroke:rgba(255,255,255,.2);stroke-width:.02}
-.agame-dial .dl-tick{stroke:rgba(255,255,255,.28);stroke-width:.025;stroke-linecap:round}
-.agame-dial .dl-num{fill:rgba(255,255,255,.5);font:700 .2px var(--body);text-anchor:middle;dominant-baseline:middle}
-.agame-dial .dl-dir{fill:rgba(255,255,255,.3);font:600 .13px var(--body);text-anchor:middle;dominant-baseline:middle;letter-spacing:.02em}
-.agame-dial .dl-hour,.agame-dial .dl-min{stroke-linecap:round}
-.agame-dial .dl-hour{stroke:rgba(255,255,255,.3);stroke-width:.045}
-.agame-dial .dl-min{stroke:rgba(255,255,255,.2);stroke-width:.025}
-.agame-dial .dl-sec{fill:#F5A623;opacity:.75}
-.agame-dial .dl-hub{fill:rgba(255,255,255,.4)}
+.agame-dial .dl-shadow{fill:rgba(0,0,0,.4)}
+.agame-dial .dl-dome{stroke:rgba(255,255,255,.3);stroke-width:.012}
+.agame-dial .dl-ring{fill:none;stroke:rgba(255,255,255,.16);stroke-width:.01}
+.agame-dial .dl-tick{stroke:rgba(255,255,255,.2);stroke-width:.008;stroke-linecap:round}
+.agame-dial .dl-tick.big{stroke:rgba(255,255,255,.55);stroke-width:.016}
+.agame-dial .dl-num{fill:rgba(255,255,255,.8);font:500 .15px var(--body);text-anchor:middle;dominant-baseline:middle}
+.agame-dial .dl-dir{fill:rgba(255,255,255,.4);font:500 .11px var(--body);text-anchor:middle;dominant-baseline:middle}
+.agame-dial .dl-hour,.agame-dial .dl-min{stroke:rgba(255,255,255,.8);stroke-linecap:round}
+.agame-dial .dl-hour{stroke-width:.04}
+.agame-dial .dl-min{stroke-width:.024;opacity:.7}
+.agame-dial .dl-sec{fill:#F5A623}
+.agame-dial .dl-hub{fill:rgba(255,255,255,.85)}
 .gr-shelfpick{display:inline-flex;align-items:center;gap:6px;font:700 12px var(--body);color:var(--muted)}
 .gr-shelfpick select,.gr-newshelf select{font:600 12.5px var(--body);padding:4px 8px;border-radius:8px;border:1px solid var(--line-2);background:var(--surface);color:var(--text)}
 .gr-newshelf{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}

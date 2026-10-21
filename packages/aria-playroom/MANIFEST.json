@@ -1,6 +1,6 @@
 {
   "name": "aria-playroom",
-  "syncedAt": "2026-10-21T06:23:40.804Z",
+  "syncedAt": "2026-10-21T06:47:04.608Z",
   "files": [
     "components/AriaFace.tsx",
     "components/AriaGame.tsx",
@@ -14,5 +14,5 @@
     "app/nav/games/page.tsx"
   ],
   "styles": "styles/aria-playroom.css",
-  "cssRules": 370
+  "cssRules": 373
 }

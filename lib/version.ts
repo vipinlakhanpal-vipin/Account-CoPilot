@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.12";
+export const APP_VERSION = "6.13";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.13", date: "2026-10-21", notes: "Aria's clock is now a 3D glass dome.", changes: [
+      { what: "The clock behind Aria is a glass dome: a clear bubble with a curved highlight, a soft shadow beneath it, 60 fine tick marks, 12, 3, 6, 9 with N, E, S, W inside, an hour hand, a thin amber seconds dot, and Aria riding the minute track as before. It sizes itself to the free space of the left panel", where: "Left panel, Aria", why: "You chose design A of three 3D clocks" },
+  ] },
   { version: "6.12", date: "2026-10-21", notes: "The Setup wizard shows one country at a time, with a read-only All countries overview.", changes: [
       { what: "The Country drop-down above the wizard tabs is now the only way to pick a country, and only that country is on screen: step 1 shows just its size rule and status (no more tick boxes or the full region list), and Review, Save and the daily-run switch are for it alone. A new All countries (overview) entry shows every country read-only, with its size rule and status; steps 2 to 4 ask you to pick a country, and nothing can be saved from the overview", where: "Setup wizard", why: "Seeing every region while setting up one made it unclear which country a change applied to" },
   ] },

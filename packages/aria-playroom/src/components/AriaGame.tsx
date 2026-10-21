@@ -63,20 +63,21 @@ function Roamer() {
     const tick = () => {
       const W = area.clientWidth, H = area.clientHeight;
       const free = H - ((area.querySelector<HTMLElement>(".agame-legend")?.offsetHeight || 46) + 6); // height above the legend
-      const rho = Math.max(16, Math.min(56, W / 2 - R - PAD, free / 2 - R - PAD));                     // orbit radius
-      const cx = W / 2, cy = Math.max(free / 2, rho + R + PAD);
-      svg.style.left = `${cx - 1.3 * rho}px`; svg.style.top = `${cy - 1.3 * rho}px`; svg.style.width = svg.style.height = `${2.6 * rho}px`;
+      // the glass dome takes the free space; Aria rides inside its rim, on the minute track (everything below is in dome radii)
+      const D = Math.max(R + 18, Math.min(W / 2 - PAD, free / 2)), rho = D - R - 6;
+      const cx = W / 2, cy = Math.max(free / 2, D + PAD);
+      svg.style.left = `${cx - 1.06 * D}px`; svg.style.top = `${cy - 1.06 * D}px`; svg.style.width = `${2.12 * D}px`; svg.style.height = `${2.32 * D}px`;
       const now = new Date(), s = now.getSeconds() + now.getMilliseconds() / 1000, m = now.getMinutes() + s / 60, h = (now.getHours() % 12) + m / 60;
       const pt = (deg: number, k: number) => ({ x: Math.sin((deg * Math.PI) / 180) * k, y: -Math.cos((deg * Math.PI) / 180) * k });
-      const mp = pt(m * 6, 1), hp = pt(h * 30, 0.5), sp = pt(s * 6, 1);
+      const mp = pt(m * 6, rho / D), hp = pt(h * 30, 0.34), sp = pt(s * 6, 0.8);
       if (minH) { minH.setAttribute("x2", String(mp.x)); minH.setAttribute("y2", String(mp.y)); }
       if (hourH) { hourH.setAttribute("x2", String(hp.x)); hourH.setAttribute("y2", String(hp.y)); }
       if (secD) { secD.setAttribute("cx", String(sp.x)); secD.setAttribute("cy", String(sp.y)); }
       if (st.hover) return;
       el.style.transition = st.first ? "none" : "transform 1s linear"; st.first = false;
-      el.style.transform = `translate(${cx + mp.x * rho}px,${cy + mp.y * rho}px)`;
+      el.style.transform = `translate(${cx + mp.x * D}px,${cy + mp.y * D}px)`;
       // keep the bubble fully inside the area, whatever the orb's place; its pointer still points at her
-      const bw = el.querySelector<HTMLElement>(".agame-bubble")?.offsetWidth || 176, x = cx + mp.x * rho;
+      const bw = el.querySelector<HTMLElement>(".agame-bubble")?.offsetWidth || 176, x = cx + mp.x * D;
       const left = Math.min(W - PAD - bw - x, Math.max(PAD - x, -bw / 2));
       el.style.setProperty("--bx", `${left}px`); el.style.setProperty("--ax", `${-left - 5}px`);
     };
@@ -100,11 +101,18 @@ function Roamer() {
   const go = () => { setMood(null); setPunched(true); setTimeout(() => { setPunched(false); if (!path.startsWith("/nav/games")) router.push("/nav/games"); }, 450); };
   return (
     <>
-    <svg className="agame-dial" ref={dial} viewBox="-1.3 -1.3 2.6 2.6" aria-hidden="true">
-      <circle r="1" className="dl-ring" />
-      {Array.from({ length: 12 }, (_, i) => { const a = (i * 30 * Math.PI) / 180, k = i % 3 === 0 ? 0.86 : 0.92; return <line key={i} className="dl-tick" x1={Math.sin(a) * k} y1={-Math.cos(a) * k} x2={Math.sin(a) * 1.06} y2={-Math.cos(a) * 1.06} />; })}
-      {([["12", 0, -1.22, "N", 0, -0.7], ["3", 1.2, 0.07, "E", 0.7, 0.07], ["6", 0, 1.3, "S", 0, 0.77], ["9", -1.2, 0.07, "W", -0.7, 0.07]] as const).map(([n, nx, ny, d, dx, dy]) => <g key={n}><text className="dl-num" x={nx} y={ny}>{n}</text><text className="dl-dir" x={dx} y={dy}>{d}</text></g>)}
-      <line className="dl-hour" x1="0" y1="0" x2="0" y2="-0.5" /><line className="dl-min" x1="0" y1="0" x2="0" y2="-1" /><circle className="dl-sec" r="0.05" cx="0" cy="-1" /><circle className="dl-hub" r="0.04" />
+    <svg className="agame-dial" ref={dial} viewBox="-1.06 -1.06 2.12 2.32" aria-hidden="true">
+      <defs>
+        <radialGradient id="ad-g" cx="36%" cy="28%" r="80%"><stop offset="0" stopColor="#fff" stopOpacity=".34" /><stop offset=".5" stopColor="#7FA2E8" stopOpacity=".16" /><stop offset="1" stopColor="#0B1233" stopOpacity=".7" /></radialGradient>
+        <linearGradient id="ad-h" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#fff" stopOpacity=".5" /><stop offset="1" stopColor="#fff" stopOpacity="0" /></linearGradient>
+      </defs>
+      <ellipse cx="0" cy="1.1" rx=".74" ry=".09" className="dl-shadow" />
+      <circle r="1" className="dl-dome" fill="url(#ad-g)" />
+      <circle r=".8" className="dl-ring" />
+      {Array.from({ length: 60 }, (_, i) => { const a = (i * 6 * Math.PI) / 180, big = i % 5 === 0, r1 = big ? 0.74 : 0.77; return <line key={i} className={big ? "dl-tick big" : "dl-tick"} x1={Math.sin(a) * r1} y1={-Math.cos(a) * r1} x2={Math.sin(a) * 0.8} y2={-Math.cos(a) * 0.8} />; })}
+      {([["12", 0, -0.6, "N", 0, -0.44], ["3", 0.6, 0.05, "E", 0.44, 0.04], ["6", 0, 0.65, "S", 0, 0.48], ["9", -0.6, 0.05, "W", -0.44, 0.04]] as const).map(([n, nx, ny, d, dx, dy]) => <g key={n}><text className="dl-num" x={nx} y={ny}>{n}</text><text className="dl-dir" x={dx} y={dy}>{d}</text></g>)}
+      <line className="dl-hour" x1="0" y1="0" x2="0" y2="-0.34" /><line className="dl-min" x1="0" y1="0" x2="0" y2="-0.7" /><circle className="dl-sec" r=".032" cx="0" cy="-0.8" /><circle className="dl-hub" r=".04" />
+      <ellipse cx="-.34" cy="-.6" rx=".56" ry=".26" fill="url(#ad-h)" opacity=".5" transform="rotate(-28 -.34 -.6)" />
     </svg>
     <div className={`agame${away ? " gone" : ""}`} ref={wrap} onMouseEnter={onHover}>
       {!punched && !away && !quiet && (tease || mood

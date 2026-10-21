@@ -2793,17 +2793,20 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 /* v6.04: the bracket tag shows what you are looking for (any product, solution or service) */
 .find-plat{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom}
 
-/* v6.08: Aria rides a light clock dial (12-3-6-9 with N, E, S, W): she sits on the minute hand and glides round as the time ticks */
+/* v6.13: Aria rides a glass-dome clock (12-3-6-9 with N, E, S, W): she sits on the minute hand and glides round as the time ticks */
 .agame-dial{position:absolute;pointer-events:none;overflow:visible}
-.agame-dial .dl-ring{fill:rgba(255,255,255,.04);stroke:rgba(255,255,255,.2);stroke-width:.02}
-.agame-dial .dl-tick{stroke:rgba(255,255,255,.28);stroke-width:.025;stroke-linecap:round}
-.agame-dial .dl-num{fill:rgba(255,255,255,.5);font:700 .2px var(--body);text-anchor:middle;dominant-baseline:middle}
-.agame-dial .dl-dir{fill:rgba(255,255,255,.3);font:600 .13px var(--body);text-anchor:middle;dominant-baseline:middle;letter-spacing:.02em}
-.agame-dial .dl-hour,.agame-dial .dl-min{stroke-linecap:round}
-.agame-dial .dl-hour{stroke:rgba(255,255,255,.3);stroke-width:.045}
-.agame-dial .dl-min{stroke:rgba(255,255,255,.2);stroke-width:.025}
-.agame-dial .dl-sec{fill:#F5A623;opacity:.75}
-.agame-dial .dl-hub{fill:rgba(255,255,255,.4)}
+.agame-dial .dl-shadow{fill:rgba(0,0,0,.4)}
+.agame-dial .dl-dome{stroke:rgba(255,255,255,.3);stroke-width:.012}
+.agame-dial .dl-ring{fill:none;stroke:rgba(255,255,255,.16);stroke-width:.01}
+.agame-dial .dl-tick{stroke:rgba(255,255,255,.2);stroke-width:.008;stroke-linecap:round}
+.agame-dial .dl-tick.big{stroke:rgba(255,255,255,.55);stroke-width:.016}
+.agame-dial .dl-num{fill:rgba(255,255,255,.8);font:500 .15px var(--body);text-anchor:middle;dominant-baseline:middle}
+.agame-dial .dl-dir{fill:rgba(255,255,255,.4);font:500 .11px var(--body);text-anchor:middle;dominant-baseline:middle}
+.agame-dial .dl-hour,.agame-dial .dl-min{stroke:rgba(255,255,255,.8);stroke-linecap:round}
+.agame-dial .dl-hour{stroke-width:.04}
+.agame-dial .dl-min{stroke-width:.024;opacity:.7}
+.agame-dial .dl-sec{fill:#F5A623}
+.agame-dial .dl-hub{fill:rgba(255,255,255,.85)}
 
 /* v6.09: one shelf at a time, chosen from a drop-down; every game carries a category tag */
 .gr-shelfpick{display:inline-flex;align-items:center;gap:6px;font:700 12px var(--body);color:var(--muted)}
