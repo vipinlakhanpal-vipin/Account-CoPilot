@@ -222,7 +222,7 @@ function scoresWithFrame(w: Writer, items: [ScoreName, Score][]) {
   const addR = (t: string, size: number, font: PDFFont, color: ReturnType<typeof rgb>, gap = 0) => w.wrap(t, font, size, frameW - 2 * pad).forEach((ln, i, a) => right.push({ t: ln, size, font, color, x: frameX + pad, gap: i === a.length - 1 ? gap : 0 }));
   for (const [label, sc] of items) {
     addL(`${label}: ${sc.total}%`, 9.5, w.bold, INK, 0, 0);
-    sc.parts.forEach((x) => addL(`${x.label}: ${x.score} of ${x.max} pts - ${x.why}`, 8.5, w.font, MUTED, 10, 0));
+    sc.parts.forEach((x, i) => addL(`${i + 1}. ${x.label}: ${x.score} of ${x.max} pts - ${x.why}`, 8.5, w.font, MUTED, 10, 0));
     addL(explainScore(label, sc).total, 9, w.bold, TEAL, 10, 0);
     left.push({ t: "", size: 8.5, font: w.font, color: INK, x: M, gap: 0 });
   }
@@ -233,6 +233,7 @@ function scoresWithFrame(w: Writer, items: [ScoreName, Score][]) {
     addR(`${e.name}: ${e.pct}%`, 8, w.bold, INK, 1);
     addR(e.question, 7.5, w.font, INK, 1);
     addR(e.formula, 7.5, w.bold, TEAL, 1);
+    if (e.count) addR(e.count, 7.5, w.font, INK, 1);
     if (e.extremes) addR(e.extremes, 7.5, w.font, INK, 1);
     addR(e.reading, 7, w.font, MUTED, 5);
   }

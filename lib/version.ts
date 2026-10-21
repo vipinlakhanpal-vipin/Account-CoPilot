@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.41";
+export const APP_VERSION = "6.42";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.42", date: "2026-10-21", notes: "The lines under each score are numbered, and the note says how many scored 0.", changes: [
+      { what: "Under ICP Match, Opportunity and Coupa Fit the lines are now numbered 1, 2, 3 ... and the framed note beside them says how many earned points, for example \"All 9 numbered lines scored 0, so the total is 0 and the score is 0%\", or \"6 of 9 numbered lines earned points. Lines 3, 5 and 8 scored 0\"", where: "PDF report and the score cards on the account page", why: "A reader can see at a glance why Opportunity is 0: every one of its lines scored 0" },
+  ] },
   { version: "6.41", date: "2026-10-21", notes: "Excel and PDF show the same companies, with the same names, in the same order, and the Excel has a numbered list to check it by.", changes: [
       { what: "The Excel now lists its companies in exactly the order the PDF does (rank 1, 2, 3 ...) and tells companies apart by their record, not by name, so two companies can never be merged or swapped. A new sheet, \"Companies (same as PDF)\", numbers every company the way the PDF's \"Companies in this report\" table does, so the two can be checked line by line. I read both files from the live data for UAE top 20 and 42, South Africa top 9, KSA top 25 and a tile list, and the names and order were identical every time", where: "Excel contact list and PDF report (Aria, Reports dialog, tile Reports button)", why: "You saw the same count but different companies in the two files and want no discrepancy, ever" },
   ] },
