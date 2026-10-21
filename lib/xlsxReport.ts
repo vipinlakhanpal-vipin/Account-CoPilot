@@ -24,14 +24,14 @@ const splitName = (full: string) => {
 export type CampaignOptions = { region: string; statuses: string[]; emailOnly: boolean; generatedBy: string; ids?: string[]; def?: unknown; limit?: number; rank?: "fit" | "revenue" | "name"; criteria?: Partial<Criteria> | null; product?: Detected };
 
 const GREEN = "FF0F6E56", BAND = "FFF1F7F5", LINE = "FFD5DEDA";
-type Out = { company: string; name: string; first: string; last: string; title: string; email: string; phone: string; linkedin: string; erp: string; s2p: string;
+type Out = { cid: string; company: string; name: string; first: string; last: string; title: string; email: string; phone: string; linkedin: string; erp: string; s2p: string;
   revenue: string; revType: string; employees: string; hq: string; tier: string; unit: string };
 
 export async function buildCampaignList(d: AllData, o: CampaignOptions) {
   // Which companies, and in what order, is decided by the same function the PDF uses, so the two files always match.
   const sel = selectReportAccounts(d.accounts, { region: o.region, ids: o.ids, statuses: o.statuses, rank: o.rank, limit: o.limit, criteria: o.criteria });
   const accounts = sel.selected;
-  const order = new Map(accounts.map((a, i) => [s(a.company_name), i]));
+  const order = new Map(accounts.map((a, i) => [s(a.id), i]));
   const byId = new Map(accounts.map((a) => [a.id, a]));
   const people = buildPeople(d.contacts.filter((p) => byId.has(p.company_id))).filter((p) => p.trust !== "Conflicting");
 
@@ -43,33 +43,33 @@ export async function buildCampaignList(d: AllData, o: CampaignOptions) {
     // Phones exactly as stored (never guessed); a person with several numbers across sources gets them all, once each.
     const seenNo = new Set<string>(), phone = p.rows.flatMap((r) => s(r.phone).split(/[;/]/)).map((x) => x.trim()).filter((x) => {
       const digits = x.replace(/\D/g, ""); if (digits.length < 7 || seenNo.has(digits)) return false; seenNo.add(digits); return true; }).join(" / ");
-    return { company: s(a.company_name), name, first, last, title: s(p.title_verbatim), email, phone, linkedin: s(p.linkedin_url) || p.rows.map((r) => s(r.linkedin_url)).find(Boolean) || "", erp: known(a.erp).replace(/\s*\(.*$/, ""),
+    return { cid: s(a.id), company: s(a.company_name), name, first, last, title: s(p.title_verbatim), email, phone, linkedin: s(p.linkedin_url) || p.rows.map((r) => s(r.linkedin_url)).find(Boolean) || "", erp: known(a.erp).replace(/\s*\(.*$/, ""),
       s2p: known(a.existing_s2p_product), revenue: rev ? fmtMoneyM(rev, cur) : "",
       revType: rev ? (revenueIsOfficial(a) ? "Official" : "Estimate") : "", employees: known(a.employee_range).replace(/\s*\(.*$/, ""),
       hq: [s(a.hq_city), s(a.country)].filter(Boolean).join(", "), tier: s(p.contact_tier), unit: s(p.business_unit) };
   }).filter((r) => r.name && (!o.emailOnly || r.email || r.phone || r.linkedin)) // reachable: an official email, a phone or a LinkedIn profile
-    .sort((x, y) => x.company.localeCompare(y.company) || (x.unit ? 1 : 0) - (y.unit ? 1 : 0) || x.unit.localeCompare(y.unit) || x.tier.localeCompare(y.tier) || x.name.localeCompare(y.name));
+    .sort((x, y) => (order.get(x.cid) ?? 1e9) - (order.get(y.cid) ?? 1e9) || (x.unit ? 1 : 0) - (y.unit ? 1 : 0) || x.unit.localeCompare(y.unit) || x.tier.localeCompare(y.tier) || x.name.localeCompare(y.name));
   // A company with a property or business unit (for example Kerzner International under Atlantis, The Palm) names the account's own contacts "Main account", so the tree reads: company, then group contacts, then each property.
-  const hasUnits = new Set(rows.filter((r) => r.unit).map((r) => r.company));
-  rows.forEach((r) => { if (hasUnits.has(r.company) && !r.unit) r.unit = "Main account"; });
+  const hasUnits = new Set(rows.filter((r) => r.unit).map((r) => r.cid));
+  rows.forEach((r) => { if (hasUnits.has(r.cid) && !r.unit) r.unit = "Main account"; });
 
   // One block per company, so each company is listed once with its people beneath it.
   const groups: Out[][] = [];
-  for (const r of rows) { const g = groups[groups.length - 1]; if (g && g[0].company === r.company) g.push(r); else groups.push([r]); }
+  for (const r of rows) { const g = groups[groups.length - 1]; if (g && g[0].cid === r.cid) g.push(r); else groups.push([r]); }
   const contacts = groups.reduce((n, g) => n + g.length, 0), totalWithContacts = groups.length;
   // A selected company with no reachable contact is still listed (one line saying so), so this file has exactly the companies the PDF has.
   const NO_CONTACT = o.emailOnly ? "No contact with an email, phone or LinkedIn on file" : "No contact on file";
-  const have = new Set(groups.map((g) => g[0].company));
+  const have = new Set(groups.map((g) => g[0].cid));
   for (const a of accounts) {
-    if (have.has(s(a.company_name))) continue;
+    if (have.has(s(a.id))) continue;
     const rev = revenueOf(a), cur = rulesFor(o.def, a.country).currency as { code: string; per_usd: number };
-    groups.push([{ company: s(a.company_name), name: NO_CONTACT, first: "", last: "", title: "", email: "", phone: "", linkedin: "", erp: known(a.erp).replace(/\s*\(.*$/, ""), s2p: known(a.existing_s2p_product),
+    groups.push([{ cid: s(a.id), company: s(a.company_name), name: NO_CONTACT, first: "", last: "", title: "", email: "", phone: "", linkedin: "", erp: known(a.erp).replace(/\s*\(.*$/, ""), s2p: known(a.existing_s2p_product),
       revenue: rev ? fmtMoneyM(rev, cur) : "", revType: rev ? (revenueIsOfficial(a) ? "Official" : "Estimate") : "", employees: known(a.employee_range).replace(/\s*\(.*$/, ""),
       hq: [s(a.hq_city), s(a.country)].filter(Boolean).join(", "), tier: "", unit: "" }]);
   }
   // Same order as the PDF: best ICP fit, largest revenue, or A to Z, as chosen.
   const rank = o.rank || "fit";
-  groups.sort((x, y) => (order.get(x[0].company) ?? 1e9) - (order.get(y[0].company) ?? 1e9));
+  groups.sort((x, y) => (order.get(x[0].cid) ?? 1e9) - (order.get(y[0].cid) ?? 1e9));
   const companies = groups.length;
 
   const wb = new ExcelJS.Workbook();
@@ -126,10 +126,21 @@ export async function buildCampaignList(d: AllData, o: CampaignOptions) {
     ws.getCell(start, 1).font = { bold: true };
   });
 
+  // The same numbered list the PDF opens with ("Companies in this report"), so the two files can be checked against each other line by line.
+  const cs = wb.addWorksheet("Companies (same as PDF)", { views: [{ state: "frozen", ySplit: 3, showGridLines: false }] });
+  cs.columns = [{ width: 6 }, { width: 44 }, { width: 14 }, { width: 18 }, { width: 12 }];
+  cs.mergeCells(1, 1, 1, 5); cs.getCell(1, 1).value = `Companies in this file: ${companies}. The PDF lists the same companies, in this same order.`; cs.getCell(1, 1).font = { bold: true, size: 12, color: { argb: GREEN } };
+  cs.getCell(3, 1).value = "#"; cs.getCell(3, 2).value = "Company"; cs.getCell(3, 3).value = "Country"; cs.getCell(3, 4).value = "Status"; cs.getCell(3, 5).value = "Contacts"; styleHeader(cs.getRow(3));
+  const byCid = new Map(accounts.map((a) => [s(a.id), a]));
+  groups.forEach((g, i) => {
+    const a = byCid.get(g[0].cid); const real = g.filter((x) => x.name !== NO_CONTACT).length;
+    cs.getCell(4 + i, 1).value = i + 1; cs.getCell(4 + i, 2).value = g[0].company; cs.getCell(4 + i, 3).value = s(a?.country); cs.getCell(4 + i, 4).value = s(a?.icp_status).replace("ICP — ", ""); cs.getCell(4 + i, 5).value = real;
+  });
+
   // A search that names a product (Coupa, SAP Ariba, another platform) also gets a Playbook sheet and a Discovery Questions sheet.
   if (o.product?.products.length) {
-    const names = new Set(groups.map((g) => g[0].company));
-    const picked = accounts.filter((a) => names.has(s(a.company_name)));
+    const ids = new Set(groups.map((g) => g[0].cid));
+    const picked = accounts.filter((a) => ids.has(s(a.id)));
     const plays = playbookFor(o.product), label = productsLabel(o.product);
     const head = (sh: ExcelJS.Worksheet, row: number, labels: string[]) => { labels.forEach((h, i) => { sh.getCell(row, i + 1).value = h; }); styleHeader(sh.getRow(row)); };
     const wrap = (sh: ExcelJS.Worksheet, from: number, to: number, nCols: number) => { for (let rr = from; rr <= to; rr++) for (let c = 1; c <= nCols; c++) { const cell = sh.getCell(rr, c);
