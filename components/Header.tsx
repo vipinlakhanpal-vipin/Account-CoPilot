@@ -56,7 +56,7 @@ function Glyph({ g }: { g?: string }) {
 const Badge = ({ sig }: { sig: { new: number; hot: number } | null }) => (sig && sig.new > 0 ? <span className={`sig-badge${sig.hot ? " hot" : ""}`} aria-label={`${sig.new} new buying signals`}>{sig.new > 99 ? "99+" : sig.new}</span> : null);
 
 // Rendered once in the root layout, so it stays put across page changes (no rebuild, no jump).
-export default function Header({ meta }: { meta: string }) {
+export default function Header({ meta, isOwner = false }: { meta: string; isOwner?: boolean }) {
   const { latest, releases, author } = useNewVersionInfo();
   const [showChanges, setShowChanges] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
@@ -77,7 +77,7 @@ export default function Header({ meta }: { meta: string }) {
   const history = RELEASES.filter((r) => r.changes?.length).slice(0, 60);
   // Open the "what's new" window once per new version (per browser session); the user can close it and reopen it from the banner.
   useEffect(() => {
-    if (!latest || !releases.some((r) => r.changes?.length)) return;
+    if (!isOwner || !latest || !releases.some((r) => r.changes?.length)) return;
     try { if (sessionStorage.getItem("changesSeen") === latest) return; sessionStorage.setItem("changesSeen", latest); } catch {}
     setShowChanges(true);
   }, [latest, releases]);
@@ -96,7 +96,7 @@ export default function Header({ meta }: { meta: string }) {
   useEffect(() => {
     try {
       const v = sessionStorage.getItem("upgradedTo");
-      if (v) { sessionStorage.removeItem("upgradedTo"); setUpgraded(v); const t = setTimeout(() => setUpgraded(""), 5000); return () => clearTimeout(t); }
+      if (v) { sessionStorage.removeItem("upgradedTo"); setUpgraded(v); const t = setTimeout(() => setUpgraded(""), isOwner ? 5000 : 12000); return () => clearTimeout(t); }
     } catch {}
   }, []);
   const upgrade = () => {
@@ -152,7 +152,7 @@ export default function Header({ meta }: { meta: string }) {
   if (path.startsWith("/login") || path.startsWith("/auth")) return null;
   return (
     <>
-      {latest && !upgraded && (
+      {isOwner && latest && !upgraded && (
         <div className="update-bar" role="status">
           <div className="update-head">
             <span>{upgrading ? <>Upgrading <b>Account CoPilot</b> to v{latest}…</> : <>Update available: <b>Account CoPilot v{latest}</b></>}</span>
@@ -163,7 +163,7 @@ export default function Header({ meta }: { meta: string }) {
           </div>
         </div>
       )}
-      {latest && showChanges && releases.some((r) => r.changes?.length) && (
+      {isOwner && latest && showChanges && releases.some((r) => r.changes?.length) && (
         <div className="wn-backdrop" onClick={() => setShowChanges(false)}>
           <div className="wn" role="dialog" aria-modal="true" aria-labelledby="wn-title" onClick={(e) => e.stopPropagation()}>
             <div className="wn-head">
@@ -230,7 +230,7 @@ export default function Header({ meta }: { meta: string }) {
         </div>
       )}
       {upgraded && (
-        <div className="update-bar done" role="status"><span>Updated to <b>Account CoPilot v{upgraded}</b> ✓</span></div>
+        <div className="update-bar done" role="status"><span>Updated to <b>Account CoPilot v{upgraded}</b> ✓</span>{!isOwner && <button type="button" className="link" onClick={() => { setUpgraded(""); setShowHistory(true); }}>What&apos;s new?</button>}</div>
       )}
       <header className="top">
         <div className="navbar has-sub" ref={barRef}>

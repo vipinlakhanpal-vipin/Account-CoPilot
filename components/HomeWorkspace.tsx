@@ -6,6 +6,7 @@ import { ask, notify } from "@/components/Confirm";
 import { fmtDateTime } from "@/lib/dates";
 import ProgressGauge from "@/components/ProgressGauge";
 import { shortFile } from "@/lib/shortFile";
+import { useReloadGuard } from "@/lib/reloadGuard";
 
 // Home workspace: a left rail with two destinations — About Account CoPilot (always free to read) and Setup Wizard
 // (reads and writes the exact settings.icp_definition record Setup → Define ICP uses, so there's no separate config to
@@ -108,6 +109,8 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
   const [activateBy, setActivateBy] = useState<Record<string, boolean>>({});
   const [wantsProfiling, setWantsProfiling] = useState<"free" | "paid" | "">("");
   const [draftBy, setDraftBy] = useState<Record<string, Draft>>({});
+  const [edited, setEdited] = useState(false); // wizard settings changed and not saved yet
+  useReloadGuard(!!staged || uploadBusy || saving || edited, "unsaved wizard work");
   const [sizeDraft, setSizeDraft] = useState<Record<string, SizeDraft>>({});
   // Each region keeps its own size rule — Europe or the USA can carry a higher bar than the Gulf. Falls back to that
   // region's own last-saved value (every region always has one, even unconfigured ones — DEFAULT_RULES), not a shared draft.
@@ -128,9 +131,9 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
   const defActive = (k: string) => def?.regions[k]?.status === "active";
   const planFor = (k: string) => ({ domains: domainsBy[k] ?? defDomains(k), draft: draftBy[k] ?? defDraft(k), activate: activateBy[k] ?? defActive(k) });
   const domains = planFor(focus).domains, draft = planFor(focus).draft, activateNow = planFor(focus).activate, hasList = hasListBy[focus] || "";
-  const setDomains = (u: string[] | ((c: string[]) => string[])) => setDomainsBy((cur) => ({ ...cur, [focus]: typeof u === "function" ? u(cur[focus] ?? defDomains(focus)) : u }));
-  const setDraft = (u: Draft | ((c: Draft) => Draft)) => setDraftBy((cur) => ({ ...cur, [focus]: typeof u === "function" ? u(cur[focus] ?? defDraft(focus)) : u }));
-  const setActivateNow = (v: boolean) => setActivateBy((cur) => ({ ...cur, [focus]: v }));
+  const setDomains = (u: string[] | ((c: string[]) => string[])) => { setEdited(true); setDomainsBy((cur) => ({ ...cur, [focus]: typeof u === "function" ? u(cur[focus] ?? defDomains(focus)) : u })); };
+  const setDraft = (u: Draft | ((c: Draft) => Draft)) => { setEdited(true); setDraftBy((cur) => ({ ...cur, [focus]: typeof u === "function" ? u(cur[focus] ?? defDraft(focus)) : u })); };
+  const setActivateNow = (v: boolean) => { setEdited(true); setActivateBy((cur) => ({ ...cur, [focus]: v })); };
   const setHasList = (v: "yes" | "no") => setHasListBy((cur) => ({ ...cur, [focus]: v }));
   // This country's uploaded lists (what it already has waiting or processed), loaded when the country changes and after each upload.
   type Upload = { id: string; filename: string; region: string; uploaded_by: string; uploaded_at: string; rows: number; status: "waiting" | "done" | "error"; summary?: string; processed_at?: string };
@@ -293,7 +296,7 @@ export default function HomeWorkspace({ access, layout = "stack", forceStep, onS
     try {
       const res = await fetch("/api/icp", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "save", definition: n }) });
       const j = await res.json();
-      if (j.ok) { notify(`Saved and applied — ${j.changed || 0} account${j.changed === 1 ? "" : "s"} changed status.`, "ok"); setDef(n); setJustSaved(true); }
+      if (j.ok) { notify(`Saved and applied — ${j.changed || 0} account${j.changed === 1 ? "" : "s"} changed status.`, "ok"); setDef(n); setJustSaved(true); setEdited(false); }
       else notify(j.error || j.problems?.[0] || "Could not save.", "error");
     } catch { notify("Could not reach the server.", "error"); }
     setSaving(false);

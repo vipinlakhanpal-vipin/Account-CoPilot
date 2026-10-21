@@ -2,6 +2,7 @@
 import { ask, notify } from "@/components/Confirm";
 import InfoTip from "@/components/InfoTip";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useReloadGuard } from "@/lib/reloadGuard";
 import { REGIONS, OPTIONS, DEFAULT_RULES, normalizeDefinition, validateRules, summarizeRules, type Definition, type Rules, effectiveEngine } from "@/lib/icpDefinition.mjs";
 import { fmtDateTime } from "@/lib/dates";
 
@@ -169,6 +170,7 @@ export default function IcpEditor({ initial, counts, isSuper, allowed, roleLabel
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [def, auto, dirty, busy, problems.length, stuck]);
   const w = r.pipeline.w_match + r.pipeline.w_opportunity + r.pipeline.w_fit;
+  useReloadGuard(dirty || !!busy, "unsaved ICP changes");
   // Warn before leaving the page with unsaved changes.
   useEffect(() => {
     if (!dirty) return;

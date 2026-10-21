@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.47";
+export const APP_VERSION = "6.48";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,10 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.48", date: "2026-10-21", notes: "Everyone except the owner now gets new versions automatically: no \"update available\" bar and no Refresh button to press. The Dashboard uploads table shows all its columns.", changes: [
+      { what: "The app loads a new version by itself at a safe moment: when the tab comes back into view after being away, or when the person has been idle for 90 seconds. It never reloads while there is unsaved work: a chosen Excel file, an upload or save in progress, an unsaved ICP or wizard change, an open dialog, or typing in a field. A short \"Updated to vX\" bar confirms it, with a link to what changed. The owner keeps the Update available bar and Refresh button exactly as before", where: "Every page, for Admins and Standard Users", why: "Users should never have to press Refresh to get the newest version" },
+      { what: "The Excel uploads table on the Dashboard now spans the full width, so File, Country, Rows, New, Already in app, Status and Progress all show in full, and country names read South Africa instead of SouthAfrica", where: "Dashboard, Where the data came from", why: "The last columns were cut off" },
+  ] },
   { version: "6.47", date: "2026-10-21", notes: "Uploads: duplicate question before storing, time estimates and a notification when read, and a delete button for the Super Admin. Only the Super Admin can delete or cancel anything.", changes: [
       { what: "If a file has the same data as one already uploaded for the country (even under a different file name), or the same name and the same number of rows, the app now says so before storing it, names the earlier file and who uploaded it, and asks whether to continue. Continuing is safe: the app adds only what is not already in its database and leaves the rest", where: "Setup wizard, Add Data", why: "Two users uploaded the same file and nobody was warned" },
       { what: "After an upload the message gives the approximate time: how long the upload took, when a session will read it (about 10 minutes once the instant runner starts, otherwise the 6:00 am Dubai run), and how long rating the new companies takes at the country's daily pace. When the file has been read a notice appears and the bell carries an entry", where: "Setup wizard, Add Data, and the bell", why: "You wanted to know how long it takes and to be told when it is done" },

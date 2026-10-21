@@ -8,6 +8,7 @@ import ContactsJobTracker from "@/components/ContactsJobTracker";
 import ActivityTracker from "@/components/ActivityTracker";
 import TableNeat from "@/components/TableNeat";
 import TabFit from "@/components/TabFit";
+import AutoUpdate from "@/components/AutoUpdate";
 import AppShell from "@/components/AppShell";
 import { supabaseServer } from "@/lib/supabase/server";
 import { getAccess } from "@/lib/access";
@@ -40,7 +41,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Fredoka:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" />
       </head>
-      <body data-nodl={access && access.isSuper && !access.canDownload ? "1" : undefined}><Suspense fallback={null}><Header meta={await headerMeta()} /></Suspense><AppShell isSuper={!!access?.isSuper} isOwner={!!access?.isOwner}>{children}</AppShell><ConfirmHost /><ContactsJobTracker /><Suspense fallback={null}><ActivityTracker /></Suspense><TableNeat /><TabFit /><footer className="site-footer">Designed and developed by <b>Vipin</b></footer></body>
+      <body data-nodl={access && access.isSuper && !access.canDownload ? "1" : undefined}><Suspense fallback={null}><Header meta={await headerMeta()} isOwner={!!access?.isOwner} /></Suspense><AppShell isSuper={!!access?.isSuper} isOwner={!!access?.isOwner}>{children}</AppShell><ConfirmHost /><ContactsJobTracker /><Suspense fallback={null}><ActivityTracker /></Suspense><TableNeat /><TabFit />{access && !access.isOwner && <AutoUpdate />}<footer className="site-footer">Designed and developed by <b>Vipin</b></footer></body>
     </html>
   );
 }

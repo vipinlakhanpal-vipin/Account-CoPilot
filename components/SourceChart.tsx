@@ -96,11 +96,11 @@ export default function SourceChart({ accounts, sources, uploads, country, onDri
             <Rows items={ev.exchanges} max={Math.max(1, ...ev.exchanges.map((e) => e.n))} onPick={(t, r) => onDrill(`Filings from ${t}`, r)} />
           </div>
         )}
-        <div className="panel">
+        <div className="panel" style={{ gridColumn: "1 / -1" }}>
           <h2 className="with-count">Excel uploads in the Setup wizard {ups.length > 0 && <span className="count">{upNew} new · {upOld} already in the app</span>}</h2>
           {ups.length === 0 ? <p className="note">No Excel list uploaded{country === "All" ? "" : " for this country"} yet.</p> : (
             <div className="tablewrap"><table><thead><tr><th>File</th><th>Country</th><th>Rows</th><th>New</th><th>Already in app</th><th>Status</th><th>Progress</th></tr></thead>
-              <tbody>{ups.map((u) => <tr key={u.id}><td title={u.filename}>{shortFile(u.filename)}</td><td>{u.region}</td><td>{u.rows ?? "—"}</td><td>{u.added ?? "—"}</td><td>{u.already ?? "—"}</td><td>{u.status === "done" ? "Read in" : u.status === "waiting" ? "Waiting" : u.status}</td><td>{(() => { const g = progressOf(u); return <ProgressGauge pct={g.pct} label={g.label} tone={g.tone} busy={g.busy} />; })()}</td></tr>)}</tbody></table></div>
+              <tbody>{ups.map((u) => <tr key={u.id}><td title={u.filename}>{shortFile(u.filename)}</td><td>{String(u.region).replace(/([a-z])([A-Z])/g, "$1 $2")}</td><td>{u.rows ?? "—"}</td><td>{u.added ?? "—"}</td><td>{u.already ?? "—"}</td><td>{u.status === "done" ? "Read in" : u.status === "waiting" ? "Waiting" : u.status}</td><td>{(() => { const g = progressOf(u); return <ProgressGauge pct={g.pct} label={g.label} tone={g.tone} busy={g.busy} />; })()}</td></tr>)}</tbody></table></div>
           )}
         </div>
       </div>
