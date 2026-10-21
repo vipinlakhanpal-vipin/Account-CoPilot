@@ -2830,3 +2830,7 @@ button.aria-orb:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 .hw-uploads{margin-top:14px}
 .hw-fieldset{border:0;padding:0;margin:0;min-width:0}
 .hw-fieldset:disabled{opacity:.85}
+
+/* v6.14: Aria's size follows the screen (--as, set in AriaGame.tsx: 0.6 on a small laptop window up to 1 on large monitors) */
+.navmid .agame-bot{left:calc(-36px * var(--as,1));top:calc(-36px * var(--as,1));width:calc(72px * var(--as,1));height:calc(72px * var(--as,1))}
+.navmid .agame-bubble,.navmid .agame-bubble.funny{bottom:calc(12px + 36px * var(--as,1))}

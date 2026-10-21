@@ -57,14 +57,18 @@ function Roamer() {
   useEffect(() => {
     const el = wrap.current, area = el?.parentElement, svg = dial.current;
     if (!el || !area || !svg) return;
-    const R = 36, PAD = 8;
+    const PAD = 8;
     const hourH = svg.querySelector<SVGLineElement>(".dl-hour"), minH = svg.querySelector<SVGLineElement>(".dl-min"), secD = svg.querySelector<SVGCircleElement>(".dl-sec");
     const st = { hover: false, first: true };
     const tick = () => {
       const W = area.clientWidth, H = area.clientHeight;
       const free = H - ((area.querySelector<HTMLElement>(".agame-legend")?.offsetHeight || 46) + 6); // height above the legend
+      // Screen size: a 13 to 16 inch laptop window is about 780 to 1000 px tall, a 24 to 32 inch monitor 1000 to 1300 px or more, an ultrawide the same height, so the height decides.
+      // Aria and the dome scale from 0.6 (small laptop) up to 1 (large monitors), and never take more than the free space.
+      const sc = Math.min(1, Math.max(0.6, window.innerHeight / 1100)), R = 36 * sc;
+      area.style.setProperty("--as", String(sc));
       // the glass dome takes the free space; Aria rides inside its rim, on the minute track (everything below is in dome radii)
-      const D = Math.max(R + 18, Math.min(W / 2 - PAD, free / 2)), rho = D - R - 6;
+      const D = Math.max(R + 14, Math.min(105 * sc, W / 2 - PAD, free / 2)), rho = D - R - 5;
       const cx = W / 2, cy = Math.max(free / 2, D + PAD);
       svg.style.left = `${cx - 1.06 * D}px`; svg.style.top = `${cy - 1.06 * D}px`; svg.style.width = `${2.12 * D}px`; svg.style.height = `${2.32 * D}px`;
       const now = new Date(), s = now.getSeconds() + now.getMilliseconds() / 1000, m = now.getMinutes() + s / 60, h = (now.getHours() % 12) + m / 60;
