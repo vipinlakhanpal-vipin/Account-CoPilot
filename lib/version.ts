@@ -1,5 +1,5 @@
 // Bump APP_VERSION on every release (v1.0, v1.1, v1.2 …) and add a line to RELEASES.
-export const APP_VERSION = "6.61";
+export const APP_VERSION = "6.62";
 
 // Shared with the login page, so both read the one tagline.
 export const TAGLINE = "AI Autonomous Agent for Account Intelligence";
@@ -9,6 +9,9 @@ export type Change = { what: string; where: string; why: string };
 export const RELEASE_AUTHOR = "Vipin";
 
 export const RELEASES: { version: string; date: string; notes: string; changes?: Change[] }[] = [
+  { version: "6.62", date: "2026-10-22", notes: "Fixes the crash on the Daily run page after an Excel list was read.", changes: [
+      { what: "The Daily run page no longer crashes when the latest bell note is an \"Excel list read\" note, which has no list of new companies", where: "Daily run", why: "Clicking Daily run showed an application error" },
+  ] },
   { version: "6.61", date: "2026-10-21", notes: "Playroom: a light red Close Aria button beside Aria's yellow speech strip.", changes: [
       { what: "A light red Close Aria button sits next to Aria's yellow strip in the playroom, the same height, and takes you back to your work", where: "Playroom (Play games with Aria)", why: "A clear way out of the playroom" },
   ] },

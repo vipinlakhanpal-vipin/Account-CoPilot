@@ -403,7 +403,7 @@ export async function POST(req: Request) {
     await put(db, "uploaded_lists", st);
     // The bell tells everyone the list has been read.
     const lg = await get<{ entries: unknown[] }>(db, "engine_log", { entries: [] });
-    lg.entries.unshift({ at: now, summary: `Excel list read: ${item.filename} (${item.region}): ${b.status === "done" ? b.summary : `could not be read: ${b.summary}`}`, source: "upload", region: item.region });
+    lg.entries.unshift({ at: now, summary: `Excel list read: ${item.filename} (${item.region}): ${b.status === "done" ? b.summary : `could not be read: ${b.summary}`}`, source: "upload", region: item.region, verified: 0, new_companies: [] });
     await put(db, "engine_log", { entries: lg.entries.slice(0, 60) });
     invalidateAllData();
     return NextResponse.json({ ok: true });

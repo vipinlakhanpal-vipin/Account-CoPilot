@@ -48,7 +48,7 @@ export default function EngineBell({ inline = false }: { inline?: boolean }) {
   const blocks = entries.flatMap((e) => {
     const regionField = e.region || e.summary.match(/^([^—]+)—/)?.[1]?.trim() || "—";
     const listed = regionField.split(",").map((r) => r.trim()).filter(Boolean);
-    const newSet = new Set(e.new_companies.map(norm));
+    const newSet = new Set((e.new_companies || []).map(norm));
     const rows = (e.details || []).map((d) => ({ ...d, isNew: newSet.has(norm(d.name)), isVerified: !/unknown/i.test(d.status) }));
     const split = rows.some((d) => d.region);
     // Instant lookups ("Company lookup: …") and free-text lines aren't regions — group them so the dropdown stays a clean region list.
@@ -172,7 +172,7 @@ export default function EngineBell({ inline = false }: { inline?: boolean }) {
                     {group.map((e, ei) => {
                       const regionField = e.region || e.summary.match(/^([^—]+)—/)?.[1]?.trim() || "—";
                       const regions = regionField.split(",").map((r) => r.trim()).filter(Boolean);
-                      const newSet = new Set(e.new_companies.map(norm));
+                      const newSet = new Set((e.new_companies || []).map(norm));
                       const rows = (e.details || []).map((d) => ({ ...d, isNew: newSet.has(norm(d.name)), isVerified: !/unknown/i.test(d.status) }));
                       // More than one region in this entry: if each row already carries its own real region
                       // (resolved server-side from the company record), split into one section per region.

@@ -30,7 +30,7 @@ export default function ScheduledRunHistory() {
       <p className="note">Every run from here on tags itself automatically — Run status shows a badge with no extra step. Older runs, from before this existed, show &quot;—&quot;.</p>
       <div className="run-summary-box">
         <div className="run-summary-box-label">Summary</div>
-        <div className="run-summary-box-body"><b>{latest.verified}</b> verified{latest.new_companies.length > 0 && <> · {latest.new_companies.length} new: {latest.new_companies.join(", ")}</>}</div>
+        <div className="run-summary-box-body"><b>{latest.verified ?? 0}</b> verified{(latest.new_companies?.length ?? 0) > 0 && <> · {latest.new_companies.length} new: {latest.new_companies.join(", ")}</>}</div>
       </div>
       <div className="tablewrap"><table className="run-history-table"><thead><tr><th>Date</th><th>Company</th><th>Entity</th><th>Status</th><th>Revenue</th><th>Region</th><th>Run Status</th><th>Activate Region</th></tr></thead>
         <tbody>{log.slice(0, 10).flatMap((e) => {
